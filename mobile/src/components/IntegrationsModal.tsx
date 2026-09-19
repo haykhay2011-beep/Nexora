@@ -13,6 +13,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { theme } from '../theme';
 import { authorizedFetch, getAccessToken } from '../lib/api';
 import { API_BASE_URL } from '../lib/config';
+import { useAuth } from '../context/AuthContext';
 import PlaidLinkWebView from './PlaidLinkWebView';
 
 type Provider = 'google' | 'yahoo' | 'plaid';
@@ -22,7 +23,26 @@ interface IntegrationsModalProps {
   onClose: () => void;
 }
 
+const YAHOO_DOMAINS = ['yahoo.com', 'yahoo.co.uk', 'ymail.com', 'rocketmail.com'];
+
+function detectEmailProvider(email: string | undefined): 'google' | 'yahoo' | null {
+  const domain = email?.split('@')[1]?.toLowerCase();
+  if (!domain) return null;
+  if (domain === 'gmail.com' || domain === 'googlemail.com') return 'google';
+  if (YAHOO_DOMAINS.includes(domain)) return 'yahoo';
+  return null;
+}
+
 export default function IntegrationsModal({ visible, onClose }: IntegrationsModalProps) {
+  const { session } = useAuth();
+  // Only surface the email integration that actually matches the account the
+  // user signed up with - a Gmail address never needs the Yahoo option and
+  // vice versa. Unrecognized domains (work email, etc.) fall back to showing
+  // both, since we can't tell which mail host is behind them.
+  const detectedEmailProvider = detectEmailProvider(session?.user.email);
+  const showGoogle = detectedEmailProvider !== 'yahoo';
+  const showYahoo = detectedEmailProvider !== 'google';
+
   const [connected, setConnected] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyProvider, setBusyProvider] = useState<Provider | null>(null);
@@ -132,25 +152,29 @@ export default function IntegrationsModal({ visible, onClose }: IntegrationsModa
 
           {loading ? <ActivityIndicator color={theme.colors.textSecondary} style={{ marginVertical: 12 }} /> : null}
 
-          <IntegrationRow
-            label="Google"
-            description="Gmail, Calendar & Tasks"
-            connected={isConnected('google')}
-            busy={busyProvider === 'google'}
-            onConnect={handleConnectGoogle}
-            onDisconnect={() => handleDisconnect('google')}
-          />
+          {showGoogle ? (
+            <IntegrationRow
+              label="Google"
+              description="Gmail, Calendar & Tasks"
+              connected={isConnected('google')}
+              busy={busyProvider === 'google'}
+              onConnect={handleConnectGoogle}
+              onDisconnect={() => handleDisconnect('google')}
+            />
+          ) : null}
 
-          <IntegrationRow
-            label="Yahoo Mail"
-            description="Connect with an App Password"
-            connected={isConnected('yahoo')}
-            busy={busyProvider === 'yahoo'}
-            onConnect={() => setYahooFormVisible((v) => !v)}
-            onDisconnect={() => handleDisconnect('yahoo')}
-          />
+          {showYahoo ? (
+            <IntegrationRow
+              label="Yahoo Mail"
+              description="Connect with an App Password"
+              connected={isConnected('yahoo')}
+              busy={busyProvider === 'yahoo'}
+              onConnect={() => setYahooFormVisible((v) => !v)}
+              onDisconnect={() => handleDisconnect('yahoo')}
+            />
+          ) : null}
 
-          {yahooFormVisible ? (
+          {showYahoo && yahooFormVisible ? (
             <View style={styles.yahooForm}>
               <TextInput
                 style={styles.input}
