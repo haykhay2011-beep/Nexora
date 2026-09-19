@@ -10,6 +10,7 @@ chatRouter.use(requireAuth);
 const HISTORY_LIMIT = 50;
 
 chatRouter.get('/history', async (req, res) => {
+  console.log('[chat/history] request received for user', req.userId);
   try {
     const { data, error } = await supabaseAdmin
       .from('chat_messages')
@@ -45,6 +46,7 @@ chatRouter.post('/transcribe', async (req, res) => {
 
 chatRouter.post('/', async (req, res) => {
   const { message, history } = req.body ?? {};
+  console.log('[chat] request received for user', req.userId, 'message:', message);
 
   if (!message || typeof message !== 'string') {
     return res.status(400).json({ error: 'message is required.' });
@@ -68,6 +70,7 @@ chatRouter.post('/', async (req, res) => {
       ])
       .then(({ error }) => {
         if (error) console.error('[chat] failed to persist messages', error);
+        else console.log('[chat] persisted 2 messages for user', req.userId);
       });
 
     res.json({ reply });
