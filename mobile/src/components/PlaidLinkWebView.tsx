@@ -27,6 +27,9 @@ export default function PlaidLinkWebView({ visible, linkToken, onSuccess, onExit
         </head>
         <body style="margin:0;background:#0B0F1F;">
           <script>
+            window.onerror = function (message) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'exit', error: String(message) }));
+            };
             var handler = Plaid.create({
               token: ${JSON.stringify(linkToken)},
               onSuccess: function (public_token, metadata) {
@@ -35,10 +38,8 @@ export default function PlaidLinkWebView({ visible, linkToken, onSuccess, onExit
               onExit: function (err, metadata) {
                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'exit', error: err }));
               },
-              onLoad: function () {
-                handler.open();
-              },
             });
+            handler.open();
           </script>
         </body>
       </html>
