@@ -115,3 +115,45 @@ export async function googleDraftReply(userId: string, messageId: string, body: 
 
   return { draftId: draft.data.id, to, subject: replySubject };
 }
+
+export async function googleSendEmail(userId: string, to: string, subject: string, body: string) {
+  const auth = await getAuthenticatedGoogleClient(userId);
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  const rawMessage = [`To: ${to}`, `Subject: ${subject}`, 'Content-Type: text/plain; charset="UTF-8"', '', body].join(
+    '\r\n'
+  );
+
+  const sent = await gmail.users.messages.send({
+    userId: 'me',
+    requestBody: { raw: base64UrlEncode(rawMessage) },
+  });
+
+  return { messageId: sent.data.id, to, subject };
+}
+
+export async function googleMarkEmailRead(userId: string, messageId: string) {
+  const auth = await getAuthenticatedGoogleClient(userId);
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  await gmail.users.messages.modify({
+    userId: 'me',
+    id: messageId,
+    requestBody: { removeLabelIds: ['UNREAD'] },
+  });
+
+  return { id: messageId, read: true };
+}
+
+export async function googleArchiveEmail(userId: string, messageId: string) {
+  const auth = await getAuthenticatedGoogleClient(userId);
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  await gmail.users.messages.modify({
+    userId: 'me',
+    id: messageId,
+    requestBody: { removeLabelIds: ['INBOX'] },
+  });
+
+  return { id: messageId, archived: true };
+}

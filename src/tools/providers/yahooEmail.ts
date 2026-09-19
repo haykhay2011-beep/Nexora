@@ -1,5 +1,6 @@
 import { ImapFlow, FetchMessageObject } from 'imapflow';
 import { simpleParser } from 'mailparser';
+import nodemailer from 'nodemailer';
 import { getIntegration } from '../../services/integrationsStore';
 import { IntegrationNotConnectedError } from '../../services/googleClient';
 
@@ -134,5 +135,44 @@ export async function yahooDraftReply(userId: string, uid: string, body: string)
     await client.append('Drafts', rawMessage, ['\\Draft']);
 
     return { to, subject: replySubject, savedTo: 'Drafts' };
+  });
+}
+
+export async function yahooSendEmail(userId: string, to: string, subject: string, body: string) {
+  const creds = await getYahooCreds(userId);
+
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.mail.yahoo.com',
+    port: 465,
+    secure: true,
+    auth: { user: creds.email, pass: creds.appPassword },
+  });
+
+  const info = await transporter.sendMail({ from: creds.email, to, subject, text: body });
+
+  return { messageId: info.messageId, to, subject };
+}
+
+export async function yahooMarkEmailRead(userId: string, uid: string) {
+  return withYahooClient(userId, async (client) => {
+    const lock = await client.getMailboxLock('INBOX');
+    try {
+      await client.messageFlagsAdd(uid, ['\\Seen'], { uid: true });
+      return { id: uid, read: true };
+    } finally {
+      lock.release();
+    }
+  });
+}
+
+export async function yahooArchiveEmail(userId: string, uid: string) {
+  return withYahooClient(userId, async (client) => {
+    const lock = await client.getMailboxLock('INBOX');
+    try {
+      await client.messageMove(uid, 'Archive', { uid: true });
+      return { id: uid, archived: true };
+    } finally {
+      lock.release();
+    }
   });
 }

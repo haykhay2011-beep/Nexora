@@ -82,3 +82,39 @@ drop policy if exists "Users can insert own messages" on public.chat_messages;
 create policy "Users can insert own messages"
   on public.chat_messages for insert
   with check (auth.uid() = user_id);
+
+-- Reminders Jarvis tracks on the user's behalf and proactively surfaces
+-- once due (e.g. "remind me to call mom tomorrow").
+create table if not exists public.reminders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  text text not null,
+  due_at timestamptz not null,
+  completed boolean not null default false,
+  surfaced boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists reminders_user_id_due_at_idx on public.reminders (user_id, due_at);
+
+alter table public.reminders enable row level security;
+
+drop policy if exists "Users can view own reminders" on public.reminders;
+create policy "Users can view own reminders"
+  on public.reminders for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own reminders" on public.reminders;
+create policy "Users can insert own reminders"
+  on public.reminders for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own reminders" on public.reminders;
+create policy "Users can update own reminders"
+  on public.reminders for update
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own reminders" on public.reminders;
+create policy "Users can delete own reminders"
+  on public.reminders for delete
+  using (auth.uid() = user_id);

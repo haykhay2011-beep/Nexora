@@ -1,6 +1,20 @@
 import { getIntegration } from '../services/integrationsStore';
-import { googleDraftReply, googleListRecentEmails, googleReadEmail } from './providers/googleEmail';
-import { yahooDraftReply, yahooListRecentEmails, yahooReadEmail } from './providers/yahooEmail';
+import {
+  googleArchiveEmail,
+  googleDraftReply,
+  googleListRecentEmails,
+  googleMarkEmailRead,
+  googleReadEmail,
+  googleSendEmail,
+} from './providers/googleEmail';
+import {
+  yahooArchiveEmail,
+  yahooDraftReply,
+  yahooListRecentEmails,
+  yahooMarkEmailRead,
+  yahooReadEmail,
+  yahooSendEmail,
+} from './providers/yahooEmail';
 
 type EmailProvider = 'google' | 'yahoo';
 
@@ -58,5 +72,50 @@ export async function draftReply(userId: string, args: { messageId: string; body
     return JSON.stringify({ provider, draft });
   } catch (err: any) {
     return JSON.stringify({ error: err.message ?? 'Failed to save the draft reply.' });
+  }
+}
+
+export async function sendEmail(userId: string, args: { to: string; subject: string; body: string }) {
+  try {
+    const provider = await resolveActiveEmailProvider(userId);
+
+    const sent =
+      provider === 'google'
+        ? await googleSendEmail(userId, args.to, args.subject, args.body)
+        : await yahooSendEmail(userId, args.to, args.subject, args.body);
+
+    return JSON.stringify({ provider, sent });
+  } catch (err: any) {
+    return JSON.stringify({ error: err.message ?? 'Failed to send the email.' });
+  }
+}
+
+export async function markEmailRead(userId: string, args: { messageId: string }) {
+  try {
+    const provider = await resolveActiveEmailProvider(userId);
+
+    const result =
+      provider === 'google'
+        ? await googleMarkEmailRead(userId, args.messageId)
+        : await yahooMarkEmailRead(userId, args.messageId);
+
+    return JSON.stringify({ provider, result });
+  } catch (err: any) {
+    return JSON.stringify({ error: err.message ?? 'Failed to mark the email as read.' });
+  }
+}
+
+export async function archiveEmail(userId: string, args: { messageId: string }) {
+  try {
+    const provider = await resolveActiveEmailProvider(userId);
+
+    const result =
+      provider === 'google'
+        ? await googleArchiveEmail(userId, args.messageId)
+        : await yahooArchiveEmail(userId, args.messageId);
+
+    return JSON.stringify({ provider, result });
+  } catch (err: any) {
+    return JSON.stringify({ error: err.message ?? 'Failed to archive the email.' });
   }
 }

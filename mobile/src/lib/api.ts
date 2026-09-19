@@ -49,6 +49,11 @@ export async function sendChatMessage(message: string, history: ChatTurn[]): Pro
   }
 }
 
+export async function fetchChatHistory(): Promise<ChatTurn[]> {
+  const res = await authorizedFetch<{ messages: (ChatTurn & { created_at: string })[] }>('/chat/history');
+  return res.messages;
+}
+
 export async function authorizedFetch<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const token = await getAccessToken();
 

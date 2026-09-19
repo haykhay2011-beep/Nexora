@@ -1,12 +1,13 @@
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import LoginScreen from './src/screens/LoginScreen';
 import ChatScreen from './src/screens/ChatScreen';
-import { theme } from './src/theme';
 
 function Root() {
   const { session, loading } = useAuth();
+  const { theme } = useTheme();
 
   if (loading) {
     return (
@@ -21,8 +22,10 @@ function Root() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Root />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Root />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

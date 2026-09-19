@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Modal,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -10,11 +11,16 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as WebBrowser from 'expo-web-browser';
-import { theme } from '../theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppTheme } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { authorizedFetch, getAccessToken } from '../lib/api';
 import { API_BASE_URL } from '../lib/config';
 import { useAuth } from '../context/AuthContext';
+import { disableMorningBriefing, setupMorningBriefing } from '../lib/notifications';
 import PlaidLinkWebView from './PlaidLinkWebView';
+
+const MORNING_BRIEFING_KEY = 'jarvis-morning-briefing-enabled';
 
 type Provider = 'google' | 'yahoo' | 'plaid';
 
@@ -35,6 +41,9 @@ function detectEmailProvider(email: string | undefined): 'google' | 'yahoo' | nu
 
 export default function IntegrationsModal({ visible, onClose }: IntegrationsModalProps) {
   const { session } = useAuth();
+  const { theme, mode, toggleTheme } = useTheme();
+  const styles = createStyles(theme);
+
   // Only surface the email integration that actually matches the account the
   // user signed up with - a Gmail address never needs the Yahoo option and
   // vice versa. Unrecognized domains (work email, etc.) fall back to showing
@@ -51,6 +60,21 @@ export default function IntegrationsModal({ visible, onClose }: IntegrationsModa
   const [yahooAppPassword, setYahooAppPassword] = useState('');
   const [yahooError, setYahooError] = useState<string | null>(null);
   const [plaidLinkToken, setPlaidLinkToken] = useState<string | null>(null);
+  const [morningBriefingEnabled, setMorningBriefingEnabled] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(MORNING_BRIEFING_KEY).then((v) => setMorningBriefingEnabled(v === 'true'));
+  }, []);
+
+  const handleToggleMorningBriefing = async (value: boolean) => {
+    setMorningBriefingEnabled(value);
+    await AsyncStorage.setItem(MORNING_BRIEFING_KEY, String(value));
+    if (value) {
+      await setupMorningBriefing();
+    } else {
+      await disableMorningBriefing();
+    }
+  };
 
   const refreshStatus = async () => {
     setLoading(true);
@@ -142,7 +166,7 @@ export default function IntegrationsModal({ visible, onClose }: IntegrationsModa
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <BlurView intensity={60} tint="dark" style={styles.sheet}>
+        <BlurView intensity={60} tint={theme.mode === 'dark' ? 'dark' : 'light'} style={styles.sheet}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Integrations</Text>
             <TouchableOpacity onPress={onClose}>
@@ -152,8 +176,33 @@ export default function IntegrationsModal({ visible, onClose }: IntegrationsModa
 
           {loading ? <ActivityIndicator color={theme.colors.textSecondary} style={{ marginVertical: 12 }} /> : null}
 
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Dark Mode</Text>
+              <Text style={styles.rowDescription}>Switch the app's appearance</Text>
+            </View>
+            <Switch
+              value={mode === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ true: theme.colors.accent, false: theme.colors.glass }}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Morning Briefing</Text>
+              <Text style={styles.rowDescription}>Daily reminder to check your day</Text>
+            </View>
+            <Switch
+              value={morningBriefingEnabled}
+              onValueChange={handleToggleMorningBriefing}
+              trackColor={{ true: theme.colors.accent, false: theme.colors.glass }}
+            />
+          </View>
+
           {showGoogle ? (
             <IntegrationRow
+              theme={theme}
               label="Google"
               description="Gmail, Calendar & Tasks"
               connected={isConnected('google')}
@@ -165,6 +214,7 @@ export default function IntegrationsModal({ visible, onClose }: IntegrationsModa
 
           {showYahoo ? (
             <IntegrationRow
+              theme={theme}
               label="Yahoo Mail"
               description="Connect with an App Password"
               connected={isConnected('yahoo')}
@@ -205,6 +255,7 @@ export default function IntegrationsModal({ visible, onClose }: IntegrationsModa
           ) : null}
 
           <IntegrationRow
+            theme={theme}
             label="Bank Account"
             description="Balances & transactions via Plaid"
             connected={isConnected('plaid')}
@@ -226,6 +277,7 @@ export default function IntegrationsModal({ visible, onClose }: IntegrationsModa
 }
 
 function IntegrationRow({
+  theme,
   label,
   description,
   connected,
@@ -233,6 +285,7 @@ function IntegrationRow({
   onConnect,
   onDisconnect,
 }: {
+  theme: AppTheme;
   label: string;
   description: string;
   connected: boolean;
@@ -240,6 +293,7 @@ function IntegrationRow({
   onConnect: () => void;
   onDisconnect: () => void;
 }) {
+  const styles = createStyles(theme);
   return (
     <View style={styles.row}>
       <View style={{ flex: 1 }}>
@@ -261,50 +315,52 @@ function IntegrationRow({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  sheet: {
-    borderTopLeftRadius: theme.radius.lg,
-    borderTopRightRadius: theme.radius.lg,
-    padding: 24,
-    paddingBottom: 40,
-    borderWidth: 1,
-    borderColor: theme.colors.glassBorder,
-    overflow: 'hidden',
-  },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 20, fontWeight: '700', color: theme.colors.textPrimary },
-  closeText: { color: theme.colors.accent, fontSize: 15, fontWeight: '600' },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.glassBorder,
-  },
-  rowLabel: { color: theme.colors.textPrimary, fontSize: 16, fontWeight: '600' },
-  rowDescription: { color: theme.colors.textSecondary, fontSize: 12, marginTop: 2 },
-  pill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, minWidth: 96, alignItems: 'center' },
-  pillDefault: { backgroundColor: theme.colors.accent },
-  pillConnected: { backgroundColor: 'rgba(93, 224, 160, 0.2)', borderWidth: 1, borderColor: theme.colors.success },
-  pillText: { color: '#fff', fontWeight: '600', fontSize: 13 },
-  yahooForm: { paddingVertical: 12, gap: 10 },
-  input: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    color: theme.colors.textPrimary,
-    borderWidth: 1,
-    borderColor: theme.colors.glassBorder,
-    marginBottom: 8,
-  },
-  errorText: { color: theme.colors.danger, fontSize: 12, marginBottom: 8 },
-  smallButton: {
-    backgroundColor: theme.colors.accent,
-    borderRadius: theme.radius.sm,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  smallButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-});
+function createStyles(theme: AppTheme) {
+  return StyleSheet.create({
+    backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
+    sheet: {
+      borderTopLeftRadius: theme.radius.lg,
+      borderTopRightRadius: theme.radius.lg,
+      padding: 24,
+      paddingBottom: 40,
+      borderWidth: 1,
+      borderColor: theme.colors.glassBorder,
+      overflow: 'hidden',
+    },
+    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+    title: { fontSize: 20, fontWeight: '700', color: theme.colors.textPrimary },
+    closeText: { color: theme.colors.accent, fontSize: 15, fontWeight: '600' },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.glassBorder,
+    },
+    rowLabel: { color: theme.colors.textPrimary, fontSize: 16, fontWeight: '600' },
+    rowDescription: { color: theme.colors.textSecondary, fontSize: 12, marginTop: 2 },
+    pill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, minWidth: 96, alignItems: 'center' },
+    pillDefault: { backgroundColor: theme.colors.accent },
+    pillConnected: { backgroundColor: 'rgba(93, 224, 160, 0.2)', borderWidth: 1, borderColor: theme.colors.success },
+    pillText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+    yahooForm: { paddingVertical: 12, gap: 10 },
+    input: {
+      backgroundColor: 'rgba(255,255,255,0.06)',
+      borderRadius: theme.radius.sm,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      color: theme.colors.textPrimary,
+      borderWidth: 1,
+      borderColor: theme.colors.glassBorder,
+      marginBottom: 8,
+    },
+    errorText: { color: theme.colors.danger, fontSize: 12, marginBottom: 8 },
+    smallButton: {
+      backgroundColor: theme.colors.accent,
+      borderRadius: theme.radius.sm,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    smallButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  });
+}

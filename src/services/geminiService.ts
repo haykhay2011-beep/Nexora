@@ -13,7 +13,11 @@ Guidelines:
   integration isn't connected yet) and suggest they connect it from the Integrations menu. Never expose
   raw stack traces or technical jargon.
 - Be concise, warm, and proactive - summarize what matters instead of dumping raw data.
-- Never fabricate emails, events, tasks, or transactions - only report what the tools actually return.`;
+- Never fabricate emails, events, tasks, or transactions - only report what the tools actually return.
+- sendEmail is irreversible - always confirm the recipient, subject, and body with the user in plain
+  language before calling it. draftReply is safe to use without confirmation since it only saves a draft.
+- When the user mentions something to remember or be reminded about later, use createReminder with a
+  concrete ISO datetime (resolve relative phrases like "tomorrow" or "in an hour" against the current time).`;
 
 const MAX_TOOL_ITERATIONS = 6;
 
@@ -82,4 +86,25 @@ export async function runChatTurn(userId: string, message: string, history: Chat
   }
 
   return result.text ?? '';
+}
+
+/**
+ * One-shot audio transcription for the mobile app's voice input button -
+ * unrelated to any chat history, just "what did they say".
+ */
+export async function transcribeAudio(base64Audio: string, mimeType: string): Promise<string> {
+  const result = await genAI.models.generateContent({
+    model: env.geminiModel,
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { text: 'Transcribe this audio verbatim. Reply with only the transcribed text, no commentary.' },
+          { inlineData: { mimeType, data: base64Audio } },
+        ],
+      },
+    ],
+  });
+
+  return (result.text ?? '').trim();
 }

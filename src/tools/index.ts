@@ -1,8 +1,9 @@
 import { FunctionDeclaration, Type } from '@google/genai';
-import { listRecentEmails, readEmail, draftReply } from './emailTools';
+import { listRecentEmails, readEmail, draftReply, sendEmail, markEmailRead, archiveEmail } from './emailTools';
 import { listTodayEvents, createCalendarEvent } from './calendarTools';
 import { listTasks, createTask, completeTask } from './taskTools';
 import { getAccountBalances, getRecentTransactions } from './financeTools';
+import { createReminder, listReminders } from './reminderTools';
 
 export type ToolHandler = (userId: string, args: any) => Promise<string>;
 
@@ -113,6 +114,58 @@ export const toolDeclarations: FunctionDeclaration[] = [
       },
     },
   },
+  {
+    name: 'sendEmail',
+    description: 'Sends a brand new email on the user\'s behalf (not a reply). Only use after the user confirms the recipient, subject, and body.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        to: { type: Type.STRING, description: 'Recipient email address.' },
+        subject: { type: Type.STRING, description: 'Email subject line.' },
+        body: { type: Type.STRING, description: 'Plain-text email body.' },
+      },
+      required: ['to', 'subject', 'body'],
+    },
+  },
+  {
+    name: 'markEmailRead',
+    description: 'Marks an email as read.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        messageId: { type: Type.STRING, description: 'The id of the email to mark as read.' },
+      },
+      required: ['messageId'],
+    },
+  },
+  {
+    name: 'archiveEmail',
+    description: "Archives an email, removing it from the user's inbox.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        messageId: { type: Type.STRING, description: 'The id of the email to archive.' },
+      },
+      required: ['messageId'],
+    },
+  },
+  {
+    name: 'createReminder',
+    description: "Creates a reminder that Jarvis will proactively surface to the user once it's due (e.g. \"remind me to call mom tomorrow at 5pm\").",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        text: { type: Type.STRING, description: 'What to remind the user about.' },
+        dueIso: { type: Type.STRING, description: 'When to surface the reminder, as an ISO 8601 datetime.' },
+      },
+      required: ['text', 'dueIso'],
+    },
+  },
+  {
+    name: 'listReminders',
+    description: "Lists the user's upcoming, not-yet-completed reminders.",
+    parameters: { type: Type.OBJECT, properties: {} },
+  },
 ];
 
 export const toolHandlers: Record<string, ToolHandler> = {
@@ -126,4 +179,9 @@ export const toolHandlers: Record<string, ToolHandler> = {
   completeTask: (userId, args) => completeTask(userId, args ?? {}),
   getAccountBalances: (userId) => getAccountBalances(userId),
   getRecentTransactions: (userId, args) => getRecentTransactions(userId, args ?? {}),
+  sendEmail: (userId, args) => sendEmail(userId, args ?? {}),
+  markEmailRead: (userId, args) => markEmailRead(userId, args ?? {}),
+  archiveEmail: (userId, args) => archiveEmail(userId, args ?? {}),
+  createReminder: (userId, args) => createReminder(userId, args ?? {}),
+  listReminders: (userId) => listReminders(userId),
 };
