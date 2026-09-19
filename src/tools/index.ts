@@ -1,4 +1,4 @@
-import { FunctionDeclaration, SchemaType } from '@google/generative-ai';
+import { FunctionDeclaration, Type } from '@google/genai';
 import { listRecentEmails, readEmail, draftReply } from './emailTools';
 import { listTodayEvents, createCalendarEvent } from './calendarTools';
 import { listTasks, createTask, completeTask } from './taskTools';
@@ -13,10 +13,10 @@ export const toolDeclarations: FunctionDeclaration[] = [
       "Lists the user's most recent inbox emails (subject, sender, date, snippet) from whichever email " +
       'provider (Google or Yahoo) they currently have connected.',
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
         maxResults: {
-          type: SchemaType.NUMBER,
+          type: Type.NUMBER,
           description: 'How many recent emails to return. Defaults to 10.',
         },
       },
@@ -26,9 +26,9 @@ export const toolDeclarations: FunctionDeclaration[] = [
     name: 'readEmail',
     description: 'Reads the full body of a single email by its message id, as returned by listRecentEmails.',
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
-        messageId: { type: SchemaType.STRING, description: 'The id of the email to read.' },
+        messageId: { type: Type.STRING, description: 'The id of the email to read.' },
       },
       required: ['messageId'],
     },
@@ -37,10 +37,10 @@ export const toolDeclarations: FunctionDeclaration[] = [
     name: 'draftReply',
     description: 'Saves a draft reply to an existing email for the user to review and send themselves.',
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
-        messageId: { type: SchemaType.STRING, description: 'The id of the email being replied to.' },
-        body: { type: SchemaType.STRING, description: 'The plain-text body of the reply.' },
+        messageId: { type: Type.STRING, description: 'The id of the email being replied to.' },
+        body: { type: Type.STRING, description: 'The plain-text body of the reply.' },
       },
       required: ['messageId', 'body'],
     },
@@ -48,21 +48,21 @@ export const toolDeclarations: FunctionDeclaration[] = [
   {
     name: 'listTodayEvents',
     description: "Lists all of the user's Google Calendar events for today.",
-    parameters: { type: SchemaType.OBJECT, properties: {} },
+    parameters: { type: Type.OBJECT, properties: {} },
   },
   {
     name: 'createCalendarEvent',
     description: 'Creates a new event on the user\'s Google Calendar.',
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
-        summary: { type: SchemaType.STRING, description: 'The event title.' },
-        startIso: { type: SchemaType.STRING, description: 'Start time as an ISO 8601 datetime.' },
-        endIso: { type: SchemaType.STRING, description: 'End time as an ISO 8601 datetime.' },
-        description: { type: SchemaType.STRING, description: 'Optional event description.' },
+        summary: { type: Type.STRING, description: 'The event title.' },
+        startIso: { type: Type.STRING, description: 'Start time as an ISO 8601 datetime.' },
+        endIso: { type: Type.STRING, description: 'End time as an ISO 8601 datetime.' },
+        description: { type: Type.STRING, description: 'Optional event description.' },
         attendees: {
-          type: SchemaType.ARRAY,
-          items: { type: SchemaType.STRING },
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
           description: 'Optional list of attendee email addresses.',
         },
       },
@@ -72,17 +72,17 @@ export const toolDeclarations: FunctionDeclaration[] = [
   {
     name: 'listTasks',
     description: "Lists the user's incomplete Google Tasks.",
-    parameters: { type: SchemaType.OBJECT, properties: {} },
+    parameters: { type: Type.OBJECT, properties: {} },
   },
   {
     name: 'createTask',
     description: 'Creates a new Google Task for the user.',
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
-        title: { type: SchemaType.STRING, description: 'The task title.' },
-        notes: { type: SchemaType.STRING, description: 'Optional additional notes.' },
-        dueIso: { type: SchemaType.STRING, description: 'Optional due date as an ISO 8601 date.' },
+        title: { type: Type.STRING, description: 'The task title.' },
+        notes: { type: Type.STRING, description: 'Optional additional notes.' },
+        dueIso: { type: Type.STRING, description: 'Optional due date as an ISO 8601 date.' },
       },
       required: ['title'],
     },
@@ -91,9 +91,9 @@ export const toolDeclarations: FunctionDeclaration[] = [
     name: 'completeTask',
     description: 'Marks an existing Google Task as completed.',
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
-        taskId: { type: SchemaType.STRING, description: 'The id of the task to complete.' },
+        taskId: { type: Type.STRING, description: 'The id of the task to complete.' },
       },
       required: ['taskId'],
     },
@@ -101,15 +101,15 @@ export const toolDeclarations: FunctionDeclaration[] = [
   {
     name: 'getAccountBalances',
     description: "Fetches the user's bank account balances via their connected Plaid account.",
-    parameters: { type: SchemaType.OBJECT, properties: {} },
+    parameters: { type: Type.OBJECT, properties: {} },
   },
   {
     name: 'getRecentTransactions',
     description: "Fetches the user's recent bank transactions via their connected Plaid account.",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
-        days: { type: SchemaType.NUMBER, description: 'How many days back to look. Defaults to 7.' },
+        days: { type: Type.NUMBER, description: 'How many days back to look. Defaults to 7.' },
       },
     },
   },

@@ -1,8 +1,8 @@
-import { Content, FunctionCallingMode, GoogleGenerativeAI } from '@google/generative-ai';
+import { Content, FunctionCallingConfigMode, GoogleGenAI, Part } from '@google/genai';
 import { env } from '../config/env';
 import { toolDeclarations, toolHandlers } from '../tools';
 
-const genAI = new GoogleGenerativeAI(env.geminiApiKey);
+const genAI = new GoogleGenAI({ apiKey: env.geminiApiKey });
 
 const SYSTEM_INSTRUCTION = `You are Jarvis, the user's personal AI operating system. You have real-time,
 authenticated access to their email, calendar, tasks, and bank accounts through the tools available to you.
@@ -34,25 +34,26 @@ function toGeminiHistory(turns: ChatTurn[]): Content[] {
  * (scoped to `userId`) until it produces a final text answer.
  */
 export async function runChatTurn(userId: string, message: string, history: ChatTurn[] = []): Promise<string> {
-  const model = genAI.getGenerativeModel({
+  const chat = genAI.chats.create({
     model: env.geminiModel,
-    systemInstruction: SYSTEM_INSTRUCTION,
-    tools: [{ functionDeclarations: toolDeclarations }],
-    toolConfig: { functionCallingConfig: { mode: FunctionCallingMode.AUTO } },
+    history: toGeminiHistory(history),
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      tools: [{ functionDeclarations: toolDeclarations }],
+      toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.AUTO } },
+    },
   });
 
-  const chat = model.startChat({ history: toGeminiHistory(history) });
-
-  let result = await chat.sendMessage(message);
+  let result = await chat.sendMessage({ message });
   let iterations = 0;
 
   while (iterations < MAX_TOOL_ITERATIONS) {
-    const calls = result.response.functionCalls();
+    const calls = result.functionCalls;
     if (!calls || calls.length === 0) break;
 
-    const responses = await Promise.all(
+    const responseParts: Part[] = await Promise.all(
       calls.map(async (call) => {
-        const handler = toolHandlers[call.name];
+        const handler = call.name ? toolHandlers[call.name] : undefined;
         let outputText: string;
 
         if (!handler) {
@@ -76,9 +77,9 @@ export async function runChatTurn(userId: string, message: string, history: Chat
       })
     );
 
-    result = await chat.sendMessage(responses);
+    result = await chat.sendMessage({ message: responseParts });
     iterations += 1;
   }
 
-  return result.response.text();
+  return result.text ?? '';
 }
