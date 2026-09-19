@@ -69,11 +69,16 @@ export default function PlaidLinkWebView({ visible, linkToken, onSuccess, onExit
         </View>
         {linkToken ? (
           <WebView
-            source={{ html }}
+            // A baseUrl gives the page a real https origin instead of an
+            // opaque/null one - without it, Plaid Link's internal iframe
+            // postMessage handshake never completes and it spins forever.
+            source={{ html, baseUrl: 'https://cdn.plaid.com' }}
             originWhitelist={['*']}
             onMessage={handleMessage}
             javaScriptEnabled
             domStorageEnabled
+            thirdPartyCookiesEnabled
+            sharedCookiesEnabled
           />
         ) : null}
       </View>
