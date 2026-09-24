@@ -1,0 +1,596 @@
+<title>Signal Drift</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  /* Deliberately single-theme: deep space reads the same on any host. */
+  :root {
+    color-scheme: dark;
+    --void: #090C1A;
+    --void-2: #121833;
+    --ink: #E8ECF7;
+    --dim: #8A93B4;
+    --coral: #FF8A5B;
+    --teal: #3FD0C9;
+    --lilac: #B69CFF;
+    --dust: #FFD66B;
+    --danger: #FF5470;
+    --display: "Unbounded", "Arial Black", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--mono);
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #stage { position: relative; height: 100%; }
+  canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
+
+  .hud {
+    position: absolute; inset: 0 0 auto 0;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 0;
+    pointer-events: none;
+  }
+  .readout { display: grid; gap: 2px; }
+  .readout .label {
+    font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+  }
+  .readout .value {
+    font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .readout.right { text-align: right; }
+  .readout.right .value { color: var(--dust); font-size: 20px; }
+  .hud-right { display: flex; gap: 14px; align-items: flex-start; }
+  .icon-btn {
+    pointer-events: auto;
+    background: rgba(18, 24, 51, .7); color: var(--ink);
+    border: 1px solid rgba(138, 147, 180, .35); border-radius: 8px;
+    font: 600 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+    padding: 8px 10px; cursor: pointer;
+  }
+  .icon-btn:focus-visible, .go:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    padding-inline: 16px;
+    background: radial-gradient(ellipse at 50% 40%, rgba(9, 12, 26, .35), rgba(9, 12, 26, .82));
+  }
+  .panel { width: min(100%, 380px); display: grid; gap: 18px; }
+  .kicker {
+    font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--teal);
+  }
+  h1 {
+    margin: 0; font-family: var(--display); font-weight: 800;
+    font-size: clamp(40px, 12vw, 58px); line-height: .92; letter-spacing: -.02em;
+    text-wrap: balance;
+  }
+  h1 span { color: var(--coral); }
+  h2 {
+    margin: 0; font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1;
+    color: var(--danger); text-wrap: balance;
+  }
+  .panel p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--dim); }
+  .panel p strong { color: var(--ink); font-weight: 600; }
+  .rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13px; line-height: 1.45; }
+  .rules li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; color: var(--ink); }
+  .rules li::before { content: ""; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(138,147,180,.25); border: 1px solid rgba(138,147,180,.25); border-radius: 10px; overflow: hidden; }
+  .stats div { background: var(--void-2); padding: 12px; display: grid; gap: 4px; }
+  .stats .label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+  .stats .value { font-family: var(--display); font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stats .new { color: var(--dust); }
+  .go {
+    justify-self: start;
+    font: 800 15px/1 var(--display); letter-spacing: .04em;
+    color: var(--void); background: var(--teal);
+    border: 0; border-radius: 999px; padding: 16px 28px; cursor: pointer;
+    box-shadow: 0 0 0 6px rgba(63, 208, 201, .15), 0 0 30px rgba(63, 208, 201, .35);
+  }
+  .go:hover { background: #5FE3DC; }
+  .hint { font-size: 11px; color: var(--dim); letter-spacing: .06em; }
+
+  .toast {
+    position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+    transform: translateX(-50%);
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+    pointer-events: none; white-space: nowrap;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .go { transition: transform .15s ease, background .15s ease; }
+    .go:active { transform: scale(.96); }
+  }
+</style>
+
+<div id="stage">
+  <canvas id="sky" aria-label="Signal Drift play field"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="readout">
+      <span class="label">Relays linked</span>
+      <span class="value" id="relays">0</span>
+    </div>
+    <div class="hud-right">
+      <div class="readout right">
+        <span class="label">Stardust</span>
+        <span class="value" id="dust">0</span>
+      </div>
+      <button class="icon-btn" id="mute" type="button" aria-pressed="false">Sound on</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden>Tap to launch</div>
+
+  <div class="overlay" id="title">
+    <div class="panel">
+      <span class="kicker">Deep-space relay network</span>
+      <h1>Signal<br><span>Drift</span></h1>
+      <p>You are a signal probe. Hop from planet to planet to extend the relay chain as far into the dark as you can.</p>
+      <ul class="rules">
+        <li style="--c: var(--teal)"><span><strong>Tap, click or press Space</strong> to break orbit. You fly off in a straight line along your heading.</span></li>
+        <li style="--c: var(--coral)"><span>Cross another planet's dashed ring to <strong>lock into its orbit</strong>.</span></li>
+        <li style="--c: var(--danger)"><span>Orbits decay. Stay too long and you <strong>burn up</strong>.</span></li>
+        <li style="--c: var(--dust)"><span>Grab <strong>stardust</strong> between planets for bonus.</span></li>
+      </ul>
+      <button class="go" id="start" type="button">Launch probe</button>
+      <span class="hint" id="best-line"></span>
+    </div>
+  </div>
+
+  <div class="overlay" id="over" hidden>
+    <div class="panel">
+      <span class="kicker">Transmission ended</span>
+      <h2>Signal lost</h2>
+      <p id="reason"></p>
+      <div class="stats">
+        <div><span class="label">Relays</span><span class="value" id="f-relays">0</span></div>
+        <div><span class="label">Dust</span><span class="value" id="f-dust">0</span></div>
+        <div><span class="label">Best</span><span class="value" id="f-best">0</span></div>
+      </div>
+      <button class="go" id="again" type="button">Relaunch</button>
+      <span class="hint">Space or Enter also relaunches</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('sky');
+  const ctx = cv.getContext('2d');
+  const $ = (id) => document.getElementById(id);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const COL = {
+    void: '#090C1A', ink: '#E8ECF7', dim: '#8A93B4',
+    coral: '#FF8A5B', teal: '#3FD0C9', lilac: '#B69CFF', dust: '#FFD66B', danger: '#FF5470',
+  };
+  const PLANET_HUES = [
+    ['#FF8A5B', '#7A2E1B'], ['#3FD0C9', '#10504D'], ['#B69CFF', '#3B2A7A'],
+    ['#F2C572', '#6B4A12'], ['#7FB2FF', '#1C3A73'], ['#FF7EB6', '#6E1F45'],
+  ];
+
+  // ---------- storage (optional) ----------
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+  let best = store.get('signal-drift-best', 0);
+  let muted = store.get('signal-drift-muted', false);
+
+  // ---------- sizing ----------
+  const W = 420; // logical width of the play column
+  let dpr = 1, cw = 0, ch = 0, S = 1, VW = W, VH = 700, OX = 0;
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cw = cv.clientWidth; ch = cv.clientHeight;
+    cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+    S = Math.min(cw / W, ch / 640, 1.6);
+    VW = cw / S; VH = ch / S; OX = (VW - W) / 2;
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  // ---------- audio ----------
+  let ac = null;
+  function audio() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch { ac = null; } }
+    if (ac && ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  function tone(freq, dur, type = 'sine', vol = 0.12, slideTo = null, delay = 0) {
+    if (muted) return;
+    const a = audio(); if (!a) return;
+    const t = a.currentTime + delay;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  const sfx = {
+    launch() { tone(220, 0.12, 'triangle', 0.08, 440); },
+    capture(n) { const base = 330 * Math.pow(2, (n % 8) / 12); tone(base, 0.12, 'sine', 0.12); tone(base * 1.5, 0.18, 'sine', 0.1, null, 0.07); },
+    dust() { tone(1320, 0.08, 'sine', 0.06); tone(1760, 0.1, 'sine', 0.05, null, 0.04); },
+    crash() { tone(180, 0.6, 'sawtooth', 0.12, 40); tone(90, 0.7, 'square', 0.05, 30); },
+  };
+
+  // ---------- world ----------
+  const LETTERS = 'KXVRTNQZ';
+  function relayName(i) {
+    return LETTERS[(i * 7 + 3) % LETTERS.length] + LETTERS[(i * 5 + 1) % LETTERS.length] + '-' + String(100 + ((i * 137) % 900));
+  }
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  let planets, motes, player, camY, particles, trail, relays, dust, t, shake, state, flightTime, stars;
+
+  function makePlanet(i, prev) {
+    const difficulty = Math.min(i / 30, 1);
+    const r = rand(15, 28);
+    const ring = r + rand(52, 64) - difficulty * 18;
+    const gap = i === 0 ? 0 : rand(200, 250) + difficulty * 50;
+    let x = i === 0 ? W / 2 : rand(70, W - 70);
+    if (prev && Math.abs(x - prev.bx) < 50) x = clamp(prev.bx + (Math.random() < 0.5 ? -1 : 1) * rand(90, 150), 70, W - 70);
+    const drifts = i >= 6 && Math.random() < 0.25 + difficulty * 0.45;
+    const [c1, c2] = PLANET_HUES[i % PLANET_HUES.length];
+    return {
+      i, bx: x, x, y: prev ? prev.y - gap : 0, r, ring,
+      amp: drifts ? rand(30, 60) : 0, freq: rand(0.6, 1.1), phase: rand(0, Math.PI * 2),
+      c1, c2, name: relayName(i), bands: Math.random() < 0.5, tilt: rand(-0.5, 0.5),
+    };
+  }
+
+  function extendWorld() {
+    while (planets.length < player.p + 6) {
+      const prev = planets[planets.length - 1];
+      const np = makePlanet(planets.length, prev);
+      planets.push(np);
+      // stardust lies roughly on the path between neighbours
+      const n = Math.random() < 0.6 ? 2 : 1;
+      for (let k = 0; k < n; k++) {
+        const f = rand(0.35, 0.65);
+        motes.push({ x: prev.bx + (np.bx - prev.bx) * f + rand(-55, 55), y: prev.y + (np.y - prev.y) * f, taken: false, ph: rand(0, 6) });
+      }
+    }
+  }
+
+  function makeStars() {
+    stars = [];
+    for (let k = 0; k < 160; k++) stars.push({ x: Math.random(), y: Math.random(), z: rand(0.1, 0.6), s: rand(0.4, 1.4), tw: rand(0, 6) });
+  }
+
+  function reset() {
+    planets = []; motes = []; particles = []; trail = [];
+    relays = 0; dust = 0; t = 0; shake = 0; flightTime = 0;
+    planets.push(makePlanet(0, null));
+    const p0 = planets[0];
+    player = { mode: 'orbit', p: 0, ang: Math.PI * 0.5, dir: 1, R: p0.ring - 6, w: 2.1, x: 0, y: 0, vx: 0, vy: 0 };
+    extendWorld();
+    camY = p0.y - VH * 0.64;
+    updateHud();
+  }
+
+  // ---------- game flow ----------
+  function startGame() {
+    audio();
+    reset();
+    state = 'play';
+    $('title').hidden = true; $('over').hidden = true; $('hud').hidden = false;
+    $('toast').hidden = false;
+    cv.focus?.();
+  }
+
+  function endGame(reason) {
+    if (state !== 'play') return;
+    state = 'dead';
+    sfx.crash();
+    burst(player.x, player.y, COL.danger, reduceMotion ? 12 : 40, 220);
+    if (!reduceMotion) shake = 14;
+    const newBest = relays > best;
+    if (newBest) { best = relays; store.set('signal-drift-best', best); }
+    setTimeout(() => {
+      $('reason').textContent = reason;
+      $('f-relays').textContent = relays;
+      $('f-dust').textContent = dust;
+      $('f-best').textContent = best;
+      $('f-best').classList.toggle('new', newBest);
+      $('over').hidden = false; $('toast').hidden = true;
+      $('again').focus();
+    }, 700);
+  }
+
+  function launch() {
+    if (state !== 'play' || player.mode !== 'orbit') return;
+    const pl = planets[player.p];
+    const speed = Math.max(Math.abs(player.w) * player.R, 250 + Math.min(relays * 3, 90));
+    player.vx = -Math.sin(player.ang) * player.dir * speed;
+    player.vy = Math.cos(player.ang) * player.dir * speed;
+    player.mode = 'fly';
+    flightTime = 0;
+    $('toast').hidden = true;
+    sfx.launch();
+    burst(player.x, player.y, pl.c1, reduceMotion ? 4 : 10, 60);
+  }
+
+  function capture(j, d) {
+    const pl = planets[j];
+    const dx = player.x - pl.x, dy = player.y - pl.y;
+    const cross = dx * player.vy - dy * player.vx;
+    player.mode = 'orbit';
+    player.p = j;
+    player.R = clamp(d, pl.r + 16, pl.ring);
+    player.ang = Math.atan2(dy, dx);
+    player.dir = cross >= 0 ? 1 : -1;
+    const wBase = 2.0 + Math.min(relays * 0.05, 1.4);
+    player.w = wBase;
+    relays = Math.max(relays, j);
+    updateHud(true);
+    sfx.capture(relays);
+    burst(player.x, player.y, pl.c1, reduceMotion ? 8 : 24, 140);
+    extendWorld();
+  }
+
+  function burst(x, y, color, n, spd) {
+    for (let k = 0; k < n; k++) {
+      const a = Math.random() * Math.PI * 2, v = rand(0.2, 1) * spd;
+      particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rand(0.4, 0.9), max: 0.9, color });
+    }
+  }
+
+  let bumpTimer = 0;
+  function updateHud(bump) {
+    $('relays').textContent = relays;
+    $('dust').textContent = dust;
+    if (bump && !reduceMotion) {
+      const el = $('relays');
+      el.style.transform = 'scale(1.25)'; el.style.transition = 'none';
+      clearTimeout(bumpTimer);
+      bumpTimer = setTimeout(() => { el.style.transition = 'transform .25s ease'; el.style.transform = 'scale(1)'; }, 40);
+    }
+  }
+
+  // ---------- update ----------
+  function update(dt) {
+    t += dt;
+    for (const pl of planets) pl.x = pl.bx + Math.sin(t * pl.freq + pl.phase) * pl.amp;
+
+    if (state === 'play' || state === 'dead') {
+      if (state === 'play' && player.mode === 'orbit') {
+        const pl = planets[player.p];
+        const decay = player.p === 0 ? 0 : Math.min(5 + relays * 0.55, 20);
+        player.R -= decay * dt;
+        player.ang += player.w * player.dir * dt;
+        player.x = pl.x + Math.cos(player.ang) * player.R;
+        player.y = pl.y + Math.sin(player.ang) * player.R;
+        if (player.R < pl.r + 4) endGame(`Your orbit around ${pl.name} decayed and the probe burned up in its atmosphere. Launch sooner.`);
+      } else if (state === 'play' && player.mode === 'fly') {
+        flightTime += dt;
+        player.x += player.vx * dt;
+        player.y += player.vy * dt;
+        for (let j = 0; j < planets.length; j++) {
+          const pl = planets[j];
+          const d = Math.hypot(player.x - pl.x, player.y - pl.y);
+          if (d < pl.r + 2) { endGame(`The probe flew straight into ${pl.name}.`); break; }
+          if (j > player.p && d < pl.ring + 4) { capture(j, d); break; }
+        }
+        const sx = player.x + OX, sy = player.y - camY;
+        if (state === 'play' && (flightTime > 2.8 || sx < -40 || sx > VW + 40 || sy > VH + 40 || sy < -120)) {
+          endGame(relays === 0
+            ? 'The probe missed every ring and drifted into the void. Launch when your heading points at the next dashed ring.'
+            : `The probe drifted past the relay network after ${relays} link${relays === 1 ? '' : 's'}.`);
+        }
+      }
+      if (state === 'play') {
+        for (const m of motes) {
+          if (!m.taken && Math.hypot(player.x - m.x, player.y - m.y) < 18) {
+            m.taken = true; dust++; updateHud(); sfx.dust();
+            burst(m.x, m.y, COL.dust, reduceMotion ? 5 : 14, 90);
+          }
+        }
+        trail.push({ x: player.x, y: player.y });
+        if (trail.length > 36) trail.shift();
+      }
+
+      // camera: keep current planet low on screen; follow the probe if it climbs
+      let target = planets[player.p].y - VH * 0.64;
+      if (player.mode === 'fly') target = Math.min(target, player.y - VH * 0.3);
+      camY += (target - camY) * Math.min(1, dt * 3.2);
+    } else {
+      // attract mode on title screen: gentle sway over the first relays
+      camY = planets[0].y - VH * 0.64 - 140 - Math.sin(t * 0.25) * 90;
+    }
+
+    for (let k = particles.length - 1; k >= 0; k--) {
+      const q = particles[k];
+      q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 0.96; q.vy *= 0.96;
+      if (q.life <= 0) particles.splice(k, 1);
+    }
+    shake *= 0.88;
+    motes = motes.filter((m) => m.y - camY < VH + 200);
+  }
+
+  // ---------- render ----------
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const g = ctx.createLinearGradient(0, 0, 0, ch);
+    g.addColorStop(0, '#060818'); g.addColorStop(1, '#10163A');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, cw, ch);
+
+    const sxk = shake ? rand(-shake, shake) : 0, syk = shake ? rand(-shake, shake) : 0;
+    ctx.setTransform(dpr * S, 0, 0, dpr * S, dpr * sxk, dpr * syk);
+
+    // stars (parallax)
+    for (const s of stars) {
+      const y = ((s.y * VH - camY * s.z) % VH + VH) % VH;
+      const a = 0.35 + 0.35 * Math.sin(t * 1.5 + s.tw);
+      ctx.fillStyle = `rgba(232,236,247,${a * s.z * 1.6})`;
+      ctx.fillRect(s.x * VW, y, s.s, s.s);
+    }
+
+    ctx.save();
+    ctx.translate(OX, -camY);
+
+    // relay links already made
+    ctx.strokeStyle = 'rgba(63,208,201,0.18)'; ctx.lineWidth = 1; ctx.setLineDash([2, 6]);
+    ctx.beginPath();
+    for (let j = 0; j <= player.p && j < planets.length; j++) { const pl = planets[j]; j ? ctx.lineTo(pl.x, pl.y) : ctx.moveTo(pl.x, pl.y); }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    // motes
+    for (const m of motes) {
+      if (m.taken) continue;
+      const pulse = 1 + 0.25 * Math.sin(t * 5 + m.ph);
+      ctx.fillStyle = 'rgba(255,214,107,0.18)';
+      ctx.beginPath(); ctx.arc(m.x, m.y, 9 * pulse, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = COL.dust;
+      ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(t * 2 + m.ph);
+      ctx.fillRect(-3, -3, 6, 6); ctx.restore();
+    }
+
+    // planets
+    ctx.font = '600 9px "IBM Plex Mono", ui-monospace, monospace';
+    for (let j = 0; j < planets.length; j++) {
+      const pl = planets[j];
+      const sy = pl.y - camY;
+      if (sy < -120 || sy > VH + 120) continue;
+      const isCurrent = j === player.p && state !== 'title';
+      const isTarget = j > player.p || state === 'title';
+
+      // capture ring
+      if (isTarget) {
+        ctx.strokeStyle = j === player.p + 1 ? 'rgba(232,236,247,0.55)' : 'rgba(232,236,247,0.22)';
+        ctx.lineWidth = 1.2; ctx.setLineDash([4, 6]); ctx.lineDashOffset = -t * 12;
+        ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.ring, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // current orbit, colour shifts toward danger as it decays
+      if (isCurrent && player.mode === 'orbit') {
+        const room = clamp((player.R - pl.r - 4) / (pl.ring - pl.r - 4), 0, 1);
+        const col = room > 0.45 ? COL.teal : room > 0.2 ? COL.dust : COL.danger;
+        ctx.strokeStyle = col; ctx.globalAlpha = 0.5; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(pl.x, pl.y, player.R, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 0.12; ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r + 4, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // glow + body
+      const glow = ctx.createRadialGradient(pl.x, pl.y, pl.r * 0.6, pl.x, pl.y, pl.r * 2.2);
+      glow.addColorStop(0, pl.c1 + '40'); glow.addColorStop(1, pl.c1 + '00');
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r * 2.2, 0, Math.PI * 2); ctx.fill();
+
+      const body = ctx.createRadialGradient(pl.x - pl.r * 0.4, pl.y - pl.r * 0.45, pl.r * 0.1, pl.x, pl.y, pl.r);
+      body.addColorStop(0, pl.c1); body.addColorStop(1, pl.c2);
+      ctx.fillStyle = body; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, Math.PI * 2); ctx.fill();
+
+      if (pl.bands) {
+        ctx.save(); ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, Math.PI * 2); ctx.clip();
+        ctx.translate(pl.x, pl.y); ctx.rotate(pl.tilt);
+        ctx.fillStyle = 'rgba(9,12,26,0.22)';
+        ctx.fillRect(-pl.r, -pl.r * 0.35, pl.r * 2, pl.r * 0.18);
+        ctx.fillRect(-pl.r, pl.r * 0.15, pl.r * 2, pl.r * 0.12);
+        ctx.restore();
+      } else {
+        ctx.save(); ctx.translate(pl.x, pl.y); ctx.rotate(pl.tilt);
+        ctx.strokeStyle = pl.c1 + '99'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(0, 0, pl.r * 1.6, pl.r * 0.35, 0, Math.PI * 0.02, Math.PI * 0.98, true); ctx.stroke();
+        ctx.restore();
+      }
+
+      // catalogue label
+      ctx.fillStyle = j < player.p && state !== 'title' ? 'rgba(138,147,180,0.45)' : 'rgba(138,147,180,0.9)';
+      ctx.textAlign = 'left';
+      ctx.fillText(pl.name, pl.x + pl.r + 8, pl.y - pl.r - 2);
+    }
+
+    if (state === 'play' || state === 'dead') {
+      // launch heading preview
+      if (state === 'play' && player.mode === 'orbit') {
+        const hx = -Math.sin(player.ang) * player.dir, hy = Math.cos(player.ang) * player.dir;
+        const grad = ctx.createLinearGradient(player.x, player.y, player.x + hx * 90, player.y + hy * 90);
+        grad.addColorStop(0, 'rgba(63,208,201,0.7)'); grad.addColorStop(1, 'rgba(63,208,201,0)');
+        ctx.strokeStyle = grad; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+        ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(player.x + hx * 90, player.y + hy * 90); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // trail
+      for (let k = 1; k < trail.length; k++) {
+        const a = k / trail.length;
+        ctx.strokeStyle = `rgba(63,208,201,${a * 0.6})`; ctx.lineWidth = 2.5 * a;
+        ctx.beginPath(); ctx.moveTo(trail[k - 1].x, trail[k - 1].y); ctx.lineTo(trail[k].x, trail[k].y); ctx.stroke();
+      }
+      // probe
+      if (state === 'play') {
+        const pg = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 16);
+        pg.addColorStop(0, 'rgba(232,236,247,0.9)'); pg.addColorStop(0.3, 'rgba(63,208,201,0.5)'); pg.addColorStop(1, 'rgba(63,208,201,0)');
+        ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(player.x, player.y, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(t * 4);
+        ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(4, 0); ctx.lineTo(0, 5); ctx.lineTo(-4, 0); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // particles
+    for (const q of particles) {
+      ctx.globalAlpha = clamp(q.life / q.max, 0, 1);
+      ctx.fillStyle = q.color; ctx.fillRect(q.x - 1.5, q.y - 1.5, 3, 3);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 1 / 30);
+    last = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- input ----------
+  function onAction(e) {
+    if (state === 'play') { e?.preventDefault?.(); launch(); }
+  }
+  cv.addEventListener('pointerdown', onAction);
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowUp') {
+      if (e.target instanceof HTMLButtonElement && e.target.id === 'mute') return;
+      e.preventDefault();
+      if (state === 'play') launch();
+      else if (state === 'title' || (state === 'dead' && !$('over').hidden)) startGame();
+    }
+  });
+  $('start').addEventListener('click', startGame);
+  $('again').addEventListener('click', startGame);
+  function renderMute() {
+    $('mute').textContent = muted ? 'Sound off' : 'Sound on';
+    $('mute').setAttribute('aria-pressed', String(muted));
+  }
+  $('mute').addEventListener('click', (e) => {
+    e.stopPropagation(); muted = !muted; store.set('signal-drift-muted', muted); renderMute(); $('mute').blur();
+  });
+  renderMute();
+
+  // ---------- boot ----------
+  $('best-line').textContent = best > 0 ? `Your best: ${best} relays linked` : 'Space or Enter also launches';
+  makeStars();
+  reset();
+  state = 'title';
+  requestAnimationFrame(frame);
+})();
+</script>
