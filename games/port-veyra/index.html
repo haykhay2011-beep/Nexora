@@ -147,6 +147,12 @@
   .picker-head h2 { margin: 0; font: 800 1.8rem/1 var(--display); text-transform: uppercase; }
   .picker-head p { margin: 0; font-size: 0.8rem; color: var(--muted); }
   #pickClose { margin-left: auto; font: 800 0.9rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper); background: none; border: 1px solid var(--line); border-radius: 3px; padding: 0.5rem 0.8rem; cursor: pointer; }
+  .shot-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.8rem; }
+  .shot-row > span { font: 600 0.7rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .shot-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .shot-chips button { font: 600 0.72rem/1 var(--mono); color: var(--paper); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 0.4rem 0.7rem; cursor: pointer; }
+  .shot-chips button[aria-checked="true"] { background: #f2a800; border-color: #f2a800; color: #10181c; }
+  .shot-chips button:focus-visible { outline: 2px solid #f2a800; outline-offset: 2px; }
   .pick-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: 0.7rem; }
   .pick { width: 100%; display: grid; padding: 0; text-align: left; color: var(--paper); background: #15171d; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; overflow: hidden; font: inherit; }
   .pick:hover:not(:disabled), .pick:focus-visible { border-color: #f2a800; box-shadow: 0 0 0 2px #f2a800; outline: none; }
@@ -281,6 +287,7 @@
 <div id="picker" class="picker" hidden role="dialog" aria-modal="true" aria-labelledby="pickTitle">
   <div class="picker-card">
     <div class="picker-head"><h2 id="pickTitle">Quick Travel</h2><p>Pick a destination and fly there.</p><button id="pickClose" type="button">Close</button></div>
+    <div class="shot-row"><span id="shotLabel">Flight camera</span><div class="shot-chips" id="shotChips" role="radiogroup" aria-labelledby="shotLabel"></div></div>
     <ul class="pick-grid" id="pickGrid"></ul>
   </div>
 </div>
@@ -5100,11 +5107,6 @@ const puffs = [];
     rig.add(m); puffs.push(m);
   }
 }
-// Flight path in metres: an S-curve that banks left then right, then (tau > 1) the descent into the cloud deck
-function pathAt(tau, out) {
-  const d = Math.max(0, (tau - 1) / 0.38);
-  return out.set(-160 + 520 * tau, 10 * Math.sin(tau * 2.8) - 150 * d * d, 60 * Math.sin(tau * 4.2 - 0.4));
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // QUICK TRAVEL STATE MACHINE
@@ -5117,7 +5119,7 @@ function pathAt(tau, out) {
 // ═══════════════════════════════════════════════════════════════════════════════
 const reduceMotionQT = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const QT_DUR = reduceMotionQT ? { depart: 200, flight: 0, descend: 0, arrive: 350 } : { depart: 520, flight: 1750, descend: 620, arrive: 1000 };
-const QT = { state: 'idle', t0: 0, to: 0, from: null, sky: false, camStart: new THREE.Vector3(), lookStart: new THREE.Vector3(), pull: new THREE.Vector3(), roll: 0 };
+const QT = { state: 'idle', t0: 0, to: 0, from: null, sky: false, camStart: new THREE.Vector3(), lookStart: new THREE.Vector3(), pull: new THREE.Vector3(), roll: 0, shot: 'chase', camFix: new THREE.Vector3(), look: new THREE.Vector3() };
 const veilEl = document.getElementById('qtVeil'), enrouteEl = document.getElementById('qtEnroute');
 const SKY_VEIL = '#dfe7ef', CLOUD_VEIL = '#f1f3f5';
 const setVeil = (a, color) => { veilEl.style.opacity = a.toFixed(3); if (color) veilEl.style.background = color; };
@@ -5134,9 +5136,9 @@ function quickTravelTo(i) {
   const why = travelBlocked(); if (why) { toast(why, '#ff8a7a'); return false; }
   closePhone(); wheel.open = false; caption = null;
   if (i >= 0 && !player.region) regionBack = player.interior ? { ...INTERIORS[player.interior].street } : { x: playerPos().x, y: playerPos().y, a: player.car ? player.car.a : player.a };
-  QT.to = i; QT.fromName = destName(here);
+  QT.to = i; QT.fromName = destName(here); QT.shot = pickShot();
   enrouteEl.innerHTML = ''; const sp = document.createElement('span'); sp.textContent = 'En route · ';
-  enrouteEl.append(sp, document.createTextNode(`${QT.fromName} → ${destName(i)}`)); enrouteEl.hidden = false;
+  enrouteEl.append(sp, document.createTextNode(`${QT.fromName} → ${destName(i)}${reduceMotionQT ? '' : ' · ' + SHOT_NAMES[QT.shot]}`)); enrouteEl.hidden = false;
   keys.clear(); mouseFire = false;
   mode = 'travel';
   setTravelLocked(true);
@@ -5215,33 +5217,144 @@ function landAt(i) {
 const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _f = new THREE.Vector3(), _f0 = new THREE.Vector3(), _f1 = new THREE.Vector3();
 const _side = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _want = new THREE.Vector3(), _look = new THREE.Vector3(), _w = new THREE.Vector3();
 const lerp = (a, b, t) => a + (b - a) * t, easeIO = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, easeOut = t => 1 - Math.pow(1 - t, 3);
+// ═══════════════════════════════════════════════════════════════════════════════
+// FLIGHT SHOTS — six camera treatments for the same flight
+// Each shot supplies, in metres around the sky set:
+//   path(tau, out)   plane position; tau runs 0→1 over the flight phase and 1→1.38 over the descent
+//   full             true if path() already covers the descent (otherwise a shared dive is appended)
+//   roll(tau)        extra roll on top of the automatic bank-into-turn
+//   cam(c)           places the camera for the flight phase; returns { fov, blur } for the speed pass
+// The descent phase uses one shared "follow the dive into the cloud deck" camera unless the shot handles it.
+// ═══════════════════════════════════════════════════════════════════════════════
+const SHOT_ORDER = ['chase', 'barrel', 'flyby', 'dive', 'orbit', 'lowpass'];
+const SHOT_NAMES = { auto: 'Auto', chase: 'Chase cam', barrel: 'Barrel roll', flyby: 'Flyby', dive: 'Diving descent', orbit: 'Orbit reveal', lowpass: 'Low pass' };
+let shotPref = 'auto', shotCycle = 0;
+try { const v = localStorage.getItem('hayastan-flight-cam'); if (SHOT_NAMES[v]) shotPref = v; } catch (e) { /* storage unavailable */ }
+const pickShot = () => shotPref !== 'auto' ? shotPref : SHOT_ORDER[shotCycle++ % SHOT_ORDER.length];
+const _c1 = new THREE.Vector3(), _c2 = new THREE.Vector3(), _c3 = new THREE.Vector3();
+const gauss = (x, c, w) => Math.exp(-(((x - c) / w) ** 2));
+const SHOTS = {
+  // 1. CHASE — the camera waits ahead, the plane flies in, then the camera swings round into a trailing orbit
+  chase: {
+    path: (tau, o) => o.set(-160 + 520 * tau, 10 * Math.sin(tau * 2.8), 60 * Math.sin(tau * 4.2 - 0.4)),
+    roll: () => 0,
+    cam(c) {
+      const e = easeIO(c.tau), theta = lerp(2.0, 0.3, e), dist = lerp(30, 15, e), h = lerp(6, 3.5, e);
+      _want.copy(c.P).addScaledVector(c.F, -Math.cos(theta) * dist).addScaledVector(c.side, Math.sin(theta) * dist).addScaledVector(_up, h);
+      if (c.init) { this.path(0.34, _c1); _c1.addScaledVector(c.side, 40).addScaledVector(_up, 5); toWorld(_c1, camera.position); }
+      camera.position.lerp(toWorld(_want, _want), 1 - Math.exp(-c.dt * sstep(0.12, 0.4, c.tau) * 8));
+      camera.lookAt(toWorld(_c1.copy(c.P).addScaledVector(c.F, 5), _c1)); camera.rotateZ(QT.roll * 0.12);
+      return { fov: 55, blur: 0.03 * sstep(0.2, 0.6, c.tau) };
+    },
+  },
+  // 2. BARREL ROLL — a full 360° roll mid-flight; the camera is locked to the plane's own frame (roll included),
+  //    so the plane holds still in frame and the horizon spins around it
+  barrel: {
+    path: (tau, o) => o.set(-160 + 520 * tau, 6 * Math.sin(tau * 2), 25 * Math.sin(tau * 2.2 - 0.3)),
+    roll: tau => -Math.PI * 2 * easeIO(clamp((tau - 0.28) / 0.44, 0, 1)),
+    cam(c) {
+      airplane.updateMatrixWorld();
+      camera.position.copy(airplane.localToWorld(_c1.set(4 * MS, 3.2 * MS, -15 * MS)));      // pivot frame: +z nose, +x left wing, +y roof
+      camera.up.copy(_c2.set(0, 1, 0).applyQuaternion(airplane.quaternion));                 // share the plane's "up" = spinning horizon
+      camera.lookAt(airplane.localToWorld(_c3.set(0, 1.2 * MS, 14 * MS)));
+      return { fov: 58, blur: 0.035 * sstep(0.25, 0.45, c.tau) * (1 - sstep(0.75, 0.9, c.tau)) + 0.01 };
+    },
+  },
+  // 3. FLYBY — a fixed camera just off the flight line; the plane screams toward it and past,
+  //    with a burst of motion blur and a brief field-of-view "whoosh" punch at the moment of passing
+  flyby: {
+    pass: 0.55,
+    path: (tau, o) => o.set(-420 + 900 * tau, 4 + 2 * Math.sin(tau * 3), 6 * Math.sin(tau * 2)),
+    roll: tau => 0.35 * gauss(tau, 0.55, 0.12),
+    cam(c) {
+      if (c.init) { this.path(this.pass, _c1).add(_c2.set(0, 2.5, 9.5)); toWorld(_c1, QT.camFix); QT.look.copy(airplane.position); }
+      const punch = gauss(c.tau, this.pass, 0.05);
+      camera.position.copy(QT.camFix);
+      if (punch > 0.05) camera.position.add(_c1.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(punch * 0.5 * MS));   // buffet as it passes
+      QT.look.lerp(airplane.position, 1 - Math.exp(-c.dt * 14));                            // the operator pans a beat behind the plane
+      camera.lookAt(QT.look);
+      return { fov: 50 + 26 * punch, blur: 0.015 + 0.1 * gauss(c.tau, this.pass, 0.08), ca: 0.0035 + 0.006 * punch };
+    },
+  },
+  // 4. DIVING DESCENT — level for a moment, then the nose drops and the plane accelerates down through the layers
+  //    (ease-in), the camera riding above and behind; the dive levels out just as the cloud deck swallows it
+  dive: {
+    full: true,
+    path: (tau, o) => o.set(-100 + 420 * tau + 180 * tau * tau, 60 - 195 * sstep(0.28, 1.38, tau), 18 * Math.sin(tau * 1.5)),
+    roll: tau => 0.12 * Math.sin(tau * 5),
+    cam(c) {
+      _want.copy(c.P).addScaledVector(c.F, -14).addScaledVector(_up, 8);
+      if (c.init) toWorld(_want, camera.position);
+      camera.position.lerp(toWorld(_want, _want), 1 - Math.exp(-c.dt * lerp(5, 11, clamp(c.tau / 1.38, 0, 1))));
+      camera.lookAt(toWorld(_c1.copy(c.P).addScaledVector(c.F, 8), _c1));
+      const steep = clamp(-c.F.y * 2, 0, 1);
+      return { fov: 55 + 9 * steep, blur: 0.015 + 0.06 * steep };
+    },
+  },
+  // 5. ORBIT REVEAL — starts tight on the wing root, then pulls back while arcing 180° around the plane,
+  //    ending on a wide establishing shot as the clouds stream past
+  orbit: {
+    path: (tau, o) => o.set(-100 + 400 * tau, 20 + 3 * Math.sin(tau * 3), 0),
+    roll: tau => 0.12 * Math.sin(tau * 4),
+    cam(c) {
+      const e = easeIO(c.tau), theta = 0.95 + Math.PI * e, dist = lerp(7, 48, e * e), h = lerp(2, 11, e);   // tight on the wing root → wide
+      _want.copy(c.P).addScaledVector(c.F, Math.cos(theta) * dist).addScaledVector(c.side, Math.sin(theta) * dist).addScaledVector(_up, h);
+      camera.position.copy(toWorld(_want, _want));
+      camera.lookAt(toWorld(_c1.copy(c.P).addScaledVector(c.side, lerp(1.8, 0, e)).addScaledVector(_up, lerp(0.2, 0, e)), _c1));
+      return { fov: lerp(42, 60, e), blur: 0.02 + 0.02 * e };
+    },
+  },
+  // 6. LOW PASS — a ground observer standing on the cloud tops; the plane banks and skims low across the
+  //    horizon from left to right while the camera pans on a tripod to track it (long lens)
+  lowpass: {
+    path: (tau, o) => o.set(-300 + 1000 * tau, -100 + 5 * Math.sin(tau * 4), 60 + 40 * Math.sin(tau * 2)),
+    roll: tau => 0.45 * Math.sin(tau * Math.PI),
+    cam(c) {
+      if (c.init) { toWorld(_c1.set(200, -117, -150), QT.camFix); QT.look.copy(airplane.position); }
+      camera.position.copy(QT.camFix).add(_c1.set(0, Math.sin(c.t * 1.3) * 0.4 * MS, 0));   // a little handheld drift
+      QT.look.lerp(airplane.position, 1 - Math.exp(-c.dt * 5));
+      camera.lookAt(QT.look);
+      return { fov: lerp(16, 22, c.tau), blur: 0.012 };                                       // long lens, like a spotter on the ground
+    },
+  },
+};
+// Plane position for any shot and any tau; shots without their own descent get a shared dive appended
+function shotPath(S, tau, out) {
+  if (S.full || tau <= 1) return S.path(tau, out);
+  S.path(1, out); S.path(0.996, _c3); const k = (tau - 1) / 0.004;
+  out.x += (out.x - _c3.x) * k; out.y += (out.y - _c3.y) * k; out.z += (out.z - _c3.z) * k;
+  const d = (tau - 1) / 0.38; out.y -= 150 * d * d;
+  return out;
+}
+// Runs every frame of the flight and descend phases: poses the plane, then hands the camera to the shot
 function flightCamera(dt, t) {
   const u = clamp((performance.now() - QT.t0) / (QT_DUR[QT.state] || 1), 0, 1);
   const tau = QT.state === 'flight' ? u : 1 + 0.38 * u;                  // one continuous path parameter across both phases
-  pathAt(tau, _p); pathAt(tau + 0.004, _q); _f.subVectors(_q, _p).normalize();
+  const S = SHOTS[QT.shot] || SHOTS.chase;
+  shotPath(S, tau, _p); shotPath(S, tau + 0.004, _q); _f.subVectors(_q, _p).normalize();
   // Bank into the turn: the change in heading over a short span of path (cross product's y) sets the roll
-  pathAt(tau - 0.01, _q); _f0.subVectors(_p, _q).normalize(); pathAt(tau + 0.01, _q); _f1.subVectors(_q, _p).normalize();
+  shotPath(S, tau - 0.01, _q); _f0.subVectors(_p, _q).normalize(); shotPath(S, tau + 0.01, _q); _f1.subVectors(_q, _p).normalize();
   const turn = _f0.z * _f1.x - _f0.x * _f1.z;
-  const roll = clamp(-turn * 25, -1.1, 1.1) + 0.08 * Math.sin(t * 4.3);
-  QT.roll += (roll - QT.roll) * Math.min(1, dt * 6);
+  const bank = clamp(-turn * 25, -1.1, 1.1) + 0.08 * Math.sin(t * 4.3);
+  QT.roll += (bank - QT.roll) * Math.min(1, dt * 6);
   toWorld(_p, airplane.position); toWorld(_q.copy(_p).add(_f), _w);
-  airplane.lookAt(_w); airplane.rotateZ(QT.roll);
-  // Chase orbit: the camera sweeps from a front-quarter view round to behind the plane as it passes
+  airplane.lookAt(_w); airplane.rotateZ(QT.roll + S.roll(Math.min(tau, 1)));
   _side.crossVectors(_up, _f).normalize();
-  const e = easeIO(Math.min(1, tau));
-  const theta = QT.state === 'descend' ? 0.25 : lerp(2.0, 0.3, e), dist = QT.state === 'descend' ? 13 : lerp(30, 15, e), h = QT.state === 'descend' ? 5 : lerp(6, 3.5, e);
-  _want.copy(_p).addScaledVector(_f, -Math.cos(theta) * dist).addScaledVector(_side, Math.sin(theta) * dist).addScaledVector(_up, h);
-  toWorld(_want, _want);
-  if (QT.camInit) {
-    // First frame: the camera waits ahead of the plane, so it flies into frame toward us
-    QT.camInit = false; pathAt(0.34, _q); _q.addScaledVector(_side, 40).addScaledVector(_up, 5); toWorld(_q, camera.position);
+  const c = { tau, u, dt, t, P: _p, F: _f, side: _side, init: QT.camInit };
+  QT.camInit = false;
+  let fx;
+  if (QT.state === 'descend' && !S.full) {
+    // Shared descent: swing in behind and above, then follow the plane down into the white
+    camera.up.set(0, 1, 0);
+    _want.copy(_p).addScaledVector(_f, -Math.cos(0.25) * 13).addScaledVector(_side, Math.sin(0.25) * 13).addScaledVector(_up, 5);
+    camera.position.lerp(toWorld(_want, _want), 1 - Math.exp(-dt * 10));
+    camera.lookAt(toWorld(_c1.copy(_p).addScaledVector(_f, 5), _c1));
+    fx = { fov: lerp(55, 64, u), blur: 0.03 * u };
+  } else {
+    if (QT.shot !== 'barrel') camera.up.set(0, 1, 0);
+    fx = S.cam(c);
   }
-  const follow = QT.state === 'descend' ? 10 : sstep(0.12, 0.4, tau) * 8;
-  camera.position.lerp(_want, 1 - Math.exp(-dt * follow));
-  toWorld(_look.copy(_p).addScaledVector(_f, 5), _look);
-  camera.lookAt(_look); camera.rotateZ(QT.roll * 0.12);
-  const fov = QT.state === 'descend' ? lerp(55, 64, u) : 55;
-  if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  if (Math.abs(camera.fov - fx.fov) > 0.05) { camera.fov = fx.fov; camera.updateProjectionMatrix(); }
   // [SUN] strong raking key light, its shadow box tight around the plane
   const L = MOODS.flight, sd = dirFrom(L.sunElev, L.sunAzim);
   moon.target.position.copy(airplane.position); moon.position.copy(airplane.position).addScaledVector(sd, 1500);
@@ -5251,8 +5364,8 @@ function flightCamera(dt, t) {
   // Clouds always face the camera; the speed pass gets blur, aberration and the sun's screen position
   for (const m of puffs) m.quaternion.copy(camera.quaternion);
   if (speedPass) {
-    speedPass.uniforms.blur.value = 0.022 + 0.03 * sstep(0.2, 0.6, tau) + (QT.state === 'descend' ? 0.03 * u : 0);
-    speedPass.uniforms.ca.value = 0.0035;
+    speedPass.uniforms.blur.value = 0.022 + fx.blur;
+    speedPass.uniforms.ca.value = fx.ca || 0.0035;
     _q.copy(camera.position).addScaledVector(sd, 20000).project(camera);
     const onScreen = _q.z < 1 && Math.abs(_q.x) < 1.2 && Math.abs(_q.y) < 1.2;
     speedPass.uniforms.flare.value = onScreen ? 1 : 0; speedPass.uniforms.sunUV.value.set(_q.x * 0.5 + 0.5, _q.y * 0.5 + 0.5);
@@ -5404,6 +5517,19 @@ function closePicker(silent) {
   else if (mode === 'picker') mode = 'play';
 }
 document.getElementById('pickClose').addEventListener('click', () => closePicker());
+{
+  // Flight camera chooser: Auto cycles through all six shots trip by trip; a pick is remembered in this browser
+  const box = document.getElementById('shotChips');
+  for (const k of ['auto', ...SHOT_ORDER]) {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.textContent = SHOT_NAMES[k];
+    b.setAttribute('aria-checked', String(k === shotPref));
+    b.addEventListener('click', () => {
+      shotPref = k; for (const o of box.children) o.setAttribute('aria-checked', String(o === b));
+      try { localStorage.setItem('hayastan-flight-cam', k); } catch (e) { /* storage unavailable */ }
+    });
+    box.append(b);
+  }
+}
 pickerEl.addEventListener('click', e => { if (e.target === pickerEl) closePicker(); });
 document.getElementById('destQuick').addEventListener('click', openPicker);
 document.getElementById('destPrev').addEventListener('click', () => quickTravelTo(destIndex(player.region) - 1));
@@ -5829,6 +5955,7 @@ const camLook = new THREE.Vector3(), camWant = new THREE.Vector3();
 let camYaw = 0;
 function updateCamera(dt) {
   if (QT.sky) { flightCamera(dt, performance.now() / 1000); return; }   // the flight owns the camera
+  camera.up.set(0, 1, 0);                                                // the barrel roll borrows camera.up; give it back
   const k = FX.smoothCamera ? Math.min(1, dt * 5) : 1;
   if (mode === 'title') {
     const a = time * 0.05, cx = 26 * T, cz = 25 * T;
