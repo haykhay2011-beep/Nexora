@@ -118,6 +118,25 @@
     color: #fff; background: linear-gradient(90deg, #d90012, #0033a0 60%, #f2a800); }
   .hg-go:disabled { opacity: 0.45; cursor: default; }
   .ph-home { display: flex; justify-content: center; padding-top: 8px; }
+  .wx-now { display: grid; gap: 3px; padding: 6px 4px 10px; border-bottom: 1px solid var(--line); }
+  .wx-now b { font: 800 2.2rem/1 var(--display); }
+  .wx-now span { font-size: 0.7rem; color: var(--muted); }
+  .wx-now .wx-mode { color: #9fd4e8; }
+  .wx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .wx-btn { font: 600 0.68rem/1.1 var(--mono); padding: 0.6rem 0.2rem; border: 1px solid var(--line); background: none; color: var(--paper); border-radius: 6px; cursor: pointer; }
+  .wx-btn.on { background: #6fb3ff; border-color: #6fb3ff; color: #0d0f14; }
+  .ph-item.wx-danger b { color: #ff8a7a; }
+  .gpt { display: grid; gap: 8px; }
+  .gpt-log { display: grid; gap: 6px; align-content: start; max-height: 18rem; overflow-y: auto; padding-right: 2px; }
+  .gpt-msg { padding: 6px 9px; border-radius: 9px; font-size: 0.74rem; line-height: 1.45; max-width: 88%; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .gpt-msg.me { justify-self: end; background: #2a3a55; }
+  .gpt-msg.bot { justify-self: start; background: #1b2724; border-left: 2px solid #f2a800; }
+  .gpt-msg.sys { justify-self: start; color: var(--muted); font-style: italic; }
+  .gpt-form { display: flex; gap: 6px; }
+  .gpt-form input { flex: 1; min-width: 0; font: 600 0.78rem var(--mono); color: var(--paper); background: #15171d; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem; }
+  .gpt-form input:focus-visible { outline: 2px solid #f2a800; outline-offset: 1px; }
+  .gpt-form button { font: 800 0.82rem/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; background: #f2a800; color: #10181c; border: 0; border-radius: 6px; padding: 0 0.8rem; cursor: pointer; }
+  .gpt-form button:disabled { opacity: 0.5; cursor: default; }
   .ph-home button { width: 96px; height: 5px; border-radius: 3px; border: 0; background: #3a3d44; cursor: pointer; padding: 0; }
   @media (prefers-reduced-motion: reduce) { #phone { animation: none; } }
   /* ─── Quick Travel ─── */
@@ -233,7 +252,10 @@
   .swatches button[aria-checked="true"] { border-color: var(--paper); box-shadow: 0 0 0 2px #0a0c10 inset; }
   #talk { position: fixed; left: 0; right: 0; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; padding-inline: 16px; z-index: 6; }
   #talk[hidden] { display: none !important; }
-  .talk-box { width: 100%; max-width: 40rem; background: rgba(10,12,16,0.92); border: 1px solid var(--line); border-left: 3px solid #ff7a3d; border-radius: 4px; padding: 0.9rem 1.1rem; cursor: pointer; }
+  .talk-box { width: 100%; max-width: 44rem; display: flex; cursor: pointer; }
+  /* The portrait cell is a transparent window: the 3D close-up is drawn onto the game canvas behind it */
+  .talk-portrait { flex: 0 0 auto; width: clamp(5.5rem, 22vw, 8.5rem); aspect-ratio: 4 / 5; border: 1px solid var(--line); border-right: 0; border-radius: 4px 0 0 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4); }
+  .talk-text { flex: 1; min-width: 0; background: rgba(10,12,16,0.92); border: 1px solid var(--line); border-left: 3px solid #ff7a3d; border-radius: 0 4px 4px 0; padding: 0.9rem 1.1rem; }
   .talk-who { margin: 0 0 0.25rem; font: 800 1.1rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
   .talk-line { margin: 0; font-size: 0.92rem; line-height: 1.55; color: var(--paper); }
   .talk-en { margin: 0.3rem 0 0; font-size: 0.78rem; font-style: italic; color: var(--muted); }
@@ -433,10 +455,13 @@
 
 <div id="talk" hidden>
   <div class="talk-box">
-    <p class="talk-who" id="talkWho"></p>
-    <p class="talk-line" id="talkLine"></p>
+    <div class="talk-portrait" id="talkPortrait" aria-hidden="true"></div>
+    <div class="talk-text">
+      <p class="talk-who" id="talkWho"></p>
+      <p class="talk-line" id="talkLine"></p>
       <p class="talk-en" id="talkEn" hidden></p>
-    <p class="talk-hint">E, Space or click to continue · Esc to skip</p>
+      <p class="talk-hint">E, Space or click to continue · Esc to skip</p>
+    </div>
   </div>
 </div>
 <form id="chatForm" hidden><input id="chatInput" maxlength="140" autocomplete="off" aria-label="Chat message" placeholder="Say something. Enter sends, Esc cancels"></form>
@@ -1036,6 +1061,10 @@ function say(cat, who, speaker, force) {
   lastLine[cat] = k;
   const [hy, en] = lines[k];
   caption = { who, hy, en, t: 3.6, speaker };
+  if (speaker && speaker.x != null) {
+    const f = faceNear(speaker.x, speaker.y);
+    if (f) { f.talkUntil = performance.now() / 1000 + 3.2; f.expr = EXPR[exprFor(hy)] || {}; setTimeout(() => { f.expr = {}; }, 3600); }
+  }
   speechCD = cat === 'greet' ? 5 : 2.5;
   return true;
 }
@@ -1158,7 +1187,7 @@ function driveCar(c, inp, dt) {
   // Grip returns gradually instead of snapping, so you can catch and hold a slide with counter-steer.
   const speed0 = Math.hypot(c.vx, c.vy), slipAng = speed0 > 30 ? Math.abs(Math.atan2(c.vx * -Math.sin(c.a) + c.vy * Math.cos(c.a), Math.abs(vF) + 1)) : 0;
   const sliding = slipAng > 0.25 && speed0 > 90 && !s.bike;
-  const gripTarget = inp.hb ? 1.1 : sliding && inp.thr > 0 ? 2.6 : s.grip;
+  const gripTarget = (inp.hb ? 1.1 : sliding && inp.thr > 0 ? 2.6 : s.grip) * weatherGrip();   // wet and snowy roads are slippery
   c.gripNow = c.gripNow === undefined ? s.grip : c.gripNow + (gripTarget - c.gripNow) * Math.min(1, dt * (gripTarget < c.gripNow ? 12 : 2.2));
   const steerK = inp.hb ? 1.5 : sliding ? 1.3 : 1;
   // Steering scales with speed and flips in reverse
@@ -2492,14 +2521,16 @@ function talk(lines, done) {
 function showTalkLine() {
   const [who, text, en] = talkState.lines[talkState.i], c = CAST[who];
   const w = document.getElementById('talkWho'); w.textContent = c[0]; w.style.color = c[1];
-  document.getElementById('talkLine').textContent = text;
+  document.getElementById('talkLine').textContent = '';
+  startTalkLine(who, text);                                   // types the line out while the portrait mouths it
   const e = document.getElementById('talkEn'); e.hidden = !en; e.textContent = en || '';
 }
 function talkNext(skip) {
   if (!talkState) return;
+  if (!skip && !talkType.done) { talkType.done = true; return; }   // first press finishes the line, the next one advances
   talkState.i = skip ? talkState.lines.length : talkState.i + 1;
   if (talkState.i < talkState.lines.length) { showTalkLine(); return; }
-  const d = talkState.done; talkState = null; talkEl.hidden = true; mode = 'play'; d?.();
+  const d = talkState.done; talkState = null; talkEl.hidden = true; talkType.who = null; mode = 'play'; d?.();
 }
 talkEl.addEventListener('click', () => talkNext());
 
@@ -2875,6 +2906,7 @@ const phNote = text => phBody.append(el('p', 'ph-note', text));
 function phRow(a, b, ok) { const r = el('div', 'ph-row'); r.append(el('span', '', a), el('span', ok ? 'ok' : '', b)); phBody.append(r); }
 const PHONE_APPS = [
   ['hayagram', 'Hayagram', 'linear-gradient(135deg, #d90012, #0033a0 55%, #f2a800)', '◎'],
+  ['gpt', 'Hayastan GPT', 'linear-gradient(135deg, #0f766e, #f2a800)', 'Հ'], ['weather', 'Weather', 'linear-gradient(#6fb3ff, #d6e4ff)', '☂'],
   ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'],
   ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
   ['taxi', 'Hayastan Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
@@ -2933,6 +2965,10 @@ function phoneApp(app) {
       const d = Math.hypot(at.x - player.x, at.y - player.y), fare = Math.round(25 + d / 40);
       phItem(name, `${Math.round(d / 5)} m · ${fmtMoney(fare)}`, () => takeCab(at, fare, name), !!blocked || player.money < fare || d < 150);
     }
+  } else if (app === 'weather') {
+    weatherApp();
+  } else if (app === 'gpt') {
+    hayastanGptApp();
   } else if (app === 'hayagram') {
     hayagramApp();
   } else if (app === 'settings') {
@@ -3164,6 +3200,7 @@ function update(dt) {
   for (const p of peds) updatePed(p, dt);
   updateSpeech(dt);
   updateGps(dt);
+  updateWeather(dt);
   carVsBodies();
   if (player.car) { player.x = player.car.x; player.y = player.car.y; }
   if (mode === 'play') {
@@ -3806,6 +3843,285 @@ const matCache = new Map();
 const cachedLam = color => { if (!matCache.has(color)) matCache.set(color, lam(color)); return matCache.get(color); };
 const eyeMat = lam('#101014'), gunMat = lam('#1a1a1c');
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// DETAILED FACES
+// One shared head geometry (≈4k vertices, denser than the old 12×10 sphere) sculpted procedurally,
+// with morph targets for expressions, layered eyes (sclera / iris / pupil / cornea), eyelid meshes that
+// blink by morph, brows, ears, and an inner mouth with teeth that shows when the jaw opens.
+// Used for the player and named characters; street pedestrians keep the cheap head for frame rate.
+// Head space: +x is the face (nose), +y up, ±z the sides. Head radius ≈ 2.45 units.
+//
+// r128 notes: morph targets need `material.morphTargets = true` (removed in r133+, where it is automatic);
+// r128 applies at most 8 morph influences without morph normals (4 with), so normals stay from the base mesh;
+// `sheen` is a THREE.Color in r128 (a float + sheenColor from r137). No CapsuleGeometry is needed here.
+// ═══════════════════════════════════════════════════════════════════════════════
+// Local helpers (this block runs before the Armenia module defines its own)
+const fsst = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const _fv = new THREE.Vector3();
+// Tileable value noise → canvas texture (lattice wraps, so the texture repeats seamlessly)
+function faceTileTex(size, cells, oct, fill) {
+  const h = new Float32Array(size * size);
+  for (let o = 0, c = cells, amp = 0.5; o < oct; o++, c *= 2, amp *= 0.5) {
+    const lat = new Float32Array(c * c).map(() => Math.random() * 2 - 1), L = (i, j) => lat[(j % c) * c + (i % c)];
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const fx = x / size * c, fy = y / size * c, x0 = fx | 0, y0 = fy | 0, tx = fx - x0, ty = fy - y0, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+      const a = L(x0, y0) + (L(x0 + 1, y0) - L(x0, y0)) * sx, b = L(x0, y0 + 1) + (L(x0 + 1, y0 + 1) - L(x0, y0 + 1)) * sx;
+      h[y * size + x] += amp * (a + (b - a) * sy);
+    }
+  }
+  const cv = document.createElement('canvas'); cv.width = cv.height = size; const g = cv.getContext('2d'), img = g.createImageData(size, size);
+  fill(h, img.data, size); g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+const g1 = (x, c, s) => Math.exp(-((x - c) * (x - c)) / (2 * s * s));          // 1D gaussian falloff
+const g3 = (p, c, sx, sy, sz) => Math.exp(-(((p.x - c[0]) / sx) ** 2 + ((p.y - c[1]) / sy) ** 2 + ((p.z - c[2]) / sz) ** 2) / 2);
+// Morph target order — influence indices used everywhere below
+const FACE_MORPHS = ['smile', 'frown', 'browRaise', 'mouthOpen', 'pucker', 'squint'];
+const FM = Object.fromEntries(FACE_MORPHS.map((n, i) => [n, i]));
+const EYE_Y = 0.32, EYE_Z = 0.84, EYE_R = 0.34, EYE_X = 2.0;
+const faceGeo = (() => {
+  const g = new THREE.SphereGeometry(2.45, 72, 56);
+  const pos = g.attributes.position, v = new THREE.Vector3(), n = pos.count;
+  const base = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    v.fromBufferAttribute(pos, i);
+    const front = fsst(0.2, 1.6, v.x);                                     // 0 at the back of the skull → 1 on the face
+    v.y *= 1.08; v.z *= 0.9;                                                // a head is taller than it is wide
+    const jaw = fsst(-0.5, -2.5, v.y); v.z *= 1 - 0.2 * jaw; v.x *= 1 - 0.08 * jaw * (1 - front);   // jaw tapers to the chin
+    let dx = 0;
+    dx += 0.22 * g3(v, [0, -2.05, 0], 9, 0.35, 0.55) * front;             // chin
+    dx += 0.2 * g1(v.y, 0.98, 0.16) * g1(Math.abs(v.z), 0.75, 0.55) * front;   // brow ridge
+    for (const s of [-1, 1]) dx -= 0.2 * g3(v, [0, EYE_Y, s * EYE_Z], 9, 0.3, 0.34) * front;    // eye sockets (shallow: the lids and brow do the framing)
+    // Nose: bridge rising to a rounded tip, plus nostril wings
+    const bridge = g1(v.z, 0, 0.2 + 0.14 * fsst(0.6, -0.5, v.y)) * fsst(0.75, 0.35, v.y) * fsst(-0.75, -0.45, v.y);
+    dx += bridge * (0.3 + 0.62 * fsst(0.55, -0.35, v.y)) * front;
+    for (const s of [-1, 1]) dx += 0.26 * g3(v, [0, -0.5, s * 0.34], 9, 0.14, 0.14) * front;
+    for (const s of [-1, 1]) dx += 0.14 * g3(v, [0, -0.05, s * 1.35], 9, 0.35, 0.3) * front;   // cheekbones
+    dx += 0.16 * g1(v.y, -1.02, 0.09) * g1(v.z, 0, 0.52) * front;           // upper lip
+    dx += 0.15 * g1(v.y, -1.38, 0.1) * g1(v.z, 0, 0.48) * front;            // lower lip
+    dx -= 0.1 * g1(v.y, -1.2, 0.035) * g1(v.z, 0, 0.55) * front;            // mouth line
+    dx -= 0.06 * g1(v.y, -0.78, 0.07) * g1(v.z, 0, 0.1) * front;            // philtrum groove
+    v.x += dx;
+    pos.setXYZ(i, v.x, v.y, v.z); base.set([v.x, v.y, v.z], i * 3);
+  }
+  g.computeVertexNormals();
+  // ── Morph targets: each is a full copy of the positions with one expression applied ──
+  const mk = fn => { const a = new Float32Array(base); for (let i = 0; i < n; i++) { v.set(base[i * 3], base[i * 3 + 1], base[i * 3 + 2]); const d = fn(v); a[i * 3] += d[0]; a[i * 3 + 1] += d[1]; a[i * 3 + 2] += d[2]; } return new THREE.BufferAttribute(a, 3); };
+  const fr = p => fsst(0.8, 2.0, p.x);
+  const corner = (p, s) => g3(p, [0, -1.2, s * 0.55], 9, 0.18, 0.22) * fr(p);
+  const targets = {
+    // smile: mouth corners up, back and out; cheeks lift
+    smile: p => { let dx = 0, dy = 0, dz = 0; for (const s of [-1, 1]) { const w = corner(p, s); dy += 0.24 * w; dx -= 0.1 * w; dz += s * 0.1 * w; const ch = g3(p, [0, -0.35, s * 1.05], 9, 0.3, 0.35) * fr(p); dy += 0.1 * ch; dx += 0.06 * ch; } return [dx, dy, dz]; },
+    // frown: corners down, inner brows down and together
+    frown: p => { let dx = 0, dy = 0, dz = 0; for (const s of [-1, 1]) { const w = corner(p, s); dy -= 0.2 * w; const b = g3(p, [0, 0.95, s * 0.42], 9, 0.18, 0.28) * fr(p); dy -= 0.13 * b; dz -= s * 0.07 * b; dx += 0.03 * b; } return [dx, dy, dz]; },
+    // browRaise: brows and forehead lift
+    browRaise: p => { const w = g1(p.y, 1.05, 0.28) * g1(Math.abs(p.z), 0.7, 0.6) * fr(p); return [0, 0.22 * w, 0]; },
+    // mouthOpen: everything below the mouth line swings down and slightly back (jaw hinge), upper lip rises a touch
+    mouthOpen: p => { const low = fsst(-1.18, -1.32, p.y) * fsst(0.3, 1.4, p.x) * g1(p.z, 0, 1.2); const up = g1(p.y, -1.02, 0.1) * fr(p) * g1(p.z, 0, 0.5); return [-0.12 * low, -0.55 * low + 0.05 * up, 0]; },
+    // pucker: lips push forward and narrow (the "oo" viseme)
+    pucker: p => { const w = g3(p, [0, -1.2, 0], 9, 0.28, 0.6) * fr(p); return [0.2 * w, 0, -p.z * 0.28 * w]; },
+    // squint: lower lids and upper cheeks lift (reads as warmth or suspicion)
+    squint: p => { let dy = 0; for (const s of [-1, 1]) dy += 0.1 * g3(p, [0, 0.0, s * EYE_Z], 9, 0.2, 0.35) * fr(p); return [0, dy, 0]; },
+  };
+  g.morphAttributes.position = FACE_MORPHS.map(k => mk(targets[k]));
+  return g;
+})();
+// Eyelid shells: upper and lower caps over the front of the eye; morph target 0 = closed
+function lidGeo(upper) {
+  const g = upper ? new THREE.SphereGeometry(EYE_R + 0.05, 20, 10, Math.PI / 2, Math.PI, 0, Math.PI * 0.43)
+                  : new THREE.SphereGeometry(EYE_R + 0.045, 20, 6, Math.PI / 2, Math.PI, Math.PI * 0.63, Math.PI * 0.37);
+  const pos = g.attributes.position, closed = new Float32Array(pos.array.length), v = new THREE.Vector3();
+  const rot = new THREE.Matrix4().makeRotationZ(upper ? -1.02 : 0.36);    // upper lid sweeps down over the eye, lower lid rises a little
+  for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(rot); closed.set([v.x, v.y, v.z], i * 3); }
+  g.morphAttributes.position = [new THREE.BufferAttribute(closed, 3)];
+  return g;
+}
+const upperLidGeo = lidGeo(true), lowerLidGeo = lidGeo(false);
+const scleraGeo = new THREE.SphereGeometry(EYE_R, 24, 16), corneaGeo = new THREE.SphereGeometry(EYE_R * 1.035, 24, 8, 0, Math.PI * 2, 0, 0.75).rotateZ(-Math.PI / 2);   // clear bulge over the iris
+// Caps around +x: SphereGeometry caps are built around +y, so rotate them onto the eye's forward axis
+const eyeCap = (r, ang, seg = 28) => new THREE.SphereGeometry(r, seg, 6, 0, Math.PI * 2, 0, ang).rotateZ(-Math.PI / 2);
+const irisGeo = eyeCap(EYE_R * 1.004, 0.56), limbusGeo = eyeCap(EYE_R * 1.002, 0.6), pupilGeo = eyeCap(EYE_R * 1.008, 0.22, 20);
+const browGeo = new THREE.BoxGeometry(0.16, 0.09, 0.82), earGeo = new THREE.SphereGeometry(0.5, 10, 8).scale(0.45, 1, 0.3);
+const mouthGeo = new THREE.SphereGeometry(0.62, 16, 10).scale(0.35, 0.5, 1), teethGeo = new THREE.BoxGeometry(0.2, 0.16, 0.86);
+
+// ─── Face textures (procedural) ─────────────────────────────────────────────
+// Pores / fine wrinkles: tileable noise → tangent-space normal map
+const poreNormal = faceTileTex(256, 24, 3, (h, d, n) => {
+  const at = (x, y) => h[((y + n) % n) * n + ((x + n) % n)];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const dx = (at(x + 1, y) - at(x - 1, y)) * 2.2, dy = (at(x, y + 1) - at(x, y - 1)) * 2.2, inv = 1 / Math.hypot(dx, dy, 1), i = (y * n + x) * 4;
+    d[i] = (-dx * inv * 0.5 + 0.5) * 255; d[i + 1] = (-dy * inv * 0.5 + 0.5) * 255; d[i + 2] = (inv * 0.5 + 0.5) * 255; d[i + 3] = 255;
+  }
+});
+poreNormal.repeat.set(5, 3);
+// Face maps painted in the sphere's UV space: u = 0.5 is the centre of the face, v = 1 the crown.
+// T-zone roughness: forehead, nose and chin are slightly oilier (lower roughness) than the cheeks
+const faceUV = (g, W, H) => ({ X: u => u * W, Y: v => (1 - v) * H });
+function faceCanvas(draw) { const c = document.createElement('canvas'); c.width = 256; c.height = 128; draw(c.getContext('2d'), 256, 128); const t = new THREE.CanvasTexture(c); return t; }
+const tzoneRough = faceCanvas((g, W, H) => {
+  g.fillStyle = 'rgb(165,165,165)'; g.fillRect(0, 0, W, H);                                   // matte skin ≈ 0.65
+  const blob = (u, v, rx, ry, val) => { const { X, Y } = faceUV(g, W, H), gr = g.createRadialGradient(X(u), Y(v), 0, X(u), Y(v), rx * W);
+    gr.addColorStop(0, `rgb(${val},${val},${val})`); gr.addColorStop(1, 'rgba(165,165,165,0)'); g.save(); g.translate(X(u), Y(v)); g.scale(1, ry / rx); g.translate(-X(u), -Y(v)); g.fillStyle = gr; g.fillRect(0, 0, W, H); g.restore(); };
+  blob(0.5, 0.7, 0.07, 0.05, 105);   // forehead
+  blob(0.5, 0.5, 0.025, 0.09, 95);   // nose bridge and tip
+  blob(0.5, 0.2, 0.045, 0.04, 110);  // chin
+  blob(0.44, 0.47, 0.035, 0.05, 190); blob(0.56, 0.47, 0.035, 0.05, 190);   // cheeks a little more matte
+});
+// Warm albedo variation: blush on cheeks, nose and ears reads as blood under the skin (fake subsurface warmth)
+const warmAlbedo = faceCanvas((g, W, H) => {
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+  const { X, Y } = faceUV(g, W, H);
+  const warm = (u, v, r, a) => { const gr = g.createRadialGradient(X(u), Y(v), 0, X(u), Y(v), r * W); gr.addColorStop(0, `rgba(255,170,150,${a})`); gr.addColorStop(1, 'rgba(255,170,150,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); };
+  warm(0.44, 0.45, 0.05, 0.45); warm(0.56, 0.45, 0.05, 0.45); warm(0.5, 0.46, 0.022, 0.4); warm(0.5, 0.2, 0.03, 0.2);
+  warm(0.25, 0.5, 0.03, 0.35); warm(0.75, 0.5, 0.03, 0.35);   // ears
+  // lips slightly deeper
+  g.fillStyle = 'rgba(190,90,90,0.35)'; g.fillRect(X(0.465), Y(0.305), X(0.07) - 0, Y(0.28) - Y(0.305));
+});
+const irisTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 4, 32, 32, 32); gr.addColorStop(0, '#fff'); gr.addColorStop(0.75, '#bbb'); gr.addColorStop(1, '#333');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  g.strokeStyle = 'rgba(0,0,0,0.25)'; for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; g.beginPath(); g.moveTo(32 + Math.cos(a) * 8, 32 + Math.sin(a) * 8); g.lineTo(32 + Math.cos(a) * 30, 32 + Math.sin(a) * 30); g.stroke(); }
+  return new THREE.CanvasTexture(c);
+})();
+// ─── Face materials ─────────────────────────────────────────────────────────
+// [PBR skin] dielectric, T-zone roughness map, pore normal map, warm sheen + thin clearcoat
+// = light scattering just under the surface without a real SSS pass
+const skinMats = new Map();
+function skinMat(hex, morph = true) {
+  const key = 'face-skin:' + hex + (morph ? '' : ':static');
+  if (skinMats.has(key)) return skinMats.get(key);
+  const c = new THREE.Color(hex);
+  const m = new THREE.MeshPhysicalMaterial({ color: c, map: warmAlbedo, roughness: 1, roughnessMap: tzoneRough, metalness: 0,
+    normalMap: poreNormal, normalScale: new THREE.Vector2(0.28, 0.28),
+    sheen: c.clone().lerp(new THREE.Color('#ff9a7a'), 0.5).multiplyScalar(0.35), clearcoat: 0.08, clearcoatRoughness: 0.55, morphTargets: morph });
+  skinMats.set(key, m); matCache.set(key, m);          // registered so the Armenia colour conversion covers it too
+  return m;
+}
+// [PBR eyes] near-zero roughness + clearcoat so each eye carries its own sharp highlight
+const scleraMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#e4dccf'), roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.03 });
+const corneaMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#ffffff'), roughness: 0, metalness: 0, clearcoat: 1, clearcoatRoughness: 0, transparent: true, opacity: 0.1, depthWrite: false });
+const pupilMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#050505'), roughness: 0.05, clearcoat: 1 });
+const irisMats = new Map();
+const irisMat = hex => irisMats.get(hex) || (irisMats.set(hex, new THREE.MeshPhysicalMaterial({ color: new THREE.Color(hex), roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.05 })), irisMats.get(hex));
+const limbusMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#1a120c'), roughness: 0.3 });
+const mouthMat = new THREE.MeshBasicMaterial({ color: 0x2a0d0e }), teethMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#ece6d8'), roughness: 0.3, clearcoat: 0.6 });
+matCache.set('face-sclera', scleraMat); matCache.set('face-teeth', teethMat);
+
+// Beard mask in the head's UV space (jaw, chin, upper lip, sideburns), speckled so alphaTest reads as stubble
+const beardMask = (() => { const c = document.createElement('canvas'); c.width = 1024; c.height = 512; const g = c.getContext('2d'), W = 1024, H = 512;
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.filter = 'blur(6px)';
+  const { X, Y } = faceUV(g, W, H);
+  g.fillStyle = '#fff';
+  g.beginPath(); g.ellipse(X(0.5), Y(0.25), 0.125 * W, 0.11 * H, 0, 0, Math.PI * 2); g.fill();           // jaw and chin
+  g.fillRect(X(0.375), Y(0.45), 0.02 * W, 0.2 * H); g.fillRect(X(0.605), Y(0.45), 0.02 * W, 0.2 * H);   // sideburns
+  g.beginPath(); g.ellipse(X(0.5), Y(0.382), 0.05 * W, 0.013 * H, 0, 0, Math.PI * 2); g.fill();         // moustache
+  g.fillStyle = '#000'; g.beginPath(); g.ellipse(X(0.5), Y(0.337), 0.042 * W, 0.022 * H, 0, 0, Math.PI * 2); g.fill();   // keep the lips clear
+  g.filter = 'none';
+  const img = g.getImageData(0, 0, W, H); for (let i = 0; i < img.data.length; i += 4) { const k = 0.55 + Math.random() * 0.45; img.data[i] *= k; img.data[i + 1] *= k; img.data[i + 2] *= k; }
+  g.putImageData(img, 0, 0);
+  return new THREE.CanvasTexture(c);
+})();
+const beardMats = new Map();
+const beardMat = hex => beardMats.get(hex) || (beardMats.set(hex, new THREE.MeshPhysicalMaterial({ color: new THREE.Color(hex), roughness: 0.9, alphaMap: beardMask, transparent: true, opacity: 0.8, depthWrite: false, morphTargets: true })), matCache.set('face-beard:' + hex, beardMats.get(hex)), beardMats.get(hex));
+// Every detailed face is registered here for the idle / talking animation loop
+const faces = [];
+function buildFace(head, look) {
+  const shadow = m => { m.castShadow = m.receiveShadow = true; return m; };
+  const skin = skinMat(look.skin);
+  const mesh = shadow(new THREE.Mesh(faceGeo, skin)); head.add(mesh);
+  const f = { head, mesh, infl: mesh.morphTargetInfluences, eyes: [], lids: [], brows: [], blink: 0, nextBlink: 1 + Math.random() * 3, blinkT: -1,
+    gaze: new THREE.Vector2(), gazeTo: new THREE.Vector2(), nextSaccade: 0, talk: 0, talkUntil: 0, viseme: { open: 0, pucker: 0 }, expr: {}, tilt: Math.random() * 10, portrait: false };
+  for (const s of [-1, 1]) {
+    // Eye: a group we rotate for gaze; sclera, iris and pupil are separate layers under a clear cornea
+    const eye = new THREE.Group(); eye.position.set(EYE_X, EYE_Y, s * EYE_Z); head.add(eye);
+    eye.add(shadow(new THREE.Mesh(scleraGeo, scleraMat)));
+    eye.add(new THREE.Mesh(limbusGeo, limbusMat));                                     // dark ring at the iris edge
+    eye.add(new THREE.Mesh(irisGeo, irisMat(look.eyes || '#5a3a22')));
+    eye.add(new THREE.Mesh(pupilGeo, pupilMat));
+    eye.add(new THREE.Mesh(corneaGeo, corneaMat));
+    f.eyes.push(eye);
+    // Eyelids: skin-coloured shells centred on the eye, closed by their morph target
+    for (const geo of [upperLidGeo, lowerLidGeo]) { const lid = shadow(new THREE.Mesh(geo, skin)); lid.position.copy(eye.position); head.add(lid); f.lids.push(lid); }
+    // Brows and ears
+    const brow = new THREE.Mesh(browGeo, cachedLam(look.hair || '#1c1a18')); brow.position.set(2.36, 0.9, s * 0.82); brow.rotation.x = s * 0.12; head.add(brow); f.brows.push({ m: brow, s });
+    const ear = shadow(new THREE.Mesh(earGeo, skinMat(look.skin, false))); ear.position.set(-0.1, 0.1, s * 2.12); head.add(ear);
+  }
+  // Inner mouth and upper teeth sit just inside the lips: hidden by the skin until the jaw morph opens it
+  if (look.goatee) {
+    const beard = new THREE.Mesh(faceGeo, beardMat(look.hair || '#1c1a18')); beard.scale.setScalar(1.012); head.add(beard);
+    beard.morphTargetInfluences = mesh.morphTargetInfluences;                            // same weights: the beard opens with the jaw
+  }
+  const mouth = new THREE.Mesh(mouthGeo, mouthMat); mouth.position.set(1.72, -1.24, 0); head.add(mouth);
+  const teeth = new THREE.Mesh(teethGeo, teethMat); teeth.position.set(1.9, -1.14, 0); head.add(teeth);
+  faces.push(f);
+  return f;
+}
+// Expression presets (morph weights 0..1) used by dialogue and street talk
+const EXPR = {
+  neutral: {}, happy: { smile: 0.75, squint: 0.35 }, sad: { frown: 0.7 }, surprised: { browRaise: 0.9, mouthOpen: 0.15 },
+  angry: { frown: 0.9, squint: 0.5 }, curious: { browRaise: 0.45, smile: 0.15 },
+};
+function exprFor(text) {
+  if (/!\s*$/.test(text) && /\b(no|never|out|stop|help|thief|don'?t)\b/i.test(text)) return 'angry';
+  if (/\b(set you up|mistake|wasted|warrant|custody|kill|trust)\b/i.test(text)) return 'sad';
+  if (/!\s*$/.test(text)) return 'surprised';
+  if (/\?\s*$/.test(text)) return 'curious';
+  if (/\b(welcome|glad|yours|home|beautiful|bari galust|shnorhakal|lav)\b/i.test(text)) return 'happy';
+  return 'neutral';
+}
+// Viseme for one character of text: a/e/i open wide, o/u pucker, m/b/p/f/v close, other consonants half-open
+function visemeFor(ch) {
+  const c = (ch || ' ').toLowerCase();
+  if ('aeiyáéíý'.includes(c)) return { open: 0.75, pucker: 0 };
+  if ('ouóú'.includes(c)) return { open: 0.45, pucker: 0.8 };
+  if ('mbpfv'.includes(c)) return { open: 0, pucker: 0.1 };
+  if (/[a-zա-ֆ]/.test(c)) return { open: 0.3, pucker: 0.1 };
+  return { open: 0.05, pucker: 0 };
+}
+// Per-frame face animation: blinking, eye saccades, head micro-motion, expression and mouth blending
+function updateFaces(dt) {
+  const now = performance.now() / 1000;
+  for (let i = faces.length - 1; i >= 0; i--) {
+    const f = faces[i];
+    if (!f.portrait) { let r = f.head; while (r.parent) r = r.parent; if (!r.isScene) { if (!r.parent && r !== f.head) faces.splice(i, 1); continue; } }
+    if (!f.portrait && !isShown(f.head)) continue;
+    if (!f.portrait && f.head.getWorldPosition(_fv).distanceToSquared(camera.position) > 700 * 700) continue;   // far away: skip the work
+    // Blink: close in 0.07 s, open in 0.13 s, every 2-6 s, occasionally a double blink
+    f.nextBlink -= dt;
+    if (f.nextBlink <= 0) { f.blinkT = 0; f.nextBlink = Math.random() < 0.2 ? 0.28 : 2 + Math.random() * 4; }
+    if (f.blinkT >= 0) { f.blinkT += dt; f.blink = f.blinkT < 0.07 ? f.blinkT / 0.07 : Math.max(0, 1 - (f.blinkT - 0.07) / 0.13); if (f.blinkT > 0.2) f.blinkT = -1; }
+    for (const lid of f.lids) lid.morphTargetInfluences[0] = f.blink;
+    // Saccades: the eyes jump to a new nearby target every 0.4-2.2 s, snapping quickly
+    f.nextSaccade -= dt;
+    if (f.nextSaccade <= 0) { f.nextSaccade = 0.4 + Math.random() * 1.8; f.gazeTo.set((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.22); }
+    f.gaze.lerp(f.gazeTo, Math.min(1, dt * 22));
+    for (const e of f.eyes) { e.rotation.y = f.gaze.x; e.rotation.z = f.gaze.y; }
+    // Head micro-motion layered on top of whatever posePerson set this frame
+    f.tilt += dt;
+    f.head.rotation.x += Math.sin(f.tilt * 0.7) * 0.03; f.head.rotation.z += Math.sin(f.tilt * 0.53 + 1) * 0.025;
+    // Talking: street speakers flap through random visemes; dialogue portraits get exact visemes from the text
+    if (f.talkUntil > now && !f.portrait) { if (Math.random() < dt * 12) f.viseme = visemeFor('aeoumbt'[Math.random() * 7 | 0]); }
+    else if (!f.portrait) f.viseme = { open: 0, pucker: 0 };
+    // Blend toward the target weights (expression + viseme), smoothly
+    const tgt = { ...EXPR.neutral, ...f.expr }, k = Math.min(1, dt * 10);
+    const want = [tgt.smile || 0, tgt.frown || 0, tgt.browRaise || 0, Math.max(tgt.mouthOpen || 0, f.viseme.open), Math.max(tgt.pucker || 0, f.viseme.pucker), (tgt.squint || 0) + f.blink * 0.3];
+    for (let i = 0; i < want.length; i++) f.infl[i] += (want[i] - f.infl[i]) * (i === FM.mouthOpen || i === FM.pucker ? Math.min(1, dt * 18) : k);
+    // Brows follow the brow morphs (they are separate meshes)
+    for (const b of f.brows) { b.m.position.y = 0.9 + 0.2 * f.infl[FM.browRaise] - 0.12 * f.infl[FM.frown]; b.m.rotation.x = b.s * (0.12 - 0.25 * f.infl[FM.frown] + 0.08 * f.infl[FM.browRaise]); }
+  }
+}
+// Visible only if every ancestor is visible and the chain reaches a scene (removed people drop out of the list)
+function isShown(o) { let p = o; for (; p.parent; p = p.parent) if (!p.visible) return false; return p.isScene === true; }
+
+
+// Street talk: whoever has a detailed face moves their mouth while their caption is up
+function faceNear(x, y) {
+  let best = null, bd = 30 * 30;
+  for (const f of faces) { if (f.portrait) continue; f.head.getWorldPosition(_fv); const d = (_fv.x - x) ** 2 + (_fv.z - y) ** 2; if (d < bd) { bd = d; best = f; } }
+  return best;
+}
+
 function buildPerson(look) {
   const g = new THREE.Group(), inner = new THREE.Group();
   const M = (geo, color, parent, x = 0, y = 0, z = 0, shadow = false) => {
@@ -3821,15 +4137,19 @@ function buildPerson(look) {
   const neck = J(spine, 0, 7.6, 0);
   M(PG.neck, look.skin, neck);
   const head = J(neck, 0.2, 3.9, 0);
-  M(PG.head, look.skin, head, 0, 0, 0, true);
-  for (const z of [-0.9, 0.9]) M(PG.eye, eyeMat, head, 2.2, 0.3, z);
-  M(PG.nose, look.skin, head, 2.45, -0.4, 0);
-  if (look.goatee) { M(PG.goatee, look.hair, head, 2.05, -2.0, 0); M(PG.mustache, look.hair, head, 2.35, -1.05, 0); }
+  if (look.face) buildFace(head, look);                 // sculpted head, layered eyes, eyelids, morph-target expressions
+  else {
+    M(PG.head, look.skin, head, 0, 0, 0, true);
+    for (const z of [-0.9, 0.9]) M(PG.eye, eyeMat, head, 2.2, 0.3, z);
+    M(PG.nose, look.skin, head, 2.45, -0.4, 0);
+  }
+  if (look.goatee && !look.face) { M(PG.goatee, look.hair, head, 2.05, -2.0, 0); M(PG.mustache, look.hair, head, 2.35, -1.05, 0); }
   if (look.tank) M(PG.neckline, look.skin, spine, 2.05, 7.1, 0);
   if (look.cap) { M(PG.cap, look.pants, head, -0.2, 1.7, 0); M(PG.brim, look.pants, head, 2.4, 1.2, 0); }
   else {
     const hair = M(PG.hairCap, look.hair, head, -0.25, 0.2, 0); hair.rotation.z = 0.22;
     if (look.buzz) { hair.scale.setScalar(0.96); hair.position.set(-0.1, 0.1, 0); hair.rotation.z = 0.12; }
+    if (look.face) { hair.position.y += 0.75; hair.rotation.z += 0.3; hair.scale.y *= 0.92; }   // clear the forehead on the taller sculpted head
     if (look.longHair && !look.buzz) M(PG.hairBack, look.hair, head, -1.9, 0.6, 0);
   }
   const limbs = {};
@@ -3914,7 +4234,7 @@ function posePerson(g, x, y, a, phase, moving, down, fade, opts = {}) {
   }
 }
 // Player: shaved head, goatee, white tank top and blue jeans by default; the apartment wardrobe swaps outfits
-const PLAYER_BASE = { skin: '#6b4430', hair: '#120e0c', buzz: true, goatee: true };
+const PLAYER_BASE = { skin: '#6b4430', hair: '#120e0c', buzz: true, goatee: true, face: true, eyes: '#3a2414' };
 const OUTFITS = [
   { name: 'Tank top and jeans', shirt: '#f2efe8', pants: '#3d5a86', shoes: '#18181b', tank: true },
   { name: 'Green flannel', shirt: '#3f6b3a', pants: '#2b2f38', shoes: '#e8e4dc' },
@@ -3968,7 +4288,7 @@ function IRoom(I, floorMat, wallMat, trimMat) {
 }
 const interiorNPCs = [];
 function INPC(I, x, y, a, look, solid = true) {
-  const g = buildPerson(look); g.position.set(I.ox + x, 0, I.oy + y); g.rotation.y = -a;
+  const g = buildPerson({ ...look, face: true }); g.position.set(I.ox + x, 0, I.oy + y); g.rotation.y = -a;
   interiorGroup.add(g); interiorNPCs.push({ g, x: I.ox + x, y: I.oy + y, a });
   if (solid) I.solids.push([x - 7, y - 7, x + 7, y + 7]);
 }
@@ -4479,7 +4799,7 @@ function RTree(R, x, z, s = 1, kind = 'cone', col) {
   R.solids.push([x - 5 * s, z - 5 * s, x + 5 * s, z + 5 * s]);
 }
 function RNPC(R, x, z, a, look) {
-  const g = buildPerson(look); g.position.set(R.ox + x, 0, R.oy + z); g.rotation.y = -a;
+  const g = buildPerson({ ...look, face: true }); g.position.set(R.ox + x, 0, R.oy + z); g.rotation.y = -a;
   R.group.add(g); R.npcs.push({ g, x: R.ox + x, y: R.oy + z, a }); R.solids.push([x - 7, z - 7, x + 7, z + 7]);
 }
 const randomLook = () => { const p = makePed(0, 0); return { skin: p.skin, hair: p.hair, shirt: p.shirt, pants: p.pants, shoes: p.shoes, longHair: p.longHair }; };
@@ -5547,6 +5867,377 @@ addEventListener('keydown', e => {
 // Warm the flight sky in idle time so the first trip never waits on it
 (window.requestIdleCallback || (f => setTimeout(f, 1500)))(() => envFor('flight'));
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// DIALOGUE PORTRAIT — a lit close-up of whoever is speaking, drawn into the talk box
+// Its own tiny scene: key light (warm, casts PCF soft shadows under brow, nose and chin), fill (cool, soft, no shadow)
+// and a rim light, so the features read with dimension. Mouth shapes follow the text as it types out.
+// ═══════════════════════════════════════════════════════════════════════════════
+const portraitScene = new THREE.Scene();
+portraitScene.background = new THREE.Color('#15181f');
+const portraitCam = new THREE.PerspectiveCamera(26, 1, 1, 200);
+{
+  const key = new THREE.DirectionalLight(0xffe8d0, 1.25); key.position.set(14, 10, 9); key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0004; key.shadow.normalBias = 0.02; key.shadow.radius = 3;
+  Object.assign(key.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 60 });
+  const fill = new THREE.DirectionalLight(0xb8c8ff, 0.4); fill.position.set(10, 2, -12);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.55); rim.position.set(-12, 8, 4);
+  portraitScene.add(key, key.target, fill, rim, new THREE.HemisphereLight(0x8090a8, 0x302820, 0.35));
+  key.target.position.set(0, 26, 0);
+}
+const CAST_LOOKS = {
+  lou: { skin: '#b98a66', hair: '#8a8580', shirt: '#3a4a3a', pants: '#2a2a2a', goatee: true, buzz: true, eyes: '#4a3a2a' },
+  nova: { skin: '#c49673', hair: '#141214', shirt: '#2a2a3a', pants: '#1d1d22', longHair: true, eyes: '#2f4a3a' },
+  vic: { skin: '#d0a47e', hair: '#2a1c14', shirt: '#6a1a22', pants: '#1d1d22', goatee: true, eyes: '#3a2a1a' },
+  hale: { skin: '#e0b89a', hair: '#6a4a30', shirt: '#4a4a52', pants: '#2a2a30', eyes: '#3a5a7a' },
+  pm: { skin: '#c9a07e', hair: '#4a4540', shirt: '#1f2a44', pants: '#1f2a44', goatee: true, buzz: true, eyes: '#4a3a2a' },
+};
+const portraits = {};
+function portraitFor(who) {
+  if (portraits[who]) return portraits[who];
+  const look = who === 'you' ? { ...PLAYER_BASE, ...OUTFITS[player.outfit || 0], face: true } : { ...(CAST_LOOKS[who] || CAST_LOOKS.lou), face: true, shoes: '#1c1c20' };
+  const g = buildPerson(look); g.userData.blob.visible = false;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  posePerson(g, 0, 0, 0, 0, false, false, 1);
+  const f = faces[faces.length - 1]; f.portrait = true;
+  portraitScene.add(g); portraits[who] = { g, f };
+  return portraits[who];
+}
+const talkPortraitEl = document.getElementById('talkPortrait');
+const talkType = { text: '', shown: 0, done: true, who: null };
+function renderPortrait() {
+  if (mode !== 'talk' || !talkType.who || !talkPortraitEl) return;
+  const r = talkPortraitEl.getBoundingClientRect(); if (r.width < 8) return;
+  for (const k in portraits) portraits[k].g.visible = k === talkType.who;
+  const P = portraitFor(talkType.who), head = P.g.userData.head;
+  posePerson(P.g, 0, 0, 0, 0, false, false, 1);
+  head.getWorldPosition(_c1);
+  portraitCam.aspect = r.width / r.height; portraitCam.updateProjectionMatrix();
+  portraitCam.position.set(_c1.x + 17, _c1.y + 1.6, _c1.z + 5); portraitCam.lookAt(_c1.x, _c1.y - 0.2, _c1.z);
+  const hdr = hdrMode();
+  if (hdr) renderer.outputEncoding = THREE.sRGBEncoding;                  // Armenia colours are linear: encode them for display
+  renderer.setScissorTest(true);
+  renderer.setViewport(r.left, vh - r.bottom, r.width, r.height); renderer.setScissor(r.left, vh - r.bottom, r.width, r.height);
+  renderer.render(portraitScene, portraitCam);
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, vw, vh);
+  if (hdr) renderer.outputEncoding = THREE.LinearEncoding;
+}
+// Typewriter + visemes: the line types out at ~40 characters a second and the portrait mouths each letter
+function startTalkLine(who, text) {
+  talkType.text = text; talkType.shown = 0; talkType.done = reduceMotionQT; talkType.who = who;
+  const P = portraitFor(who); P.f.expr = EXPR[exprFor(text)];
+}
+function updateTalkType(dt) {
+  if (mode !== 'talk' || !talkType.who) return;
+  const P = portraitFor(talkType.who), line = document.getElementById('talkLine');
+  if (!talkType.done) {
+    const prev = Math.floor(talkType.shown);
+    const ch = talkType.text[prev] || ' ';
+    talkType.shown += dt * (/[.,!?—]/.test(ch) ? 12 : 40);                // pause a beat on punctuation
+    const n = Math.min(talkType.text.length, Math.floor(talkType.shown));
+    if (n !== prev) line.textContent = talkType.text.slice(0, n);
+    P.f.viseme = visemeFor(talkType.text[n - 1]);
+    if (n >= talkType.text.length) talkType.done = true;
+  } else { P.f.viseme = { open: 0, pucker: 0 }; if (line.textContent !== talkType.text) line.textContent = talkType.text; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WEATHER & NATURAL DISASTERS
+// Weather: clear · cloudy · rain · storm · fog · snow (Auto changes it every few minutes).
+// Disasters (city only): earthquake · tornado · flood · wildfire. All driven from the Weather phone app.
+// ═══════════════════════════════════════════════════════════════════════════════
+const WEATHERS = {
+  clear:  { name: 'Clear', temp: 24, wind: 6, hum: 35, light: 1, fog: 1, rain: 0, snow: 0, grip: 1, sky: null },
+  cloudy: { name: 'Cloudy', temp: 18, wind: 14, hum: 55, light: 0.72, fog: 1.3, rain: 0, snow: 0, grip: 1, sky: '#7d8794' },
+  rain:   { name: 'Rain', temp: 14, wind: 18, hum: 88, light: 0.55, fog: 1.8, rain: 1, snow: 0, grip: 0.72, sky: '#5b6470' },
+  storm:  { name: 'Thunderstorm', temp: 12, wind: 42, hum: 95, light: 0.38, fog: 2.2, rain: 1.7, snow: 0, grip: 0.62, sky: '#383e48', lightning: true },
+  fog:    { name: 'Fog', temp: 11, wind: 3, hum: 97, light: 0.7, fog: 4.5, rain: 0, snow: 0, grip: 0.92, sky: '#a8adb2' },
+  snow:   { name: 'Snow', temp: -3, wind: 12, hum: 80, light: 0.8, fog: 2.2, rain: 0, snow: 1, grip: 0.5, sky: '#b9c0c8' },
+};
+const weather = { kind: 'clear', auto: true, nextAuto: 180, mix: 0, snowCover: 0, flash: 0, nextBolt: 5, disaster: null };
+const weatherGrip = () => WEATHERS[weather.kind].grip;
+function setWeather(kind, fromUser) {
+  if (!WEATHERS[kind]) return false;
+  weather.kind = kind; if (fromUser) weather.auto = false;
+  toast(`Weather: ${WEATHERS[kind].name}`, '#9fd4e8');
+  return true;
+}
+// Rain: streaks as line segments in a box that follows the camera; snow: drifting points
+const RAIN_N = 1600, SNOW_N = 1800, BOX = 700, TOP = 520;
+const rainPos = new Float32Array(RAIN_N * 6), snowPos = new Float32Array(SNOW_N * 3);
+for (let i = 0; i < RAIN_N; i++) { const x = (Math.random() - 0.5) * BOX * 2, y = Math.random() * TOP, z = (Math.random() - 0.5) * BOX * 2; rainPos.set([x, y, z, x, y - 16, z], i * 6); }
+for (let i = 0; i < SNOW_N; i++) snowPos.set([(Math.random() - 0.5) * BOX * 2, Math.random() * TOP, (Math.random() - 0.5) * BOX * 2], i * 3);
+const rainGeo = new THREE.BufferGeometry(); rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+const snowGeo = new THREE.BufferGeometry(); snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+const rainFx = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0xaab8c8, transparent: true, opacity: 0.35, depthWrite: false }));
+const snowFx = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 3.2, transparent: true, opacity: 0.85, depthWrite: false }));
+rainFx.frustumCulled = snowFx.frustumCulled = false; rainFx.visible = snowFx.visible = false;
+scene.add(rainFx, snowFx);
+const groundBase = ground.material.color.clone();
+// ─── Disasters ──────────────────────────────────────────────────────────────
+const DISASTERS = {
+  earthquake: { name: 'Earthquake', dur: 26, blurb: 'Magnitude 6.8. The ground shakes, debris falls, people panic.' },
+  tornado: { name: 'Tornado', dur: 45, blurb: 'An EF3 funnel crosses the city, throwing cars and people.' },
+  flood: { name: 'Flood', dur: 50, blurb: 'Water rises through the streets. Cars stall and slow to a crawl.' },
+  wildfire: { name: 'Wildfire', dur: 60, blurb: 'Fire spreads through the parks. Smoke fills the sky. Keep clear.' },
+};
+const disasterFx = new THREE.Group(); scene.add(disasterFx);
+// Tornado funnel: stacked open cones with a streaky, scrolling translucent texture, plus debris orbiting it
+const funnelTex = tileTex(128, 2, 3, (h, d, n) => { for (let i = 0; i < n * n; i++) { const v = clamp(120 + h[i] * 200, 0, 255); d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = clamp(90 + h[i] * 260, 0, 255); } });
+funnelTex.repeat.set(3, 1);
+const funnelMat = new THREE.MeshLambertMaterial({ color: 0x7a7872, map: funnelTex, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+const funnel = new THREE.Group();
+for (let k = 0; k < 5; k++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(40 + k * 55, 14 + k * 45, 220, 20, 1, true), funnelMat); m.position.y = 110 + k * 200; funnel.add(m); }
+const debrisGeo = new THREE.BoxGeometry(4, 4, 4), debris = [];
+for (let k = 0; k < 40; k++) { const m = new THREE.Mesh(debrisGeo, cachedLam(['#5a4a3a', '#6a6a6a', '#3a2a1a'][k % 3])); m.userData = { r: 30 + Math.random() * 120, h: Math.random() * 500, a: Math.random() * 6, s: 1 + Math.random() * 2 }; funnel.add(m); debris.push(m); }
+funnel.visible = false; disasterFx.add(funnel);
+// Flood: a translucent water sheet over the whole city that rises and recedes
+const floodMat = new THREE.MeshLambertMaterial({ color: 0x3a5a52, transparent: true, opacity: 0.78, emissive: 0x0a1a18 });
+const flood = new THREE.Mesh(new THREE.PlaneGeometry(GW * T, GH * T).rotateX(-Math.PI / 2), floodMat); flood.position.set(GW * T / 2, 0, GH * T / 2); flood.visible = false; disasterFx.add(flood);
+// Wildfire: additive flame sprites and dark smoke on grass tiles, spreading from a seed
+const fireTiles = [];
+for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (tileAt(x, y) === GRASS) fireTiles.push([x, y]);
+const FIRE_N = 900;
+const firePos = new Float32Array(FIRE_N * 3), fireGeo = new THREE.BufferGeometry(); fireGeo.setAttribute('position', new THREE.BufferAttribute(firePos, 3));
+const fireFx = new THREE.Points(fireGeo, new THREE.PointsMaterial({ color: 0xff7a24, size: 14, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+const smokePos = new Float32Array(FIRE_N * 3), smokeGeo = new THREE.BufferGeometry(); smokeGeo.setAttribute('position', new THREE.BufferAttribute(smokePos, 3));
+const smokeFx = new THREE.Points(smokeGeo, new THREE.PointsMaterial({ color: 0x2a2624, size: 46, transparent: true, opacity: 0.35, depthWrite: false }));
+fireFx.frustumCulled = smokeFx.frustumCulled = false; fireFx.visible = smokeFx.visible = false; disasterFx.add(fireFx, smokeFx);
+// Earthquake debris: chunks of facade that fall near the player
+const quakeChunks = [];
+for (let k = 0; k < 18; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(6 + Math.random() * 8, 4 + Math.random() * 6, 6 + Math.random() * 8), cachedLam(['#8a7a6a', '#6a6460', '#a89888'][k % 3])); m.visible = false; m.castShadow = true; m.userData = { vy: 0 }; disasterFx.add(m); quakeChunks.push(m); }
+
+function startDisaster(kind) {
+  const D = DISASTERS[kind]; if (!D) return 'Unknown disaster';
+  if (player.region || QT.state !== 'idle') return 'Disasters only happen in Hayastan city';
+  stopDisaster(true);
+  const p = playerPos();
+  weather.disaster = { kind, t: 0, dur: D.dur, level: 0, x: p.x - 900, y: p.y - 300, dir: Math.random() * Math.PI * 2, burning: [] };
+  const W = weather.disaster;
+  if (kind === 'tornado') { W.x = p.x + (Math.random() < 0.5 ? -1 : 1) * 1200; W.y = p.y + (Math.random() - 0.5) * 600; funnel.visible = true; if (WEATHERS[weather.kind].light > 0.5) weather.kind = 'storm'; }
+  if (kind === 'flood') { flood.visible = true; if (weather.kind === 'clear') weather.kind = 'rain'; }
+  if (kind === 'wildfire') {
+    fireFx.visible = smokeFx.visible = true;
+    const seed = fireTiles.slice().sort((a, b) => Math.hypot(a[0] * T - p.x, a[1] * T - p.y) - Math.hypot(b[0] * T - p.x, b[1] * T - p.y))[Math.min(20, fireTiles.length - 1)];
+    W.burning = seed ? [seed] : [];
+  }
+  showBanner(`${D.name.toUpperCase()} WARNING`, D.blurb, '#ff5f5f', 4);
+  toast(`Emergency alert: ${D.name}`, '#ff5f5f');
+  for (const q of peds) if (q.state !== 'down') q.fleeT = 6;
+  return `${D.name} started`;
+}
+function stopDisaster(silent) {
+  const W = weather.disaster; if (!W) return;
+  weather.disaster = null; funnel.visible = flood.visible = fireFx.visible = smokeFx.visible = false; for (const c of quakeChunks) c.visible = false;
+  if (!silent) toast(`${DISASTERS[W.kind].name} is over`, '#7fe0a0');
+}
+function updateDisaster(dt) {
+  const W = weather.disaster; if (!W) return;
+  if (player.region) { stopDisaster(true); return; }
+  W.t += dt;
+  const life = W.t / W.dur, ramp = sstep(0, 0.12, life) * (1 - sstep(0.85, 1, life));
+  const p = playerPos();
+  if (W.kind === 'earthquake') {
+    cam.shake = Math.max(cam.shake, 9 * ramp);
+    for (const c of cars) if (c.ai && Math.random() < dt * 2 * ramp) { c.vx += (Math.random() - 0.5) * 80; c.vy += (Math.random() - 0.5) * 80; }
+    if (Math.random() < dt * 3 * ramp) for (const q of peds) if (q.state !== 'down' && Math.hypot(q.x - p.x, q.y - p.y) < 500) q.fleeT = 3;
+    // Falling chunks of facade near the player
+    for (const m of quakeChunks) {
+      if (!m.visible && Math.random() < dt * 0.9 * ramp) { m.visible = true; m.position.set(p.x + (Math.random() - 0.5) * 400, 160 + Math.random() * 120, p.y + (Math.random() - 0.5) * 400); m.userData.vy = 0; }
+      if (m.visible) {
+        m.userData.vy -= 300 * dt; m.position.y += m.userData.vy * dt; m.rotation.x += dt * 3; m.rotation.z += dt * 2;
+        if (m.position.y < 3) {
+          sparks(m.position.x, m.position.z, 6); m.visible = false;
+          if (!player.car && Math.hypot(m.position.x - player.x, m.position.z - player.y) < 22) { player.hp -= 12; flash = 0.8; toast('Hit by falling debris', '#ff8a7a'); }
+        }
+      }
+    }
+  } else if (W.kind === 'tornado') {
+    // The funnel wanders toward the player's side of town
+    W.dir += (Math.random() - 0.5) * dt * 0.8;
+    const toP = Math.atan2(p.y - W.y, p.x - W.x); W.dir += angDiff(toP, W.dir) * dt * 0.15;
+    W.x += Math.cos(W.dir) * 70 * dt; W.y += Math.sin(W.dir) * 70 * dt;
+    funnel.position.set(W.x, 0, W.y); funnel.rotation.y += dt * 2.5; funnelTex.offset.x += dt * 0.6; funnel.scale.setScalar(0.3 + 0.7 * ramp);
+    for (const d of debris) { const u = d.userData; u.a += dt * u.s * 2; d.position.set(Math.cos(u.a) * u.r, u.h + Math.sin(u.a * 3) * 20, Math.sin(u.a) * u.r); d.rotation.x += dt * 4; }
+    cam.shake = Math.max(cam.shake, 5 * sstep(700, 150, Math.hypot(p.x - W.x, p.y - W.y)) * ramp);
+    // Anything within the funnel's reach gets pulled round and flung outward
+    const pull = (o, strength) => {
+      const dx = o.x - W.x, dy = o.y - W.y, d = Math.hypot(dx, dy); if (d > 180 || d < 1) return false;
+      const k = (1 - d / 180) * strength * ramp; o.vx = (o.vx || 0) + (-dy / d * 3 + dx / d) * k * dt; o.vy = (o.vy || 0) + (dx / d * 3 + dy / d) * k * dt; return true;
+    };
+    for (const c of cars) if (!c.spec.air) pull(c, 900);
+    for (const q of peds) if (q.state !== 'down' && Math.hypot(q.x - W.x, q.y - W.y) < 120) { q.state = 'down'; q.downT = 0; q.vx = (q.x - W.x) * 3; q.vy = (q.y - W.y) * 3; }
+    if (!player.car && Math.hypot(player.x - W.x, player.y - W.y) < 110) {
+      const a = Math.atan2(player.y - W.y, player.x - W.x) + 1.2;
+      for (let s = 0; s < 6; s++) { const nx = player.x + Math.cos(a) * 8, ny = player.y + Math.sin(a) * 8; if (!circleSolid(nx, ny, 7)) { player.x = nx; player.y = ny; } }
+      player.hp -= 14 * dt; flash = Math.max(flash, 0.3);
+    }
+  } else if (W.kind === 'flood') {
+    W.level = 11 * ramp; flood.position.y = W.level; floodMat.opacity = 0.55 + 0.25 * ramp;
+    if (W.level > 3) {
+      const drag = 1 - Math.min(0.9, dt * 1.6 * (W.level / 11));
+      for (const c of cars) if (!c.spec.air) { c.vx *= drag; c.vy *= drag; }
+      for (const q of peds) if (q.state !== 'down') q.fleeT = Math.max(q.fleeT, 0.5);
+    }
+  } else if (W.kind === 'wildfire') {
+    // Spread to neighbouring grass tiles a few times a second; burn out after a while
+    if (Math.random() < dt * 3 * ramp && W.burning.length < 160) {
+      const b = pick(W.burning), n = fireTiles.find(t => Math.abs(t[0] - b[0]) + Math.abs(t[1] - b[1]) === 1 && !W.burning.includes(t));
+      if (n) W.burning.push(n);
+    }
+    const fp = fireGeo.attributes.position, sp = smokeGeo.attributes.position;
+    for (let i = 0; i < FIRE_N; i++) {
+      const t = W.burning[i % Math.max(1, W.burning.length)]; if (!t) break;
+      const k = (time * 0.9 + i * 0.137) % 1;
+      fp.setXYZ(i, (t[0] + (i * 0.618 % 1)) * T, 4 + k * 30 * ramp, (t[1] + (i * 0.382 % 1)) * T);
+      sp.setXYZ(i, (t[0] + (i * 0.33 % 1)) * T + k * 60, 30 + k * 260, (t[1] + (i * 0.77 % 1)) * T + k * 30);
+    }
+    fp.needsUpdate = sp.needsUpdate = true;
+    if (!player.car) for (const t of W.burning) if (Math.hypot((t[0] + 0.5) * T - player.x, (t[1] + 0.5) * T - player.y) < T * 0.7) { player.hp -= 20 * dt; flash = Math.max(flash, 0.4); break; }
+  }
+  if (W.t >= W.dur) stopDisaster();
+}
+function updateWeather(dt) {
+  const Wd = WEATHERS[weather.kind];
+  if (weather.auto && !weather.disaster) {
+    weather.nextAuto -= dt;
+    if (weather.nextAuto <= 0) { weather.nextAuto = 150 + Math.random() * 180; weather.kind = pick(['clear', 'clear', 'cloudy', 'cloudy', 'rain', 'fog', 'storm', ...(weather.kind === 'snow' || Math.random() < 0.15 ? ['snow'] : [])]); }
+  }
+  const inSky = QT.sky, cp = camera.position;
+  // Rain streaks and snowflakes fall inside a box that follows the camera, wrapping around at the edges
+  const rainOn = Wd.rain > 0 && !inSky && !player.interior, snowOn = Wd.snow > 0 && !inSky && !player.interior;
+  rainFx.visible = rainOn; snowFx.visible = snowOn;
+  const wind = Wd.wind * 0.6;
+  if (rainOn) {
+    rainFx.position.set(cp.x, 0, cp.z); rainFx.material.opacity = 0.22 + 0.2 * Wd.rain;
+    const a = rainGeo.attributes.position.array, fall = 900 * dt * (0.8 + 0.4 * Wd.rain), n = Math.floor(RAIN_N * Math.min(1, Wd.rain));
+    for (let i = 0; i < RAIN_N; i++) {
+      const o = i * 6; let y = a[o + 1] - fall;
+      if (y < 0 || i >= n) { y = i >= n ? -9999 : TOP; a[o] = (Math.random() - 0.5) * BOX * 2; a[o + 2] = (Math.random() - 0.5) * BOX * 2; }
+      a[o + 1] = y; a[o + 3] = a[o] - wind * 0.4; a[o + 4] = y - 18; a[o + 5] = a[o + 2];
+    }
+    rainGeo.attributes.position.needsUpdate = true;
+  }
+  if (snowOn) {
+    snowFx.position.set(cp.x, 0, cp.z);
+    const a = snowGeo.attributes.position.array, t = performance.now() / 1000;
+    for (let i = 0; i < SNOW_N; i++) { const o = i * 3; a[o + 1] -= 40 * dt; a[o] += (Math.sin(t + i) * 8 + wind * 0.3) * dt; if (a[o + 1] < 0) { a[o + 1] = TOP; a[o] = (Math.random() - 0.5) * BOX * 2; a[o + 2] = (Math.random() - 0.5) * BOX * 2; } }
+    snowGeo.attributes.position.needsUpdate = true;
+  }
+  // Snow settles slowly on the streets and melts when it stops
+  weather.snowCover = clamp(weather.snowCover + dt * (snowOn ? 0.03 : -0.02), 0, 0.85);
+  // Lightning: random bolts light the whole sky for an instant, then thunder shakes the camera
+  if (Wd.lightning && !inSky) { weather.nextBolt -= dt; if (weather.nextBolt <= 0) { weather.nextBolt = 3 + Math.random() * 9; weather.flash = 1; setTimeout(() => { cam.shake = Math.max(cam.shake, 3); }, 400 + Math.random() * 900); } }
+  weather.flash = Math.max(0, weather.flash - dt * 4);
+  updateDisaster(dt);
+}
+// Applied after the time-of-day / Armenia lighting each frame: darker skies, heavier fog, wet or snowy ground
+function applyWeatherLook() {
+  if (QT.sky || player.interior) return;
+  const Wd = WEATHERS[weather.kind];
+  hemi.intensity *= 0.5 + 0.5 * Wd.light; moon.intensity *= Wd.light;
+  scene.fog.density *= Wd.fog;
+  if (Wd.sky) { scene.fog.color.lerp(tmpA.set(Wd.sky), 0.55); if (scene.background && scene.background.isColor) scene.background.lerp(tmpA.set(Wd.sky), 0.55); }
+  if (weather.disaster?.kind === 'wildfire') { scene.fog.color.lerp(tmpA.set('#6a4a38'), 0.5); scene.fog.density *= 1.6; }
+  if (weather.flash > 0) { hemi.intensity += 2.5 * weather.flash; hemi.color.lerp(tmpA.set('#dfe8ff'), weather.flash); }
+  // Ground: rain darkens the asphalt (wet), snow whitens it
+  const wet = Wd.rain > 0 || weather.disaster?.kind === 'flood' ? 0.72 : 1;
+  ground.material.color.copy(groundBase).multiplyScalar(wet).lerp(tmpA.set('#e8edf2'), weather.snowCover);
+  ground.material.emissiveIntensity *= 1 - weather.snowCover * 0.4;
+}
+function drawWeatherHud() {
+  if (weather.flash > 0.05) { ctx.fillStyle = `rgba(230,240,255,${weather.flash * 0.35})`; ctx.fillRect(0, 0, vw, vh); }
+  const W = weather.disaster; if (!W || mode === 'talk') return;
+  const left = Math.max(0, Math.ceil(W.dur - W.t)), s = clamp(vw / 900, 0.72, 1), label = `${DISASTERS[W.kind].name.toUpperCase()} · ${left}s`;
+  ctx.font = `800 ${Math.round(15 * s + 3)}px ${DISPLAY}`; ctx.textAlign = 'center';
+  const w = ctx.measureText(label).width + 36, x = vw / 2 - w / 2, y = insetTop + 16 + 96 * s;
+  ctx.fillStyle = Math.floor(time * 3) % 2 ? 'rgba(170,20,20,0.9)' : 'rgba(120,12,12,0.9)'; ctx.fillRect(x, y, w, 26);
+  ctx.fillStyle = '#fff'; ctx.fillText(label, vw / 2, y + 19);
+}
+
+// ─── Weather app ───────────────────────────────────────────────────────────
+function weatherApp() {
+  const Wd = WEATHERS[weather.kind];
+  const now = el('div', 'wx-now');
+  now.append(el('b', '', `${Wd.temp}°C`), el('span', '', `${Wd.name} · wind ${Wd.wind} km/h · humidity ${Wd.hum}%`), el('span', 'wx-mode', weather.auto ? 'Auto: changes on its own' : 'Set by you'));
+  phBody.append(now);
+  const grid = el('div', 'wx-grid');
+  for (const [k, W] of Object.entries(WEATHERS)) {
+    const b = el('button', 'wx-btn' + (k === weather.kind ? ' on' : ''), W.name); b.type = 'button'; b.setAttribute('aria-pressed', String(k === weather.kind));
+    b.addEventListener('click', () => { setWeather(k, true); phoneApp('weather'); }); grid.append(b);
+  }
+  phBody.append(grid);
+  phItem(weather.auto ? 'Auto weather is on' : 'Turn Auto weather back on', 'The sky changes every few minutes', () => { weather.auto = true; weather.nextAuto = 60; phoneApp('weather'); }, weather.auto);
+  phNote('Natural disasters');
+  const inCity = !player.region;
+  for (const [k, D] of Object.entries(DISASTERS)) {
+    const b = phItem(D.name, D.blurb, () => { const r = startDisaster(k); if (r !== `${D.name} started`) toast(r, '#ff8a7a'); closePhone(); }, !inCity || !!weather.disaster);
+    b.classList.add('wx-danger');
+  }
+  if (weather.disaster) phItem(`Stop the ${DISASTERS[weather.disaster.kind].name.toLowerCase()}`, 'End it now', () => { stopDisaster(); phoneApp('weather'); });
+  if (!inCity) phNote('Disasters only happen in Hayastan city.');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HAYASTAN GPT — an assistant on the phone, answered by Claude through the artifact's `sample` capability.
+// It can act in the game through a few page functions (weather, disasters, travel, waypoints, status).
+// ═══════════════════════════════════════════════════════════════════════════════
+const gpt = { sample: null, ready: false, tools: false, turns: [], busy: false, ctl: null, log: [] };
+(window.claude?.use ? window.claude.use('sample') : Promise.resolve(null)).then(async s => {
+  gpt.sample = s; gpt.ready = true;
+  if (s) { const lim = await s.limits().catch(() => null); gpt.tools = !!lim?.tools; }
+}).catch(() => { gpt.ready = true; });
+const PLACES_GPT = { casino: () => PLACES.casinoDoor, apartment: () => ({ x: 26 * T, y: 32.65 * T }), customs: () => PLACES.customs, airfield: () => ({ x: 68 * T, y: 12.6 * T }), bank: () => PLACES.bank };
+const gptTools = [
+  { name: 'get_status', description: 'Returns the player\'s money, health, wanted stars, location, weather and time as JSON.',
+    execute: () => ({ money: player.money, health: Math.round(player.hp), wanted: stars(), location: player.region ? REGIONS[player.region].name : districtName, weather: WEATHERS[weather.kind].name, disaster: weather.disaster?.kind || null, time: clockText() }) },
+  { name: 'set_weather', description: 'Changes the weather. Returns a confirmation.', inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: Object.keys(WEATHERS) } }, required: ['kind'] },
+    execute: i => { if (!setWeather(String(i.kind), true)) throw new Error('Unknown weather'); return `Weather set to ${WEATHERS[i.kind].name}`; } },
+  { name: 'start_disaster', description: 'Starts a natural disaster in the city (earthquake, tornado, flood or wildfire). Only when the player explicitly asks for one.', inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: Object.keys(DISASTERS) } }, required: ['kind'] },
+    execute: i => startDisaster(String(i.kind)) },
+  { name: 'quick_travel', description: 'Flies the player by plane to an Armenian destination, or "city" to go home. Returns whether the trip started.', inputSchema: { type: 'object', properties: { destination: { type: 'string', enum: ['city', ...DESTS.map(D => D.key)] } }, required: ['destination'] },
+    execute: i => { const k = String(i.destination); const ok = quickTravelTo(k === 'city' ? -1 : destIndex(k)); if (!ok) throw new Error(travelBlocked() || 'Could not travel right now'); closePhone(); return `Flying to ${k}`; } },
+  { name: 'set_waypoint', description: 'Puts a GPS waypoint on a place in the city: casino, apartment, customs, airfield or bank.', inputSchema: { type: 'object', properties: { place: { type: 'string', enum: Object.keys(PLACES_GPT) } }, required: ['place'] },
+    execute: i => { const f = PLACES_GPT[String(i.place)]; if (!f) throw new Error('Unknown place'); if (player.region) throw new Error('Waypoints work in the city'); const at = f(); waypoint = { x: at.x, y: at.y }; return `Waypoint set on the ${i.place}`; } },
+];
+function gptBrief() {
+  return `You are Hayastan GPT, the assistant app on the player's phone in the open-world game "Hayastan". Reply in 1-4 short sentences, friendly, plain text, no markdown. `
+    + `You can speak English or Armenian (write Armenian in Latin letters unless asked otherwise). `
+    + `The game: a harbor city called Hayastan (districts Meridian, Larkfield, Saltmarsh Docks, Eastshore, Cedar Heights, an airfield and the Gilded Anchor casino) plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
+    + `Controls: WASD move, Space enter/exit vehicles, F shoot, E interact, M map, / phone, C camera, B nitro, G Quick Travel in Armenia. `
+    + (gpt.tools ? 'Use the tools when the player asks you to change the weather, start a disaster, travel, set a waypoint, or asks about their status; say briefly what you did. Never start a disaster unless the player asks for it. ' : '')
+    + `Current state: ${JSON.stringify(gptTools[0].execute())}.`;
+}
+function hayastanGptApp() {
+  const wrap = el('div', 'gpt'), list = el('div', 'gpt-log'); list.setAttribute('aria-live', 'polite');
+  const addMsg = (who, text) => { const m = el('div', 'gpt-msg ' + who); m.textContent = text; list.append(m); list.scrollTop = list.scrollHeight; return m; };
+  if (!gpt.log.length) gpt.log.push(['bot', 'Barev! I\'m Hayastan GPT. Ask me about the city or Armenia, or tell me to change the weather, set a waypoint, or fly you somewhere.']);
+  for (const [who, text] of gpt.log) addMsg(who, text);
+  const form = el('form', 'gpt-form'), input = el('input'); input.id = 'gptInput'; input.maxLength = 400; input.placeholder = 'Ask Hayastan GPT…'; input.autocomplete = 'off';
+  const send = el('button', '', 'Send'); send.type = 'submit';
+  form.append(input, send); wrap.append(list, form); phBody.append(wrap);
+  if (gpt.ready && !gpt.sample) { addMsg('sys', 'Hayastan GPT is not available in this view. Open the game on claude.ai to chat.'); input.disabled = send.disabled = true; }
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const q = input.value.trim(); if (!q || gpt.busy) return;
+    if (!gpt.sample) { addMsg('sys', gpt.ready ? 'Hayastan GPT is not available in this view.' : 'Still connecting. Try again in a moment.'); return; }
+    input.value = ''; gpt.log.push(['me', q]); addMsg('me', q);
+    gpt.turns.push({ role: 'user', content: q }); gpt.turns = gpt.turns.slice(-10);
+    const bubble = addMsg('bot', '…'); gpt.busy = true; send.disabled = true; gpt.ctl = new AbortController();
+    const turns = [{ role: 'user', content: gptBrief() }, ...gpt.turns];
+    const opts = { modelTier: 'quick', signal: gpt.ctl.signal, onText: ({ text }) => { bubble.textContent = text; list.scrollTop = list.scrollHeight; } };
+    if (gpt.tools) opts.tools = gptTools.map(t => ({ ...t, execute: (inp) => t.execute(inp || {}) })); else opts.cache = false;
+    try {
+      const r = await gpt.sample(turns, opts);
+      bubble.textContent = r.text; gpt.turns.push({ role: 'assistant', content: r.text }); gpt.log.push(['bot', r.text]);
+    } catch (err) {
+      const msg = err?.code === 'not_granted' ? 'Hayastan GPT needs your permission to answer. Allow it when asked.' : err?.code === 'rate_limited' ? 'Too many questions at once. Try again in a moment.' : err?.code === 'cancelled' ? 'Stopped.' : 'Hayastan GPT could not answer. Try again.';
+      bubble.textContent = err?.text ? err.text : msg; bubble.classList.add(err?.text ? 'bot' : 'sys'); gpt.log.push(['sys', bubble.textContent]);
+      gpt.turns.pop();
+    } finally { gpt.busy = false; send.disabled = false; gpt.log = gpt.log.slice(-30); }
+  });
+  input.focus({ preventScroll: true });
+}
+
 let luckyWheel = null;
 {
   const I = INTERIORS.casino;
@@ -5920,7 +6611,7 @@ const sky = { night: 1 };
 const gradeEl = document.getElementById('grade'), vignetteEl = document.getElementById('vignette');
 const tmpA = new THREE.Color(), tmpB = new THREE.Color();
 function applyTimeOfDay() {
-  if (hdrMode()) { applyArmeniaLook(); return; }
+  if (hdrMode()) { applyArmeniaLook(); applyWeatherLook(); return; }
   restoreCityLook();
   const h = FX.dayNight ? tod : 21;
   let i = 0; while (i < SKY_KEYS.length - 2 && SKY_KEYS[i + 1].h <= h) i++;
@@ -5946,6 +6637,7 @@ function applyTimeOfDay() {
   // Sun or moon swings around the sky with the hour
   const az = h / 24 * Math.PI * 2;
   sky.sunOffset = [Math.cos(az) * 340, 520, Math.sin(az) * 340];
+  applyWeatherLook();
 }
 
 const LIGHT_HEX = { green: 0x5ee08a, amber: 0xffb347, red: 0xff4a4a };
@@ -6036,9 +6728,12 @@ function render(dt) {
   if (dt > 0) fps += (1 / dt - fps) * 0.05;
   applyTimeOfDay();
   syncEntities();
+  updateFaces(dt);           // blinks, saccades, micro-motion, expressions and visemes
+  updateTalkType(dt);
   updateQuickTravel(dt);
   updateCamera(dt);
   renderFrame(dt);
+  renderPortrait();          // dialogue close-up, drawn into the talk box's window
   const sig = `${player.region}|${mode}|${QT.state}`;
   if (sig !== lastPlacardSig) { lastPlacardSig = sig; updatePlacard(); }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -6050,6 +6745,7 @@ function render(dt) {
   drawNetHud(clamp(vw / 900, 0.72, 1));
   drawCaption();
   drawGpsPanel(clamp(vw / 900, 0.72, 1));
+  drawWeatherHud();
   if (mode === 'map') drawMap();
   if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
