@@ -110,30 +110,22 @@
   .ph-home button { width: 96px; height: 5px; border-radius: 3px; border: 0; background: #3a3d44; cursor: pointer; padding: 0; }
   @media (prefers-reduced-motion: reduce) { #phone { animation: none; } }
   /* ─── Title screen ─── */
-  .title-screen { overflow: hidden; background:
-      radial-gradient(ellipse 70% 55% at 50% 38%, rgba(20,110,120,0.55), rgba(6,40,50,0.82) 55%, rgba(2,12,18,0.96) 100%); }
-  .title-screen .rays { position: absolute; inset: -20% -10% 0; pointer-events: none; mix-blend-mode: screen; opacity: 0.55;
-    background: repeating-conic-gradient(from 168deg at 50% -8%, rgba(120,230,240,0.13) 0deg 3deg, transparent 3deg 9deg);
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 75%); mask-image: linear-gradient(to bottom, #000 0%, transparent 75%);
-    animation: rays 14s ease-in-out infinite alternate; }
-  @keyframes rays { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
-  .critters { position: absolute; inset: 0; pointer-events: none; }
-  .critter { position: absolute; width: var(--sz); height: var(--sz); border-radius: 45% 45% 40% 40%;
-    background: radial-gradient(circle at 50% 40%, #1a2226 0 55%, #0b0f12 56%); box-shadow: 0 0 calc(var(--sz) * 0.9) var(--glow);
-    animation: bob var(--dur) ease-in-out var(--delay) infinite alternate; opacity: 0.9; }
-  .critter::before, .critter::after { content: ""; position: absolute; top: 36%; width: 22%; height: 22%; border-radius: 50%;
-    background: var(--glow); box-shadow: 0 0 6px var(--glow); }
-  .critter::before { left: 22%; } .critter::after { right: 22%; }
-  .critter.one::after { display: none; } .critter.one::before { left: 39%; width: 26%; height: 26%; }
-  @keyframes bob { from { transform: translate(0, 0) rotate(-6deg); } to { transform: translate(var(--dx), var(--dy)) rotate(6deg); } }
+  .title-screen { overflow: hidden; background: #1a0a10; }
+  .title-screen .flag { position: absolute; inset: -3%; width: 106%; height: 106%; }
+  .title-screen .flag-shade { position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 45%, rgba(0,0,0,0.05), rgba(0,0,0,0.6) 100%),
+      repeating-linear-gradient(100deg, rgba(255,255,255,0.13) 0%, rgba(0,0,0,0.22) 9%, rgba(255,255,255,0.13) 18%);
+    background-size: 100% 100%, 200% 100%; animation: ripple 7s linear infinite; }
+  @keyframes ripple { from { background-position: 0 0, 0 0; } to { background-position: 0 0, -200% 0; } }
   .title-wrap { position: relative; width: 100%; max-width: 26rem; max-height: calc(100% - 24px); overflow-y: auto; display: grid; gap: 1.4rem; justify-items: center; padding-block: 12px; }
   .logo { margin: 0; display: grid; justify-items: center; line-height: 0.82; text-transform: uppercase; text-shadow: none; }
   .logo-top, .logo-bot { font: 400 clamp(3.2rem, 17vw, 5.4rem)/0.86 "Bungee", "Russo One", Impact, sans-serif; letter-spacing: 0.02em;
     color: #f4e6c8; -webkit-text-stroke: 3px #10181c; paint-order: stroke fill;
-    text-shadow: 0 5px 0 #0a1014, 0 0 30px rgba(120,230,240,0.45); }
+    text-shadow: 0 5px 0 #0a1014, 0 0 30px rgba(0,0,0,0.45); }
   .logo-bot { background: linear-gradient(#ffcf7a 20%, #f2922c 90%); -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 5px 0 #0a1014) drop-shadow(0 0 18px rgba(255,160,60,0.35)); text-shadow: none; }
-  .logo-sub { margin-top: 0.55rem; font: 600 1rem/1 var(--mono); letter-spacing: 0.4em; color: #8fe3ea; text-transform: none; text-shadow: 0 0 10px rgba(120,230,240,0.6); }
+  .logo-sub { margin-top: 0.55rem; font: 600 1rem/1 var(--mono); letter-spacing: 0.4em; color: #fff4dc; text-transform: none; text-shadow: 0 2px 0 #10181c, 0 0 12px rgba(0,0,0,0.8); }
   .frame { position: relative; width: 100%; box-sizing: border-box; padding: 1.1rem 1.1rem 1.2rem; border-radius: 10px;
     background: linear-gradient(#1a2a30, #0d171b); border: 2px solid #5d7c86;
     box-shadow: inset 0 0 0 2px #0a1114, inset 0 2px 0 3px rgba(170,215,225,0.22), 0 0 0 2px #0a1114, 0 10px 40px rgba(0,0,0,0.6), 0 0 40px rgba(80,200,220,0.18); }
@@ -153,11 +145,11 @@
   .tpanel { color: var(--paper); }
   .tpanel .panel-head { font-family: "Russo One", var(--display); font-weight: 400; color: #bff4fa; }
   .tpanel .keys { grid-template-columns: 1fr; border-top-color: #2a3e45; max-height: 46vh; overflow-y: auto; }
-  .story-hint { text-align: center; color: #8fb9c0; }
+  .story-hint { text-align: center; color: #fff4dc; text-shadow: 0 1px 3px #000; }
   .tpanel .toggles { grid-template-columns: 1fr 1fr; gap: 0 0.8rem; }
   .tpanel .toggles label { font-size: 0.72rem; padding: 0.25rem 0; }
   .tpanel .toggles input { accent-color: #6fe3ff; }
-  @media (prefers-reduced-motion: reduce) { .title-screen .rays, .critter { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .title-screen .flag-shade { animation: none; } }
   .field { display: grid; gap: 0.3rem; font-size: 0.78rem; color: var(--muted); }
   .field input, #chatInput { font: 600 0.95rem var(--mono); color: var(--paper); background: #15171d; border: 1px solid var(--line); border-radius: 3px; padding: 0.5rem 0.6rem; }
   .field input:focus-visible, #chatInput:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
@@ -193,8 +185,22 @@
 <div id="inset"></div>
 
 <div id="title" class="overlay title-screen">
-  <div class="rays" aria-hidden="true"></div>
-  <div class="critters" id="critters" aria-hidden="true"></div>
+  <svg class="flag" aria-hidden="true" viewBox="0 0 300 200" preserveAspectRatio="none">
+    <defs>
+      <filter id="wave" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="1" seed="4">
+          <animate attributeName="baseFrequency" dur="9s" values="0.006 0.018;0.009 0.014;0.006 0.018" repeatCount="indefinite"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="16"/>
+      </filter>
+    </defs>
+    <g filter="url(#wave)">
+      <rect x="-10" y="-10" width="320" height="77" fill="#d90012"/>
+      <rect x="-10" y="66.6" width="320" height="67" fill="#0033a0"/>
+      <rect x="-10" y="133.3" width="320" height="77" fill="#f2a800"/>
+    </g>
+  </svg>
+  <div class="flag-shade" aria-hidden="true"></div>
   <div class="title-wrap">
     <h1 class="logo"><span class="logo-top">HAYA</span><span class="logo-bot">STAN</span><span class="logo-sub" lang="hy">Հայաստան</span></h1>
     <div class="frame">
@@ -245,7 +251,7 @@
       </section>
       <section class="panel tpanel" id="creditsPanel" hidden>
         <p class="panel-head">Credits</p>
-        <p class="lede">Hayastan is an open-world crime game set in the harbor city of Port Veyra. Built as a single web page with three.js, and written with Claude Code.</p>
+        <p class="lede">Hayastan is an open-world crime game set in a harbor city on two islands. Built as a single web page with three.js, and written with Claude Code.</p>
         <p class="hint">All characters, businesses and places are fictional.</p>
         <button class="gr-btn back" type="button" data-tback>Back</button>
       </section>
@@ -311,7 +317,7 @@
 </div>
 
 <div id="phone" hidden>
-  <div class="ph-status"><span id="phTime">--:--</span><span>VEYRA TEL</span><span>86%</span></div>
+  <div class="ph-status"><span id="phTime">--:--</span><span>HAYASTAN TEL</span><span>86%</span></div>
   <div class="ph-head"><button id="phBack" type="button" aria-label="Back">‹</button><span id="phTitle">Home</span></div>
   <div class="ph-body" id="phBody"></div>
   <div class="ph-home"><button id="phHome" type="button" aria-label="Home screen"></button></div>
@@ -339,10 +345,10 @@
 
 // ─── World constants ────────────────────────────────────────────────────────
 const T = 48;                 // tile size in px
-const GW = 98, GH = 52;       // x 0-51 Meridian island · 52-59 Veyra Bay · 60-91 Eastshore island · 92+ open water
+const GW = 98, GH = 52;       // x 0-51 Meridian island · 52-59 Hayastan Bay · 60-91 Eastshore island · 92+ open water
 const NN = 6;                 // intersections north to south
 const NNX = 10;               // intersections west to east (five on each island)
-const BRIDGE_ROWS = { 1: 'Veyra Bay Bridge', 3: 'Harbor Bridge' };   // road rows that cross the bay
+const BRIDGE_ROWS = { 1: 'Hayastan Bay Bridge', 3: 'Harbor Bridge' };   // road rows that cross the bay
 const ROAD = 0, SIDE = 1, BLDG = 2, GRASS = 3, WATER = 4, YARD = 5;
 const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // E S W N
 const H_STREETS = ['Tallow St', 'Beacon St', 'Cinder St', 'Haldane St', 'Rook St', 'Ferrier St'];
@@ -354,8 +360,8 @@ const DISTRICTS = {
   residential: { name: 'Larkfield' },
   park:        { name: 'Larkfield Commons' },
   docks:       { name: 'Saltmarsh Docks' },
-  bay:         { name: 'Veyra Bay' },
-  airfield:    { name: 'Veyra Municipal Airfield' },
+  bay:         { name: 'Hayastan Bay' },
+  airfield:    { name: 'Hayastan Municipal Airfield' },
   eastshore:   { name: 'Eastshore' },
   heights:     { name: 'Cedar Heights' },
 };
@@ -714,7 +720,7 @@ for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (grid[y * GW + x] =
 
 function streetAt(x, y) {
   const tx = Math.floor(x / T), ty = Math.floor(y / T);
-  if ((tx >= 52 && tx <= 59) || tx >= 92) return isRoadRow(ty) && tx <= 59 && BRIDGE_ROWS[Math.floor(ty / 10)] ? BRIDGE_ROWS[Math.floor(ty / 10)] : tx === 52 || tx === 59 ? 'The Quay' : 'Veyra Bay';
+  if ((tx >= 52 && tx <= 59) || tx >= 92) return isRoadRow(ty) && tx <= 59 && BRIDGE_ROWS[Math.floor(ty / 10)] ? BRIDGE_ROWS[Math.floor(ty / 10)] : tx === 52 || tx === 59 ? 'The Quay' : 'Hayastan Bay';
   const h = isRoadRow(ty) ? H_STREETS[Math.floor(ty / 10)] : null, v = isRoadCol(tx) ? V_STREETS[Math.floor(tx / 10)] : null;
   if (h && v) return `${v} & ${h}`;
   return h || v || null;
@@ -1537,7 +1543,7 @@ const HEISTS = [
       { type: 'hold', ...PLACES.bank, r: 58, time: 18, heat: 2, holdHeat: true, text: 'Drill the vault. The alarm is ringing, so stay by the doors' },
       { type: 'lose', text: 'Lose the police' },
       { type: 'go', ...PLACES.lockup, r: 55, text: 'Stash the cash at your lock-up' }] }] },
-  { id: 'museum', name: 'The Veyra Museum Job', pay: 18000, blurb: 'Lift a masterpiece from the museum in Eastshore.',
+  { id: 'museum', name: 'The Hayastan Museum Job', pay: 18000, blurb: 'Lift a masterpiece from the museum in Eastshore.',
     preps: [
       { name: 'Security blueprints', steps: () => [
         { type: 'collect', x: 46.5 * T, y: 16.5 * T, text: 'Steal the security blueprints from a docks office' },
@@ -1546,7 +1552,7 @@ const HEISTS = [
         { type: 'collect', x: 63.5 * T, y: 9.5 * T, text: "Pick up the hacker's laptop at the airfield" },
         { type: 'go', ...PLACES.lockup, r: 55, text: 'Bring it to your lock-up' }] }],
     finale: [{ id: 'night', name: 'After hours', mult: 1, sub: 'Three stars once the painting leaves the wall', steps: () => [
-      { type: 'go', ...PLACES.museum, r: 44, text: 'Go to the Veyra Museum of Art in Eastshore' },
+      { type: 'go', ...PLACES.museum, r: 44, text: 'Go to the Hayastan Museum of Art in Eastshore' },
       { type: 'hold', ...PLACES.museum, r: 55, time: 15, text: 'Cut the painting from its frame' },
       { type: 'lose', heat: 3, text: 'The alarm tripped. Lose the police' },
       { type: 'go', ...PLACES.fence, r: 50, text: 'Sell the painting to the fence on the quay' }] }] },
@@ -1620,7 +1626,7 @@ const OBJECTIVE_POOL = [
   { id: 'parcels', n: 2, text: 'Deliver 2 parcels' }, { id: 'race', n: 1, text: 'Finish a race in the top three' },
   { id: 'prep', n: 1, text: 'Complete a heist prep job' }, { id: 'air', n: 30, text: 'Spend 30 seconds in the air' },
   { id: 'slots', n: 5, text: 'Play the slots 5 times' }, { id: 'anchor', n: 1, text: 'Find a gold anchor' },
-  { id: 'customs', n: 1, text: 'Buy something at Veyra Customs' }, { id: 'business', n: 1, text: 'Make a business sale or delivery' },
+  { id: 'customs', n: 1, text: 'Buy something at Hayastan Customs' }, { id: 'business', n: 1, text: 'Make a business sale or delivery' },
   { id: 'takedown', n: 1, text: 'Take down a bail-bond fugitive' }, { id: 'wanted', n: 1, text: 'Escape a three-star wanted level' },
   { id: 'casino', n: 3, text: 'Play 3 table games at the casino' }, { id: 'drift', n: 1, text: 'Score a 3,000 point drift' },
 ];
@@ -1946,7 +1952,7 @@ function racerDrive(c, dt) {
   if (moveCar(c, dt, prevA)) c.speed = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a);
 }
 
-// ─── Veyra Customs ───────────────────────────────────────────────────────────
+// ─── Hayastan Customs ───────────────────────────────────────────────────────────
 const PAINTS = [['Harbor red', '#c8553d'], ['Bay blue', '#3f6fb0'], ['Sand', '#d9c9a3'], ['Midnight', '#1d1d22'], ['Pearl', '#e8e4dc'],
   ['Teal', '#2f7a7a'], ['Cab yellow', '#f2c230'], ['Grape', '#8a5aa6'], ['Racing red', '#d12f2f'], ['Lime', '#8fcf3a']];
 const ENGINE_COST = [2000, 4000, 7000], ARMOR_COST = [1500, 3000, 5000];
@@ -1955,7 +1961,7 @@ function openCustoms() {
   if (!c) return;
   c.tune = c.tune || { engine: 0, armor: 0 };
   const maxHp = c.maxHp || c.spec.hp, repair = Math.round((maxHp - c.hp) * 3), e = c.tune.engine, a = c.tune.armor;
-  showMenu({ eyebrow: 'Veyra Customs', title: c.spec.name || 'Your ride',
+  showMenu({ eyebrow: 'Hayastan Customs', title: c.spec.name || 'Your ride',
     body: `<div class="row"><span>Condition</span><span>${Math.round(c.hp / maxHp * 100)}%</span></div><div class="row"><span>Engine</span><span>Level ${e} of 3</span></div><div class="row"><span>Armor</span><span>Level ${a} of 3</span></div><p class="muted">A respray makes the police lose your description, as long as none of them can see you.</p>`,
     options: [
       { label: repair > 0 ? `Repair · ${fmtMoney(repair)}` : 'Repair', sub: repair > 0 ? 'Fix all damage' : 'No damage to fix', disabled: repair <= 0 || player.money < repair,
@@ -1969,7 +1975,7 @@ function openCustoms() {
         : { label: 'Armor fully upgraded', disabled: true, act: () => {} }] });
 }
 function openPaint(c) {
-  showMenu({ eyebrow: 'Veyra Customs · $300', title: 'Respray',
+  showMenu({ eyebrow: 'Hayastan Customs · $300', title: 'Respray',
     options: PAINTS.map(([name, col]) => ({ label: name, sub: col === c.color ? 'Current color' : '', disabled: col === c.color,
       act: () => {
         if (!pay(300)) return true;
@@ -2234,7 +2240,7 @@ const STORY = [
   { title: 'Old Friends', at: { x: 22.5 * T, y: 32.6 * T }, pay: 2000,
     intro: [['nova', 'You still owe me for the last job, you know.'], ['you', 'Put it on my tab.'], ['nova', 'Your tab is a novel. Grab my laptop from the airfield before airport security does, and we are even.']],
     steps: () => [
-      { type: 'collect', x: 63.5 * T, y: 9.5 * T, text: "Grab Nova's laptop at the Veyra Municipal Airfield" },
+      { type: 'collect', x: 63.5 * T, y: 9.5 * T, text: "Grab Nova's laptop at the Hayastan Municipal Airfield" },
       { type: 'go', x: 22.5 * T, y: 32.6 * T, r: 55, text: 'Bring it back to the lock-up' }],
     outro: [['nova', "I'll keep your name off the police scanners. For a price. Save my number."], ['nova', 'Oh, and Vic Salazar wants a word. He is at the Gilded Anchor.']] },
   { title: "Salazar's Offer", at: { x: 33.5 * T, y: 19.5 * T }, pay: 3000,
@@ -2244,10 +2250,10 @@ const STORY = [
       { type: 'lose', heat: 2, text: 'Lose the police' }],
     outro: [['vic', 'Now we are talking. Stay close to your phone.']] },
   { title: 'The Tail', at: { x: 24 * T, y: 32.6 * T }, pay: 2500,
-    intro: [['hale', 'Evening. Detective Hale, Veyra PD. Funny how trouble follows you around.'], ['you', 'Must be the neighborhood.'], ['hale', "Must be. I'll be seeing you."], ['nova', "Hale's people are all over you. Shake them and get off the island."]],
+    intro: [['hale', 'Evening. Detective Hale, Hayastan PD. Funny how trouble follows you around.'], ['you', 'Must be the neighborhood.'], ['hale', "Must be. I'll be seeing you."], ['nova', "Hale's people are all over you. Shake them and get off the island."]],
     steps: () => [
       { type: 'lose', heat: 2, text: 'Shake the unmarked cars on your tail' },
-      { type: 'go', x: 65 * T, y: 12.5 * T, r: 60, text: 'Cross the Veyra Bay Bridge to Eastshore' }],
+      { type: 'go', x: 65 * T, y: 12.5 * T, r: 60, text: 'Cross the Hayastan Bay Bridge to Eastshore' }],
     outro: [['nova', "Clean. Hale's got nothing on you. Yet."]] },
   { title: 'Air Freight', at: { x: 66 * T, y: 9.5 * T }, pay: 5000,
     intro: [['vic', 'There is a freighter anchored off Eastshore with a crate that has my name on it.'], ['vic', 'Get a helicopter, hover over the deck while my people winch it up, and bring it to Hangar 3.']],
@@ -2262,11 +2268,11 @@ const STORY = [
     steps: () => casinoFinale({ time: 12, vaultHeat: 3, exitHeat: 3, vaultText: 'Crack the vault. Salazar said the cameras were handled. They were not' }),
     outro: [['nova', "The cameras were never off. Vic set you up."], ['you', 'Then Vic just made a mistake.']] },
   { title: 'Bridges Burned', at: { x: 22.5 * T, y: 32.6 * T }, pay: 25000,
-    intro: [['nova', 'Salazar sold you to Hale. There is a warrant, and every cop in Veyra is on the way.'], ['lou', "Get across the bay. I left keys to a place in Bayview. It's yours if you make it."]],
+    intro: [['nova', 'Salazar sold you to Hale. There is a warrant, and every cop in Hayastan is on the way.'], ['lou', "Get across the bay. I left keys to a place in Bayview. It's yours if you make it."]],
     steps: () => [
-      { type: 'lose', heat: 3, text: 'Every cop in Veyra is coming. Lose them' },
+      { type: 'lose', heat: 3, text: 'Every cop in Hayastan is coming. Lose them' },
       { type: 'go', x: 86 * T, y: 36.5 * T, r: 50, text: 'Reach the villa in Bayview, across the bay' }],
-    outro: [['hale', 'Salazar is in custody. He had a lot to say about you, and none of it holds up.'], ['nova', 'Welcome home. The villa is yours.'], ['lou', 'Port Veyra is yours now. Try not to break it.']],
+    outro: [['hale', 'Salazar is in custody. He had a lot to say about you, and none of it holds up.'], ['nova', 'Welcome home. The villa is yours.'], ['lou', 'Hayastan is yours now. Try not to break it.']],
     reward: () => { mansionState.bayview.owned = true; spawnEstateHeli('bayview'); } },
 ];
 function startChapter(i) {
@@ -2275,7 +2281,7 @@ function startChapter(i) {
     onComplete: () => {
       player.money += S.pay; story.chapter = i + 1; S.reward?.(); saveGame();
       talk(S.outro, () => {
-        if (story.chapter >= STORY.length) showBanner('The End', `Port Veyra is yours · +${fmtMoney(S.pay)} and Bayview Villa`, '#ff7a3d', 5);
+        if (story.chapter >= STORY.length) showBanner('The End', `Hayastan is yours · +${fmtMoney(S.pay)} and Bayview Villa`, '#ff7a3d', 5);
         else showBanner('Chapter complete', `${S.title} · +${fmtMoney(S.pay)}`, '#ff7a3d', 3.5);
       });
     },
@@ -2310,10 +2316,10 @@ talkEl.addEventListener('click', () => talkNext());
 // ─── Enterable buildings: nearly every building has a door and a room behind it ─
 const SHOP_NAMES = {
   shop: ['Harbor Mart', 'Quik Stop 24/7', 'Pier Grocery', 'Bayside Deli'], ammu: ['Bayside Arms', 'Liberty Guns & Ammo'],
-  clothes: ['Threads', 'Dockside Denim', 'Veyra Vintage'], diner: ['Sunny Side Diner', 'The Galley', 'Route 7 Diner'],
+  clothes: ['Threads', 'Dockside Denim', 'Hayastan Vintage'], diner: ['Sunny Side Diner', 'The Galley', 'Route 7 Diner'],
   bar: ['The Rusty Hook', 'Low Tide Tavern', 'The Anchor Bar'], gym: ['Iron Pier Gym', 'Tidewater Fitness'],
-  office: ['Meridian Trust', 'Saltmarsh Shipping Co.', 'Veyra Daily Herald', 'Harbor Insurance'], home: ['A family home'],
-  warehouse: ['A dockside warehouse'], police: ['Veyra Police HQ'], hospital: ['Larkfield General'], gallery: ['Veyra Museum of Art'],
+  office: ['Meridian Trust', 'Saltmarsh Shipping Co.', 'Hayastan Daily Herald', 'Harbor Insurance'], home: ['A family home'],
+  warehouse: ['A dockside warehouse'], police: ['Hayastan Police HQ'], hospital: ['Larkfield General'], gallery: ['Hayastan Museum of Art'],
   control: ['The control tower'], bank: ['Harbor Savings & Loan'],
 };
 const enterables = [];
@@ -2383,7 +2389,7 @@ function openAmmu() {
     else if (!w.melee) options.push({ label: `${w.name} ammo · ${fmtMoney(ammoPrice)}`, sub: `+${amt} rounds (you have ${player.ammo[k]})`, disabled: player.money < ammoPrice,
       act: () => { if (!pay(ammoPrice)) return true; player.ammo[k] += amt; toast(`+${amt} ${w.name.toLowerCase()} rounds`, '#ffb347'); openAmmu(); return true; } });
   }
-  showMenu({ eyebrow: genActive ? genActive.name : 'Guns', title: 'The counter', body: '<p class="muted">Every firearm in Port Veyra is sold with a background check. This one runs fast.</p>', options });
+  showMenu({ eyebrow: genActive ? genActive.name : 'Guns', title: 'The counter', body: '<p class="muted">Every firearm in Hayastan is sold with a background check. This one runs fast.</p>', options });
 }
 // What you can do in each kind of room: [local x, local y, radius, label, action]
 function genericActions(e) {
@@ -2495,7 +2501,7 @@ document.getElementById('chatForm').addEventListener('submit', ev => {
 // World interactions for the new systems
 for (const [id, B] of Object.entries(BUSINESSES)) interactables.push({ x: B.x, y: B.y, r: 30, act: () => openBusiness(id),
   label: () => biz[id].owned ? `Manage ${B.name}` : `For sale: ${B.name} · ${fmtMoney(B.price)}` });
-interactables.push({ ...PLACES.customs, r: 46, inCar: 'only', label: 'Veyra Customs · repair, respray, upgrades', act: openCustoms });
+interactables.push({ ...PLACES.customs, r: 46, inCar: 'only', label: 'Hayastan Customs · repair, respray, upgrades', act: openCustoms });
 for (const R of RACES) interactables.push({ ...R.entry, r: 50, inCar: 'only', when: () => !activity, act: () => startRace(R),
   label: R.kind === 'air' ? `${R.name} · air time trial through ${R.rings.length} rings` : `${R.name} · street race, $200 entry` });
 addInteract('apartment', 195, 40, 24, 'Heist planning board', openHeistBoard);
@@ -2597,19 +2603,8 @@ let titleFrom = null;
 for (const [btn, panel] of [['optionsBtn', 'optionsPanel'], ['keysBtn', 'titleKeys'], ['creditsBtn', 'creditsPanel']])
   document.getElementById(btn).addEventListener('click', () => { titleFrom = btn; showTitlePanel(panel); });
 for (const b of document.querySelectorAll('[data-tback]')) b.addEventListener('click', () => showTitlePanel(null, titleFrom));
-{
-  // Glowing drones drifting behind the main menu
-  const box = document.getElementById('critters'), glows = ['#ff9a3c', '#6fe3ff', '#ff5a5a', '#b98cff', '#9dff8a', '#ffd35a'];
-  for (let k = 0; k < 16; k++) {
-    const r = n => ((k + 1) * 9301 * (n + 7) + 49297) % 233280 / 233280, c = document.createElement('i');
-    const sz = 12 + r(1) * 26;
-    c.className = 'critter' + (r(2) < 0.4 ? ' one' : '');
-    c.style.cssText = `left:${(r(3) * 96).toFixed(1)}%;top:${(4 + r(4) * 90).toFixed(1)}%;--sz:${sz.toFixed(0)}px;--glow:${glows[k % glows.length]};` +
-      `--dur:${(3 + r(5) * 5).toFixed(1)}s;--delay:-${(r(6) * 5).toFixed(1)}s;--dx:${(r(7) * 60 - 30).toFixed(0)}px;--dy:${(r(8) * 50 - 25).toFixed(0)}px;` +
-      (sz < 20 ? 'opacity:0.55;filter:blur(1px);' : '');
-    box.append(c);
-  }
-}
+// The waving flag holds still for people who ask for less motion
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelector('.title-screen .flag animate')?.remove();
 document.getElementById('onlineBtn').addEventListener('click', () => {
   titleFrom = 'onlineBtn'; showTitlePanel('onlinePanel');
   const i = document.getElementById('nickInput'); i.value = net.nick; i.focus();
@@ -2633,7 +2628,7 @@ function startGame(kind = 'story') {
   if (mode !== 'title') return;
   gameMode = kind;
   mode = 'play'; titleEl.hidden = true; showTitlePanel(null); newOffer();
-  if (kind === 'story') showBanner(story.chapter < STORY.length ? `Chapter ${story.chapter + 1}` : 'Story complete', story.chapter < STORY.length ? `${STORY[story.chapter].title}. Follow the orange marker.` : 'Port Veyra is yours. Everything is unlocked.', '#ff7a3d', 3.5);
+  if (kind === 'story') showBanner(story.chapter < STORY.length ? `Chapter ${story.chapter + 1}` : 'Story complete', story.chapter < STORY.length ? `${STORY[story.chapter].title}. Follow the orange marker.` : 'Hayastan is yours. Everything is unlocked.', '#ff7a3d', 3.5);
   else if (kind === 'online') showBanner('Hayastan Online', 'Press T to chat, hold Tab for the scoreboard', '#4fc3ff', 3.5);
   else showBanner('Free roam', 'Jobs, heists, races and businesses. Do what you like.', '#ffb347', 3.5);
 }
@@ -2684,7 +2679,7 @@ function phRow(a, b, ok) { const r = el('div', 'ph-row'); r.append(el('span', ''
 const PHONE_APPS = [
   ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'],
   ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
-  ['taxi', 'Veyra Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
+  ['taxi', 'Hayastan Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
 function phoneApp(app) {
   phone.app = app;
   phBody.innerHTML = '';
@@ -2707,7 +2702,7 @@ function phoneApp(app) {
     const wait = Math.max(0, Math.ceil(240 - (time - phone.hackT)));
     phItem('Nova · Hacker', stars() ? `Wipe your wanted level · ${fmtMoney(800 * stars())}${wait ? ` (busy for ${wait}s)` : ''}` : 'Only useful when the police are after you', callHacker, !stars() || wait > 0 || player.money < 800 * stars());
     phItem('Harbor Bail Bonds', freeEvent ? 'You already have an open job' : 'Ask for a fugitive to track down', () => { if (!freeEvent && !activity) { startFreeEvent('bounty'); closePhone(); } }, !!freeEvent || !!activity);
-    phItem('Veyra Cabs', 'Book a ride across town', () => phoneApp('taxi'));
+    phItem('Hayastan Cabs', 'Book a ride across town', () => phoneApp('taxi'));
     phItem('Mom', 'Call your mother', () => { toast('Mom: "Are you eating? You never call."', '#e0b0ff'); phoneApp('messages'); });
   } else if (app === 'messages') {
     if (!phoneLog.length) phNote('No messages yet.');
@@ -2733,7 +2728,7 @@ function phoneApp(app) {
   } else if (app === 'taxi') {
     const blocked = stars() > 0 ? 'Cabs will not pick up someone the police are chasing' : player.car ? 'Get out of your vehicle first' : player.interior ? 'Step outside first' : activity ? 'Not during a job' : '';
     if (blocked) phNote(blocked);
-    const dests = [['Your apartment', { x: 26 * T, y: 32.65 * T }], ['The Gilded Anchor', PLACES.casinoDoor], ['Veyra Customs', PLACES.customs], ['Veyra Municipal Airfield', { x: 68 * T, y: 12.6 * T }]];
+    const dests = [['Your apartment', { x: 26 * T, y: 32.65 * T }], ['The Gilded Anchor', PLACES.casinoDoor], ['Hayastan Customs', PLACES.customs], ['Hayastan Municipal Airfield', { x: 68 * T, y: 12.6 * T }]];
     for (const [id, M] of Object.entries(MANSIONS)) if (mansionState[id].owned) dests.push([M.name, M.door]);
     if (waypoint) dests.unshift(['Your waypoint', waypoint]);
     for (const [name, at] of dests) {
@@ -2751,7 +2746,7 @@ function takeCab(at, fare, name) {
   player.x = spot.x; player.y = spot.y; player.vx = player.vy = 0;
   if (FX.dayNight) tod = (tod + 0.25) % 24;
   fade = 1; camSnap = true; closePhone();
-  toast(`Veyra Cabs dropped you at ${name}`, '#f2c230');
+  toast(`Hayastan Cabs dropped you at ${name}`, '#f2c230');
 }
 function callMechanic() {
   if (!pay(250)) return;
@@ -3180,7 +3175,7 @@ function buildMansionFront(x, z, w, d, h) {
 }
 const museumSignTex = signTex(512, 64, (g, w, h) => {
   g.fillStyle = '#e8e2d4'; g.fillRect(0, 0, w, h);
-  g.fillStyle = '#3a3226'; g.textAlign = 'center'; g.font = '800 40px "Big Shoulders Display", Impact, sans-serif'; g.fillText('VEYRA MUSEUM OF ART', w / 2, 46);
+  g.fillStyle = '#3a3226'; g.textAlign = 'center'; g.font = '800 40px "Big Shoulders Display", Impact, sans-serif'; g.fillText('HAYASTAN MUSEUM OF ART', w / 2, 46, w - 24);
 });
 function buildMuseumFront(x, zFace, w) {
   const stone = lam('#e2dccd'), zc = zFace - 14;
@@ -3365,7 +3360,7 @@ const forSaleSigns = {};
 function postSign(x, z, l1, l2, bg, fg, h = 34, parent = scene) {
   const tex = signTex(256, 96, (g, w, hh) => {
     g.fillStyle = bg; g.fillRect(0, 0, w, hh); g.strokeStyle = fg; g.lineWidth = 4; g.strokeRect(5, 5, w - 10, hh - 10);
-    g.fillStyle = fg; g.textAlign = 'center'; g.font = '800 34px "Big Shoulders Display", Impact, sans-serif'; g.fillText(l1, w / 2, 44);
+    g.fillStyle = fg; g.textAlign = 'center'; g.font = '800 34px "Big Shoulders Display", Impact, sans-serif'; g.fillText(l1, w / 2, 44, w - 20);
     g.font = '600 22px "Big Shoulders Display", Impact, sans-serif'; g.fillText(l2, w / 2, 76);
   });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, h, 6), lam('#3a3d44')); pole.position.set(x, h / 2, z); parent.add(pole);
@@ -3374,7 +3369,7 @@ function postSign(x, z, l1, l2, bg, fg, h = 34, parent = scene) {
 }
 postSign(PLACES.bank.x - 60, PLACES.bank.y + 6, 'HARBOR SAVINGS', '& Loan · since 1911', '#1f2d4a', '#e8d36a');
 postSign(PLACES.lockup.x - 40, PLACES.lockup.y, 'LOCK-UP 7', 'Private storage', '#2a2d33', '#efe6d2', 22);
-postSign(PLACES.customs.x + 50, PLACES.customs.y + 4, 'VEYRA CUSTOMS', 'Repair · Paint · Tune', '#2a1a0e', '#f28a1e');
+postSign(PLACES.customs.x + 50, PLACES.customs.y + 4, 'HAYASTAN CUSTOMS', 'Repair · Paint · Tune', '#2a1a0e', '#f28a1e');
 postSign(PLACES.fence.x + 8, PLACES.fence.y - 50, 'BAIT & TACKLE', 'Ask for Lou', '#1c2e2e', '#9fd4e8', 24);
 for (const [id, B] of Object.entries(BUSINESSES)) {
   postSign(B.x + 44, B.y, B.name.split(' ').slice(-2).join(' ').toUpperCase(), B.kind, '#1a2a20', '#7fe0a0');
@@ -4840,7 +4835,7 @@ function drawMap() {
   const mw = GW * T * sc, mh = GH * T * sc, mx = (vw - mw) / 2, my = top + headH;
   mapRect = { mx, my, sc, mw, mh };
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.font = `800 26px ${DISPLAY}`; ctx.fillStyle = '#efe6d2'; ctx.fillText('PORT VEYRA, U.S.A.', mx, top + 24);
+  ctx.font = `800 26px ${DISPLAY}`; ctx.fillStyle = '#efe6d2'; ctx.fillText('HAYASTAN', mx, top + 24);
   ctx.textAlign = 'right'; ctx.font = `400 12px ${MONO}`; ctx.fillStyle = '#9a978f';
   ctx.fillText(vw > 560 ? 'Click to set a waypoint · M or Esc to close' : 'Tap to set a waypoint', mx + mw, top + 22);
   ctx.imageSmoothingEnabled = false; ctx.drawImage(bigMap, mx, my, mw, mh); ctx.imageSmoothingEnabled = true;
@@ -4848,8 +4843,8 @@ function drawMap() {
   // District labels and street names
   ctx.textAlign = 'center';
   ctx.font = `800 ${Math.round(clamp(mw / 26, 14, 30))}px ${DISPLAY}`; ctx.fillStyle = 'rgba(239,230,210,0.5)';
-  for (const [name, x, y] of [['MERIDIAN', 20 * T, 16 * T], ['LARKFIELD', 20 * T, 44 * T], ['SALTMARSH DOCKS', 46 * T, 20 * T], ['VEYRA BAY', 55.5 * T, 21 * T], ['AIRFIELD', 75 * T, 9 * T], ['EASTSHORE', 75 * T, 26 * T], ['CEDAR HEIGHTS', 75 * T, 44 * T]]) {
-    const [a, b] = W(x, y); ctx.save(); ctx.translate(a, b); if (name === 'VEYRA BAY') ctx.rotate(Math.PI / 2); ctx.fillText(name, 0, 0); ctx.restore();
+  for (const [name, x, y] of [['MERIDIAN', 20 * T, 16 * T], ['LARKFIELD', 20 * T, 44 * T], ['SALTMARSH DOCKS', 46 * T, 20 * T], ['HAYASTAN BAY', 55.5 * T, 21 * T], ['AIRFIELD', 75 * T, 9 * T], ['EASTSHORE', 75 * T, 26 * T], ['CEDAR HEIGHTS', 75 * T, 44 * T]]) {
+    const [a, b] = W(x, y); ctx.save(); ctx.translate(a, b); if (name === 'HAYASTAN BAY') ctx.rotate(Math.PI / 2); ctx.fillText(name, 0, 0); ctx.restore();
   }
   if (mw > 420) {
     ctx.font = `400 ${Math.round(clamp(mw / 75, 9, 12))}px ${MONO}`; ctx.fillStyle = 'rgba(239,230,210,0.7)';
