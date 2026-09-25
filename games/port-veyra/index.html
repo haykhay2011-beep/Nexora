@@ -1,7 +1,7 @@
 <title>Hayastan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Bungee&family=Russo+One&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Bungee&family=Russo+One&family=Noto+Serif+Armenian:wght@500&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
   :root {
     color-scheme: dark;
@@ -120,6 +120,43 @@
   .ph-home { display: flex; justify-content: center; padding-top: 8px; }
   .ph-home button { width: 96px; height: 5px; border-radius: 3px; border: 0; background: #3a3d44; cursor: pointer; padding: 0; }
   @media (prefers-reduced-motion: reduce) { #phone { animation: none; } }
+  /* ─── Quick Travel ─── */
+  #qtVeil { position: fixed; inset: 0; pointer-events: none; opacity: 0; background: #dfe7ef; z-index: 4; }
+  .qt-enroute { position: fixed; left: 50%; transform: translateX(-50%); top: calc(20px + env(safe-area-inset-top, 0px)); margin: 0; z-index: 5; white-space: nowrap;
+    font: 600 0.74rem/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: #10181c; text-shadow: 0 0 6px rgba(255,255,255,0.8); }
+  .qt-enroute span { color: #d90012; }
+  .dest { position: fixed; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(25rem, calc(100% - 32px)); box-sizing: border-box; z-index: 3;
+    display: grid; gap: 0.45rem; padding: 0.95rem 1rem 0.85rem; background: rgba(12,14,18,0.86); border: 1px solid var(--line); border-left: 3px solid #f2a800; border-radius: 4px; }
+  .dest-top { display: flex; justify-content: space-between; align-items: baseline; font: 600 0.7rem/1 var(--mono); letter-spacing: 0.14em; color: var(--muted); }
+  #destHy { font: 500 1rem/1.2 "Noto Serif Armenian", serif; letter-spacing: 0; color: #f2a800; }
+  .dest h2 { margin: 0; font: 800 clamp(1.6rem, 5vw, 2.2rem)/0.95 var(--display); text-transform: uppercase; letter-spacing: 0.01em; text-wrap: balance; }
+  .dest-meta { margin: 0; font: 400 0.7rem/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dest-fact { margin: 0; font-size: 0.8rem; line-height: 1.55; color: #d9d2c4; }
+  .dest-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; padding-top: 0.2rem; }
+  .dest-nav button { font: 800 0.92rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper); background: none; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 3px; padding: 0.5rem 0.7rem; }
+  .dest-nav button:hover, .dest-nav button:focus-visible { border-color: var(--amber); color: var(--amber); outline: none; }
+  .dest-nav button.qt { background: linear-gradient(90deg, #d90012, #0033a0 60%, #f2a800); border-color: transparent; color: #fff; }
+  .dest-nav button:disabled, .pick:disabled, #pickClose:disabled { opacity: 0.4; cursor: default; }
+  .dest-hint { margin: 0; font: 400 0.64rem/1.3 var(--mono); color: var(--muted); }
+  @media (hover: none) { .dest { bottom: auto; top: calc(96px + env(safe-area-inset-top, 0px)); } .dest-fact, .dest-hint { display: none; } }
+  .picker { position: fixed; inset: 0; z-index: 6; display: grid; place-items: center; padding-inline: 16px; background: rgba(6,8,10,0.6); }
+  .picker-card { width: 100%; max-width: 60rem; max-height: calc(100% - 32px); overflow-y: auto; box-sizing: border-box; display: grid; gap: 1rem; padding: 1.1rem;
+    background: rgba(12,14,18,0.94); border: 1px solid var(--line); border-radius: 6px; }
+  .picker-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1rem; }
+  .picker-head h2 { margin: 0; font: 800 1.8rem/1 var(--display); text-transform: uppercase; }
+  .picker-head p { margin: 0; font-size: 0.8rem; color: var(--muted); }
+  #pickClose { margin-left: auto; font: 800 0.9rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper); background: none; border: 1px solid var(--line); border-radius: 3px; padding: 0.5rem 0.8rem; cursor: pointer; }
+  .pick-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: 0.7rem; }
+  .pick { width: 100%; display: grid; padding: 0; text-align: left; color: var(--paper); background: #15171d; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; overflow: hidden; font: inherit; }
+  .pick:hover:not(:disabled), .pick:focus-visible { border-color: #f2a800; box-shadow: 0 0 0 2px #f2a800; outline: none; }
+  .pick-ph { position: relative; display: block; aspect-ratio: 16 / 10; max-width: 100%; }
+  .pick-tag { position: absolute; left: 6px; top: 6px; font: 600 0.62rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,0.5); padding: 3px 5px; border-radius: 3px; }
+  .pick-lb { display: grid; gap: 0.2rem; padding: 0.5rem 0.6rem 0.6rem; }
+  .pick-lb b { font: 800 1rem/1.05 var(--display); text-transform: uppercase; letter-spacing: 0.02em; }
+  .pick-hy { font: 500 0.8rem/1.2 "Noto Serif Armenian", serif; color: #f2a800; }
+  .pick-sub { font: 400 0.64rem/1.3 var(--mono); color: var(--muted); }
+  @media (max-width: 560px) { .pick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   /* ─── Loading screen ─── */
   #loading { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding-inline: 16px; background: #14080c; transition: opacity .45s; }
   #loading.out { opacity: 0; pointer-events: none; }
@@ -226,6 +263,27 @@
 <div id="vignette" aria-hidden="true"></div>
 <canvas id="hud" aria-hidden="true"></canvas>
 <div id="inset"></div>
+<div id="qtVeil" aria-hidden="true"></div>
+<p id="qtEnroute" class="qt-enroute" hidden aria-live="polite"></p>
+<section id="dest" class="dest" hidden aria-live="polite">
+  <div class="dest-top"><span id="destCount">01 / 13</span><span id="destHy" lang="hy"></span></div>
+  <h2 id="destName"></h2>
+  <p id="destMeta" class="dest-meta"></p>
+  <p id="destFact" class="dest-fact"></p>
+  <div class="dest-nav">
+    <button id="destPrev" type="button" aria-label="Previous destination">‹ Prev</button>
+    <button id="destNext" type="button" aria-label="Next destination">Next ›</button>
+    <button id="destQuick" type="button" class="qt" aria-haspopup="dialog">Quick Travel</button>
+    <button id="destHome" type="button">Fly home</button>
+  </div>
+  <p class="dest-hint">Drag to look around · scroll to zoom · G picks a destination · [ ] step through</p>
+</section>
+<div id="picker" class="picker" hidden role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+  <div class="picker-card">
+    <div class="picker-head"><h2 id="pickTitle">Quick Travel</h2><p>Pick a destination and fly there.</p><button id="pickClose" type="button">Close</button></div>
+    <ul class="pick-grid" id="pickGrid"></ul>
+  </div>
+</div>
 
 <div id="title" class="overlay title-screen">
   <svg class="flag" aria-hidden="true" viewBox="0 0 300 200" preserveAspectRatio="none">
@@ -383,6 +441,18 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/SSAOShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/SSAOPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/ACESFilmicToneMappingShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script>
 <script>
 (() => {
 'use strict';
@@ -486,11 +556,13 @@ const FX = {
   smoothCamera: true,
   hiRes: true,         // render at device pixel ratio (off renders at 1x)
   showFps: false,
+  ssao: true,          // ambient occlusion in the Armenian destinations
+  bloom: true,         // HDR bloom in the Armenian destinations and the flight
 };
 const FX_LABELS = {
   dayNight: 'Day and night cycle', shadows: 'Real-time shadows', blobShadows: 'Soft contact shadows', glows: 'Light glows',
   colorGrade: 'Color grading', vignette: 'Vignette', props: 'Street props', particles: 'Exhaust and dust',
-  motionBlur: 'Motion blur', shake: 'Screen shake', smoothCamera: 'Smooth camera', hiRes: 'Full resolution', showFps: 'Show FPS',
+  motionBlur: 'Motion blur', shake: 'Screen shake', smoothCamera: 'Smooth camera', hiRes: 'Full resolution', showFps: 'Show FPS', ssao: 'Ambient occlusion (Armenia)', bloom: 'Bloom (Armenia)',
 };
 try { Object.assign(FX, JSON.parse(localStorage.getItem('port-veyra-fx') || '{}')); } catch (e) { /* storage unavailable */ }
 const saveFX = () => { try { localStorage.setItem('port-veyra-fx', JSON.stringify(FX)); } catch (e) { /* storage unavailable */ } };
@@ -2663,7 +2735,7 @@ addEventListener('blur', () => { keys.clear(); mouseFire = false; if (mode === '
 const gameCanvas = document.getElementById('game');
 gameCanvas.addEventListener('pointerdown', e => {
   if (wheel.open) { e.preventDefault(); mouse.x = e.clientX; mouse.y = e.clientY; wheelPick(); return; }
-  if (e.button === 0 && e.pointerType === 'mouse' && mode === 'play') { mouseFire = true; fireQueued = true; }
+  if (e.button === 0 && e.pointerType === 'mouse' && mode === 'play' && !player.region) { mouseFire = true; fireQueued = true; }
 });
 addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 // Weapon wheel: Enter opens it and slows time; point with the mouse and click (or press Enter again) to equip
@@ -4308,7 +4380,9 @@ const hg = { followers: 48, visited: new Set(), checkins: new Set(), pm: false }
 function travelBlocked() {
   return stars() > 0 ? 'Lose the police before you travel' : activity ? 'Finish or abandon your current job first' : mode !== 'play' ? 'Not right now' : '';
 }
-function travelTo(key) {
+// Hayagram and the fly-back pads go through the Quick Travel flight
+function travelTo(key) { quickTravelTo(destIndex(key)); }
+function travelToInstant(key) {
   const why = travelBlocked(); if (why) { toast(why, '#ff8a7a'); return; }
   const R = REGIONS[key];
   if (!player.region) regionBack = player.interior ? { ...INTERIORS[player.interior].street } : { x: playerPos().x, y: playerPos().y, a: player.car ? player.car.a : player.a };
@@ -4322,7 +4396,8 @@ function travelTo(key) {
   if (!hg.visited.has(key)) { hg.visited.add(key); hg.followers += 25; saveGame(); }
   setTimeout(() => { if (player.region === key) say('guide:' + key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true); }, 1600);
 }
-function travelHome() {
+function travelHome() { if (player.region) quickTravelTo(-1); }
+function travelHomeInstant() {
   if (!player.region) return;
   const b = regionBack || { x: 26 * T, y: 32.65 * T, a: 0 };
   player.region = null; player.x = b.x; player.y = b.y; player.a = b.a || 0; player.vx = player.vy = 0;
@@ -4352,7 +4427,7 @@ CAST.pm = ['Nikol Pashinyan', '#f2a23a'];
 
 // ─── Region building helpers (local coordinates: x east, z south, 0..1600) ────
 function RB(R, x, z, w, d, h, color, o = {}) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), typeof color === 'string' ? cachedLam(color) : color);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), typeof color === 'string' ? rmat(color) : color);
   m.position.set(R.ox + x, (o.y || 0) + h / 2, R.oy + z);
   if (o.rot) m.rotation.y = o.rot;
   m.castShadow = o.shadow !== false; m.receiveShadow = true; R.group.add(m);
@@ -4360,7 +4435,7 @@ function RB(R, x, z, w, d, h, color, o = {}) {
   return m;
 }
 function RCyl(R, x, z, rt, rb, h, color, seg = 12, y = 0, o = {}) {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), typeof color === 'string' ? cachedLam(color) : color);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), typeof color === 'string' ? rmat(color) : color);
   m.position.set(R.ox + x, y + h / 2, R.oy + z); m.castShadow = o.shadow !== false; m.receiveShadow = true; R.group.add(m);
   if (o.solid) R.solids.push([x - rb - 5, z - rb - 5, x + rb + 5, z + rb + 5]);
   return m;
@@ -4369,31 +4444,30 @@ const RCone = (R, x, z, r, h, color, seg = 8, y = 0, o = {}) => RCyl(R, x, z, 0,
 function RPrism(R, x, z, len, w, h, color, y, alongX) {
   const r = w / Math.sqrt(3), geo = new THREE.CylinderGeometry(r, r, len, 3);
   geo.rotateX(-Math.PI / 2); geo.scale(1, h / (1.5 * r), 1); if (alongX) geo.rotateY(Math.PI / 2);
-  const m = new THREE.Mesh(geo, cachedLam(color)); m.position.set(R.ox + x, y + h / 3, R.oy + z); m.castShadow = true; R.group.add(m);
+  const m = new THREE.Mesh(geo, rmat(color)); m.position.set(R.ox + x, y + h / 3, R.oy + z); m.castShadow = true; R.group.add(m);
   return m;
 }
 function RDisc(R, x, z, rx, rz, color, y = 0.6) {
   const g = new THREE.CircleGeometry(1, 40); g.rotateX(-Math.PI / 2); g.scale(rx, 1, rz);
-  const m = new THREE.Mesh(g, cachedLam(color)); m.position.set(R.ox + x, y, R.oy + z); m.receiveShadow = true; R.group.add(m); return m;
+  const m = new THREE.Mesh(g, rmat(color)); m.position.set(R.ox + x, y, R.oy + z); m.receiveShadow = true; R.group.add(m); return m;
 }
-const waterMat = lam('#2f6f9a', { emissive: new THREE.Color('#0b2a40'), transparent: true, opacity: 0.92 });
 function RWater(R, x, z, w, d, o = {}) {
   const g = o.round ? new THREE.CircleGeometry(1, 40) : new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI / 2); g.scale(w / (o.round ? 2 : 1), 1, d / (o.round ? 2 : 1));
-  const m = new THREE.Mesh(g, waterMat); m.position.set(R.ox + x, o.y ?? 0.9, R.oy + z); R.group.add(m);
+  const m = new THREE.Mesh(g, regionWaterMat()); m.position.set(R.ox + x, o.y ?? 0.9, R.oy + z); R.group.add(m);
   if (o.solid) R.solids.push([x - w / 2, z - d / 2, x + w / 2, z + d / 2]);
   return m;
 }
 function RLine(R, a, b, radius, color) {
   const A = new THREE.Vector3(R.ox + a[0], a[1], R.oy + a[2]), B = new THREE.Vector3(R.ox + b[0], b[1], R.oy + b[2]);
-  const dir = B.clone().sub(A), m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, dir.length(), 5), cachedLam(color));
+  const dir = B.clone().sub(A), m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, dir.length(), 5), rmat(color));
   m.position.copy(A).addScaledVector(dir, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()); R.group.add(m); return m;
 }
 function RTree(R, x, z, s = 1, kind = 'cone', col) {
   RCyl(R, x, z, 1.6 * s, 2.2 * s, 12 * s, '#5a3e2a', 5);
   if (kind === 'cone') { RCone(R, x, z, 13 * s, 34 * s, col || '#2f5a2c', 7, 10 * s); RCone(R, x, z, 10 * s, 24 * s, col || '#2f5a2c', 7, 26 * s); }
   else {
-    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(12 * s, 0), cachedLam(col || '#4f7a3a')); m.position.set(R.ox + x, 20 * s, R.oy + z); m.castShadow = true; R.group.add(m);
-    if (kind === 'apricot') for (let k = 0; k < 5; k++) { const f = new THREE.Mesh(new THREE.IcosahedronGeometry(1.8 * s, 0), cachedLam('#f29a1e')); f.position.set(R.ox + x + Math.cos(k * 1.3) * 10 * s, 18 * s + (k % 3) * 3 * s, R.oy + z + Math.sin(k * 1.3) * 10 * s); R.group.add(f); }
+    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(12 * s, 0), rmat(col || '#4f7a3a')); m.position.set(R.ox + x, 20 * s, R.oy + z); m.castShadow = true; R.group.add(m);
+    if (kind === 'apricot') for (let k = 0; k < 5; k++) { const f = new THREE.Mesh(new THREE.IcosahedronGeometry(1.8 * s, 0), rmat('#f29a1e')); f.position.set(R.ox + x + Math.cos(k * 1.3) * 10 * s, 18 * s + (k % 3) * 3 * s, R.oy + z + Math.sin(k * 1.3) * 10 * s); R.group.add(f); }
   }
   R.solids.push([x - 5 * s, z - 5 * s, x + 5 * s, z + 5 * s]);
 }
@@ -4432,7 +4506,7 @@ function ararat(R, x, z, s) {
 // A gorge along one edge: the ground stops at a basalt cliff and drops away
 function gorge(R, at, west) {
   const L = 14000, cliff = '#4d4943', far = 520;
-  const plane = (cx, cz, w, d, y, color) => { const g = new THREE.PlaneGeometry(w, d); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, cachedLam(color)); m.position.set(R.ox + cx, y, R.oy + cz); m.receiveShadow = true; R.group.add(m); };
+  const plane = (cx, cz, w, d, y, color) => { const g = new THREE.PlaneGeometry(w, d); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, rmat(color, 'ground')); m.position.set(R.ox + cx, y, R.oy + cz); m.receiveShadow = true; R.group.add(m); };
   if (!west) {
     plane(800, at + L / 2, L, L, 0.3, R.ground); plane(800, at - far / 2, L, far, -420, '#3f4a34'); plane(800, at - far - L / 2, L, L, 0.3, R.ground);
     RB(R, 800, at - 10, L, 20, 420, cliff, { y: -420, shadow: false }); RB(R, 800, at - far + 10, L, 20, 420, cliff, { y: -420, shadow: false });
@@ -4566,7 +4640,7 @@ const REGION_BUILD = {
     RB(R, 470, 1060, 18, 18, 160, '#7a7f86', { solid: true }); RB(R, 470, 1060, 60, 8, 8, '#7a7f86', { y: 160 });
     const A = [470, 166, 1046], B = [-3200, 380, 900], A2 = [470, 166, 1074], B2 = [-3200, 380, 928];
     RLine(R, A, B, 0.9, '#2a2c30'); RLine(R, A2, B2, 0.9, '#2a2c30');
-    const cabin = (col) => { const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.BoxGeometry(40, 22, 26), cachedLam(col)); c.position.y = -26; const w = new THREE.Mesh(new THREE.BoxGeometry(41, 8, 27), basic(0x9fd4e8)); w.position.y = -22; const arm = new THREE.Mesh(new THREE.BoxGeometry(2, 16, 2), cachedLam('#2a2c30')); arm.position.y = -8; g.add(c, w, arm); R.group.add(g); return g; };
+    const cabin = (col) => { const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.BoxGeometry(40, 22, 26), rmat(col)); c.position.y = -26; const w = new THREE.Mesh(new THREE.BoxGeometry(41, 8, 27), basic(0x9fd4e8)); w.position.y = -22; const arm = new THREE.Mesh(new THREE.BoxGeometry(2, 16, 2), rmat('#2a2c30')); arm.position.y = -8; g.add(c, w, arm); R.group.add(g); return g; };
     const c1 = cabin('#c83a3a'), c2 = cabin('#e8e4dc');
     const lerp3 = (P, Q, u, g) => g.position.set(R.ox + P[0] + (Q[0] - P[0]) * u, P[1] + (Q[1] - P[1]) * u, R.oy + P[2] + (Q[2] - P[2]) * u);
     R.anims.push(t => { const u = 0.5 + 0.5 * Math.sin(t * 0.05); lerp3(A, B, u, c1); lerp3(A2, B2, 1 - u, c2); });
@@ -4621,7 +4695,7 @@ function buildRegion(R) {
   if (R.group) return;
   const g = R.group = new THREE.Group(); scene.add(g);
   let seed = R.oy + 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed & 0xffff) / 0x10000; };
-  if (!R.gorge && !R.gorgeWest) { const gr = new THREE.Mesh(new THREE.CircleGeometry(7000, 48).rotateX(-Math.PI / 2), cachedLam(R.ground)); gr.position.set(R.ox + 800, 0, R.oy + 800); gr.receiveShadow = true; g.add(gr); }
+  if (!R.gorge && !R.gorgeWest) { const gr = new THREE.Mesh(new THREE.CircleGeometry(7000, 48).rotateX(-Math.PI / 2), rmat(R.ground, 'ground')); gr.position.set(R.ox + 800, 0, R.oy + 800); gr.receiveShadow = true; g.add(gr); }
   for (let k = 0; k < 24; k++) {
     const a = k / 24 * Math.PI * 2 + rnd() * 0.2, d = 3000 + rnd() * 1500, h = 380 + rnd() * 700, r = 520 + rnd() * 620;
     RCone(R, 800 + Math.cos(a) * d, 800 + Math.sin(a) * d, r, h, R.hills, 7, 0, { shadow: false });
@@ -4652,6 +4726,7 @@ function hayagramApp() {
   const head = el('div', 'hg-head');
   head.append(el('b', '', '@you'), el('span', '', `${hg.followers.toLocaleString()} followers · ${hg.visited.size} of ${DESTS.length} places`));
   phBody.append(head);
+  phItem('Quick Travel', 'Pick a destination and fly there', openPicker, !!travelBlocked());
   if (player.region) phItem('Back to Hayastan city', 'Fly home to where you left off', travelHome);
   const why = travelBlocked();
   if (why && !player.region) phNote(why);
@@ -4735,6 +4810,616 @@ function drawGpsPanel(s) {
   ctx.textAlign = 'right'; ctx.fillStyle = '#d66bff'; ctx.fillText(`${Math.round(gps.dist / 5)} m`, x + w - 14, y + 19);
   ctx.restore();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ARMENIA REALISM + QUICK TRAVEL
+// The Armenian destinations and the flight between them render through their own linear-HDR pipeline:
+//   PBR (MeshPhysicalMaterial) · procedural HDRIs (RGBELoader → PMREMGenerator) · PCF soft shadows
+//   · SSAO · bloom · speed blur / chromatic aberration / lens flare · ACES Filmic · sRGB.
+// The city keeps its original direct render path, so its look and frame rate are unchanged.
+// Game units: 1 unit ≈ 7 cm (a person is ~26 units tall). The flight rig is modelled in metres × 14.
+// ═══════════════════════════════════════════════════════════════════════════════
+const HAS_POST = !!(THREE.EffectComposer && THREE.RenderPass && THREE.ShaderPass && THREE.UnrealBloomPass && THREE.ACESFilmicToneMappingShader && THREE.GammaCorrectionShader);
+const HAS_SSAO = HAS_POST && !!(THREE.SSAOPass && THREE.SimplexNoise);
+const HAS_HDRI = !!THREE.RGBELoader;
+const lin = c => new THREE.Color(c).convertSRGBToLinear();          // [COLOR] sRGB hex → linear for the HDR pipeline
+const noise = THREE.SimplexNoise ? new THREE.SimplexNoise() : null;
+const n2 = (x, z) => noise ? noise.noise(x, z) : 0;
+const fbm2 = (x, z, oct = 4) => { let a = 0, f = 1, s = 0.5; for (let i = 0; i < oct; i++) { a += s * n2(x * f, z * f); f *= 2; s *= 0.5; } return a; };
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+// ─── Procedural textures (tileable, via 4D noise on a torus) ───────────────────
+function tileTex(size, freq, oct, fill) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), img = g.createImageData(size, size), h = new Float32Array(size * size);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    let a = 0, s = 0.5, f = freq; const u = x / size * 2 * Math.PI, v = y / size * 2 * Math.PI;
+    for (let o = 0; o < oct; o++) { a += s * (noise ? noise.noise4d(Math.cos(u) * f, Math.sin(u) * f, Math.cos(v) * f, Math.sin(v) * f) : Math.random() * 2 - 1); s *= 0.5; f *= 2; }
+    h[y * size + x] = a;
+  }
+  fill(h, img.data, size); g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+}
+// Stone relief: used as bumpMap (carved tuff) and roughnessMap (worn vs rough patches)
+const stoneTex = tileTex(256, 1.2, 5, (h, d, n) => { for (let i = 0; i < n * n; i++) { const v = clamp(150 + h[i] * 150, 0, 255); d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255; } });
+// Water ripples: height noise → tangent-space normal map, scrolled every frame
+const rippleTex = tileTex(256, 1.6, 4, (h, d, n) => {
+  const at = (x, y) => h[((y + n) % n) * n + ((x + n) % n)];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const dx = (at(x + 1, y) - at(x - 1, y)) * 3, dy = (at(x, y + 1) - at(x, y - 1)) * 3, inv = 1 / Math.hypot(dx, dy, 1), i = (y * n + x) * 4;
+    d[i] = (-dx * inv * 0.5 + 0.5) * 255; d[i + 1] = (-dy * inv * 0.5 + 0.5) * 255; d[i + 2] = (inv * 0.5 + 0.5) * 255; d[i + 3] = 255;
+  }
+});
+rippleTex.repeat.set(30, 30);
+const texRep = (t, r) => { const c = t.clone(); c.needsUpdate = true; c.repeat.set(r, r); return c; };
+
+// ─── [PBR] Region materials: MeshPhysicalMaterial chosen per surface ──────────
+// The region builders pass plain hex colours; rmat() turns each into a physical material by what the colour is used for.
+const RM = new Map();
+const MAT_KIND = {
+  metal: ['#2a2c30', '#7a7f86'], gold: ['#e0cf9a', '#d9c9a0'], wood: ['#6b4a2e', '#5a3e2a'], tile: ['#a3402e', '#8a3a2a', '#6a4a3a'],
+  leaf: ['#2f5a2c', '#27492a', '#4f7a3a', '#5a7a3a', '#6a8a3a', '#6a7a3a', '#4f7a2a', '#3f6a34', '#2f5a2c'], snow: ['#f4f6f8', '#eef2f4', '#eef2f4'],
+  paint: ['#c83a3a', '#e8e4dc', '#f2a800', '#d90012', '#ff6fd8', '#f29a1e', '#8a1020'], dark: ['#5a3a34', '#1f1b18', '#2a211c', '#1c1816', '#15171d'],
+};
+const kindOf = c => Object.keys(MAT_KIND).find(k => MAT_KIND[k].includes(c.toLowerCase()));
+function rmat(color, forced) {
+  const key = color + '|' + (forced || ''); if (RM.has(key)) return RM.get(key);
+  // envMapIntensity < 1: the HDRI supplies ambient light and reflections, the sun supplies the key light
+  const c = lin(color), k = forced || kindOf(color), P = o => new THREE.MeshPhysicalMaterial({ color: c, metalness: 0, envMapIntensity: 0.6, ...o });
+  let m;
+  switch (k) {
+    case 'ground': m = P({ roughness: 0.96, roughnessMap: texRep(stoneTex, 60), bumpMap: texRep(stoneTex, 60), bumpScale: 0.25 }); break;   // dry earth
+    case 'metal': m = P({ metalness: 1, roughness: 0.35 }); break;                                           // steel pylons and cables
+    case 'gold': m = P({ metalness: 1, roughness: 0.25 }); break;                                            // gilded crosses
+    case 'wood': m = P({ roughness: 0.6, clearcoat: 0.25, clearcoatRoughness: 0.5 }); break;                 // varnished timber
+    case 'tile': m = P({ roughness: 0.5, clearcoat: 0.4, clearcoatRoughness: 0.3 }); break;                  // glazed clay roof tiles
+    case 'leaf': m = P({ roughness: 0.8, sheen: lin(color).multiplyScalar(0.8) }); break;                    // foliage: sheen for the velvet rim
+    case 'snow': m = P({ roughness: 0.5, sheen: lin('#dfe8f0'), clearcoat: 0.2, clearcoatRoughness: 0.6 }); break;
+    case 'paint': m = P({ roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.1 }); break;                 // painted boats, flags, cabins
+    case 'dark': m = P({ roughness: 1 }); break;                                                             // doorways, arcades
+    default: m = P({ roughness: 0.86, roughnessMap: texRep(stoneTex, 3), bumpMap: texRep(stoneTex, 3), bumpScale: 0.35 });  // rough carved stone
+  }
+  RM.set(key, m); return m;
+}
+// [PBR] Water: near-zero roughness + clearcoat reflects the HDRI sky; the scrolling normal map adds ripples
+let regionWater = null;
+function regionWaterMat() {
+  return regionWater || (regionWater = new THREE.MeshPhysicalMaterial({ color: lin('#1c4a5c'), roughness: 0.05, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.04,
+    normalMap: rippleTex, normalScale: new THREE.Vector2(0.35, 0.35), transparent: true, opacity: 0.9 }));
+}
+
+// ─── [HDRI] Environment lighting: procedural Radiance (.hdr) skies → RGBELoader → PMREMGenerator ──
+// Artifacts cannot fetch .hdr files, so each mood is painted into float pixels, encoded as a real RGBE file,
+// decoded by THREE.RGBELoader and prefiltered by PMREMGenerator into scene.environment and scene.background.
+const pmrem = new THREE.PMREMGenerator(renderer);
+const rgbeLoader = HAS_HDRI ? new THREE.RGBELoader().setDataType(THREE.HalfFloatType) : null;
+const dirFrom = (elev, azim) => { const e = elev * Math.PI / 180, a = azim * Math.PI / 180; return new THREE.Vector3(Math.cos(e) * Math.cos(a), Math.sin(e), Math.cos(e) * Math.sin(a)); };
+function makeHDR(m) {
+  const W = 512, H = 256, head = `#?RADIANCE\n# procedural sky\nFORMAT=32-bit_rle_rgbe\n\n-Y ${H} +X ${W}\n`;
+  const hb = new TextEncoder().encode(head), buf = new Uint8Array(hb.length + W * H * 4); buf.set(hb);
+  const S = dirFrom(m.sunElev, m.sunAzim), zen = lin(m.zenith), hor = lin(m.horizon), grd = lin(m.ground), sc = lin(m.sunColor);
+  let o = hb.length;
+  for (let y = 0; y < H; y++) {
+    const lat = (0.5 - (y + 0.5) / H) * Math.PI, cy = Math.cos(lat), dy = Math.sin(lat);
+    for (let x = 0; x < W; x++) {
+      const lon = ((x + 0.5) / W - 0.5) * 2 * Math.PI, dx = Math.cos(lon) * cy, dz = Math.sin(lon) * cy;
+      let r, g, b;
+      if (dy >= 0) {
+        const t = Math.pow(dy, m.gradient || 0.45);
+        r = hor.r + (zen.r - hor.r) * t; g = hor.g + (zen.g - hor.g) * t; b = hor.b + (zen.b - hor.b) * t;
+        const cl = m.clouds ? Math.max(0, fbm2(dx / (dy + 0.12) * 1.3, dz / (dy + 0.12) * 1.3, 4) * 1.6 - 0.1) * m.clouds * sstep(0, 0.15, dy) : 0;
+        if (cl > 0) { r = r * (1 - cl) + m.cloud[0] * cl; g = g * (1 - cl) + m.cloud[1] * cl; b = b * (1 - cl) + m.cloud[2] * cl; }
+      } else { const t = sstep(0, 0.12, -dy); r = hor.r * (1 - t) + grd.r * t; g = hor.g * (1 - t) + grd.g * t; b = hor.b * (1 - t) + grd.b * t; }
+      const cs = dx * S.x + dy * S.y + dz * S.z;
+      const glow = Math.pow(Math.max(0, cs), 8) * m.glow + Math.pow(Math.max(0, cs), 200) * m.glow * 4 + (cs > 0.9994 ? m.sunPower : 0);
+      r = (r + sc.r * glow) * m.skyGain; g = (g + sc.g * glow) * m.skyGain; b = (b + sc.b * glow) * m.skyGain;
+      const v = Math.max(r, g, b);
+      if (v < 1e-32) { buf[o++] = 0; buf[o++] = 0; buf[o++] = 0; buf[o++] = 0; continue; }
+      const e = Math.ceil(Math.log2(v)), f = 256 / Math.pow(2, e);
+      buf[o++] = Math.min(255, r * f); buf[o++] = Math.min(255, g * f); buf[o++] = Math.min(255, b * f); buf[o++] = e + 128;
+    }
+  }
+  if (buf[hb.length] === 2 && buf[hb.length + 1] === 2) buf[hb.length] = 3;   // flat file must not start with the RLE marker
+  const d = rgbeLoader.parse(buf.buffer);
+  const tex = new THREE.DataTexture(d.data, d.width, d.height, d.format, d.type);
+  tex.encoding = THREE.LinearEncoding; tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.generateMipmaps = false;
+  tex.flipY = true; tex.mapping = THREE.EquirectangularReflectionMapping; tex.needsUpdate = true;
+  return { background: tex, environment: pmrem.fromEquirectangular(tex).texture };
+}
+// One mood per destination: golden hour at Noravank, cool alpine at Aragats, soft haze at Sevan, and so on.
+// fog is per game unit; sun/hemi are the game's (non-physical) light intensities; exposure feeds the ACES pass.
+const MOODS = {
+  yerevan:     { sunElev: 34, sunAzim: -125, sunColor: '#fff1dc', sunPower: 900, glow: 0.8, zenith: '#3f78c8', horizon: '#c9d6e2', ground: '#6a5e54', skyGain: 1.4, gradient: 0.5, fog: 0.00016, sun: 2.4, hemi: 0.25, exposure: 0.95 },
+  geghard:     { sunElev: 42, sunAzim: -70, sunColor: '#f2f0ea', sunPower: 300, glow: 0.35, zenith: '#6b8bb0', horizon: '#c3cbd0', ground: '#4e4a42', skyGain: 1.2, clouds: 0.55, cloud: [0.85, 0.87, 0.9], fog: 0.00045, sun: 1.5, hemi: 0.3, exposure: 1.05 },
+  garni:       { sunElev: 48, sunAzim: -150, sunColor: '#fff4e2', sunPower: 1000, glow: 0.7, zenith: '#3c73c4', horizon: '#cfd9e0', ground: '#5a5044', skyGain: 1.35, fog: 0.00026, sun: 2.5, hemi: 0.25, exposure: 0.95 },
+  khorvirap:   { sunElev: 22, sunAzim: -40, sunColor: '#ffe6c4', sunPower: 700, glow: 1.0, zenith: '#5a8ccc', horizon: '#e3dccf', ground: '#6b5c48', skyGain: 1.3, gradient: 0.6, fog: 0.00014, sun: 2.2, hemi: 0.25, exposure: 0.95 },
+  sevan:       { sunElev: 18, sunAzim: -20, sunColor: '#ffeede', sunPower: 350, glow: 1.3, zenith: '#7b9cc4', horizon: '#d8e0e6', ground: '#4e5a60', skyGain: 1.25, gradient: 0.7, clouds: 0.25, cloud: [0.95, 0.95, 0.97], fog: 0.00032, sun: 1.6, hemi: 0.3, exposure: 0.95 },
+  etchmiadzin: { sunElev: 16, sunAzim: -160, sunColor: '#ffd9a8', sunPower: 900, glow: 1.2, zenith: '#4a78bb', horizon: '#ecd8bd', ground: '#5c5040', skyGain: 1.3, gradient: 0.55, fog: 0.00024, sun: 2.2, hemi: 0.25, exposure: 0.95 },
+  noravank:    { sunElev: 7, sunAzim: -205, sunColor: '#ffb36b', sunPower: 1100, glow: 2.2, zenith: '#4f6fa8', horizon: '#f2b27a', ground: '#4a2e22', skyGain: 1.25, gradient: 0.4, fog: 0.00034, sun: 2.8, hemi: 0.22, exposure: 1.0 },
+  dilijan:     { sunElev: 38, sunAzim: -110, sunColor: '#eef0ea', sunPower: 150, glow: 0.3, zenith: '#8599ad', horizon: '#c9d0cc', ground: '#3a4632', skyGain: 1.15, clouds: 0.8, cloud: [0.82, 0.84, 0.85], fog: 0.0006, sun: 1.1, hemi: 0.35, exposure: 1.1 },
+  tatev:       { sunElev: 30, sunAzim: -60, sunColor: '#fff0d8', sunPower: 800, glow: 0.8, zenith: '#3e72bd', horizon: '#cdd8df', ground: '#4f5040', skyGain: 1.3, clouds: 0.3, cloud: [0.95, 0.95, 0.96], fog: 0.00028, sun: 2.3, hemi: 0.25, exposure: 0.95 },
+  jermuk:      { sunElev: 26, sunAzim: -30, sunColor: '#f4f6ff', sunPower: 600, glow: 0.7, zenith: '#4f7fc0', horizon: '#d2dde4', ground: '#3f4a3e', skyGain: 1.25, clouds: 0.35, cloud: [0.92, 0.93, 0.95], fog: 0.00045, sun: 1.9, hemi: 0.28, exposure: 1.0 },
+  gyumri:      { sunElev: 40, sunAzim: -120, sunColor: '#f2f0ec', sunPower: 250, glow: 0.4, zenith: '#7a93b3', horizon: '#cdd2d4', ground: '#4a4644', skyGain: 1.25, clouds: 0.65, cloud: [0.86, 0.87, 0.89], fog: 0.00032, sun: 1.4, hemi: 0.32, exposure: 1.05 },
+  aragats:     { sunElev: 36, sunAzim: -95, sunColor: '#f6f8ff', sunPower: 1300, glow: 0.6, zenith: '#2d5fb0', horizon: '#d6e2ec', ground: '#55534c', skyGain: 1.45, gradient: 0.35, clouds: 0.3, cloud: [0.97, 0.97, 0.99], fog: 0.0005, sun: 2.6, hemi: 0.25, exposure: 0.85 },
+  ararat:      { sunElev: 24, sunAzim: -150, sunColor: '#ffe9cc', sunPower: 900, glow: 1.0, zenith: '#4a80cc', horizon: '#e2dccf', ground: '#6b5c48', skyGain: 1.35, gradient: 0.55, fog: 0.00012, sun: 2.3, hemi: 0.25, exposure: 0.95 },
+  // The sky the plane flies through: low sun ahead of the flight path so it rakes across the fuselage
+  flight:      { sunElev: 12, sunAzim: 8, sunColor: '#ffe9c8', sunPower: 1600, glow: 1.6, zenith: '#2e62b8', horizon: '#dde5ee', ground: '#e9edf1', skyGain: 1.45, gradient: 0.4, fog: 0.000065, sun: 3.2, hemi: 0.3, exposure: 0.9 },
+};
+const ENVS = {};
+const envFor = key => ENVS[key] || (ENVS[key] = HAS_HDRI ? makeHDR(MOODS[key]) : null);
+
+// Facts shown on the destination placard (real history, briefly)
+const DEST_INFO = {
+  yerevan: ['Երևան', '40.18° N, 44.51° E · 990 m', 'Founded as the Urartian fortress of Erebuni in 782 BC, Yerevan is older than Rome. Its centre was rebuilt in the 20th century from pink and orange volcanic tuff, which is why it is called the Pink City.'],
+  geghard: ['Գեղարդ', '40.14° N, 44.82° E · 1,700 m · UNESCO', 'Founded in the 4th century at a sacred spring inside a cave, Geghard has chapels cut straight into the cliff. Its main church dates to 1215, and its name means "spear", after the Holy Lance once kept here.'],
+  garni: ['Գառնի', '40.11° N, 44.73° E · 1,400 m', 'Probably built by King Tiridates I in the 1st century AD, Garni is the only standing Greco-Roman colonnaded temple in the former Soviet Union. It fell in the 1679 earthquake and was rebuilt from its original stones in 1969–1975.'],
+  khorvirap: ['Խոր Վիրապ', '39.88° N, 44.58° E · 830 m', 'Gregory the Illuminator was held for about 13 years in a pit beneath this hill before converting King Tiridates III, which led Armenia to adopt Christianity in 301. The monastery faces Mount Ararat across the border.'],
+  sevan: ['Սևանա լիճ', '40.56° N, 45.00° E · 1,900 m', 'Covering about 1,240 km² at roughly 1,900 m above sea level, Sevan is one of the largest high-altitude freshwater lakes in the world. The Sevanavank churches on its peninsula were built in 874.'],
+  etchmiadzin: ['Էջմիածին', '40.16° N, 44.29° E · 860 m', 'Built between 301 and 303, soon after Armenia became the first state to adopt Christianity, Etchmiadzin is generally considered the oldest cathedral in the world. It is the seat of the Catholicos of All Armenians.'],
+  noravank: ['Նորավանք', '39.68° N, 45.23° E · 1,400 m', 'This 13th-century monastery stands at the head of a narrow gorge of red cliffs. Its two-storey Surb Astvatsatsin church, finished in 1339 and attributed to the architect Momik, is entered by stairs cantilevered from the facade.'],
+  dilijan: ['Դիլիջան', '40.74° N, 44.86° E · 1,500 m', 'Ringed by the forests of Dilijan National Park, the town was a Soviet-era retreat for composers, writers and filmmakers. Sharambeyan Street preserves 19th-century houses with carved wooden balconies.'],
+  tatev: ['Տաթև', '39.38° N, 46.25° E · 1,570 m', 'Founded in the 9th century above the Vorotan gorge, Tatev was a medieval centre of learning with its own university. The Wings of Tatev, opened in 2010, carry cabins 5.7 km across the gorge.'],
+  jermuk: ['Ջերմուկ', '39.84° N, 45.67° E · 2,080 m', "Jermuk's hot mineral springs have drawn visitors since the Soviet era, and its bottled water is sold across the region. A waterfall of about 70 m drops into the Arpa gorge at the edge of town."],
+  gyumri: ['Գյումրի', '40.79° N, 43.85° E · 1,550 m', "Armenia's second city, known historically as Kumayri and Alexandropol, has whole blocks of 19th-century buildings in black and red tuff. Much of it was destroyed in the 1988 Spitak earthquake and has been restored since."],
+  aragats: ['Արագած', '40.53° N, 44.20° E · 4,090 m', 'At 4,090 m, the northern summit of Aragats is the highest point in Armenia. The massif has four peaks around a collapsed volcanic crater, and Lake Kari lies near 3,200 m beside a cosmic-ray research station.'],
+  ararat: ['Արարատ', '39.70° N, 44.30° E · 5,137 m', 'Masis, the 5,137 m summit of Ararat, stands in Turkey about 30 km from the Armenian border, yet it is on Armenia\'s coat of arms and fills the southern sky above Yerevan and Khor Virap.'],
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// POST-PROCESSING: HDR target → SSAO → Bloom → Speed/Flare → ACES Filmic → sRGB
+// ═══════════════════════════════════════════════════════════════════════════════
+let composer = null, renderPassP = null, ssaoPass = null, bloomPass = null, speedPass = null, acesPass = null;
+if (HAS_POST) {
+  const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, type: THREE.HalfFloatType };
+  // Half-float keeps highlights above 1.0 for bloom and tone mapping; 4× MSAA when WebGL2 allows
+  const rt = renderer.capabilities.isWebGL2 ? new THREE.WebGLMultisampleRenderTarget(vw * dpr, vh * dpr, opts) : new THREE.WebGLRenderTarget(vw * dpr, vh * dpr, opts);
+  if (renderer.capabilities.isWebGL2) rt.samples = 4;
+  composer = new THREE.EffectComposer(renderer, rt);
+  renderPassP = new THREE.RenderPass(scene, camera);
+  composer.addPass(renderPassP);
+  if (HAS_SSAO) {
+    // [SSAO] darkens creases and contact points; kernel ~16 units ≈ 1.1 m
+    ssaoPass = new THREE.SSAOPass(scene, camera, vw * dpr, vh * dpr);
+    ssaoPass.kernelRadius = 16; ssaoPass.minDistance = 0.00002; ssaoPass.maxDistance = 0.003;
+    ssaoPass.beautyRenderTarget.texture.type = THREE.HalfFloatType;
+    ssaoPass.normalRenderTarget.depthTexture.type = THREE.UnsignedIntType;
+    const over = ssaoPass.renderOverride.bind(ssaoPass);
+    ssaoPass.renderOverride = (...a) => { const bg = scene.background; scene.background = null; over(...a); scene.background = bg; };
+    composer.addPass(ssaoPass);
+  }
+  // [BLOOM] threshold above 1.0 in linear HDR: only the sun, its glints and emissive surfaces glow
+  bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(vw, vh), 0.55, 0.45, 1.5);
+  composer.addPass(bloomPass);
+  // [SPEED FX] zoom blur + chromatic aberration + lens flare; enabled only during Quick Travel
+  speedPass = new THREE.ShaderPass({
+    uniforms: { tDiffuse: { value: null }, blur: { value: 0 }, ca: { value: 0 }, flare: { value: 0 }, sunUV: { value: new THREE.Vector2(0.5, 0.5) }, aspect: { value: 1 } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `
+      uniform sampler2D tDiffuse; uniform float blur; uniform float ca; uniform float flare; uniform float aspect; uniform vec2 sunUV;
+      varying vec2 vUv;
+      float lum(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+      float disc(vec2 uv, vec2 c, float r) { return smoothstep(r, r * 0.55, length((uv - c) * vec2(aspect, 1.0))); }
+      void main() {
+        vec2 dir = vUv - 0.5;
+        vec3 acc = vec3(0.0); float wsum = 0.0;
+        // 8 taps toward the centre = zoom blur ("forward speed"); R and B split radially = chromatic aberration
+        for (int i = 0; i < 8; i++) {
+          float k = float(i) / 7.0; float w = 1.0 - 0.6 * k;
+          vec2 uv = vUv - dir * blur * k;
+          acc += w * vec3(texture2D(tDiffuse, uv - dir * ca).r, texture2D(tDiffuse, uv).g, texture2D(tDiffuse, uv + dir * ca).b);
+          wsum += w;
+        }
+        vec3 col = acc / wsum;
+        if (flare > 0.0) {
+          // Visibility = brightness of the sun pixel itself, so the fuselage or a cloud occludes the flare for free
+          float vis = lum(texture2D(tDiffuse, sunUV).rgb) + lum(texture2D(tDiffuse, sunUV + vec2(0.004, 0.0)).rgb) + lum(texture2D(tDiffuse, sunUV - vec2(0.004, 0.0)).rgb)
+                    + lum(texture2D(tDiffuse, sunUV + vec2(0.0, 0.006)).rgb) + lum(texture2D(tDiffuse, sunUV - vec2(0.0, 0.006)).rgb);
+          vis = smoothstep(2.0, 10.0, vis / 5.0) * flare;
+          vec2 axis = vec2(0.5) - sunUV;
+          col += vec3(1.0, 0.72, 0.42) * disc(vUv, sunUV + axis * 0.55, 0.035) * 0.35 * vis;
+          col += vec3(0.50, 0.80, 1.00) * disc(vUv, sunUV + axis * 1.10, 0.060) * 0.22 * vis;
+          col += vec3(0.90, 0.50, 1.00) * disc(vUv, sunUV + axis * 1.45, 0.020) * 0.40 * vis;
+          col += vec3(1.00, 0.90, 0.60) * disc(vUv, sunUV + axis * 1.80, 0.090) * 0.12 * vis;
+          vec2 d = (vUv - sunUV) * vec2(aspect, 1.0);
+          col += vec3(1.0, 0.85, 0.65) * exp(-abs(d.y) * 90.0) * exp(-abs(d.x) * 2.5) * 1.6 * vis;   // anamorphic streak
+          col += vec3(0.7, 0.85, 1.0) * smoothstep(0.02, 0.0, abs(length(d) - 0.22)) * 0.15 * vis;   // halo
+        }
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+  });
+  speedPass.enabled = false;
+  composer.addPass(speedPass);
+  // [TONE MAPPING] ACES Filmic for every destination and the flight alike, so lighting never jumps between them
+  acesPass = new THREE.ShaderPass(THREE.ACESFilmicToneMappingShader);
+  composer.addPass(acesPass);
+  composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader));
+  const sizePost = () => { composer.setPixelRatio(dpr); composer.setSize(vw, vh); };
+  sizePost(); addEventListener('resize', sizePost);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FLIGHT RIG: sky set far from everything, with a low-poly PBR airplane and layered clouds
+// ═══════════════════════════════════════════════════════════════════════════════
+const FLY = new THREE.Vector3(-90000, 12000, 0), MS = 14;            // origin of the sky set; metres → game units
+const rig = new THREE.Group(); rig.visible = false; scene.add(rig);
+const toWorld = (v, out) => out.copy(v).multiplyScalar(MS).add(FLY);
+// Brushed metal: fine streaks along the fuselage drive roughness, so highlights stretch like real brushed aluminium
+const brushed = (() => {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 16; const g = c.getContext('2d');
+  for (let x = 0; x < 256; x++) { const v = 120 + Math.random() * 80 | 0; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(x, 0, 1, 16); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 1); return t;
+})();
+const hullMat = new THREE.MeshPhysicalMaterial({ color: lin('#c9ced4'), metalness: 1, roughness: 0.32, roughnessMap: brushed, clearcoat: 0.3, clearcoatRoughness: 0.15 });
+const wingMat = hullMat.clone(); wingMat.roughness = 0.45;                 // wings: a touch rougher so the broad flats don't mirror the sky
+const canopyMat = new THREE.MeshPhysicalMaterial({ color: lin('#0c1822'), metalness: 0.1, roughness: 0.03, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.6, transparent: true, opacity: 0.92 });
+const liveryMat = hex => new THREE.MeshPhysicalMaterial({ color: lin(hex), metalness: 0.2, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.08 });
+const exhaustMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 1.8, 0.7) });   // > 1.0 so it blooms
+const airplane = new THREE.Group(), model = new THREE.Group();
+model.rotation.y = -Math.PI / 2;           // model is built nose-along-+x; this turns it to face +z so lookAt() aims the nose
+model.scale.setScalar(MS); airplane.add(model); rig.add(airplane);
+{
+  const P = (geo, mat, x, y, z, o = {}) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (o.rx) m.rotation.x = o.rx; if (o.ry) m.rotation.y = o.ry; if (o.rz) m.rotation.z = o.rz; m.castShadow = m.receiveShadow = true; model.add(m); return m; };
+  P(new THREE.CylinderGeometry(0.85, 0.72, 10, 14).rotateZ(-Math.PI / 2), hullMat, 0, 0, 0);                        // fuselage
+  P(new THREE.SphereGeometry(0.85, 14, 10).scale(2.1, 1, 1), hullMat, 5, 0, 0);                                     // nose
+  P(new THREE.ConeGeometry(0.72, 4.4, 14).rotateZ(Math.PI / 2), hullMat, -7.2, 0.25, 0);                            // tail cone
+  P(new THREE.SphereGeometry(0.62, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(2.2, 0.9, 1), canopyMat, 4.2, 0.45, 0);   // glossy canopy
+  P(new THREE.BoxGeometry(6, 0.18, 1.72), canopyMat, 0.8, 0.28, 0);                                                 // cabin window band
+  for (const [hex, x] of [['#d90012', -3.0], ['#0033a0', -3.45], ['#f2a800', -3.9]]) P(new THREE.CylinderGeometry(0.765, 0.76, 0.44, 14).rotateZ(-Math.PI / 2), liveryMat(hex), x, 0, 0);
+  for (const s of [-1, 1]) {
+    P(new THREE.BoxGeometry(2.6, 0.16, 6.8), wingMat, -0.4, -0.25, s * 4.0, { ry: -s * 0.32, rx: -s * 0.07 });   // swept wings with dihedral
+    P(new THREE.BoxGeometry(0.9, 0.18, 0.3), liveryMat('#d90012'), -1.6, -0.02, s * 7.35);                          // wingtips
+    P(new THREE.CylinderGeometry(0.42, 0.36, 2.4, 12).rotateZ(-Math.PI / 2), hullMat, 0.6, -0.78, s * 3.1);         // engines
+    P(new THREE.CircleGeometry(0.3, 12), exhaustMat, -0.61, -0.78, s * 3.1, { ry: -Math.PI / 2 });
+    P(new THREE.BoxGeometry(1.5, 0.12, 2.6), wingMat, -8.1, 0.35, s * 1.5, { ry: -s * 0.35 });                     // tailplane
+  }
+  P(new THREE.BoxGeometry(2.2, 2.6, 0.14), liveryMat('#e8912c'), -8.0, 1.6, 0, { rz: 0.45 });                       // fin
+}
+// Clouds: layered horizontal sheets for depth and parallax, plus billboard puffs along the flight corridor
+const puffTex = (() => {
+  const n = 128, c = document.createElement('canvas'); c.width = c.height = n; const g = c.getContext('2d'), img = g.createImageData(n, n);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const u = x / n - 0.5, v = y / n - 0.5, r = Math.hypot(u, v * 1.3) * 2, f = fbm2(x * 0.05, y * 0.05, 4) * 0.5 + 0.5, i = (y * n + x) * 4;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = 255; img.data[i + 3] = clamp(f * 1.25 - r * r * 1.1, 0, 1) * 255;
+  }
+  g.putImageData(img, 0, 0); return new THREE.CanvasTexture(c);
+})();
+const deckTex = tileTex(256, 1.5, 5, (h, d, n) => { for (let i = 0; i < n * n; i++) { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 255; d[i * 4 + 3] = clamp((h[i] + 0.15) * 2.2, 0, 1) * 255; } });
+const cloudWhite = new THREE.Color(1.25, 1.22, 1.18);                  // slightly above 1: sunlit tops
+const puffs = [];
+[[-130, 0.95, 12], [-70, 0.5, 8], [230, 0.16, 5]].forEach(([y, op, rep]) => {       // deck, mid layer, high cirrus (metres)
+  const t = deckTex.clone(); t.needsUpdate = true; t.repeat.set(rep, rep);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: cloudWhite, map: t, transparent: true, opacity: op, depthWrite: false, side: THREE.DoubleSide }));
+  m.position.copy(toWorld(new THREE.Vector3(200, y, 0), new THREE.Vector3())); m.scale.setScalar(MS); rig.add(m);
+});
+{
+  const mats = [0.4, 0.6, 0.8].map(o => new THREE.MeshBasicMaterial({ color: cloudWhite, map: puffTex, transparent: true, opacity: o, depthWrite: false }));
+  for (let k = 0; k < 42; k++) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mats[k % 3]), s = (50 + Math.random() * 130) * MS;
+    m.scale.set(s, s * 0.6, 1);
+    toWorld(new THREE.Vector3(-200 + Math.random() * 1000, -60 + Math.random() * 110, (Math.random() - 0.5) * 420), m.position);
+    rig.add(m); puffs.push(m);
+  }
+}
+// Flight path in metres: an S-curve that banks left then right, then (tau > 1) the descent into the cloud deck
+function pathAt(tau, out) {
+  const d = Math.max(0, (tau - 1) / 0.38);
+  return out.set(-160 + 520 * tau, 10 * Math.sin(tau * 2.8) - 150 * d * d, 60 * Math.sin(tau * 4.2 - 0.4));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUICK TRAVEL STATE MACHINE
+//   idle ──quickTravelTo(i)──▶ depart ─▶ flight ─▶ descend ─▶ arrive ─▶ idle
+//   depart  (0.52 s) camera pulls back and up from where you are; the screen fades to sky
+//   flight  (1.75 s) cut to the sky set; the plane flies into frame, banking; the camera swings into a chase orbit
+//   descend (0.62 s) the plane dives into the cloud deck; fog thickens to a white-out
+//   arrive  (1.00 s) cut to the destination under the white; the camera settles from high above into the chase view
+// Everything else in the game is frozen (mode 'travel'), and every travel button is disabled until idle.
+// ═══════════════════════════════════════════════════════════════════════════════
+const reduceMotionQT = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const QT_DUR = reduceMotionQT ? { depart: 200, flight: 0, descend: 0, arrive: 350 } : { depart: 520, flight: 1750, descend: 620, arrive: 1000 };
+const QT = { state: 'idle', t0: 0, to: 0, from: null, sky: false, camStart: new THREE.Vector3(), lookStart: new THREE.Vector3(), pull: new THREE.Vector3(), roll: 0 };
+const veilEl = document.getElementById('qtVeil'), enrouteEl = document.getElementById('qtEnroute');
+const SKY_VEIL = '#dfe7ef', CLOUD_VEIL = '#f1f3f5';
+const setVeil = (a, color) => { veilEl.style.opacity = a.toFixed(3); if (color) veilEl.style.background = color; };
+const destName = i => i < 0 ? 'Hayastan city' : DESTS[i].name;
+const destIndex = key => DESTS.findIndex(D => D.key === key);
+
+// Called from the picker, the placard's Prev/Next, Hayagram and the "fly back" pads: one path for every trip.
+function quickTravelTo(i) {
+  if (QT.state !== 'idle') return false;                                  // re-entry guard: ignore until the sequence finishes
+  if (i >= 0) i = (i + DESTS.length) % DESTS.length;
+  const here = player.region ? destIndex(player.region) : -1;
+  if (i === here) return false;
+  closePicker(true);                                                        // leaves 'picker' mode before the checks below
+  const why = travelBlocked(); if (why) { toast(why, '#ff8a7a'); return false; }
+  closePhone(); wheel.open = false; caption = null;
+  if (i >= 0 && !player.region) regionBack = player.interior ? { ...INTERIORS[player.interior].street } : { x: playerPos().x, y: playerPos().y, a: player.car ? player.car.a : player.a };
+  QT.to = i; QT.fromName = destName(here);
+  enrouteEl.innerHTML = ''; const sp = document.createElement('span'); sp.textContent = 'En route · ';
+  enrouteEl.append(sp, document.createTextNode(`${QT.fromName} → ${destName(i)}`)); enrouteEl.hidden = false;
+  keys.clear(); mouseFire = false;
+  mode = 'travel';
+  setTravelLocked(true);
+  enterQT('depart');
+  return true;
+}
+function enterQT(state) {
+  QT.state = state; QT.t0 = performance.now();
+  if (state === 'depart') {
+    QT.pull.copy(camera.position).sub(camLook).normalize();
+    if (speedPass) speedPass.enabled = true;
+  } else if (state === 'flight') {
+    // Screen is white: do the expensive work here so no hitch is visible (region geometry, its HDRI, the flight sky)
+    if (QT.to >= 0) { buildRegion(REGIONS[DESTS[QT.to].key]); envFor(DESTS[QT.to].key); }
+    envFor('flight');
+    QT.sky = true; rig.visible = true; playerMesh.visible = false;
+    QT.ssaoWas = FX.ssao; QT.camInit = true;
+    camera.far = 60000; camera.fov = 55; camera.updateProjectionMatrix();
+  } else if (state === 'descend') {
+    // nothing to set up: flightCamera() reads the state
+  } else if (state === 'arrive') {
+    QT.sky = false; rig.visible = false;
+    landAt(QT.to);
+    if (speedPass) { speedPass.enabled = false; speedPass.uniforms.flare.value = 0; }
+    QT.camStart.set(player.x - 420, 900, player.y + 520); QT.lookStart.set(player.x, 0, player.y);
+    camSnap = true;
+  } else if (state === 'idle') {
+    mode = 'play'; setVeil(0); enrouteEl.hidden = true; setTravelLocked(false); updatePlacard();
+  }
+}
+// Advances the state machine; called every frame from render() while travelling
+function updateQuickTravel(dt) {
+  if (QT.state === 'idle') return;
+  const dur = QT_DUR[QT.state], u = dur ? clamp((performance.now() - QT.t0) / dur, 0, 1) : 1;
+  switch (QT.state) {
+    case 'depart':
+      setVeil(sstep(0.45, 1, u), SKY_VEIL);
+      if (speedPass) { speedPass.uniforms.blur.value = 0.03 * u * u; speedPass.uniforms.ca.value = 0.002 * u; }
+      if (u >= 1) enterQT(reduceMotionQT ? 'arrive' : 'flight');
+      break;
+    case 'flight':
+      setVeil(1 - sstep(0, 0.18, u), SKY_VEIL);
+      if (u >= 1) enterQT('descend');
+      break;
+    case 'descend':
+      setVeil(sstep(0.5, 1, u), CLOUD_VEIL);
+      if (u >= 1) enterQT('arrive');
+      break;
+    case 'arrive':
+      setVeil(1 - sstep(0, 0.4, u), CLOUD_VEIL);
+      if (u >= 1) enterQT('idle');
+      break;
+  }
+}
+// Put the player at the destination (or back in the city) — the old instant teleport, now run under the white-out
+function landAt(i) {
+  if (player.car) exitCar(true);
+  if (player.interior === 'generic') disposeGeneric();
+  player.interior = null; player.vx = player.vy = 0;
+  if (i < 0) {
+    const b = regionBack || { x: 26 * T, y: 32.65 * T, a: 0 };
+    player.region = null; player.x = b.x; player.y = b.y; player.a = b.a || 0;
+    toast('Back in Hayastan city', '#f2a800');
+    return;
+  }
+  const D = DESTS[i], R = REGIONS[D.key];
+  buildRegion(R);
+  player.region = D.key; player.x = R.ox + R.spawn[0]; player.y = R.oy + R.spawn[1]; player.a = -Math.PI / 2;
+  orbit.yaw = 0; orbit.pitch = 0; orbit.zoom = 1;
+  if (!hg.visited.has(D.key)) { hg.visited.add(D.key); hg.followers += 25; saveGame(); }
+  showBanner(R.name, R.sub, R.col, 3.5);
+  setTimeout(() => { if (player.region === D.key) say('guide:' + D.key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true); }, 1800);
+}
+
+// ─── Camera during travel ─────────────────────────────────────────────────────
+const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _f = new THREE.Vector3(), _f0 = new THREE.Vector3(), _f1 = new THREE.Vector3();
+const _side = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _want = new THREE.Vector3(), _look = new THREE.Vector3(), _w = new THREE.Vector3();
+const lerp = (a, b, t) => a + (b - a) * t, easeIO = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, easeOut = t => 1 - Math.pow(1 - t, 3);
+function flightCamera(dt, t) {
+  const u = clamp((performance.now() - QT.t0) / (QT_DUR[QT.state] || 1), 0, 1);
+  const tau = QT.state === 'flight' ? u : 1 + 0.38 * u;                  // one continuous path parameter across both phases
+  pathAt(tau, _p); pathAt(tau + 0.004, _q); _f.subVectors(_q, _p).normalize();
+  // Bank into the turn: the change in heading over a short span of path (cross product's y) sets the roll
+  pathAt(tau - 0.01, _q); _f0.subVectors(_p, _q).normalize(); pathAt(tau + 0.01, _q); _f1.subVectors(_q, _p).normalize();
+  const turn = _f0.z * _f1.x - _f0.x * _f1.z;
+  const roll = clamp(-turn * 25, -1.1, 1.1) + 0.08 * Math.sin(t * 4.3);
+  QT.roll += (roll - QT.roll) * Math.min(1, dt * 6);
+  toWorld(_p, airplane.position); toWorld(_q.copy(_p).add(_f), _w);
+  airplane.lookAt(_w); airplane.rotateZ(QT.roll);
+  // Chase orbit: the camera sweeps from a front-quarter view round to behind the plane as it passes
+  _side.crossVectors(_up, _f).normalize();
+  const e = easeIO(Math.min(1, tau));
+  const theta = QT.state === 'descend' ? 0.25 : lerp(2.0, 0.3, e), dist = QT.state === 'descend' ? 13 : lerp(30, 15, e), h = QT.state === 'descend' ? 5 : lerp(6, 3.5, e);
+  _want.copy(_p).addScaledVector(_f, -Math.cos(theta) * dist).addScaledVector(_side, Math.sin(theta) * dist).addScaledVector(_up, h);
+  toWorld(_want, _want);
+  if (QT.camInit) {
+    // First frame: the camera waits ahead of the plane, so it flies into frame toward us
+    QT.camInit = false; pathAt(0.34, _q); _q.addScaledVector(_side, 40).addScaledVector(_up, 5); toWorld(_q, camera.position);
+  }
+  const follow = QT.state === 'descend' ? 10 : sstep(0.12, 0.4, tau) * 8;
+  camera.position.lerp(_want, 1 - Math.exp(-dt * follow));
+  toWorld(_look.copy(_p).addScaledVector(_f, 5), _look);
+  camera.lookAt(_look); camera.rotateZ(QT.roll * 0.12);
+  const fov = QT.state === 'descend' ? lerp(55, 64, u) : 55;
+  if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  // [SUN] strong raking key light, its shadow box tight around the plane
+  const L = MOODS.flight, sd = dirFrom(L.sunElev, L.sunAzim);
+  moon.target.position.copy(airplane.position); moon.position.copy(airplane.position).addScaledVector(sd, 1500);
+  setShadowBox(260);
+  // [FOG] thickens into a white-out as the plane punches into the deck
+  scene.fog.density = L.fog + (QT.state === 'descend' ? u * u * 0.0016 : 0);
+  // Clouds always face the camera; the speed pass gets blur, aberration and the sun's screen position
+  for (const m of puffs) m.quaternion.copy(camera.quaternion);
+  if (speedPass) {
+    speedPass.uniforms.blur.value = 0.022 + 0.03 * sstep(0.2, 0.6, tau) + (QT.state === 'descend' ? 0.03 * u : 0);
+    speedPass.uniforms.ca.value = 0.0035;
+    _q.copy(camera.position).addScaledVector(sd, 20000).project(camera);
+    const onScreen = _q.z < 1 && Math.abs(_q.x) < 1.2 && Math.abs(_q.y) < 1.2;
+    speedPass.uniforms.flare.value = onScreen ? 1 : 0; speedPass.uniforms.sunUV.value.set(_q.x * 0.5 + 0.5, _q.y * 0.5 + 0.5);
+    speedPass.uniforms.aspect.value = vw / vh;
+  }
+}
+// Depart and arrive wrap the normal chase camera (called at the end of updateCamera)
+function travelCameraAdjust() {
+  const dur = QT_DUR[QT.state] || 1, u = clamp((performance.now() - QT.t0) / dur, 0, 1);
+  if (QT.state === 'depart' && !reduceMotionQT) {
+    const e = u * u * (3 - 2 * u);
+    camera.position.addScaledVector(QT.pull, 260 * e).y += 420 * e;          // pull back and climb
+    camera.lookAt(camLook);
+  } else if (QT.state === 'arrive') {
+    const e = easeOut(u);                                                  // settle: glide from high above into the chase view
+    const land = camMode === 'first' || player.interior ? camera.position.clone() : camWant;   // where the normal camera wants to be
+    camera.position.lerpVectors(QT.camStart, land, reduceMotionQT ? 1 : e);
+    _look.lerpVectors(QT.lookStart, camLook, reduceMotionQT ? 1 : e); camera.lookAt(_look);
+    scene.fog.density *= 1 + 12 * (1 - e);                                 // still inside the cloud as we descend onto the scene
+  }
+}
+let shadowBoxNow = 520;
+function setShadowBox(s) { if (s === shadowBoxNow) return; shadowBoxNow = s; Object.assign(moon.shadow.camera, { left: -s, right: s, top: s, bottom: -s }); moon.shadow.camera.far = s > 300 ? 1600 : 3200; moon.shadow.camera.updateProjectionMatrix(); }
+
+// ─── Orbit camera in destinations: drag to look around, wheel/pinch to zoom ───
+const orbit = { yaw: 0, pitch: 0, zoom: 1, drag: null, pinch: 0, touches: new Map() };
+glCanvas.addEventListener('pointerdown', e => {
+  if (!player.region || mode !== 'play') return;
+  orbit.touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  orbit.drag = { x: e.clientX, y: e.clientY };
+});
+addEventListener('pointermove', e => {
+  const t0 = orbit.touches.get(e.pointerId);
+  if (!orbit.drag || !player.region || !t0) return;
+  if (orbit.touches.size === 2) {
+    t0.x = e.clientX; t0.y = e.clientY; const [a, b] = [...orbit.touches.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (orbit.pinch) orbit.zoom = clamp(orbit.zoom * orbit.pinch / d, 0.5, 2.6); orbit.pinch = d; return;
+  }
+  orbit.yaw -= (e.clientX - t0.x) * 0.006; orbit.pitch = clamp(orbit.pitch - (e.clientY - t0.y) * 0.004, -0.35, 1.2);
+  t0.x = e.clientX; t0.y = e.clientY;
+});
+const endDrag = e => { orbit.touches.delete(e.pointerId); if (orbit.touches.size < 2) orbit.pinch = 0; if (!orbit.touches.size) orbit.drag = null; };
+addEventListener('pointerup', endDrag); addEventListener('pointercancel', endDrag);
+glCanvas.addEventListener('wheel', e => { if (!player.region || mode !== 'play') return; e.preventDefault(); orbit.zoom = clamp(orbit.zoom * Math.exp(e.deltaY * 0.0012), 0.5, 2.6); }, { passive: false });
+
+// ─── Lighting for destinations and the sky set (called from applyTimeOfDay) ────
+const hdrMode = () => !!(HAS_POST && (player.region || QT.sky));
+const cityBg = scene.background;
+let charsLinear = false;
+// The game's shared Lambert materials were authored as display colours; the HDR path is linear, so convert them
+// while in Armenia (people and cars keep their look) and back again in the city. Flags avoid double conversion.
+function linearizeShared(on) {
+  for (const m of matCache.values()) {
+    if (on && !m.userData.lin) { m.color.convertSRGBToLinear(); m.userData.lin = true; }
+    else if (!on && m.userData.lin) { m.color.convertLinearToSRGB(); m.userData.lin = false; }
+  }
+  charsLinear = on;
+}
+function applyArmeniaLook() {
+  const key = QT.sky ? 'flight' : player.region, L = MOODS[key], env = envFor(key);
+  if (env) { scene.background = env.background; scene.environment = env.environment; }
+  else { scene.background = cityBg; cityBg.copy(lin(L.horizon)); }
+  const fogC = lin(L.horizon).multiplyScalar(L.skyGain * 0.95);
+  scene.fog.color.copy(fogC); scene.fog.density = L.fog;
+  // The game runs non-physical light units (punctual lights ×π), so the mood's sun and sky values are scaled to match
+  hemi.color.copy(lin(L.zenith)); hemi.groundColor.copy(lin(L.ground)); hemi.intensity = L.hemi * 0.6;
+  moon.color.copy(lin(L.sunColor)); moon.intensity = L.sun * 0.42;
+  const sd = dirFrom(L.sunElev, L.sunAzim); sky.sunOffset = [sd.x * 900, sd.y * 900, sd.z * 900];
+  sky.night = 0; headSpot.intensity = 0;
+  gradeEl.hidden = true; vignetteEl.hidden = !FX.vignette || QT.sky;       // the CSS vignette reads as a dark ring over open sky
+  if (!QT.sky) setShadowBox(260);
+  if (acesPass) acesPass.uniforms.exposure.value = L.exposure * 0.85;
+  linearizeShared(true);
+  // Post settings follow the Graphics toggles; SSAO sits out the flight (clouds and depth-less sky)
+  if (ssaoPass) { const on = FX.ssao && !QT.sky; ssaoPass.enabled = on; renderPassP.enabled = !on; }
+  if (bloomPass) bloomPass.enabled = FX.bloom;
+}
+function restoreCityLook() {
+  if (scene.background !== cityBg) { scene.background = cityBg; scene.environment = null; }
+  if (charsLinear) linearizeShared(false);
+  setShadowBox(520);
+}
+// The one render call: HDR pipeline for Armenia and the flight, the original direct path for the city
+let armeniaFps = { t0: 0, frames: 0, checked: false };
+function renderFrame(dt) {
+  rippleTex.offset.set(time * 0.012, time * 0.008);
+  if (hdrMode()) {
+    composer.render(dt);
+    // First seconds in Armenia on a slow GPU: drop SSAO (the most expensive pass) and say so
+    const now = performance.now();
+    if (!armeniaFps.checked && !QT.sky) {
+      if (!armeniaFps.t0) armeniaFps.t0 = now;
+      armeniaFps.frames++;
+      if (now - armeniaFps.t0 > 3000) {
+        armeniaFps.checked = true;
+        if (FX.ssao && armeniaFps.frames / 3 < 40) { FX.ssao = false; saveFX(); toast('Ambient occlusion turned off to keep the frame rate up', '#9fd4e8'); }
+      }
+    }
+  } else renderer.render(scene, camera);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UI: destination placard, Quick Travel picker, locked controls
+// ═══════════════════════════════════════════════════════════════════════════════
+const placardEl = document.getElementById('dest'), pickerEl = document.getElementById('picker'), pickGrid = document.getElementById('pickGrid');
+function updatePlacard() {
+  const show = !!player.region && (mode === 'play' || mode === 'picker') && QT.state === 'idle';
+  placardEl.hidden = !show;
+  if (!show) return;
+  const i = destIndex(player.region), D = DESTS[i], [hy, meta, fact] = DEST_INFO[D.key];
+  document.getElementById('destCount').textContent = `${String(i + 1).padStart(2, '0')} / ${DESTS.length}`;
+  document.getElementById('destHy').textContent = hy; document.getElementById('destName').textContent = D.name;
+  document.getElementById('destMeta').textContent = meta; document.getElementById('destFact').textContent = fact;
+}
+function setTravelLocked(on) {
+  for (const id of ['destPrev', 'destNext', 'destQuick', 'destHome', 'pickClose']) document.getElementById(id).disabled = on;
+  for (const b of pickGrid.querySelectorAll('button')) b.disabled = on || b.dataset.here === '1';
+  if (on) for (const b of phBody.querySelectorAll('.hg-go')) b.disabled = true;
+  placardEl.hidden = on || !player.region;
+}
+function openPicker() {
+  if (QT.state !== 'idle' || (mode !== 'play')) return;
+  closePhone();
+  const here = player.region ? destIndex(player.region) : -1;
+  pickGrid.innerHTML = '';
+  const card = (i, name, sub, hy, art) => {
+    const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button'; b.className = 'pick';
+    const ph = document.createElement('span'); ph.className = 'pick-ph'; ph.style.background = art;
+    const tag = document.createElement('span'); tag.className = 'pick-tag'; tag.textContent = i === here ? 'You are here' : i < 0 ? 'Home' : String(i + 1).padStart(2, '0');
+    ph.append(tag);
+    const lb = document.createElement('span'); lb.className = 'pick-lb';
+    const nm = document.createElement('b'); nm.textContent = name;
+    const sb = document.createElement('span'); sb.className = 'pick-sub'; sb.textContent = sub;
+    const h = document.createElement('span'); h.className = 'pick-hy'; h.lang = 'hy'; h.textContent = hy;
+    lb.append(nm, h, sb); b.append(ph, lb);
+    if (i === here) { b.disabled = true; b.dataset.here = '1'; }
+    b.addEventListener('click', () => quickTravelTo(i));
+    li.append(b); pickGrid.append(li);
+  };
+  if (player.region) card(-1, 'Hayastan city', 'Fly home to where you left off', 'Քաղաք', 'linear-gradient(#0b1019 0%, #3a2a44 45%, #ffb347 46%, #6b4046 100%)');
+  DESTS.forEach((D, i) => card(i, D.name, D.sub, DEST_INFO[D.key][0], D.art));
+  pickerEl.hidden = false; mode = 'picker'; keys.clear(); mouseFire = false; placardEl.hidden = true;
+  (pickGrid.querySelector('button:not(:disabled)') || document.getElementById('pickClose')).focus({ preventScroll: true });
+}
+function closePicker(silent) {
+  if (pickerEl.hidden) return;
+  pickerEl.hidden = true;
+  if (mode === 'picker' && !silent) { mode = 'play'; updatePlacard(); document.getElementById('destQuick').focus({ preventScroll: true }); }
+  else if (mode === 'picker') mode = 'play';
+}
+document.getElementById('pickClose').addEventListener('click', () => closePicker());
+pickerEl.addEventListener('click', e => { if (e.target === pickerEl) closePicker(); });
+document.getElementById('destQuick').addEventListener('click', openPicker);
+document.getElementById('destPrev').addEventListener('click', () => quickTravelTo(destIndex(player.region) - 1));
+document.getElementById('destNext').addEventListener('click', () => quickTravelTo(destIndex(player.region) + 1));
+document.getElementById('destHome').addEventListener('click', () => quickTravelTo(-1));
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' && mode === 'picker') { e.preventDefault(); closePicker(); }
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (mode === 'play' && player.region && !e.repeat) {
+    if (e.code === 'BracketLeft') quickTravelTo(destIndex(player.region) - 1);
+    else if (e.code === 'BracketRight') quickTravelTo(destIndex(player.region) + 1);
+    else if (e.code === 'KeyG') openPicker();
+  }
+});
+// Warm the flight sky in idle time so the first trip never waits on it
+(window.requestIdleCallback || (f => setTimeout(f, 1500)))(() => envFor('flight'));
 
 let luckyWheel = null;
 {
@@ -5109,6 +5794,8 @@ const sky = { night: 1 };
 const gradeEl = document.getElementById('grade'), vignetteEl = document.getElementById('vignette');
 const tmpA = new THREE.Color(), tmpB = new THREE.Color();
 function applyTimeOfDay() {
+  if (hdrMode()) { applyArmeniaLook(); return; }
+  restoreCityLook();
   const h = FX.dayNight ? tod : 21;
   let i = 0; while (i < SKY_KEYS.length - 2 && SKY_KEYS[i + 1].h <= h) i++;
   const A = SKY_KEYS[i], B = SKY_KEYS[i + 1], t = clamp((h - A.h) / (B.h - A.h), 0, 1);
@@ -5141,6 +5828,7 @@ const LIGHT_HEX = { green: 0x5ee08a, amber: 0xffb347, red: 0xff4a4a };
 const camLook = new THREE.Vector3(), camWant = new THREE.Vector3();
 let camYaw = 0;
 function updateCamera(dt) {
+  if (QT.sky) { flightCamera(dt, performance.now() / 1000); return; }   // the flight owns the camera
   const k = FX.smoothCamera ? Math.min(1, dt * 5) : 1;
   if (mode === 'title') {
     const a = time * 0.05, cx = 26 * T, cz = 25 * T;
@@ -5172,9 +5860,15 @@ function updateCamera(dt) {
     camYaw += angDiff(heading, camYaw) * (FX.smoothCamera ? Math.min(1, dt * (pc ? 3 : 4)) : 1);
     const high = camMode === 'high';
     const flying = pc && pc.spec.air, az = pc ? pc.z || 0 : 0;
-    const dist = high ? 170 : flying ? 150 + spd * 0.12 : pc ? (pc.spec.bus ? 150 : 96) + spd * 0.08 : 74;
+    let dist = high ? 170 : flying ? 150 + spd * 0.12 : pc ? (pc.spec.bus ? 150 : 96) + spd * 0.08 : 74;
     let height = (high ? 330 : flying ? 64 : pc ? (pc.spec.bus ? 70 : 44) : 38) + az;
-    const bx = p.x - Math.cos(camYaw) * dist, bz = p.y - Math.sin(camYaw) * dist;
+    // In the Armenian destinations the chase camera can be orbited (drag) and zoomed (wheel); walking eases it back behind you
+    let yawC = camYaw;
+    if (player.region && !high) {
+      if (!orbit.drag && Math.hypot(player.vx, player.vy) > 8) orbit.yaw *= 1 - Math.min(1, dt * 1.2);
+      yawC += orbit.yaw; dist *= orbit.zoom; height = height * orbit.zoom + orbit.pitch * 90 * orbit.zoom;
+    }
+    const bx = p.x - Math.cos(yawC) * dist, bz = p.y - Math.sin(yawC) * dist;
     // Lift over buildings that would block the view
     if (!high && !flying && (solidPx(bx, bz) || solidPx((bx + p.x) / 2, (bz + p.y) / 2))) height = 150;
     if (flying) height = Math.max(height, groundAt(bx, bz) + 30);
@@ -5195,6 +5889,7 @@ function updateCamera(dt) {
   const so = sky.sunOffset || [260, 520, 160];
   moon.position.set(f.x + so[0], so[1], f.z + so[2]); moon.target.position.set(f.x, 0, f.z);
   moon.castShadow = FX.shadows;
+  if (QT.state === 'depart' || QT.state === 'arrive') travelCameraAdjust();
 }
 
 const DISPLAY = '"Big Shoulders Display", "Arial Narrow", Impact, sans-serif';
@@ -5208,19 +5903,22 @@ function drawStar(x, y, r, fill, stroke) {
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
 }
 
-let fps = 60;
+let fps = 60, lastPlacardSig = '';
 function render(dt) {
   syncRemotes(dt);
   if (dt > 0) fps += (1 / dt - fps) * 0.05;
   applyTimeOfDay();
   syncEntities();
+  updateQuickTravel(dt);
   updateCamera(dt);
-  renderer.render(scene, camera);
+  renderFrame(dt);
+  const sig = `${player.region}|${mode}|${QT.state}`;
+  if (sig !== lastPlacardSig) { lastPlacardSig = sig; updatePlacard(); }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, vw, vh);
   if (flash > 0) { ctx.fillStyle = `rgba(200,30,40,${flash * 0.3})`; ctx.fillRect(0, 0, vw, vh); }
   if (FX.showFps) { ctx.font = `600 12px ${MONO}`; ctx.textAlign = 'left'; ctx.fillStyle = '#9a978f'; ctx.fillText(`${Math.round(fps)} fps`, 16, vh - insetBottom - 8); }
-  if (mode === 'title') return;
+  if (mode === 'title' || mode === 'travel') return;
   drawHud();
   drawNetHud(clamp(vw / 900, 0.72, 1));
   drawCaption();
@@ -5595,7 +6293,7 @@ function applyFX() { propsGroup.visible = FX.props; aoPlane.visible = FX.blobSha
 // ─── Loading screen ──────────────────────────────────────────────────────────
 const LOAD_TIPS = ['Press / to pull out your phone.', 'Walk up to people: most will say barev. Some will not.', 'Hold Shift and steer to drift. Drifting pays.',
   'Press B for nitro. It refills when you let off.', 'Almost every door in the city opens. Press E.', 'Lose the police by breaking line of sight, or by walking into a building.',
-  'Press Enter for the weapon wheel and pick with the mouse.', 'Set a waypoint on the map (M) and the GPS draws the route.', 'Open Hayagram on your phone (/) to teleport across Armenia.', 'Press C to switch to first person.', 'Online: press T to chat and hold Tab for the scoreboard.'];
+  'Press Enter for the weapon wheel and pick with the mouse.', 'Set a waypoint on the map (M) and the GPS draws the route.', 'Open Hayagram on your phone (/) and use Quick Travel to fly across Armenia.', 'Press C to switch to first person.', 'Online: press T to chat and hold Tab for the scoreboard.'];
 const LOAD_STEPS = ['Laying the streets', 'Raising the buildings', 'Parking the cars', 'Waking the neighbors', 'Brewing the surch', 'Lighting the khorovats'];
 const loadEl = document.getElementById('loading');
 let loadBusy = false;
@@ -5658,7 +6356,7 @@ function boot(data) {
   let last = performance.now();
   const frame = now => {
     const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
-    if (mode !== 'paused' && mode !== 'map' && mode !== 'talk') update(wheel.open ? dt * 0.25 : dt);
+    if (mode !== 'paused' && mode !== 'map' && mode !== 'talk' && mode !== 'travel' && mode !== 'picker') update(wheel.open ? dt * 0.25 : dt);
     render(dt);
     requestAnimationFrame(frame);
   };
