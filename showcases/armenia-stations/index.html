@@ -1,0 +1,876 @@
+<title>Armenia in Twelve Stations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Noto+Serif+Armenian:wght@500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Palette drawn from Armenian building stone: pink Artik tuff, apricot, basalt, limestone */
+  :root {
+    --tuff: #b86a5b;
+    --apricot: #e8912c;
+    --ink: #221c1a;
+    --paper: #f4eee7;
+    --muted: #6f6360;
+    --plate: rgba(244, 238, 231, 0.9);
+    --plate-line: rgba(34, 28, 26, 0.14);
+    --chip: rgba(244, 238, 231, 0.82);
+    --ground: #1b1716;
+    --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+    --body: "Newsreader", Georgia, "Times New Roman", serif;
+    --hy: "Noto Serif Armenian", "Noto Sans Armenian", "Arian AMU", serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ink: #f1e9e1; --paper: #1d1817; --muted: #b3a59f;
+      --plate: rgba(24, 20, 19, 0.86); --plate-line: rgba(241, 233, 225, 0.14); --chip: rgba(24, 20, 19, 0.78);
+      --tuff: #e0917f; --apricot: #f2a44a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #f1e9e1; --paper: #1d1817; --muted: #b3a59f;
+    --plate: rgba(24, 20, 19, 0.86); --plate-line: rgba(241, 233, 225, 0.14); --chip: rgba(24, 20, 19, 0.78);
+    --tuff: #e0917f; --apricot: #f2a44a;
+  }
+  html, body { height: 100%; }
+  body { background: var(--ground); color: var(--ink); overflow: hidden; font-family: var(--body); }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  #stage.dragging { cursor: grabbing; }
+
+  /* Museum-style placard, bottom left */
+  .placard { position: fixed; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(27rem, calc(100% - 32px));
+    box-sizing: border-box; padding: 1.1rem 1.2rem 1rem; display: grid; gap: 0.55rem;
+    background: var(--plate); border: 1px solid var(--plate-line); border-radius: 3px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: opacity .35s ease, transform .35s ease; }
+  .placard.swap { opacity: 0; transform: translateY(6px); }
+  .row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .count { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.14em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hy { font: 500 1rem/1.2 var(--hy); color: var(--tuff); }
+  h1 { margin: 0; font: 800 clamp(1.7rem, 5.4vw, 2.5rem)/0.98 var(--display); letter-spacing: -0.01em; text-wrap: balance; }
+  .meta { margin: 0; font: 400 0.72rem/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .meta b { font-weight: 500; color: var(--ink); }
+  .fact { margin: 0; font: 400 1rem/1.5 var(--body); max-width: 60ch; }
+  .nav { display: flex; gap: 0.5rem; align-items: center; padding-top: 0.25rem; }
+  .nav button { font: 500 0.78rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); cursor: pointer;
+    background: transparent; border: 1px solid var(--plate-line); border-radius: 2px; padding: 0.6rem 0.85rem; }
+  .nav button:hover { border-color: var(--tuff); color: var(--tuff); }
+  .nav button:focus-visible, .ticks button:focus-visible, .chip button:focus-visible { outline: 2px solid var(--apricot); outline-offset: 2px; }
+  .ticks { display: flex; gap: 4px; margin-left: auto; }
+  .ticks button { width: 9px; height: 18px; padding: 0; border: 0; border-radius: 1px; background: var(--plate-line); cursor: pointer; }
+  .ticks button[aria-current="true"] { background: var(--apricot); }
+
+  /* Render settings chip, top right */
+  .chip { position: fixed; right: 16px; top: calc(16px + env(safe-area-inset-top, 0px)); display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;
+    padding: 0.4rem 0.5rem; background: var(--chip); border: 1px solid var(--plate-line); border-radius: 3px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    font: 400 0.7rem/1 var(--mono); color: var(--muted); max-width: calc(100% - 32px); box-sizing: border-box; }
+  .chip button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--plate-line); border-radius: 2px; padding: 0.35rem 0.5rem; cursor: pointer; }
+  .chip button[aria-pressed="false"] { color: var(--muted); text-decoration: line-through; }
+  #fps { min-width: 5.5ch; text-align: right; font-variant-numeric: tabular-nums; }
+  .hint { position: fixed; left: 16px; top: calc(16px + env(safe-area-inset-top, 0px)); font: 400 0.7rem/1.3 var(--mono); color: #f4eee7;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7); max-width: 40%; }
+  #note { position: fixed; right: 16px; top: calc(56px + env(safe-area-inset-top, 0px)); font: 400 0.68rem/1.3 var(--mono); color: #f4eee7; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+  @media (max-width: 560px) {
+    .placard { padding: 0.85rem 0.9rem 0.8rem; gap: 0.4rem; }
+    .fact { font-size: 0.9rem; }
+    .hint { display: none; }
+    .ticks { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .placard { transition: none; } }
+</style>
+
+<canvas id="stage" aria-label="3D view of the current Armenian landmark. Drag to orbit, scroll or pinch to zoom."></canvas>
+<p class="hint">Drag to orbit · scroll or pinch to zoom · ← → to travel</p>
+<div class="chip" role="group" aria-label="Render settings">
+  <button id="tSSAO" type="button" aria-pressed="true">SSAO</button>
+  <button id="tBloom" type="button" aria-pressed="true">Bloom</button>
+  <span id="fps">-- fps</span>
+</div>
+<p id="note" role="status"></p>
+
+<section class="placard" id="placard" aria-live="polite">
+  <div class="row-top"><span class="count" id="count">01 / 12</span><span class="hy" id="hy" lang="hy"></span></div>
+  <h1 id="name">Yerevan</h1>
+  <p class="meta" id="meta"></p>
+  <p class="fact" id="fact"></p>
+  <div class="nav">
+    <button id="prev" type="button" aria-label="Previous station">← Prev</button>
+    <button id="next" type="button" aria-label="Next station">Next →</button>
+    <div class="ticks" id="ticks" role="group" aria-label="Jump to a station"></div>
+  </div>
+</section>
+
+<!-- three.js r128 core (UMD) and the non-module example add-ons it needs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/SSAOShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/SSAOPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/ACESFilmicToneMappingShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Reflector.js"></script>
+<script>
+(() => {
+'use strict';
+// [COLOR MANAGEMENT] hex values are sRGB; convert once to linear because lighting, fog and the HDR buffer are linear
+const V3 = THREE.Vector3, C = c => new THREE.Color(c).convertSRGBToLinear();
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const simplex = new THREE.SimplexNoise();
+const n2 = (x, z) => simplex.noise(x, z);
+const fbm = (x, z, oct = 4) => { let a = 0, f = 1, s = 0.5; for (let i = 0; i < oct; i++) { a += s * n2(x * f, z * f); f *= 2; s *= 0.5; } return a; };
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+// ════════════════════════════════════════════════════════════════════════════
+// RENDERER — physically based setup
+// ════════════════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+const DPR = Math.min(devicePixelRatio || 1, 1.5);          // cap resolution: the biggest single fps lever
+renderer.setPixelRatio(DPR);
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.physicallyCorrectLights = true;                    // [PBR] light units behave physically (inverse-square, lux-like sun)
+renderer.toneMapping = THREE.NoToneMapping;                 // [TONE MAPPING] scene stays linear HDR; ACES runs later as a post pass
+renderer.outputEncoding = THREE.LinearEncoding;             // the final gamma pass converts linear → sRGB
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;           // [SOFT SHADOWS] percentage-closer filtering with soft kernel
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 2, 7000);
+scene.fog = new THREE.FogExp2(0xbfc8d0, 0.001);             // [FOG] exponential-squared; colour and density lerp per station
+
+// The sun: one shadow-casting directional light whose direction matches the sun baked into each HDRI
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.6;
+sun.shadow.radius = 4;                                      // [SOFT SHADOWS] widens the PCF soft kernel
+scene.add(sun, sun.target);
+
+// ════════════════════════════════════════════════════════════════════════════
+// PROCEDURAL TEXTURES — tileable noise for stone relief/roughness and water ripples
+// ════════════════════════════════════════════════════════════════════════════
+// 4D simplex sampled on a torus makes the 2D texture tile seamlessly
+function tileNoise(u, v, freq, oct) {
+  let a = 0, s = 0.5, f = freq;
+  for (let i = 0; i < oct; i++) {
+    const x = Math.cos(u * 2 * Math.PI) * f, y = Math.sin(u * 2 * Math.PI) * f, z = Math.cos(v * 2 * Math.PI) * f, w = Math.sin(v * 2 * Math.PI) * f;
+    a += s * simplex.noise4d(x, y, z, w); s *= 0.5; f *= 2;
+  }
+  return a;
+}
+function noiseCanvas(size, freq, oct, fn) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), img = g.createImageData(size, size);
+  const h = new Float32Array(size * size);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) h[y * size + x] = tileNoise(x / size, y / size, freq, oct);
+  fn(h, img.data, size); g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+}
+// Stone: grey relief used as bumpMap (carved surface) and roughnessMap (worn vs rough patches)
+const stoneTex = noiseCanvas(256, 1.2, 5, (h, d, n) => {
+  for (let i = 0; i < n * n; i++) { const v = Math.max(0, Math.min(255, 150 + h[i] * 150)); d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255; }
+});
+// Water: height noise converted to a tangent-space normal map; scrolled every frame for moving ripples
+const waterNormals = noiseCanvas(256, 1.6, 4, (h, d, n) => {
+  const at = (x, y) => h[((y + n) % n) * n + ((x + n) % n)];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const dx = (at(x + 1, y) - at(x - 1, y)) * 3, dy = (at(x, y + 1) - at(x, y - 1)) * 3, inv = 1 / Math.hypot(dx, dy, 1), i = (y * n + x) * 4;
+    d[i] = (-dx * inv * 0.5 + 0.5) * 255; d[i + 1] = (-dy * inv * 0.5 + 0.5) * 255; d[i + 2] = (inv * 0.5 + 0.5) * 255; d[i + 3] = 255;
+  }
+});
+waterNormals.repeat.set(24, 24);
+
+// ════════════════════════════════════════════════════════════════════════════
+// PBR MATERIALS — MeshPhysicalMaterial with metalness/roughness chosen per surface
+// ════════════════════════════════════════════════════════════════════════════
+function stone(color, { rough = 0.88, bump = 0.6, rep = 2 } = {}) {
+  const map = stoneTex.clone(); map.needsUpdate = true; map.repeat.set(rep, rep);
+  // [PBR] rough dielectric stone: metalness 0, high roughness, bump relief for carved/worn tuff
+  return new THREE.MeshPhysicalMaterial({ color: C(color), metalness: 0, roughness: rough, roughnessMap: map, bumpMap: map, bumpScale: bump * 0.35 });
+}
+const M = {
+  pinkTuff: stone('#c48878', { rough: 0.82, bump: 0.35, rep: 3 }),
+  roseTuff: stone('#b87665', { rough: 0.85, bump: 0.35, rep: 3 }),
+  carved: stone('#8d8377', { rough: 0.96, bump: 1.2, rep: 2 }),        // Geghard: rough, deeply carved rock
+  basalt: stone('#6f6a65', { rough: 0.78, bump: 0.5, rep: 3 }),        // Garni: smoother dressed basalt
+  basaltDark: stone('#3e3a38', { rough: 0.7, bump: 0.5, rep: 3 }),
+  limestone: stone('#d9cdb8', { rough: 0.8, bump: 0.3, rep: 3 }),
+  ochreTuff: stone('#c2a07c', { rough: 0.88, bump: 0.45, rep: 3 }),
+  redRock: stone('#9d4a31', { rough: 0.92, bump: 1.0, rep: 2 }),       // Noravank cliffs
+  redTuff: stone('#b3674a', { rough: 0.85, bump: 0.5, rep: 3 }),
+  blackTuff: stone('#3b3533', { rough: 0.86, bump: 0.5, rep: 3 }),     // Gyumri
+  orangeTuff: stone('#b06a44', { rough: 0.86, bump: 0.5, rep: 3 }),
+  slate: stone('#5e5a57', { rough: 0.6, bump: 0.2, rep: 4 }),          // stone roof slabs: a touch smoother
+  paving: stone('#a08a80', { rough: 0.72, bump: 0.08, rep: 6 }),
+  cobble: stone('#6e645c', { rough: 0.75, bump: 1.4, rep: 30 }),
+  rock: stone('#6b6862', { rough: 0.94, bump: 1.1, rep: 2 }),
+  dark: new THREE.MeshPhysicalMaterial({ color: C('#140f0d'), roughness: 1, metalness: 0 }),
+  // [PBR] wood: dielectric, mid roughness, light clearcoat for varnish
+  wood: new THREE.MeshPhysicalMaterial({ color: C('#6b4428'), roughness: 0.55, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.5 }),
+  tile: new THREE.MeshPhysicalMaterial({ color: C('#9a3b26'), roughness: 0.5, metalness: 0, clearcoat: 0.4, clearcoatRoughness: 0.3 }),
+  // [PBR] glass: very low roughness so windows mirror the HDRI sky
+  glass: new THREE.MeshPhysicalMaterial({ color: C('#1c2428'), roughness: 0.06, metalness: 0.2, clearcoat: 1, reflectivity: 0.9 }),
+  // [PBR] metals: metalness 1 so colour comes from reflections, roughness sets how sharp they are
+  gold: new THREE.MeshPhysicalMaterial({ color: C('#d9a84b'), roughness: 0.25, metalness: 1 }),
+  steel: new THREE.MeshPhysicalMaterial({ color: C('#8a9097'), roughness: 0.35, metalness: 1 }),
+  cable: new THREE.MeshPhysicalMaterial({ color: C('#2a2c30'), roughness: 0.45, metalness: 1 }),
+  cabin: new THREE.MeshPhysicalMaterial({ color: C('#b8282a'), roughness: 0.3, metalness: 0.4, clearcoat: 1, clearcoatRoughness: 0.08 }),
+  // [PBR] foliage: dielectric with sheen for the soft velvet rim light on leaves and needles
+  leaf: new THREE.MeshPhysicalMaterial({ color: C('#3f6a33'), roughness: 0.8, metalness: 0, sheen: C('#3a5a2a') }),
+  conifer: new THREE.MeshPhysicalMaterial({ color: C('#23422a'), roughness: 0.85, metalness: 0, sheen: C('#1f3a22') }),
+  vine: new THREE.MeshPhysicalMaterial({ color: C('#56802f'), roughness: 0.75, metalness: 0, sheen: C('#3a5a1a') }),
+  trunk: new THREE.MeshPhysicalMaterial({ color: C('#4a3526'), roughness: 0.9, metalness: 0 }),
+  // [PBR] snow: bright, fairly rough, sheen for the sparkle-free soft glint of settled snow
+  snow: new THREE.MeshPhysicalMaterial({ color: C('#f2f5f8'), roughness: 0.5, metalness: 0, sheen: C('#dfe8f0'), clearcoat: 0.2, clearcoatRoughness: 0.6 }),
+  // [PBR] water: near-zero roughness + clearcoat = glossy surface reflecting the environment; scrolling normal map adds ripples
+  water: new THREE.MeshPhysicalMaterial({ color: C('#16414f'), roughness: 0.05, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.04,
+    normalMap: waterNormals, normalScale: new THREE.Vector2(0.35, 0.35), transparent: true, opacity: 0.88 }),
+  waterFall: new THREE.MeshPhysicalMaterial({ color: C('#e8f4f8'), roughness: 0.2, metalness: 0, emissive: C('#9fc4d4'), emissiveIntensity: 0.6,
+    transparent: true, opacity: 0.85, depthWrite: false }),
+  jet: new THREE.MeshPhysicalMaterial({ color: C('#e6f5ff'), roughness: 0.1, emissive: C('#bfe4ff'), emissiveIntensity: 1.8, transparent: true, opacity: 0.55, depthWrite: false }),
+  clockFace: new THREE.MeshPhysicalMaterial({ color: C('#f5efe0'), roughness: 0.3, emissive: C('#ffe7b0'), emissiveIntensity: 3 }),   // bright enough to bloom
+  terrain: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.93, metalness: 0 }),
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// HDRI ENVIRONMENT LIGHTING — procedural Radiance (.hdr) files → RGBELoader → PMREMGenerator
+// ════════════════════════════════════════════════════════════════════════════
+// Each station gets its own sky "mood". The sky is rendered to float pixels, encoded as a real RGBE .hdr file,
+// decoded by THREE.RGBELoader, and prefiltered by PMREMGenerator into scene.environment (image-based lighting
+// for every PBR material) and scene.background. Swap makeHDR() for a downloaded .hdr to use photographic skies.
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+const rgbe = new THREE.RGBELoader().setDataType(THREE.HalfFloatType);
+const sunDir = (elev, azim) => { const e = elev * Math.PI / 180, a = azim * Math.PI / 180; return new V3(Math.cos(e) * Math.cos(a), Math.sin(e), Math.cos(e) * Math.sin(a)); };
+function makeHDR(m) {
+  const W = 512, H = 256, head = `#?RADIANCE\n# procedural sky\nFORMAT=32-bit_rle_rgbe\n\n-Y ${H} +X ${W}\n`;
+  const hb = new TextEncoder().encode(head), buf = new Uint8Array(hb.length + W * H * 4); buf.set(hb);
+  const S = sunDir(m.sunElev, m.sunAzim), zen = C(m.zenith), hor = C(m.horizon), grd = C(m.ground), sc = C(m.sunColor);
+  let o = hb.length;
+  for (let y = 0; y < H; y++) {
+    const lat = (0.5 - (y + 0.5) / H) * Math.PI, cy = Math.cos(lat), dy = Math.sin(lat);
+    for (let x = 0; x < W; x++) {
+      const lon = ((x + 0.5) / W - 0.5) * 2 * Math.PI, dx = Math.cos(lon) * cy, dz = Math.sin(lon) * cy;
+      let r, g, b;
+      if (dy >= 0) {
+        const t = Math.pow(dy, m.gradient || 0.45);
+        r = hor.r + (zen.r - hor.r) * t; g = hor.g + (zen.g - hor.g) * t; b = hor.b + (zen.b - hor.b) * t;
+        const cl = m.clouds ? Math.max(0, fbm(dx / (dy + 0.12) * 1.3, dz / (dy + 0.12) * 1.3, 4) * 1.6 - 0.1) * m.clouds * smooth(0, 0.15, dy) : 0;
+        if (cl > 0) { r = r * (1 - cl) + m.cloud[0] * cl; g = g * (1 - cl) + m.cloud[1] * cl; b = b * (1 - cl) + m.cloud[2] * cl; }
+      } else {
+        const t = smooth(0, 0.12, -dy); r = hor.r * (1 - t) + grd.r * t; g = hor.g * (1 - t) + grd.g * t; b = hor.b * (1 - t) + grd.b * t;
+      }
+      // Sun: a very bright disc (drives reflections and bloom) plus a wide glow through the atmosphere
+      const cs = dx * S.x + dy * S.y + dz * S.z;
+      const glow = Math.pow(Math.max(0, cs), 8) * m.glow + Math.pow(Math.max(0, cs), 200) * m.glow * 4 + (cs > 0.9994 ? m.sunPower : 0);
+      r += sc.r * glow; g += sc.g * glow; b += sc.b * glow;
+      r *= m.skyGain; g *= m.skyGain; b *= m.skyGain;
+      // RGBE encode (shared exponent)
+      const v = Math.max(r, g, b);
+      if (v < 1e-32) { buf[o++] = 0; buf[o++] = 0; buf[o++] = 0; buf[o++] = 0; continue; }
+      const e = Math.ceil(Math.log2(v)), f = 256 / Math.pow(2, e);
+      buf[o++] = Math.min(255, r * f); buf[o++] = Math.min(255, g * f); buf[o++] = Math.min(255, b * f); buf[o++] = e + 128;
+    }
+  }
+  // A flat (non run-length) file must not start with the RLE marker bytes 2,2
+  if (buf[hb.length] === 2 && buf[hb.length + 1] === 2) buf[hb.length] = 3;
+  const d = rgbe.parse(buf.buffer);
+  const tex = new THREE.DataTexture(d.data, d.width, d.height, d.format, d.type);
+  tex.encoding = THREE.LinearEncoding; tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.generateMipmaps = false;
+  tex.flipY = true; tex.mapping = THREE.EquirectangularReflectionMapping; tex.needsUpdate = true;
+  return { background: tex, environment: pmrem.fromEquirectangular(tex).texture };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// GEOMETRY HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function mesh(geo, mat, x = 0, y = 0, z = 0, parent, o = {}) {
+  const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z);
+  if (o.ry) m.rotation.y = o.ry; if (o.rx) m.rotation.x = o.rx; if (o.rz) m.rotation.z = o.rz;
+  m.castShadow = o.cast !== false; m.receiveShadow = true; parent.add(m); return m;
+}
+const box = (p, w, h, d, mat, x, y, z, o) => mesh(new THREE.BoxGeometry(w, h, d), mat, x, y + h / 2, z, p, o);
+const cyl = (p, rt, rb, h, mat, x, y, z, seg = 16, o) => mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat, x, y + h / 2, z, p, o);
+const cone = (p, r, h, mat, x, y, z, seg = 8, o) => cyl(p, 0, r, h, mat, x, y, z, seg, o);
+// Gabled roof: a triangular prism with its base at height y
+function prism(p, len, w, h, mat, x, y, z, alongX) {
+  const r = w / Math.sqrt(3), g = new THREE.CylinderGeometry(r, r, len, 3);
+  g.rotateX(-Math.PI / 2); g.scale(1, h / (1.5 * r), 1); if (alongX) g.rotateY(Math.PI / 2);
+  return mesh(g, mat, x, y + h / 3, z, p);
+}
+// InstancedMesh: one draw call for many copies (trees, rocks, columns, vines) — key to holding 60fps
+function instanced(p, geo, mat, list, colorFn) {
+  const im = new THREE.InstancedMesh(geo, mat, list.length), o = new THREE.Object3D();
+  list.forEach((t, i) => {
+    o.position.set(t.x, t.y || 0, t.z); o.rotation.set(t.rx || 0, t.ry || 0, t.rz || 0); o.scale.set(t.sx || t.s || 1, t.sy || t.s || 1, t.sz || t.s || 1);
+    o.updateMatrix(); im.setMatrixAt(i, o.matrix); if (colorFn) im.setColorAt(i, colorFn(i));
+  });
+  im.castShadow = true; im.receiveShadow = true; p.add(im); return im;
+}
+// Heightfield terrain with vertex colours from a (height, slope) → colour function
+function terrain(p, size, seg, hFn, colFn) {
+  const g = new THREE.PlaneGeometry(size, size, seg, seg); g.rotateX(-Math.PI / 2);
+  const pos = g.attributes.position, cols = new Float32Array(pos.count * 3), c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) pos.setY(i, hFn(pos.getX(i), pos.getZ(i)));
+  g.computeVertexNormals();
+  const nrm = g.attributes.normal;
+  for (let i = 0; i < pos.count; i++) { colFn(c, pos.getY(i), 1 - nrm.getY(i), pos.getX(i), pos.getZ(i)); cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b; }
+  g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  const m = mesh(g, M.terrain, 0, 0, 0, p, { cast: false }); return m;
+}
+const mix = (c, a, b, t) => c.copy(C(a)).lerp(C(b), Math.min(1, Math.max(0, t)));
+// A classic Armenian church: cross-in-square hall, gabled arms, cylindrical/polygonal drum, conical dome, door facing +z
+function church(p, x, z, s, wall, roof, o = {}) {
+  const g = new THREE.Group(); g.position.set(x, o.y || 0, z); if (o.ry) g.rotation.y = o.ry; p.add(g);
+  const H = 9 * s;
+  box(g, 10 * s, H, 18 * s, wall, 0, 0, 0); box(g, 17 * s, H, 8 * s, wall, 0, 0, -1.5 * s);
+  prism(g, 18.4 * s, 10.6 * s, 3.6 * s, roof, 0, H, 0); prism(g, 17.4 * s, 8.6 * s, 3.6 * s, roof, 0, H, -1.5 * s, true);
+  const dH = (o.tallDrum ? 9 : 6) * s;
+  cyl(g, 3.2 * s, 3.2 * s, dH, wall, 0, H + 1.5 * s, -1.5 * s, 12);
+  cone(g, 4 * s, 5 * s, roof, 0, H + 1.5 * s + dH, -1.5 * s, 12);
+  const top = H + 1.5 * s + dH + 5 * s;
+  box(g, 0.3 * s, 2.4 * s, 0.3 * s, M.gold, 0, top, -1.5 * s); box(g, 1.3 * s, 0.3 * s, 0.3 * s, M.gold, 0, top + 1.5 * s, -1.5 * s);
+  box(g, 2.2 * s, 4.2 * s, 0.3 * s, M.dark, 0, 0, 9.05 * s, { cast: false });                    // door recess
+  for (const dx of [-3, 3]) box(g, 0.6 * s, 2.2 * s, 0.25 * s, M.dark, dx * s, 5 * s, 9.05 * s, { cast: false });   // slit windows
+  if (o.belfry) {
+    const bz = 9 * s + 3.5 * s;
+    box(g, 7 * s, 8 * s, 7 * s, wall, 0, 0, bz);
+    for (const dx of [-2.6, 2.6]) for (const dz of [-2.6, 2.6]) cyl(g, 0.45 * s, 0.45 * s, 4.5 * s, wall, dx * s, 8 * s, bz + dz * s, 8);
+    cone(g, 4.2 * s, 4 * s, roof, 0, 12.5 * s, bz, 8);
+  }
+  return g;
+}
+// Mount Ararat backdrop: Masis and Sis with snow caps (scaled for composition, not true distance)
+function ararat(p, x, z, s) {
+  const peak = (px, pz, r, h) => {
+    const g = new THREE.ConeGeometry(r, h, 48, 12, true), pos = g.attributes.position, cols = new Float32Array(pos.count * 3), c = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i) + h / 2, k = 1 - y / h, a = Math.atan2(pos.getZ(i), pos.getX(i));
+      const jag = 1 + 0.06 * Math.sin(a * 7) * k + 0.04 * n2(a * 3, y * 0.004);
+      pos.setX(i, pos.getX(i) * jag); pos.setZ(i, pos.getZ(i) * jag);
+      const snowLine = 0.55 + 0.06 * Math.sin(a * 9) + 0.04 * n2(a * 5, 1);
+      mix(c, '#6f5d52', '#f4f7fa', smooth(snowLine - 0.02, snowLine + 0.02, y / h)); cols.set([c.r, c.g, c.b], i * 3);
+    }
+    g.computeVertexNormals(); g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    mesh(g, M.terrain, px, h / 2, pz, p, { cast: false });
+  };
+  peak(x, z, 1500 * s, 1350 * s); peak(x + 1900 * s, z + 300 * s, 760 * s, 640 * s);
+}
+function trees(p, area, n, avoid, kind = 'conifer', yFn) {
+  const list = [];
+  for (let k = 0, tries = 0; k < n && tries < n * 20; tries++) {
+    const x = area.x0 + Math.random() * (area.x1 - area.x0), z = area.z0 + Math.random() * (area.z1 - area.z0);
+    if (avoid && avoid(x, z)) continue;
+    list.push({ x, z, y: yFn ? yFn(x, z) : 0, s: 0.8 + Math.random() * 0.7, ry: Math.random() * 6 }); k++;
+  }
+  if (kind === 'conifer') {
+    instanced(p, new THREE.ConeGeometry(3, 12, 7).translate(0, 9, 0), M.conifer, list);
+    instanced(p, new THREE.CylinderGeometry(0.4, 0.5, 4, 5).translate(0, 2, 0), M.trunk, list);
+  } else {
+    instanced(p, new THREE.IcosahedronGeometry(4, 1).translate(0, 7, 0), M.leaf, list, () => C('#3f6a33').offsetHSL((Math.random() - 0.5) * 0.04, 0, (Math.random() - 0.5) * 0.12));
+    instanced(p, new THREE.CylinderGeometry(0.35, 0.5, 4, 5).translate(0, 2, 0), M.trunk, list);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// THE TWELVE STATIONS
+// Each station: real facts, an HDRI mood, fog, a camera framing and a build() that returns an optional animate(t)
+// ════════════════════════════════════════════════════════════════════════════
+const SPACING = 4200;   // stations sit far apart along x so fog hides the neighbours
+const STATIONS = [
+  { name: 'Yerevan', hy: 'Երևան', meta: '40.18° N, 44.51° E · 990 m · Republic Square',
+    fact: 'Founded as the Urartian fortress of Erebuni in 782 BC, Yerevan is older than Rome. Its centre was rebuilt in the 20th century from pink and orange volcanic tuff, which is why it is called the Pink City.',
+    // [HDRI MOOD] clear afternoon, dry and bright; [FOG] lightest of all so Ararat reads on the horizon
+    mood: { sunElev: 34, sunAzim: -125, sunColor: '#fff1dc', sunPower: 900, glow: 0.8, zenith: '#3f78c8', horizon: '#c9d6e2', ground: '#6a5e54', skyGain: 1.4, gradient: 0.5 },
+    fog: { color: '#c7d2dc', density: 0.00032 }, exposure: 0.95, sun: 4.2, shadow: 150,
+    cam: { y: 8, r: 175, th: 1.9, ph: 1.2, min: 70, max: 420 },
+    build(g) {
+      terrain(g, 1800, 90, (x, z) => { const d = Math.hypot(x, z * 1.2); return smooth(260, 700, d) * (40 + fbm(x * 0.004, z * 0.004) * 50); },
+        (c, h) => mix(c, '#8f8270', '#6d6a4c', h / 60));
+      // Republic Square: oval of pink/grey paving with the stone "carpet" pattern at its centre
+      const sq = mesh(new THREE.CircleGeometry(1, 64).rotateX(-Math.PI / 2).scale(95, 1, 70), M.paving, 0, 0.05, 0, g, { cast: false });
+      mesh(new THREE.RingGeometry(20, 24, 64).rotateX(-Math.PI / 2).scale(1.35, 1, 1), M.basalt, 0, 0.08, 0, g, { cast: false });
+      mesh(new THREE.CircleGeometry(12, 32).rotateX(-Math.PI / 2).scale(1.35, 1, 1), M.roseTuff, 0, 0.1, 0, g, { cast: false });
+      // Government House: long arcaded block with a clock tower
+      box(g, 120, 20, 22, M.pinkTuff, 0, 0, -86);
+      box(g, 124, 1.6, 25, M.roseTuff, 0, 20, -86);
+      for (let k = 0; k < 17; k++) box(g, 4, 9, 1.2, M.dark, -56 + k * 7, 0, -74.6, { cast: false });   // arcade openings
+      for (let k = 0; k < 17; k++) box(g, 3, 3.6, 0.8, M.glass, -56 + k * 7, 12, -74.8, { cast: false });
+      box(g, 14, 46, 14, M.pinkTuff, 0, 0, -86); box(g, 16, 2, 16, M.roseTuff, 0, 46, -86);
+      cone(g, 9, 9, M.slate, 0, 48, -86, 4, { ry: Math.PI / 4 });
+      mesh(new THREE.CircleGeometry(3.2, 32), M.clockFace, 0, 38, -78.9, g, { cast: false });
+      // History Museum and hotel: curved facades built from short straight segments along an arc
+      for (const side of [-1, 1]) for (let k = 0; k < 8; k++) {
+        const a = -0.9 + k * 0.26, x = side * (112 * Math.cos(a) + 8), z = 95 * Math.sin(a) * 0.9 + 6;
+        box(g, 14, 18, 20, k % 2 ? M.pinkTuff : M.roseTuff, x, 0, z, { ry: -side * a + (side > 0 ? 0 : Math.PI) });
+      }
+      // Singing fountains: a basin with emissive jets that pulse
+      box(g, 70, 1.2, 12, M.basalt, 0, 0, 92); const pool = mesh(new THREE.PlaneGeometry(67, 9).rotateX(-Math.PI / 2), M.water, 0, 1.05, 92, g, { cast: false });
+      const jets = [];
+      for (let k = 0; k < 11; k++) { const j = mesh(new THREE.CylinderGeometry(0.25, 0.7, 1, 8), M.jet, -30 + k * 6, 1, 92, g, { cast: false }); jets.push(j); }
+      // Surrounding city blocks: instanced with per-instance tuff colours
+      const blocks = [];
+      for (let k = 0; k < 70; k++) { const a = Math.random() * Math.PI * 2, d = 200 + Math.random() * 260; blocks.push({ x: Math.cos(a) * d, z: Math.sin(a) * d * 0.8, sx: 20 + Math.random() * 24, sy: 12 + Math.random() * 30, sz: 18 + Math.random() * 20, ry: Math.random() }); }
+      instanced(g, new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), M.pinkTuff, blocks, () => C(['#c48878', '#b87665', '#d09a84', '#c2a07c'][Math.floor(Math.random() * 4)]));
+      trees(g, { x0: -100, x1: 100, z0: 104, z1: 125 }, 16, null, 'round');
+      ararat(g, 600, -2600, 1);
+      return t => jets.forEach((j, i) => { const h = 3 + 7 * Math.abs(Math.sin(t * 1.3 + i * 0.6)); j.scale.y = h; j.position.y = 1 + h / 2; });
+    } },
+  { name: 'Geghard Monastery', hy: 'Գեղարդ', meta: '40.14° N, 44.82° E · 1,700 m · Azat river gorge · UNESCO 2000',
+    fact: 'Founded in the 4th century at a sacred spring inside a cave, Geghard has chapels cut straight into the cliff. Its main church dates to 1215, and its name means "spear", after the Holy Lance once kept here.',
+    // [HDRI MOOD] cool, soft light in a narrow gorge; [FOG] heavier mountain haze
+    mood: { sunElev: 42, sunAzim: -70, sunColor: '#f2f0ea', sunPower: 300, glow: 0.35, zenith: '#6b8bb0', horizon: '#c3cbd0', ground: '#4e4a42', skyGain: 1.2, clouds: 0.55, cloud: [0.85, 0.87, 0.9] },
+    fog: { color: '#b9c2c7', density: 0.0024 }, exposure: 1.05, sun: 2.4, shadow: 110,
+    cam: { y: 12, r: 120, th: 1.75, ph: 1.28, min: 50, max: 260 },
+    build(g) {
+      terrain(g, 1200, 160, (x, z) => {
+        const back = smooth(-40, -75, z) * (70 + fbm(x * 0.02, z * 0.02) * 25), sides = smooth(70, 150, Math.abs(x)) * (80 + fbm(x * 0.01, z * 0.01) * 40);
+        return Math.max(back, sides) + fbm(x * 0.05, z * 0.05, 3) * 1.2;
+      }, (c, h, sl) => mix(c, '#5f6a3c', '#8d8377', smooth(0.25, 0.55, sl) + h / 80));
+      // Rock overhang carved into the cliff: the chapels are "inside" this mass
+      box(g, 90, 40, 26, M.carved, 0, 0, -58);
+      for (const [x, w] of [[-26, 7], [22, 9], [4, 5]]) box(g, w, 9, 2, M.dark, x, 3, -44.8, { cast: false });   // cave-chapel openings
+      church(g, 0, -20, 1.25, M.carved, M.slate, { tallDrum: true });
+      box(g, 22, 10, 14, M.carved, 0, 0, 0); prism(g, 22.4, 14.6, 3, M.slate, 0, 10, 0, true);              // gavit (narthex)
+      box(g, 4, 6, 0.4, M.dark, 0, 0, 7.05, { cast: false });
+      // Khachkars: carved cross-stones with strong bump relief
+      for (let k = 0; k < 9; k++) box(g, 1.6, 3.2, 0.45, M.carved, -30 + k * 7.5, 0, 20 + (k % 2) * 2, { ry: (Math.random() - 0.5) * 0.3 });
+      // Enclosure wall with gate
+      box(g, 50, 6, 2.5, M.carved, -36, 0, 42); box(g, 50, 6, 2.5, M.carved, 36, 0, 42); box(g, 22, 3, 2.8, M.carved, 0, 6, 42);
+      trees(g, { x0: -220, x1: 220, z0: 50, z1: 260 }, 90, (x, z) => Math.abs(x) < 30 && z < 120, 'round');
+    } },
+  { name: 'Temple of Garni', hy: 'Գառնի', meta: '40.11° N, 44.73° E · 1,400 m · built 1st century AD',
+    fact: 'Probably built by King Tiridates I in the 1st century AD, Garni is the only standing Greco-Roman colonnaded temple in the former Soviet Union. It fell in the 1679 earthquake and was rebuilt from its original stones between 1969 and 1975.',
+    mood: { sunElev: 48, sunAzim: -150, sunColor: '#fff4e2', sunPower: 1000, glow: 0.7, zenith: '#3c73c4', horizon: '#cfd9e0', ground: '#5a5044', skyGain: 1.35 },
+    fog: { color: '#cbd5dd', density: 0.0012 }, exposure: 0.95, sun: 4.4, shadow: 90,
+    cam: { y: 6, r: 80, th: 2.2, ph: 1.2, min: 30, max: 220 },
+    build(g) {
+      // Plateau that drops into the Azat gorge to the east
+      const hF = (x, z) => { const drop = smooth(38, 70, x) * -95 + smooth(170, 260, x) * 110; return drop + fbm(x * 0.01, z * 0.01) * 6 * (1 - smooth(20, 40, Math.hypot(x, z))); };
+      terrain(g, 1100, 170, hF, (c, h, sl) => mix(c, '#8b8456', '#55504a', smooth(0.2, 0.5, sl) + (h < -40 ? 0.5 : 0)));
+      // Symphony of Stones: hexagonal basalt columns lining the gorge wall
+      const cols = [];
+      for (let z = -200; z < 200; z += 3.2) for (let k = 0; k < 4; k++) { const x = 52 + k * 2.8 + Math.random(); cols.push({ x, z: z + (k % 2) * 1.6, y: hF(x, z) - 30, sy: 26 + Math.random() * 10, ry: Math.random() }); }
+      instanced(g, new THREE.CylinderGeometry(1.5, 1.5, 1, 6).translate(0, 0.5, 0), M.basaltDark, cols);
+      // Temple: podium, front stair, 24 Ionic-style columns, cella, entablature and pediment roof
+      const T = new THREE.Group(); g.add(T);
+      box(T, 16, 2.8, 22, M.basalt, 0, 0, 0);
+      for (let k = 0; k < 9; k++) box(T, 8, 0.31, 0.45, M.basalt, 0, k * 0.31, 11.2 + (8 - k) * 0.45);
+      const colList = [];
+      for (let i = 0; i < 6; i++) for (const z of [-9.8, 9.8]) colList.push({ x: -6.5 + i * 2.6, z });
+      for (let k = 1; k < 7; k++) for (const x of [-6.5, 6.5]) colList.push({ x, z: -9.8 + k * 2.8 });
+      instanced(T, new THREE.CylinderGeometry(0.45, 0.5, 6.6, 16).translate(0, 2.8 + 3.3, 0), M.basalt, colList);
+      instanced(T, new THREE.BoxGeometry(1.2, 0.5, 1.2).translate(0, 9.65, 0), M.basalt, colList);
+      box(T, 9, 6.6, 13, M.basalt, 0, 2.8, -2); box(T, 2.2, 4.2, 0.3, M.dark, 0, 2.8, 4.55, { cast: false });
+      box(T, 16.2, 1.5, 22.2, M.basalt, 0, 9.9, 0);
+      prism(T, 22.4, 16.4, 3.3, M.basalt, 0, 11.4, 0);
+      trees(g, { x0: -200, x1: 30, z0: -200, z1: 200 }, 50, (x, z) => Math.hypot(x, z) < 40, 'round');
+    } },
+  { name: 'Khor Virap Monastery', hy: 'Խոր Վիրապ', meta: '39.88° N, 44.58° E · 830 m · 30 km from Ararat\'s summit',
+    fact: 'Gregory the Illuminator was held for about 13 years in a pit beneath this hill before converting King Tiridates III, which led Armenia to adopt Christianity in 301. The monastery faces Mount Ararat across the Turkish border.',
+    // [HDRI MOOD] hazy morning over the Ararat plain; [FOG] light so the mountain stays visible
+    mood: { sunElev: 22, sunAzim: -40, sunColor: '#ffe6c4', sunPower: 700, glow: 1.0, zenith: '#5a8ccc', horizon: '#e3dccf', ground: '#6b5c48', skyGain: 1.3, gradient: 0.6 },
+    fog: { color: '#dcd6cb', density: 0.00034 }, exposure: 0.95, sun: 3.8, shadow: 110,
+    cam: { y: 12, r: 150, th: 1.95, ph: 1.28, min: 60, max: 380 },
+    build(g) {
+      const hF = (x, z) => 18 * Math.exp(-(x * x + z * z) / 2600) + fbm(x * 0.006, z * 0.006) * 4;
+      terrain(g, 2000, 120, hF, (c, h) => mix(c, '#8f8656', '#a58e66', h / 18));
+      const top = hF(0, 0) - 1.5, W = new THREE.Group(); W.position.y = top; g.add(W);
+      box(W, 52, 6, 2.2, M.ochreTuff, 0, 0, -26); box(W, 2.2, 6, 52, M.ochreTuff, -26, 0, 0); box(W, 2.2, 6, 52, M.ochreTuff, 26, 0, 0);
+      box(W, 21, 6, 2.2, M.ochreTuff, -15.5, 0, 26); box(W, 21, 6, 2.2, M.ochreTuff, 15.5, 0, 26);
+      for (const [x, z] of [[-26, -26], [26, -26], [-26, 26], [26, 26]]) { cyl(W, 2.6, 2.8, 8, M.ochreTuff, x, 0, z, 14); cone(W, 3, 2.4, M.slate, x, 8, z, 14); }
+      church(W, 2, -3, 1.05, M.ochreTuff, M.slate, { belfry: true });
+      church(W, -16, -14, 0.5, M.ochreTuff, M.slate);
+      // Vineyards on the plain: long instanced rows
+      const vines = [];
+      for (let r = 0; r < 26; r++) for (let k = 0; k < 18; k++) { const x = -320 + k * 22 + (r % 2) * 6, z = 90 + r * 5.5; vines.push({ x, z, y: hF(x, z), sx: 16, sy: 1.6, sz: 1.2 }); }
+      instanced(g, new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), M.vine, vines);
+      ararat(g, -700, -2500, 1.05);
+    } },
+  { name: 'Lake Sevan', hy: 'Սևանա լիճ', meta: '40.56° N, 45.00° E · 1,900 m · about 1,240 km²',
+    fact: 'Covering about 1,240 km² at roughly 1,900 m above sea level, Sevan is one of the largest high-altitude freshwater lakes in the world. The Sevanavank churches on its peninsula were built in 874.',
+    // [HDRI MOOD] soft haze, low contrast, pale blue; [FOG] bluish veil over the water
+    mood: { sunElev: 18, sunAzim: -20, sunColor: '#ffeede', sunPower: 350, glow: 1.3, zenith: '#7b9cc4', horizon: '#d8e0e6', ground: '#4e5a60', skyGain: 1.25, gradient: 0.7, clouds: 0.25, cloud: [0.95, 0.95, 0.97] },
+    fog: { color: '#cfd9e0', density: 0.0012 }, exposure: 0.9, sun: 2.6, shadow: 90, water: true,
+    cam: { y: 8, r: 120, th: 2.1, ph: 1.33, min: 50, max: 300 },
+    build(g) {
+      // Peninsula and far shore: terrain that dips below the water level (y=0) everywhere else
+      const hF = (x, z) => {
+        const pen = 22 * Math.exp(-(x * x) / 900 - ((z + 10) * (z + 10)) / 2500), neck = 4 * Math.exp(-(x * x) / 300) * smooth(20, 80, z);
+        const shore = smooth(90, 180, z) * 6, far = smooth(900, 1600, Math.hypot(x, z)) * (160 + fbm(x * 0.002, z * 0.002) * 120);
+        return Math.max(pen, neck, shore, far) - 2.5 + fbm(x * 0.03, z * 0.03, 2) * 0.8;
+      };
+      terrain(g, 3600, 180, hF, (c, h, sl) => mix(c, '#c9b88f', '#58703a', smooth(0.5, 3, h) - smooth(40, 140, h) * 0.4));
+      // [PBR + REFLECTION] true planar mirror (Reflector) under a glossy PBR water film with scrolling ripples
+      const mirror = new THREE.Reflector(new THREE.PlaneGeometry(3400, 3400), { textureWidth: 1024, textureHeight: 1024, color: 0x46565e, clipBias: 0.003 });
+      mirror.rotation.x = -Math.PI / 2; mirror.position.y = -0.05; g.add(mirror);
+      const orig = mirror.onBeforeRender;
+      mirror.onBeforeRender = function (r, s, cam) { if (!s.overrideMaterial) orig.call(this, r, s, cam); };   // skip during the SSAO normal pass
+      const film = mesh(new THREE.PlaneGeometry(3400, 3400).rotateX(-Math.PI / 2), M.water, 0, 0.02, 0, g, { cast: false });
+      film.material = M.water.clone(); film.material.opacity = 0.72; film.material.color = C('#10323f');
+      const peak = hF(0, -10);
+      church(g, -5, -18, 0.8, M.basaltDark, M.slate, { y: peak - 2.5, ry: 0.2 });
+      church(g, 9, -2, 0.62, M.basaltDark, M.slate, { y: peak - 5, ry: -0.3 });
+      trees(g, { x0: -60, x1: 60, z0: 40, z1: 140 }, 14, (x, z) => hF(x, z) < 1, 'round', hF);
+      this.mirror = mirror;
+    } },
+  { name: 'Etchmiadzin Cathedral', hy: 'Էջմիածնի Մայր տաճար', meta: '40.16° N, 44.29° E · 860 m · founded 301–303',
+    fact: 'Built between 301 and 303, soon after Armenia became the first state to adopt Christianity, Etchmiadzin is generally considered the oldest cathedral in the world. It is the seat of the Catholicos of All Armenians.',
+    mood: { sunElev: 16, sunAzim: -160, sunColor: '#ffd9a8', sunPower: 900, glow: 1.2, zenith: '#4a78bb', horizon: '#ecd8bd', ground: '#5c5040', skyGain: 1.3, gradient: 0.55 },
+    fog: { color: '#e2d6c4', density: 0.0011 }, exposure: 0.95, sun: 3.6, shadow: 110,
+    cam: { y: 12, r: 120, th: 1.7, ph: 1.25, min: 50, max: 300 },
+    build(g) {
+      terrain(g, 1400, 80, (x, z) => smooth(200, 600, Math.hypot(x, z)) * 12 + fbm(x * 0.01, z * 0.01) * 1.2, (c, h) => mix(c, '#5e7a3a', '#7a8448', h / 10));
+      box(g, 12, 0.15, 140, M.limestone, 0, 0, 40, { cast: false }); box(g, 90, 0.12, 80, M.limestone, 0, 0, 0, { cast: false });
+      const ch = church(g, 0, 0, 1.7, M.limestone, M.slate, { tallDrum: true, belfry: true });
+      // Rotundas over the three apses (17th-century additions)
+      for (const [x, z] of [[-14, -2.5], [14, -2.5], [0, -14]]) { cyl(ch, 1.6, 1.6, 3, M.limestone, x, 15.3, z, 10); cone(ch, 2.1, 2.4, M.slate, x, 18.3, z, 10); }
+      // Gate of St. Tiridates: two piers and a lintel
+      box(g, 4, 11, 4, M.limestone, -7, 0, 90); box(g, 4, 11, 4, M.limestone, 7, 0, 90); box(g, 18, 3, 4.6, M.limestone, 0, 11, 90);
+      trees(g, { x0: -140, x1: 140, z0: -140, z1: 140 }, 70, (x, z) => (Math.abs(x) < 50 && Math.abs(z) < 45) || Math.abs(x) < 10, 'round');
+      box(g, 50, 12, 18, M.limestone, -80, 0, -60); box(g, 50, 12, 18, M.limestone, 80, 0, -60);
+    } },
+  { name: 'Noravank Monastery', hy: 'Նորավանք', meta: '39.68° N, 45.23° E · 1,400 m · Amaghu gorge · 13th–14th c.',
+    fact: 'This 13th-century monastery stands at the head of a narrow gorge of red cliffs. Its two-storey Surb Astvatsatsin church, finished in 1339 and attributed to the architect Momik, is entered by narrow stone stairs cantilevered from the facade.',
+    // [HDRI MOOD] golden hour: low, saturated sun raking across the red cliffs
+    mood: { sunElev: 7, sunAzim: -205, sunColor: '#ffb36b', sunPower: 1100, glow: 2.2, zenith: '#4f6fa8', horizon: '#f2b27a', ground: '#4a2e22', skyGain: 1.25, gradient: 0.4 },
+    fog: { color: '#e0a878', density: 0.0017 }, exposure: 1.0, sun: 5.2, shadow: 120,
+    cam: { y: 10, r: 115, th: 1.95, ph: 1.3, min: 45, max: 280 },
+    build(g) {
+      const hF = (x, z) => {
+        const walls = smooth(55, 120, Math.abs(x + fbm(z * 0.01, 3) * 20)) * (130 + fbm(x * 0.02, z * 0.02) * 60), back = smooth(-60, -140, z) * 120;
+        return Math.max(walls, back) + fbm(x * 0.04, z * 0.04, 3) * 3;
+      };
+      terrain(g, 1200, 180, hF, (c, h, sl) => mix(c, '#7a6a44', '#a34a2e', smooth(0.2, 0.45, sl) + h / 120));
+      church(g, -14, -8, 1.05, M.redTuff, M.slate);
+      box(g, 18, 9, 12, M.redTuff, -14, 0, 13); prism(g, 18.4, 12.4, 2.6, M.slate, -14, 9, 13, true);
+      // Surb Astvatsatsin: two storeys, cantilevered stairs, columned rotunda on top
+      const A = new THREE.Group(); A.position.set(20, 0, 6); g.add(A);
+      box(A, 11, 15, 12, M.redTuff, 0, 0, 0);
+      for (let k = 0; k < 9; k++) box(A, 1.3, 0.35, 1.8, M.redTuff, -4.5 + k * 1.05, 1 + k * 1.1, 6.9);   // cantilevered steps
+      box(A, 2, 3, 0.3, M.dark, 4, 10, 6.05, { cast: false });
+      cyl(A, 4.8, 5, 1, M.redTuff, 0, 15, 0, 16);
+      const ring = []; for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; ring.push({ x: Math.cos(a) * 4.2, z: Math.sin(a) * 4.2, y: 16 }); }
+      instanced(A, new THREE.CylinderGeometry(0.3, 0.3, 4.4, 8).translate(0, 2.2, 0), M.redTuff, ring);
+      cone(A, 5.4, 4.6, M.slate, 0, 20.4, 0, 16);
+      trees(g, { x0: -50, x1: 50, z0: 30, z1: 220 }, 40, (x, z) => Math.abs(x) < 8, 'round');
+    } },
+  { name: 'Dilijan', hy: 'Դիլիջան', meta: '40.74° N, 44.86° E · 1,500 m · Dilijan National Park',
+    fact: 'Ringed by the forests of Dilijan National Park, the town was a Soviet-era retreat for composers, writers and filmmakers. Sharambeyan Street preserves 19th-century houses with carved wooden balconies.',
+    // [HDRI MOOD] overcast forest light; [FOG] dense damp mist between the ridges
+    mood: { sunElev: 38, sunAzim: -110, sunColor: '#eef0ea', sunPower: 150, glow: 0.3, zenith: '#8599ad', horizon: '#c9d0cc', ground: '#3a4632', skyGain: 1.15, clouds: 0.8, cloud: [0.82, 0.84, 0.85] },
+    fog: { color: '#b8c2bd', density: 0.0034 }, exposure: 1.1, sun: 1.6, shadow: 120,
+    cam: { y: 10, r: 110, th: 1.85, ph: 1.3, min: 40, max: 260 },
+    build(g) {
+      const hF = (x, z) => smooth(60, 260, Math.abs(z + 0.3 * x)) * (70 + fbm(x * 0.006, z * 0.006) * 60) + fbm(x * 0.02, z * 0.02) * 2;
+      terrain(g, 1400, 150, hF, (c, h) => mix(c, '#4f6a34', '#2f4a2c', h / 80));
+      // Old Dilijan houses: stone ground floor, timber upper floor with balcony, clay-tile roof
+      for (let k = 0; k < 6; k++) {
+        const x = -45 + k * 18, z = (k % 2 ? 8 : -8), y = hF(x, z) - 0.5, H = new THREE.Group(); H.position.set(x, y, z); H.rotation.y = k % 2 ? Math.PI : 0; g.add(H);
+        box(H, 11, 4, 8, M.limestone, 0, 0, 0); box(H, 11.4, 3.6, 8.4, M.wood, 0, 4, 0);
+        box(H, 11.8, 0.3, 2, M.wood, 0, 4, 5); for (let b = 0; b < 8; b++) box(H, 0.15, 1.1, 0.15, M.wood, -5.2 + b * 1.5, 4.3, 5.9);
+        for (let w = 0; w < 3; w++) box(H, 1.4, 1.8, 0.2, M.glass, -3.5 + w * 3.5, 5, 4.25, { cast: false });
+        prism(H, 12.4, 9.4, 3.2, M.tile, 0, 7.6, 0, true);
+      }
+      box(g, 110, 0.12, 6, M.cobble, 10, hF(10, 0) - 0.6, 0, { cast: false });
+      trees(g, { x0: -500, x1: 500, z0: -500, z1: 500 }, 650, (x, z) => Math.abs(z) < 22 && Math.abs(x) < 80, 'conifer', hF);
+    } },
+  { name: 'Tatev Monastery', hy: 'Տաթև', meta: '39.38° N, 46.25° E · 1,570 m · Wings of Tatev, 5,752 m span',
+    fact: 'Founded in the 9th century on a basalt spur above the Vorotan gorge, Tatev was a medieval centre of learning with its own university. The Wings of Tatev, opened in 2010, carry cabins 5.7 km across the gorge.',
+    mood: { sunElev: 30, sunAzim: -60, sunColor: '#fff0d8', sunPower: 800, glow: 0.8, zenith: '#3e72bd', horizon: '#cdd8df', ground: '#4f5040', skyGain: 1.3, clouds: 0.3, cloud: [0.95, 0.95, 0.96] },
+    fog: { color: '#c6d1d8', density: 0.0014 }, exposure: 0.95, sun: 4, shadow: 110,
+    cam: { y: 6, r: 150, th: 2.55, ph: 1.25, min: 60, max: 420 },
+    build(g) {
+      // Spur with a deep gorge to the west, far rim beyond
+      const hF = (x, z) => { const g0 = -smooth(-60, -110, x) * 320 + smooth(-420, -560, x) * 330; return g0 + fbm(x * 0.008, z * 0.008) * 14 * (1 - smooth(10, 50, Math.hypot(x, z))); };
+      terrain(g, 2400, 200, hF, (c, h, sl) => mix(c, '#6f7a44', '#57524a', smooth(0.25, 0.5, sl) + (h < -60 ? 0.6 : 0)));
+      const W = new THREE.Group(); g.add(W);
+      box(W, 70, 7, 2.5, M.basalt, 0, 0, -32); box(W, 2.5, 7, 64, M.basalt, -35, 0, 0); box(W, 2.5, 7, 64, M.basalt, 35, 0, 0);
+      box(W, 30, 7, 2.5, M.basalt, -20, 0, 32); box(W, 30, 7, 2.5, M.basalt, 20, 0, 32);
+      church(W, 4, -6, 1.3, M.basalt, M.slate, { tallDrum: true });
+      box(W, 7, 12, 7, M.basalt, 22, 0, 20); cone(W, 5, 4.5, M.slate, 22, 12, 20, 8);
+      cyl(W, 0.7, 0.8, 8, M.basalt, -12, 0, 16, 8); box(W, 1.6, 1.2, 1.6, M.basalt, -12, 8, 16);   // Gavazan, the swaying pillar
+      // Wings of Tatev: steel pylon on the rim and twin cables running across the gorge
+      const P = [-60, 0, 60];
+      for (const dx of [-2.5, 2.5]) for (const dz of [-2.5, 2.5]) box(g, 0.6, 32, 0.6, M.steel, P[0] + dx, hF(P[0], P[2]) - 1, P[2] + dz);
+      box(g, 3, 1, 16, M.steel, P[0], hF(P[0], P[2]) + 31, P[2]);
+      const y0 = hF(P[0], P[2]) + 31;
+      const ends = [[new V3(P[0], y0, P[2] - 6), new V3(-1600, 230, -140)], [new V3(P[0], y0, P[2] + 6), new V3(-1600, 230, -128)]];
+      const cabins = ends.map(([a, b]) => {
+        const d = b.clone().sub(a), c = mesh(new THREE.CylinderGeometry(0.12, 0.12, d.length(), 5), M.cable, 0, 0, 0, g, { cast: false });
+        c.position.copy(a).addScaledVector(d, 0.5); c.quaternion.setFromUnitVectors(new V3(0, 1, 0), d.clone().normalize());
+        const cab = new THREE.Group(); g.add(cab);
+        box(cab, 4, 3, 2.6, M.cabin, 0, -5.2, 0); box(cab, 4.05, 1.1, 2.65, M.glass, 0, -3.6, 0, { cast: false }); box(cab, 0.2, 2.6, 0.2, M.steel, 0, -2.6, 0);
+        return { a, b, cab };
+      });
+      return t => cabins.forEach(({ a, b, cab }, i) => { const u = 0.5 + 0.5 * Math.sin(t * 0.06 + i * Math.PI); cab.position.copy(a).lerp(b, u); });
+    } },
+  { name: 'Jermuk', hy: 'Ջերմուկ', meta: '39.84° N, 45.67° E · 2,080 m · Arpa river gorge',
+    fact: 'Jermuk\'s hot mineral springs have drawn visitors since the Soviet era, and its bottled water is sold across the region. A waterfall of about 70 m drops into the Arpa gorge at the edge of town.',
+    // [HDRI MOOD] cool, bright morning; [FOG] spray and mountain mist
+    mood: { sunElev: 26, sunAzim: -30, sunColor: '#f4f6ff', sunPower: 600, glow: 0.7, zenith: '#4f7fc0', horizon: '#d2dde4', ground: '#3f4a3e', skyGain: 1.25, clouds: 0.35, cloud: [0.92, 0.93, 0.95] },
+    fog: { color: '#c8d4da', density: 0.0024 }, exposure: 1.0, sun: 3.2, shadow: 110,
+    cam: { y: 16, r: 120, th: 1.72, ph: 1.28, min: 40, max: 280 },
+    build(g) {
+      const hF = (x, z) => Math.max(smooth(-38, -52, z) * (70 + fbm(x * 0.02, 2) * 10), smooth(90, 200, Math.abs(x)) * 80) + fbm(x * 0.03, z * 0.03, 3) * 2;
+      terrain(g, 1200, 160, hF, (c, h, sl) => mix(c, '#5a6e3a', '#4a4540', smooth(0.25, 0.5, sl)));
+      // Waterfall: a stack of emissive translucent sheets whose texture scrolls downward
+      const fallTex = stoneTex.clone(); fallTex.needsUpdate = true; fallTex.repeat.set(1, 3);
+      const fallMat = M.waterFall.clone(); fallMat.alphaMap = fallTex; fallMat.map = fallTex;
+      const sheets = [];
+      for (let k = 0; k < 3; k++) { const s = mesh(new THREE.PlaneGeometry(9 - k * 2, 68), fallMat, -2 + k * 2, 34, -40.5 + k * 0.4, g, { cast: false }); sheets.push(s); }
+      // Spray mist: additive point sprites
+      const N = 260, pos = new Float32Array(N * 3); for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 18; pos[i * 3 + 1] = Math.random() * 12; pos[i * 3 + 2] = -34 + Math.random() * 10; }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mist = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xe8f4ff, size: 2.4, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
+      g.add(mist);
+      box(g, 26, 0.6, 14, M.rock, 0, -0.4, -30); mesh(new THREE.PlaneGeometry(24, 12).rotateX(-Math.PI / 2), M.water, 0, 0.3, -30, g, { cast: false });
+      // Gallery of mineral water: colonnade with drinking fountains
+      const colonnade = []; for (let k = 0; k < 11; k++) for (const z of [18, 26]) colonnade.push({ x: -30 + k * 6, z });
+      instanced(g, new THREE.CylinderGeometry(0.5, 0.55, 7, 14).translate(0, 3.5, 0), M.limestone, colonnade);
+      box(g, 66, 1.4, 10, M.limestone, 0, 7, 22); box(g, 64, 0.4, 9, M.limestone, 0, 0, 22, { cast: false });
+      for (let k = 0; k < 4; k++) cyl(g, 0.6, 0.8, 1.2, M.steel, -18 + k * 12, 0, 22, 12);
+      for (const x of [-80, 70]) box(g, 30, 22, 24, M.limestone, x, 0, 10);
+      trees(g, { x0: -200, x1: 200, z0: 40, z1: 300 }, 120, (x, z) => Math.abs(x) < 40 && z < 70, 'conifer', hF);
+      return t => { fallTex.offset.y = t * 0.8; const p = pg.attributes.position; for (let i = 0; i < N; i++) { let y = p.getY(i) + 0.08; if (y > 14) y = 0; p.setY(i, y); } p.needsUpdate = true; };
+    } },
+  { name: 'Gyumri', hy: 'Գյումրի', meta: '40.79° N, 43.85° E · 1,550 m · Kumayri historic district',
+    fact: 'Armenia\'s second city, known historically as Kumayri and Alexandropol, has whole blocks of 19th-century buildings in black and red tuff. Much of it was destroyed in the 1988 Spitak earthquake and has been restored since.',
+    // [HDRI MOOD] high-plateau overcast, neutral and cool
+    mood: { sunElev: 40, sunAzim: -120, sunColor: '#f2f0ec', sunPower: 250, glow: 0.4, zenith: '#7a93b3', horizon: '#cdd2d4', ground: '#4a4644', skyGain: 1.25, clouds: 0.65, cloud: [0.86, 0.87, 0.89] },
+    fog: { color: '#c3c8cb', density: 0.0016 }, exposure: 1.05, sun: 2.2, shadow: 120,
+    cam: { y: 10, r: 130, th: 1.8, ph: 1.25, min: 50, max: 320 },
+    build(g) {
+      terrain(g, 1400, 60, (x, z) => smooth(250, 600, Math.hypot(x, z)) * 30, (c, h) => mix(c, '#7a7a58', '#8a8466', h / 30));
+      box(g, 170, 0.15, 150, M.cobble, 0, 0, 10, { cast: false });
+      // 19th-century blocks: alternating black and orange tuff, instanced windows that reflect the sky
+      const wins = [];
+      const block = (x, z, w, d, ry, mat) => {
+        const B = new THREE.Group(); B.position.set(x, 0, z); B.rotation.y = ry; g.add(B);
+        box(B, w, 12, d, mat, 0, 0, 0); box(B, w + 0.8, 0.8, d + 0.8, M.blackTuff, 0, 12, 0);
+        for (let k = 0; k < Math.floor(w / 4.2); k++) for (const y of [2.2, 7.4]) {
+          const v = new V3(-w / 2 + 2.4 + k * 4.2, y, d / 2 + 0.06).applyAxisAngle(new V3(0, 1, 0), ry);
+          wins.push({ x: x + v.x, y: v.y, z: z + v.z, ry });
+        }
+      };
+      for (let k = 0; k < 6; k++) block(-70 + k * 28, -62, 26, 14, 0, k % 2 ? M.orangeTuff : M.blackTuff);
+      for (let k = 0; k < 4; k++) { block(-82, -30 + k * 26, 24, 12, Math.PI / 2, k % 2 ? M.blackTuff : M.orangeTuff); block(82, -30 + k * 26, 24, 12, -Math.PI / 2, k % 2 ? M.orangeTuff : M.blackTuff); }
+      instanced(g, new THREE.BoxGeometry(1.5, 2.6, 0.2).translate(0, 1.3, 0), M.glass, wins);
+      church(g, -10, -14, 1.35, M.blackTuff, M.slate, { tallDrum: true });        // Holy Saviour (Amenaprkich)
+      church(g, 38, 10, 0.75, M.orangeTuff, M.slate, { belfry: true });            // Seven Wounds (Yot Verk)
+      trees(g, { x0: -70, x1: 70, z0: 50, z1: 80 }, 18, null, 'round');
+    } },
+  { name: 'Mount Aragats', hy: 'Արագած', meta: '40.53° N, 44.20° E · 4,090 m north summit · Lake Kari 3,190 m',
+    fact: 'At 4,090 m, the northern summit of Aragats is the highest point in Armenia. The massif has four peaks around a collapsed volcanic crater, and Lake Kari lies near 3,200 m beside a cosmic-ray research station.',
+    // [HDRI MOOD] cool, high-altitude light: deep blue zenith, white sun; [FOG] heaviest, for scale and depth
+    mood: { sunElev: 36, sunAzim: -95, sunColor: '#f6f8ff', sunPower: 1300, glow: 0.6, zenith: '#2d5fb0', horizon: '#d6e2ec', ground: '#55534c', skyGain: 1.45, gradient: 0.35, clouds: 0.3, cloud: [0.97, 0.97, 0.99] },
+    fog: { color: '#d3dee7', density: 0.0015 }, exposure: 0.85, sun: 4.8, shadow: 200,
+    cam: { y: 30, r: 280, th: 1.8, ph: 1.25, min: 120, max: 700 },
+    build(g) {
+      // Four peaks around a crater rim; snow above a noisy snow line, bare rock on steep faces
+      const peaks = [[-160, -380, 360], [180, -420, 330], [-40, -560, 410], [330, -250, 300]];
+      const hF = (x, z) => {
+        let h = 0; for (const [px, pz, ph] of peaks) h = Math.max(h, ph * Math.exp(-((x - px) ** 2 + (z - pz) ** 2) / 26000));
+        const rim = 60 * Math.exp(-((Math.hypot(x, z + 380) - 260) ** 2) / 5000);
+        return Math.max(h, rim) + fbm(x * 0.008, z * 0.008, 5) * 22 + 24;
+      };
+      const isSnow = (h, sl, x, z) => h > 150 + fbm(x * 0.01, z * 0.01) * 45 && sl < 0.5;
+      const ter = terrain(g, 2600, 230, hF, (c, h, sl, x, z) => isSnow(h, sl, x, z) ? c.copy(C('#d9dee2')) : mix(c, '#6f7a48', '#6b6862', smooth(10, 60, h) + smooth(0.3, 0.6, sl)));
+      // Snow layer: the terrain's own triangles above the snow line, re-drawn with the snow PBR material
+      // (sheen + lower roughness) and nudged up so it reads as a separate, glossier surface than the rock
+      const tg = ter.geometry, pos = tg.attributes.position, nrm = tg.attributes.normal, idx = tg.index.array, keep = [];
+      const snowV = i => isSnow(pos.getY(i), 1 - nrm.getY(i), pos.getX(i), pos.getZ(i));
+      for (let k = 0; k < idx.length; k += 3) if (snowV(idx[k]) && snowV(idx[k + 1]) && snowV(idx[k + 2])) keep.push(idx[k], idx[k + 1], idx[k + 2]);
+      const sg = new THREE.BufferGeometry(); sg.setAttribute('position', pos.clone()); sg.setAttribute('normal', nrm.clone()); sg.setIndex(keep);
+      mesh(sg, M.snow, 0, 0.4, 0, g, { cast: false });
+      mesh(new THREE.CircleGeometry(1, 40).rotateX(-Math.PI / 2).scale(40, 1, 26), M.water, 60, hF(60, 40) + 0.4, 40, g, { cast: false });   // Lake Kari
+      box(g, 12, 5, 8, M.limestone, -30, hF(-30, 60) - 0.5, 60); prism(g, 12.4, 8.4, 2.4, M.slate, -30, hF(-30, 60) + 4.5, 60, true);
+      const rocks = []; for (let k = 0; k < 160; k++) { const x = (Math.random() - 0.5) * 500, z = -80 + Math.random() * 300; rocks.push({ x, z, y: hF(x, z) - 0.5, s: 1 + Math.random() * 3.5, rx: Math.random() * 3, ry: Math.random() * 3 }); }
+      instanced(g, new THREE.DodecahedronGeometry(1, 0), M.rock, rocks);
+    } },
+];
+
+// Build every station at its slot along x
+const world = [];
+STATIONS.forEach((S, i) => {
+  const g = new THREE.Group(); g.position.set(i * SPACING, 0, 0); scene.add(g);
+  const anim = S.build.call(S, g);
+  S.origin = new V3(i * SPACING, 0, 0); S.group = g; S.anim = anim || null; S.env = null;
+});
+// Shared ground far below each station's terrain so the camera never sees a void while travelling
+mesh(new THREE.PlaneGeometry(SPACING * 14, 12000).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ color: C('#5d5a48'), roughness: 1 }), SPACING * 5.5, -400, 0, scene, { cast: false });
+
+// ════════════════════════════════════════════════════════════════════════════
+// POST-PROCESSING — HDR render target → SSAO → Bloom → ACES Filmic → sRGB
+// ════════════════════════════════════════════════════════════════════════════
+const isGL2 = renderer.capabilities.isWebGL2;
+const rtOpts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, type: THREE.HalfFloatType };
+// Half-float target keeps highlights above 1.0 so bloom and tone mapping see real HDR values; MSAA when WebGL2 allows
+const hdrRT = isGL2 ? new THREE.WebGLMultisampleRenderTarget(innerWidth * DPR, innerHeight * DPR, rtOpts) : new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, rtOpts);
+if (isGL2) hdrRT.samples = 4;
+const composer = new THREE.EffectComposer(renderer, hdrRT);
+composer.setPixelRatio(DPR); composer.setSize(innerWidth, innerHeight);
+
+const renderPass = new THREE.RenderPass(scene, camera);
+// [SSAO] screen-space ambient occlusion darkens creases, corners and contact points
+const ssao = new THREE.SSAOPass(scene, camera, innerWidth * DPR, innerHeight * DPR);
+ssao.kernelRadius = 6; ssao.minDistance = 0.000004; ssao.maxDistance = 0.0012;
+ssao.beautyRenderTarget.texture.type = THREE.HalfFloatType;          // keep its beauty buffer HDR too
+ssao.normalRenderTarget.depthTexture.type = THREE.UnsignedIntType;    // 24/32-bit depth: fewer banding artefacts at distance
+const ssaoOverride = ssao.renderOverride.bind(ssao);
+ssao.renderOverride = (...a) => { const bg = scene.background; scene.background = null; ssaoOverride(...a); scene.background = bg; };
+// [BLOOM] threshold above 1.0 in linear HDR: only the sun, its reflections and emissive surfaces glow
+const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.45, 1.6);
+// [TONE MAPPING] ACES Filmic, exposure animated per station
+const aces = new THREE.ShaderPass(THREE.ACESFilmicToneMappingShader);
+const gamma = new THREE.ShaderPass(THREE.GammaCorrectionShader);    // linear → sRGB for display
+composer.addPass(renderPass); composer.addPass(ssao); composer.addPass(bloom); composer.addPass(aces); composer.addPass(gamma);
+function setSSAO(on) { ssao.enabled = on; renderPass.enabled = !on; document.getElementById('tSSAO').setAttribute('aria-pressed', String(on)); }
+function setBloom(on) { bloom.enabled = on; document.getElementById('tBloom').setAttribute('aria-pressed', String(on)); }
+setSSAO(true);
+
+// ════════════════════════════════════════════════════════════════════════════
+// CAMERA — manual orbit controls (drag / wheel / pinch) with damping, plus tweened travel
+// ════════════════════════════════════════════════════════════════════════════
+const view = { target: new V3(), r: 150, th: 1.8, ph: 1.2, vth: 0, vph: 0, min: 40, max: 400 };
+const pointers = new Map();
+let lastPinch = 0, lastInput = performance.now();
+canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.classList.add('dragging'); lastInput = performance.now(); });
+canvas.addEventListener('pointermove', e => {
+  const p = pointers.get(e.pointerId); if (!p) return;
+  if (pointers.size === 1 && !tween) { view.vth = -(e.clientX - p.x) * 0.0055; view.vph = -(e.clientY - p.y) * 0.004; }
+  p.x = e.clientX; p.y = e.clientY;
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (lastPinch) view.r = THREE.MathUtils.clamp(view.r * lastPinch / d, view.min, view.max);
+    lastPinch = d;
+  }
+  lastInput = performance.now();
+});
+const endPointer = e => { pointers.delete(e.pointerId); if (pointers.size < 2) lastPinch = 0; if (!pointers.size) canvas.classList.remove('dragging'); };
+canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('wheel', e => { e.preventDefault(); if (tween) return; view.r = THREE.MathUtils.clamp(view.r * Math.exp(e.deltaY * 0.0012), view.min, view.max); lastInput = performance.now(); }, { passive: false });
+
+// Transition state: target, radius and angles tween together; the camera arcs upward mid-flight
+let cur = 0, tween = null;
+const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const angLerp = (a, b, t) => { let d = ((b - a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; return a + d * t; };
+const look = { fogColor: C('#fff'), fogDensity: 0.001, exposure: 1, sunColor: C('#fff'), sun: 3, sunDir: new V3(0, 1, 0), shadow: 120 };
+function stationLook(S) { return { fogColor: C(S.fog.color).multiplyScalar(S.mood.skyGain * 0.95), fogDensity: S.fog.density, exposure: S.exposure, sunColor: C(S.mood.sunColor), sun: S.sun, sunDir: sunDir(S.mood.sunElev, S.mood.sunAzim), shadow: S.shadow }; }
+function ensureEnv(S) { if (!S.env) S.env = makeHDR(S.mood); return S.env; }
+function applyEnv(S) { const e = ensureEnv(S); scene.environment = e.environment; scene.background = e.background; }
+function setShadowBox(size) { const c = sun.shadow.camera; c.left = c.bottom = -size; c.right = c.top = size; c.near = 1; c.far = 1600; c.updateProjectionMatrix(); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// UI — placard text, next/prev, station ticks, keyboard
+// ════════════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id), placard = $('placard');
+STATIONS.forEach((S, i) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', `${i + 1}. ${S.name}`); b.title = S.name; b.addEventListener('click', () => goTo(i)); $('ticks').append(b); });
+function writePlacard(i) {
+  const S = STATIONS[i];
+  $('count').textContent = `${String(i + 1).padStart(2, '0')} / ${STATIONS.length}`;
+  $('hy').textContent = S.hy; $('name').textContent = S.name; $('fact').textContent = S.fact;
+  const [coords, ...rest] = S.meta.split(' · '); $('meta').innerHTML = ''; const b = document.createElement('b'); b.textContent = coords; $('meta').append(b, document.createTextNode(rest.length ? ' · ' + rest.join(' · ') : ''));
+  [...$('ticks').children].forEach((t, k) => t.setAttribute('aria-current', String(k === i)));
+}
+function goTo(i) {
+  i = (i + STATIONS.length) % STATIONS.length;
+  if (i === cur && !tween) return;
+  const S = STATIONS[i];
+  const from = { target: view.target.clone(), r: view.r, th: view.th, ph: view.ph, look: { ...look, fogColor: look.fogColor.clone(), sunColor: look.sunColor.clone(), sunDir: look.sunDir.clone() } };
+  const to = { target: S.origin.clone().add(new V3(0, S.cam.y, 0)), r: S.cam.r, th: S.cam.th, ph: S.cam.ph, look: stationLook(S) };
+  ensureEnv(S);                                                  // build the next HDRI before the flight starts
+  tween = { from, to, t0: performance.now(), dur: reduceMotion ? 1 : 2600, next: i, swapped: false };
+  view.min = S.cam.min; view.max = S.cam.max; view.vth = view.vph = 0;
+  placard.classList.add('swap');
+  setTimeout(() => { writePlacard(i); placard.classList.remove('swap'); }, reduceMotion ? 0 : 380);
+  cur = i;
+}
+$('prev').addEventListener('click', () => goTo(cur - 1));
+$('next').addEventListener('click', () => goTo(cur + 1));
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') goTo(cur + 1); else if (e.key === 'ArrowLeft') goTo(cur - 1); });
+$('tSSAO').addEventListener('click', () => { setSSAO(!ssao.enabled); $('note').textContent = ''; });
+$('tBloom').addEventListener('click', () => setBloom(!bloom.enabled));
+
+// Start at station 1 without a flight
+{
+  const S = STATIONS[0];
+  view.target.copy(S.origin).y += S.cam.y; view.r = S.cam.r; view.th = S.cam.th; view.ph = S.cam.ph; view.min = S.cam.min; view.max = S.cam.max;
+  Object.assign(look, stationLook(S)); applyEnv(S); setShadowBox(S.shadow); writePlacard(0);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FRAME LOOP
+// ════════════════════════════════════════════════════════════════════════════
+const clock = new THREE.Clock();
+let frames = 0, fpsT = performance.now(), fpsAvg = 60, perfChecked = false, bootT = performance.now();
+function frame() {
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.1), t = clock.elapsedTime, now = performance.now();
+
+  let lift = 0;
+  if (tween) {
+    const k = Math.min(1, (now - tween.t0) / tween.dur), e = ease(k), A = tween.from, B = tween.to;
+    view.target.lerpVectors(A.target, B.target, e);
+    view.r = A.r + (B.r - A.r) * e; view.th = angLerp(A.th, B.th, e); view.ph = A.ph + (B.ph - A.ph) * e;
+    lift = Math.sin(Math.PI * e) * 420;                             // arc up and over between stations
+    look.fogColor.copy(A.look.fogColor).lerp(B.look.fogColor, e);
+    look.fogDensity = A.look.fogDensity + (B.look.fogDensity - A.look.fogDensity) * e;
+    look.exposure = A.look.exposure + (B.look.exposure - A.look.exposure) * e;
+    look.sunColor.copy(A.look.sunColor).lerp(B.look.sunColor, e);
+    look.sun = A.look.sun + (B.look.sun - A.look.sun) * e;
+    look.sunDir.copy(A.look.sunDir).lerp(B.look.sunDir, e).normalize();
+    if (!tween.swapped && k >= 0.5) { tween.swapped = true; applyEnv(STATIONS[tween.next]); setShadowBox(B.look.shadow); }   // swap HDRI at the top of the arc
+    if (k >= 1) tween = null;
+  } else {
+    // Damped orbit, and a slow idle drift after 8 s without input
+    view.th += view.vth; view.ph = THREE.MathUtils.clamp(view.ph + view.vph, 0.35, 1.48);
+    view.vth *= 0.88; view.vph *= 0.88;
+    if (!reduceMotion && now - lastInput > 8000) view.th += dt * 0.03;
+  }
+  const sp = Math.sin(view.ph);
+  camera.position.set(view.target.x + view.r * sp * Math.cos(view.th), view.target.y + view.r * Math.cos(view.ph) + lift, view.target.z + view.r * sp * Math.sin(view.th));
+  camera.lookAt(view.target);
+
+  // Atmosphere follows the tweened look
+  scene.fog.color.copy(look.fogColor); scene.fog.density = look.fogDensity;
+  aces.uniforms.exposure.value = look.exposure;
+  sun.color.copy(look.sunColor); sun.intensity = look.sun;
+  sun.target.position.copy(view.target); sun.position.copy(view.target).addScaledVector(look.sunDir, 700);
+
+  // Only animate and reflect what can be seen: current station and the one being flown to
+  const active = new Set([cur, tween ? tween.next : cur]);
+  STATIONS.forEach((S, i) => {
+    const on = active.has(i) || (tween && Math.abs(i * SPACING - view.target.x) < SPACING * 0.75);
+    S.group.visible = on;
+    if (S.mirror) S.mirror.visible = on;
+    if (on && S.anim) S.anim(t);
+  });
+  waterNormals.offset.set(t * 0.012, t * 0.008);                   // [PBR water] ripples drift
+
+  composer.render(dt);
+
+  // FPS meter; if the first seconds run slow, drop SSAO (the most expensive pass) and say so
+  frames++;
+  if (now - fpsT >= 500) { fpsAvg = frames * 1000 / (now - fpsT); frames = 0; fpsT = now; $('fps').textContent = `${Math.round(fpsAvg)} fps`; }
+  if (!perfChecked && now - bootT > 4000) { perfChecked = true; if (fpsAvg < 45 && ssao.enabled) { setSSAO(false); $('note').textContent = 'SSAO turned off to hold the frame rate'; } }
+}
+frame();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight);
+});
+// Warm the remaining HDRIs in idle time so later flights never stall
+let warm = 1; const idle = window.requestIdleCallback || (f => setTimeout(f, 200));
+const warmNext = () => { if (warm < STATIONS.length) { ensureEnv(STATIONS[warm++]); idle(warmNext); } };
+idle(warmNext);
+})();
+</script>
