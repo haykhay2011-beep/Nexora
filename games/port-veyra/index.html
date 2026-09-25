@@ -109,6 +109,27 @@
   .ph-home { display: flex; justify-content: center; padding-top: 8px; }
   .ph-home button { width: 96px; height: 5px; border-radius: 3px; border: 0; background: #3a3d44; cursor: pointer; padding: 0; }
   @media (prefers-reduced-motion: reduce) { #phone { animation: none; } }
+  /* ─── Loading screen ─── */
+  #loading { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding-inline: 16px; background: #14080c; transition: opacity .45s; }
+  #loading.out { opacity: 0; pointer-events: none; }
+  .ld-flag { position: absolute; inset: 0; background: linear-gradient(#d90012 0 33.4%, #0033a0 33.4% 66.7%, #f2a800 66.7%); filter: saturate(0.9); }
+  .ld-shade { position: absolute; inset: 0; background:
+      radial-gradient(ellipse 55% 50% at 50% 50%, rgba(8,4,6,0.55), rgba(8,4,6,0.9) 100%),
+      repeating-linear-gradient(100deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.2) 9%, rgba(255,255,255,0.08) 18%);
+    background-size: 100% 100%, 200% 100%; animation: ripple 7s linear infinite; }
+  .ld-wrap { position: relative; width: 100%; max-width: 30rem; display: grid; gap: 1rem; justify-items: center; text-align: center; }
+  .ld-logo { margin: 0 0 0.6rem; display: grid; line-height: 0.86; font: 400 clamp(2.8rem, 13vw, 4.4rem)/0.86 "Bungee", "Russo One", Impact, sans-serif;
+    color: #f4e6c8; -webkit-text-stroke: 3px #10181c; paint-order: stroke fill; text-shadow: 0 5px 0 #0a1014; }
+  .ld-logo .ld-o { color: #f2a23a; }
+  .ld-bar { width: 100%; height: 14px; box-sizing: border-box; border-radius: 7px; padding: 2px; background: #0b1114; border: 2px solid #5d7c86;
+    box-shadow: inset 0 1px 0 rgba(170,215,225,0.2), 0 0 0 2px #0a1114; overflow: hidden; }
+  .ld-fill { height: 100%; width: 0%; border-radius: 4px; transition: width .18s ease-out;
+    background: linear-gradient(90deg, #d90012 0 33.3%, #2a5ad6 33.3% 66.6%, #f2a800 66.6%); background-size: 30rem 100%;
+    box-shadow: 0 0 12px rgba(242,168,0,0.5); }
+  .ld-status { margin: 0; font: 400 0.95rem/1.2 "Russo One", var(--display); letter-spacing: 0.05em; color: #fff4dc; display: flex; gap: 0.6rem; }
+  .ld-status #ldPct { color: #f2a23a; min-width: 3ch; }
+  .ld-tip { margin: 0; min-height: 2.6em; font-size: 0.78rem; line-height: 1.5; color: #d7cdb8; max-width: 44ch; }
+  @media (prefers-reduced-motion: reduce) { .ld-shade { animation: none; } .ld-fill { transition: none; } }
   /* ─── Title screen ─── */
   .title-screen { overflow: hidden; background: #1a0a10; }
   .title-screen .flag { position: absolute; inset: -3%; width: 106%; height: 106%; }
@@ -178,6 +199,16 @@
   @media (prefers-reduced-motion: reduce) { h1 { text-shadow: none; } }
 </style>
 
+<div id="loading" role="status" aria-live="polite">
+  <div class="ld-flag" aria-hidden="true"></div>
+  <div class="ld-shade" aria-hidden="true"></div>
+  <div class="ld-wrap">
+    <p class="ld-logo"><span>HAYA</span><span class="ld-o">STAN</span></p>
+    <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
+    <p class="ld-status"><span id="ldStatus">Loading</span> <span id="ldPct">0%</span></p>
+    <p class="ld-tip" id="ldTip"></p>
+  </div>
+</div>
 <canvas id="game" aria-label="Hayastan game view"></canvas>
 <div id="grade" aria-hidden="true"></div>
 <div id="vignette" aria-hidden="true"></div>
@@ -238,7 +269,7 @@
           <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
           <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
           <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
-          <div><dt>X</dt><dd>Nitro boost</dd></div>
+          <div><dt>B / X</dt><dd>Nitro boost</dd></div>
           <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
           <div><dt>C</dt><dd>Chase or high camera</dd></div>
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
@@ -294,7 +325,7 @@
       <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
       <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
       <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
-      <div><dt>X</dt><dd>Nitro boost</dd></div>
+      <div><dt>B / X</dt><dd>Nitro boost</dd></div>
       <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase or high camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
@@ -872,6 +903,69 @@ function crime(amount, label) {
   toast(`${label}  +heat`, '#ff8a7a');
   if (stars() > before && before === 0) toast('Police are responding', '#8fb4ff');
 }
+// ─── Street talk: people speak Armenian, captioned in Latin letters with the English under it ─
+const SPEECH = {
+  greet: [['Barev, akhper jan!', 'Hi, dear brother!'], ['Barev dzez!', 'Hello!'], ['Inch ka chka?', "What's new?"], ['Vonts es?', 'How are you?'],
+    ['Lav or!', 'Good day!'], ['Ari, mi surch khmenq.', "Come, let's have a coffee."], ['Yeghanaky inch lavn a aysor!', 'The weather is so nice today!'],
+    ['Hajogh, akhper!', 'Bye, brother!'], ['Tsavd tanem, inch lav shor es hagel.', 'Aw, what nice clothes you have on.'], ['Mamad inch a anum?', "How's your mom doing?"],
+    ['Ushanum em, avtobusy chi galis...', "I'm late, the bus isn't coming..."], ['Khorovats es kerel aysor?', 'Had any khorovats today?']],
+  bump: [['Ay tgha, ushadir exi!', 'Hey kid, be careful!'], ['Ches tesnum?', "Can't you see?"], ['Kamats, kamats!', 'Easy, easy!'],
+    ['Inch es anum?!', 'What are you doing?!'], ['Vay, votqs!', 'Ow, my foot!'], ['Kuyr es?', 'Are you blind?']],
+  scared: [['Mi krakir!', "Don't shoot!"], ['Voch, khndrum em!', 'No, please!'], ['Ognutyun!', 'Help!'], ['Vay, mama jan!', 'Oh, mama!'],
+    ['Pakhek, pakhek!', 'Run, run!'], ['Vostikanutyun kanchek!', 'Call the police!']],
+  car: [['Ay varord, ush ara!', 'Hey driver, watch it!'], ['Kamats qshi!', 'Drive slower!'], ['Khent es?!', 'Are you crazy?!'], ['Chanaparhy qonny che!', "The road isn't yours!"]],
+  cop: [['Kangnir! Vostikanutyun!', 'Stop! Police!'], ['Dzerqerd ver!', 'Hands up!'], ['Getnin parki!', 'Get on the ground!'], ['Vochinch chi ogni, kangnir!', "It's no use, stop!"]],
+  shop: [['Bari galust! Inch kuzeq?', 'Welcome! What would you like?'], ['Hats, panir, lavash — amen inch taza a.', 'Bread, cheese, lavash, all fresh.']],
+  ammu: [['Bari galust. Aranc hartseri.', 'Welcome. No questions asked.'], ['Zenq? Inch tesak?', 'A gun? What kind?']],
+  clothes: [['Ari, ari, nor shorer unenq!', 'Come in, we have new clothes!'], ['Es guyny qez sazum a.', 'This color suits you.']],
+  diner: [['Bari galust! Khorovats ka, taza a.', "Welcome! There's khorovats, it's fresh."], ['Mi bazhak surch?', 'A cup of coffee?']],
+  bar: [['Mi bazhak konyak?', 'A glass of cognac?'], ['Nstir, akhper, inch es khmum?', 'Sit down, brother, what are you drinking?']],
+  gym: [['Ari, mi qich marzvenq!', "Come, let's work out a bit!"], ['Mkannery inqnirenc chen achum.', "Muscles don't grow by themselves."]],
+  office: [['Barev dzez, hertn ek spasum?', 'Hello, are you waiting your turn?'], ['Tnoreny zbaghvats a.', 'The director is busy.']],
+  home: [['Du ov es? Durs ari!', 'Who are you? Get out!'], ['Vay, gogh! Ognutyun!', 'Oh no, a thief! Help!']],
+  warehouse: [['Stegh inch es anum?', 'What are you doing here?'], ['Ashkhatanqi tegh a, durs!', "It's a workplace, out!"]],
+  police: [['Inch es uzum?', 'What do you want?'], ['Hertn spasir.', 'Wait your turn.']],
+  hospital: [['Hivand es? Nstir, bzhishky hima kga.', "Are you sick? Sit, the doctor's coming."]],
+  gallery: [['Bari galust tangaran.', 'Welcome to the museum.'], ['Khndrum em, dzerqov mi dipchi.', 'Please, no touching.']],
+  control: [['Ays taratsqy pak e!', 'This area is closed!']],
+  bank: [['Bari galust. Inchov karogh em ognel?', 'Welcome. How can I help you?']],
+};
+const SPEAKER = { shop: 'Shopkeeper', ammu: 'Gun seller', clothes: 'Shop assistant', diner: 'Waitress', bar: 'Bartender', gym: 'Trainer',
+  office: 'Receptionist', home: 'Resident', warehouse: 'Foreman', police: 'Desk officer', hospital: 'Nurse', gallery: 'Guard', control: 'Controller', bank: 'Teller' };
+let caption = null, speechCD = 0, copTalkT = -99;
+const lastLine = {};
+function say(cat, who, speaker, force) {
+  if (mode !== 'play' || player.interior && !force) return false;
+  if (!force && speechCD > 0) return false;
+  const lines = SPEECH[cat]; if (!lines) return false;
+  let k = Math.floor(Math.random() * lines.length);
+  if (lines.length > 1 && k === lastLine[cat]) k = (k + 1) % lines.length;
+  lastLine[cat] = k;
+  const [hy, en] = lines[k];
+  caption = { who, hy, en, t: 3.6, speaker };
+  speechCD = cat === 'greet' ? 5 : 2.5;
+  return true;
+}
+function updateSpeech(dt) {
+  speechCD -= dt;
+  if (caption) { caption.t -= dt; if (caption.t <= 0) caption = null; }
+  if (mode !== 'play' || player.interior || activity?.kind === 'race') return;
+  // Police shout while they are on you
+  if (stars() > 0 && time - copTalkT > 8) {
+    const pp = playerPos();
+    const cop = peds.find(p => p.cop && p.state !== 'down' && Math.hypot(p.x - pp.x, p.y - pp.y) < 320)
+      || cars.find(c => c.police && c.ai && Math.hypot(c.x - pp.x, c.y - pp.y) < 260);
+    if (cop && say('cop', 'Police', cop, true)) copTalkT = time;
+  }
+}
+// Called from updatePed once per person per frame
+function pedTalk(p, dp, threat, newlyScared) {
+  if (mode !== 'play' || player.interior || p.cop) return;
+  if (newlyScared && dp < 260) { say(player.car && dp < 130 && !(time - lastShot.t < 3) ? 'car' : 'scared', 'Passerby', p); return; }
+  if (threat || p.fleeT > 0) return;
+  if (!player.car && dp < 17 && time - (p.bumpT || -99) > 6) { p.bumpT = time; if (say('bump', 'Passerby', p, speechCD < 1.5)) return; }
+  if (!player.car && dp < 46 && !p.greeted) { p.greeted = true; if (Math.random() < 0.6) say('greet', 'Passerby', p); }
+}
 function showBanner(title, sub, color = '#ffb347', t = 3) { banner = { title, sub, color, t, max: t }; }
 
 // ─── Spawning ───────────────────────────────────────────────────────────────
@@ -1243,7 +1337,9 @@ function updatePed(p, dt) {
   const pp = playerPos(), dxp = p.x - pp.x, dyp = p.y - pp.y, dp = Math.hypot(dxp, dyp);
   const threat = (player.car && Math.hypot(player.car.vx, player.car.vy) > 140 && dp < 120) || (time - heat.lastCrime < 4 && dp < 200)
     || (time - lastShot.t < 3 && Math.hypot(p.x - lastShot.x, p.y - lastShot.y) < 380);
-  if (threat && p.fleeT <= 0) { p.fleeT = 3; newDir(p, [dxp / (dp || 1), dyp / (dp || 1)]); }
+  const newlyScared = threat && p.fleeT <= 0;
+  if (newlyScared) { p.fleeT = 3; newDir(p, [dxp / (dp || 1), dyp / (dp || 1)]); }
+  pedTalk(p, dp, threat, newlyScared);
   if (p.fleeT > 0) p.fleeT -= dt;
   p.t -= dt;
   if (p.t < 0) { p.t = 2 + Math.random() * 6; newDir(p); if (Math.random() < 0.25) p.idleT = 1 + Math.random() * 3; }
@@ -2354,6 +2450,7 @@ function enterBuilding(e) {
   genActive = e;
   buildGenericInterior(e);
   enterInterior('generic');
+  setTimeout(() => { if (genActive === e && player.interior === 'generic') say(e.type, SPEAKER[e.type] || 'Staff', null, true); }, 450);
 }
 // Crimes indoors pay less each time you repeat them at the same place within ten minutes
 function robPay(e, base) {
@@ -2511,7 +2608,7 @@ addInteract('casino', 40, 150, 26, 'Bet on the horse races', () => openHorses())
 // ─── Input ──────────────────────────────────────────────────────────────────
 const keys = new Set();
 let usePressed = false, interactPressed = false, promptIt = null;
-const GAME_KEYS = ['Slash', 'KeyX', 'Enter', 'KeyZ', 'KeyE', 'KeyM', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyQ'];
+const GAME_KEYS = ['Slash', 'KeyX', 'KeyB', 'Enter', 'KeyZ', 'KeyE', 'KeyM', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyQ'];
 addEventListener('keydown', e => {
   if (e.target && e.target.tagName === 'INPUT') {
     if (e.code === 'Escape' && net.typing) closeChat();
@@ -2625,6 +2722,12 @@ function updateStoryHint() {
 }
 document.getElementById('resumeBtn').addEventListener('click', togglePause);
 function startGame(kind = 'story') {
+  if (mode !== 'title' || loadBusy) return;
+  const steps = { story: ['Finding Lou', 'Warming up the docks', 'Starting the story'], free: ['Unlocking the city', 'Filling the streets', 'Free roam'],
+    online: ['Joining the room', 'Finding other players', 'Going online'] }[kind];
+  runLoading(1400, steps, () => beginGame(kind));
+}
+function beginGame(kind) {
   if (mode !== 'title') return;
   gameMode = kind;
   mode = 'play'; titleEl.hidden = true; showTitlePanel(null); newOffer();
@@ -2904,7 +3007,7 @@ function updatePlayer(dt) {
   if (usePressed) { usePressed = false; if (player.car) exitCar(false); else tryEnter(); }
   const up = down('KeyW', 'ArrowUp'), dn = down('KeyS', 'ArrowDown'), lf = down('KeyA', 'ArrowLeft'), rt = down('KeyD', 'ArrowRight');
   const shift = down('ShiftLeft', 'ShiftRight');
-  if (player.car) return { thr: up ? 1 : dn ? -1 : 0, steer: (rt ? 1 : 0) - (lf ? 1 : 0), hb: shift, up: shift, dn: down('KeyZ'), boost: down('KeyX') };
+  if (player.car) return { thr: up ? 1 : dn ? -1 : 0, steer: (rt ? 1 : 0) - (lf ? 1 : 0), hb: shift, up: shift, dn: down('KeyZ'), boost: down('KeyX') || down('KeyB') };
   player.a += ((rt ? 1 : 0) - (lf ? 1 : 0)) * 3.4 * dt;
   const m = (up ? 1 : 0) - (dn ? 0.6 : 0), sp = (shift && m > 0 ? 165 : 92) * (time < (player.fitT || 0) ? 1.25 : 1);
   player.vx = Math.cos(player.a) * m * sp; player.vy = Math.sin(player.a) * m * sp;
@@ -2961,6 +3064,7 @@ function update(dt) {
   }
   collideCars();
   for (const p of peds) updatePed(p, dt);
+  updateSpeech(dt);
   carVsBodies();
   if (player.car) { player.x = player.car.x; player.y = player.car.y; }
   if (mode === 'play') {
@@ -4040,6 +4144,33 @@ function syncRemotes(dt) {
   }
   for (const id of [...remoteMeshes.keys()]) if (!seen.has(id)) dropRemote(id);
 }
+function drawCaption() {
+  if (!caption || mode === 'talk' || mode === 'title') return;
+  const a = clamp(caption.t / 0.4, 0, 1) * clamp((3.6 - caption.t) / 0.15, 0, 1), maxW = Math.min(560, vw - 32);
+  const cy = vh - insetBottom - (touch ? 290 : 150);
+  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';
+  // A small speech mark over the speaker's head
+  const sp = caption.speaker;
+  if (sp && sp.x != null) {
+    const v = new THREE.Vector3(sp.x, sp.L ? 30 : 34, sp.y).project(camera);
+    if (v.z < 1) {
+      const sx = (v.x + 1) / 2 * vw, sy = (1 - v.y) / 2 * vh;
+      ctx.fillStyle = 'rgba(255,244,220,0.95)'; ctx.beginPath(); ctx.roundRect(sx - 15, sy - 22, 30, 18, 8); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(sx - 4, sy - 5); ctx.lineTo(sx, sy + 2); ctx.lineTo(sx + 4, sy - 5); ctx.fill();
+      ctx.fillStyle = '#10181c'; ctx.font = `800 14px ${MONO}`; ctx.fillText('···', sx, sy - 9);
+    }
+  }
+  ctx.font = `600 ${vw < 600 ? 15 : 18}px ${MONO}`;
+  const line = `${caption.who}: ${caption.hy}`, w = Math.min(maxW, ctx.measureText(line).width + 28);
+  ctx.fillStyle = 'rgba(8,10,14,0.72)'; ctx.beginPath(); ctx.roundRect(vw / 2 - w / 2, cy - 22, w, 50, 6); ctx.fill();
+  ctx.fillStyle = '#f2a23a'; const whoW = ctx.measureText(caption.who + ': ').width, lineW = Math.min(maxW - 28, ctx.measureText(line).width);
+  const scale = lineW / ctx.measureText(line).width, x0 = vw / 2 - lineW / 2;
+  ctx.textAlign = 'left'; ctx.fillText(caption.who + ':', x0, cy, whoW * scale);
+  ctx.fillStyle = '#fff4dc'; ctx.fillText(caption.hy, x0 + whoW * scale, cy, lineW - whoW * scale);
+  ctx.textAlign = 'center'; ctx.font = `italic 400 ${vw < 600 ? 11 : 12}px ${MONO}`; ctx.fillStyle = '#b9b3a6';
+  ctx.fillText(caption.en, vw / 2, cy + 18, maxW - 28);
+  ctx.restore();
+}
 function drawNetHud(s) {
   if (!net.on || gameMode !== 'online') return;
   const tmp = new THREE.Vector3(), p = playerPos();
@@ -4556,6 +4687,7 @@ function render(dt) {
   if (mode === 'title') return;
   drawHud();
   drawNetHud(clamp(vw / 900, 0.72, 1));
+  drawCaption();
   if (mode === 'map') drawMap();
   if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
@@ -4921,6 +5053,28 @@ function applyFX() { propsGroup.visible = FX.props; aoPlane.visible = FX.blobSha
 }
 
 // ─── Boot ───────────────────────────────────────────────────────────────────
+// ─── Loading screen ──────────────────────────────────────────────────────────
+const LOAD_TIPS = ['Press / to pull out your phone.', 'Walk up to people: most will say barev. Some will not.', 'Hold Shift and steer to drift. Drifting pays.',
+  'Press B for nitro. It refills when you let off.', 'Almost every door in the city opens. Press E.', 'Lose the police by breaking line of sight, or by walking into a building.',
+  'Press Enter for the weapon wheel and pick with the mouse.', 'Press M for the map and click to set a waypoint.', 'Online: press T to chat and hold Tab for the scoreboard.'];
+const LOAD_STEPS = ['Laying the streets', 'Raising the buildings', 'Parking the cars', 'Waking the neighbors', 'Brewing the surch', 'Lighting the khorovats'];
+const loadEl = document.getElementById('loading');
+let loadBusy = false;
+function runLoading(ms, steps, done) {
+  loadBusy = true; loadEl.hidden = false; loadEl.classList.remove('out');
+  const fill = document.getElementById('ldFill'), pct = document.getElementById('ldPct'), st = document.getElementById('ldStatus');
+  document.getElementById('ldTip').textContent = 'Tip: ' + pick(LOAD_TIPS);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, t0 = performance.now();
+  const tick = () => {
+    const k = clamp((performance.now() - t0) / ms, 0, 1), e = 1 - Math.pow(1 - k, 2), v = Math.round(e * 100);
+    fill.style.width = v + '%'; pct.textContent = v + '%'; st.textContent = steps[Math.min(steps.length - 1, Math.floor(e * steps.length))];
+    if (k < 1) { requestAnimationFrame(tick); return; }
+    loadEl.classList.add('out');
+    setTimeout(() => { loadEl.hidden = true; loadBusy = false; }, reduce ? 0 : 450);
+    done?.();
+  };
+  fill.style.width = '0%'; requestAnimationFrame(tick);
+}
 function boot(data) {
   const saved = loadGame();
   if (saved) {
@@ -4944,6 +5098,7 @@ function boot(data) {
   if (data && typeof data.money === 'number') player.money = data.money;
   if (!daily) rollDaily();
   updateStoryHint();
+  runLoading(2600, LOAD_STEPS, () => document.getElementById('startBtn').focus({ preventScroll: true }));
   cars.push(makeCar('sedan', 24.6 * T, 22.5 * T, 0, { color: '#c8553d' }));
   cars.push(makeCar('bike', 22.3 * T, 22.5 * T, 0, { color: '#d12f2f' }));
   cars.push(makeCar('sports', 52.5 * T, 24 * T, Math.PI / 2, { color: '#f2c230' }));
