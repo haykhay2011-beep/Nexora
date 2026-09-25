@@ -319,7 +319,17 @@ function districtAtPx(x, y) {
   return districtOfBlock(bx, by);
 }
 
-const buildings = [], trees = [], lamps = [];
+const buildings = [], trees = [], lamps = [], pools = [], helipads = [];
+// A mansion estate fills one residential block: house, lawn, pool and a private helipad
+function buildEstate(ix, iy, id, fill) {
+  fill(GRASS);
+  addBuilding(ix + 1, iy, 4, 3, { kind: 'mansion', id });
+  for (const tx of [ix + 3, ix + 4]) grid[(iy + 5) * GW + tx] = WATER;
+  pools.push([ix + 3, iy + 5, 2, 1]);
+  for (let j = iy + 4; j <= iy + 5; j++) for (let i = ix; i <= ix + 1; i++) grid[j * GW + i] = YARD;
+  helipads.push([(ix + 1) * T, (iy + 5) * T]);
+  trees.push([(ix + 0.5) * T, (iy + 0.5) * T, 15], [(ix + 5.5) * T, (iy + 0.6) * T, 16], [(ix + 5.5) * T, (iy + 3.4) * T, 14]);
+}
 function addBuilding(x, y, w, h, style) {
   buildings.push({ x, y, w, h, ...style });
   for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) grid[j * GW + i] = BLDG;
@@ -352,6 +362,8 @@ function addBuilding(x, y, w, h, style) {
     if (bx === 2 && by === 3) { fill(GRASS); addBuilding(ix + 1, iy, 4, 5, { kind: 'apartment' }); trees.push([(ix + 0.5) * T, (iy + 5.5) * T, 16], [(ix + 5.5) * T, (iy + 5.5) * T, 15]); continue; }
     if (bx === 2 && by === 0) { addBuilding(ix, iy, 6, 6, { kind: 'police' }); continue; }
     if (bx === 7 && by === 2) { addBuilding(ix, iy, 6, 6, { kind: 'museum' }); continue; }
+    if (bx === 7 && by === 4) { buildEstate(ix, iy, 'cedar', fill); continue; }
+    if (bx === 8 && by === 3) { buildEstate(ix, iy, 'bayview', fill); continue; }
     if (bx === 0 && by === 4) { addBuilding(ix, iy, 6, 6, { kind: 'hospital' }); continue; }
     if (d === 'downtown') {
       const r = crand(), col = () => pick(TOWER, crand);
@@ -436,6 +448,10 @@ const INTERIORS = {
                street: { x: 36 * T, y: 19.35 * T, a: Math.PI / 2 }, solids: [] },
   apartment: { name: 'Larkfield Flats, 4B', ox: -3200, oy: 1300, w: 320, h: 240, spawn: [160, 190], door: [160, 222],
                street: { x: 26 * T, y: 32.65 * T, a: -Math.PI / 2 }, solids: [] },
+  mansionA:  { name: 'Cedar Heights Estate', ox: -3200, oy: 2000, w: 480, h: 340, spawn: [240, 298], door: [240, 326],
+               street: { x: 76 * T, y: 46.6 * T, a: Math.PI / 2 }, solids: [] },
+  mansionB:  { name: 'Bayview Villa', ox: -3200, oy: 2700, w: 480, h: 340, spawn: [240, 298], door: [240, 326],
+               street: { x: 86 * T, y: 36.6 * T, a: Math.PI / 2 }, solids: [] },
 };
 function interiorAt(x, y) {
   for (const key in INTERIORS) { const I = INTERIORS[key]; if (x >= I.ox - 40 && x <= I.ox + I.w + 40 && y >= I.oy - 40 && y <= I.oy + I.h + 40) return I; }
@@ -519,7 +535,7 @@ function buyDrink() {
 function saveGame() {
   try {
     localStorage.setItem('port-veyra-save', JSON.stringify({ money: player.money, ammo: player.ammo, weapon: player.weapon, outfit: player.outfit,
-      heists: heistState, biz, anchors: [...anchorsFound], day, daily }));
+      heists: heistState, biz, anchors: [...anchorsFound], day, daily, mansions: mansionState, studio }));
     return true;
   }
   catch (e) { return false; }
@@ -614,6 +630,18 @@ mini.width = GW * MM; mini.height = GH * MM;
   cc.strokeStyle = 'rgba(235,232,222,0.8)'; cc.lineWidth = 3;
   cc.beginPath(); cc.arc(66 * T, 7 * T, 34, 0, 7); cc.stroke();
   cc.fillRect(66 * T - 12, 7 * T - 14, 5, 28); cc.fillRect(66 * T + 7, 7 * T - 14, 5, 28); cc.fillRect(66 * T - 12, 7 * T - 2.5, 24, 5);
+  // Estate pools and helipads
+  for (const [x, y, w, h] of pools) {
+    cc.fillStyle = '#e8e4dc'; cc.fillRect(x * T - 6, y * T - 6, w * T + 12, h * T + 12);
+    cc.fillStyle = '#2f9fb3'; cc.fillRect(x * T + 2, y * T + 2, w * T - 4, h * T - 4);
+    cc.strokeStyle = 'rgba(220,250,255,0.35)'; cc.lineWidth = 2;
+    for (let k = 0; k < 4; k++) { cc.beginPath(); cc.moveTo(x * T + 10 + k * 22, y * T + 14); cc.quadraticCurveTo(x * T + 20 + k * 22, y * T + 8, x * T + 30 + k * 22, y * T + 14); cc.stroke(); }
+  }
+  for (const [x, y] of helipads) {
+    cc.fillStyle = '#2a2d31'; cc.beginPath(); cc.arc(x, y, 42, 0, 7); cc.fill();
+    cc.strokeStyle = 'rgba(235,232,222,0.85)'; cc.lineWidth = 3; cc.beginPath(); cc.arc(x, y, 34, 0, 7); cc.stroke();
+    cc.fillStyle = 'rgba(235,232,222,0.85)'; cc.fillRect(x - 12, y - 14, 5, 28); cc.fillRect(x + 7, y - 14, 5, 28); cc.fillRect(x - 12, y - 2.5, 24, 5);
+  }
   // Crosswalks and stop lines
   for (let j = 0; j < NN; j++) for (let i = 0; i < NNX; i++) {
     const [cx, cy] = nodePos(i, j);
@@ -1873,6 +1901,7 @@ function updateFreeEvent(dt) {
 }
 function updateFreemode(dt) {
   updateBusinesses(dt);
+  updateMansions(dt);
   const p = playerPos(), low = !player.car || player.car.z < 30;
   if (!player.interior && low) for (let i = 0; i < ANCHORS.length; i++) {
     const a = ANCHORS[i];
@@ -1891,6 +1920,88 @@ function updateFreemode(dt) {
   if (stars() >= 3) escapeArmed = true; else if (escapeArmed && stars() === 0) { escapeArmed = false; progress('wanted'); }
   if (freeEvent) updateFreeEvent(dt);
   else if (time > nextEventT && !activity && !player.interior) { nextEventT = time + 150 + Math.random() * 120; startFreeEvent(); }
+}
+
+// ─── Mansions ────────────────────────────────────────────────────────────────
+const MANSIONS = {
+  cedar:   { name: 'Cedar Heights Estate', price: 150000, ix: 73, iy: 43, key: 'mansionA', blurb: 'Four bedrooms, a pool, a private helipad and the best view of Cedar Heights.' },
+  bayview: { name: 'Bayview Villa', price: 90000, ix: 83, iy: 33, key: 'mansionB', blurb: 'A waterfront villa at the edge of the bay with its own helipad and pool.' },
+};
+for (const M of Object.values(MANSIONS)) {
+  M.door = { x: (M.ix + 3) * T, y: (M.iy + 3.5) * T };
+  M.garage = { x: (M.ix + 2.5) * T, y: (M.iy + 4.5) * T };
+  M.pad = { x: (M.ix + 1) * T, y: (M.iy + 5) * T };
+}
+const mansionState = { cedar: { owned: false, garage: [] }, bayview: { owned: false, garage: [] } };
+const studio = { canvases: 0, market: 1 };
+const GARAGE_SLOTS = 2;
+const ownsMansion = () => Object.values(mansionState).some(m => m.owned);
+function openMansionSale(id) {
+  const M = MANSIONS[id];
+  showMenu({ eyebrow: 'Luxury real estate · for sale', title: M.name,
+    body: `<p>${M.blurb}</p><div class="row"><span>Private helipad</span><span class="muted">A helicopter waits on the pad</span></div>
+      <div class="row"><span>Garage</span><span class="muted">Stores ${GARAGE_SLOTS} vehicles with their upgrades</span></div>
+      <div class="row"><span>Art studio</span><span class="muted">Paints canvases you can sell to collectors</span></div>
+      <div class="row"><span>Security gates</span><span class="muted">Walk in unseen and the police lose the trail</span></div>
+      <div class="row"><span>Bedroom, wardrobe and a heist board</span><span class="muted">Sleep, save and plan jobs here</span></div>`,
+    options: [{ label: `Buy for ${fmtMoney(M.price)}`, sub: player.money < M.price ? `You have ${fmtMoney(player.money)}` : 'The keys are yours today', disabled: player.money < M.price,
+      act: () => { player.money -= M.price; mansionState[id].owned = true; spawnEstateHeli(id); saveGame(); showBanner('Welcome home', M.name, '#e0b0ff', 3.5); } }] });
+}
+function enterMansion(id) {
+  if (stars() > 0 && !heat.seen) { heat.v = 0; toast('The gates close behind you. The police lose the trail', '#8fb4ff'); }
+  enterInterior(MANSIONS[id].key);
+}
+function spawnEstateHeli(id) {
+  const P = MANSIONS[id].pad;
+  if (!cars.some(c => c.spec.air && !c.wreck && Math.hypot(c.x - P.x, c.y - P.y) < 70)) cars.push(makeCar('heli', P.x, P.y, 0, { keep: true, color: '#1d1d22' }));
+}
+function openGarage(id, inside) {
+  const S = mansionState[id], M = MANSIONS[id], c = player.car;
+  const options = [];
+  if (c && !inside) options.push({ label: `Store your ${(c.spec.name || 'vehicle').toLowerCase()}`, sub: S.garage.length >= GARAGE_SLOTS ? 'The garage is full' : 'Keeps its paint and upgrades',
+    disabled: S.garage.length >= GARAGE_SLOTS || c.police || !!c.spec.air || c.wreck,
+    act: () => {
+      S.garage.push({ type: c.type, color: c.color, tune: c.tune || null });
+      exitCar(true); const k = cars.indexOf(c); if (k >= 0) cars.splice(k, 1);
+      if (player.lastCar === c) player.lastCar = null;
+      saveGame(); toast('Stored in the garage', '#e0b0ff');
+    } });
+  S.garage.forEach((v, i) => options.push({ label: `Take out the ${VEHICLES[v.type].name.toLowerCase()}`, sub: v.tune ? `Engine ${v.tune.engine} · armor ${v.tune.armor}` : 'Stock', disabled: !!c,
+    act: () => {
+      S.garage.splice(i, 1);
+      if (player.interior) exitInterior();
+      const car = makeCar(v.type, M.garage.x, M.garage.y, Math.PI / 2, { color: v.color });
+      if (v.tune) { car.tune = v.tune; car.maxHp = car.hp = car.spec.hp * (1 + 0.3 * v.tune.armor); }
+      cars.push(car); player.car = car; camSnap = true;
+      saveGame();
+    } }));
+  showMenu({ eyebrow: M.name, title: 'Garage', body: `<p class="muted">${S.garage.length} of ${GARAGE_SLOTS} spaces used. ${c && !inside ? '' : 'Drive a car up to the garage door to store it.'}</p>`, options });
+}
+function openStudio() {
+  const price = Math.round(2000 * studio.market), n = Math.floor(studio.canvases);
+  showMenu({ eyebrow: 'Art studio', title: 'Canvases',
+    body: `<div class="row"><span>Finished canvases</span><span class="gold">${n} of 4</span></div>
+      <div class="row"><span>Collectors pay</span><span class="gold">${fmtMoney(price)} (${Math.round(studio.market * 100)}% of full price)</span></div>
+      <p class="muted">A new canvas is finished every three minutes. Each sale floods the market and drops the price 20%; it recovers about 5% a minute.</p>`,
+    options: [{ label: `Sell one · ${fmtMoney(price)}`, disabled: n < 1,
+      act: () => { player.money += price; studio.canvases -= 1; studio.market *= 0.8; progress('business'); saveGame(); toast(`Canvas sold · +${fmtMoney(price)}`, '#e0b0ff'); openStudio(); return true; } }] });
+}
+function updateMansions(dt) {
+  if (!ownsMansion()) return;
+  studio.canvases = Math.min(4, studio.canvases + dt / 180);
+  studio.market = Math.min(1, studio.market + dt * 0.05 / 60);
+}
+for (const [id, M] of Object.entries(MANSIONS)) {
+  interactables.push({ ...M.door, r: 28, label: () => mansionState[id].owned ? `Enter ${M.name}` : `For sale: ${M.name} · ${fmtMoney(M.price)}`,
+    act: () => mansionState[id].owned ? enterMansion(id) : openMansionSale(id) });
+  interactables.push({ ...M.garage, r: 44, inCar: 'only', when: () => mansionState[id].owned, label: 'Garage · store this vehicle', act: () => openGarage(id, false) });
+  interactables.push({ ...M.garage, r: 26, when: () => mansionState[id].owned, label: 'Garage · take out a vehicle', act: () => openGarage(id, false) });
+  addInteract(M.key, 240, 326, 26, `Leave ${M.name}`, exitInterior);
+  addInteract(M.key, 410, 126, 30, 'Sleep until morning and save', sleepAndSave);
+  addInteract(M.key, 352, 56, 22, 'Change clothes', changeClothes);
+  addInteract(M.key, 240, 40, 22, 'Heist planning board', openHeistBoard);
+  addInteract(M.key, 110, 96, 30, 'Art studio · sell canvases', openStudio);
+  addInteract(M.key, 446, 190, 24, 'Garage', () => openGarage(id, true));
 }
 
 // World interactions for the new systems
@@ -1983,7 +2094,7 @@ function progressHTML() {
   const d = daily ? daily.list.map(o => `<div class="row"><span class="${o.done ? 'ok' : ''}">${o.done ? '✓' : '○'} ${o.text}</span><span class="muted">${Math.floor(o.have)}/${o.n}</span></div>`).join('') : '';
   const b = Object.entries(BUSINESSES).map(([id, B]) => `<div class="row"><span>${B.name}</span><span class="${biz[id].owned ? 'ok' : 'muted'}">${biz[id].owned ? bizStatus(id) : 'Not owned · ' + fmtMoney(B.price)}</span></div>`).join('');
   const h = HEISTS.map(H => { const st = heistState[H.id]; return `<div class="row"><span>${H.name}</span><span class="muted">${st.preps.filter(Boolean).length}/${st.preps.length} preps${st.done ? ` · done ${st.done}×` : ''}</span></div>`; }).join('');
-  return `<p class="panel-sub">Day ${day} · daily objectives, $1,000 each and $2,500 for all three</p>${d}<p class="panel-sub">Businesses</p>${b}<p class="panel-sub">Heists · planning board in your apartment</p>${h}<p class="panel-sub">Gold anchors found: ${anchorsFound.size} of ${ANCHORS.length}</p>`;
+  return `<p class="panel-sub">Day ${day} · daily objectives, $1,000 each and $2,500 for all three</p>${d}<p class="panel-sub">Businesses</p>${b}<p class="panel-sub">Heists · planning board in your apartment</p>${h}<p class="panel-sub">Mansions</p>${Object.entries(MANSIONS).map(([id, M]) => `<div class="row"><span>${M.name}</span><span class="${mansionState[id].owned ? 'ok' : 'muted'}">${mansionState[id].owned ? `Owned · ${mansionState[id].garage.length}/${GARAGE_SLOTS} in garage` : 'For sale · ' + fmtMoney(M.price)}</span></div>`).join('')}<p class="panel-sub">Gold anchors found: ${anchorsFound.size} of ${ANCHORS.length}</p>`;
 }
 function clockText() { const h = Math.floor(tod) % 24, m = Math.floor((tod % 1) * 60); return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
 
@@ -2352,6 +2463,16 @@ const flatsSignTex = signTex(384, 96, (g, w, h) => {
   g.textAlign = 'center'; g.fillStyle = '#f2e2c4'; g.font = '800 52px "Big Shoulders Display", Impact, sans-serif'; g.fillText('LARKFIELD FLATS', w / 2, 66);
 });
 const doorGlowMats = [];
+function buildMansionFront(x, z, w, d, h) {
+  const stone = lam('#f4f0e6'), zFace = z + d / 2;
+  const roofM = new THREE.Mesh(prismGeo, lam('#3a3430')); roofM.scale.set(w + 10, 34 / 1.5, (d + 10) / 1.732); roofM.position.set(x, h, z); roofM.castShadow = true; scene.add(roofM);
+  const steps = new THREE.Mesh(new THREE.BoxGeometry(70, 4, 16), stone); steps.position.set(x, 2, zFace + 8); scene.add(steps);
+  for (let k = 0; k < 4; k++) { const col = new THREE.Mesh(new THREE.CylinderGeometry(3, 3.4, 44, 10), stone); col.position.set(x - 30 + k * 20, 24, zFace + 12); col.castShadow = true; scene.add(col); }
+  const porch = new THREE.Mesh(new THREE.BoxGeometry(76, 5, 22), stone); porch.position.set(x, 48, zFace + 10); porch.castShadow = true; scene.add(porch);
+  const door = new THREE.Mesh(new THREE.PlaneGeometry(18, 26), basic(0xffe2b0)); door.position.set(x, 13, zFace + 1.2); scene.add(door); doorGlowMats.push(door.material);
+  // Sun loungers by the pool
+  for (const dx of [-16, 16]) { const l = new THREE.Mesh(new THREE.BoxGeometry(10, 3, 22), lam('#f4f1ea')); l.position.set(x + 24 + dx, 3, zFace + 1.6 * T); scene.add(l); }
+}
 const museumSignTex = signTex(512, 64, (g, w, h) => {
   g.fillStyle = '#e8e2d4'; g.fillRect(0, 0, w, h);
   g.fillStyle = '#3a3226'; g.textAlign = 'center'; g.font = '800 40px "Big Shoulders Display", Impact, sans-serif'; g.fillText('VEYRA MUSEUM OF ART', w / 2, 46);
@@ -2395,6 +2516,8 @@ for (const b of buildings) {
     h = 96; wall = lam('#e6e8ea', { map: winMap, emissive: 0xffd9a0, emissiveMap: winEmis }); roof = lam('#ffffff', { map: crossTex });
   } else if (b.kind === 'casino') {
     h = 120; wall = lam('#4a2446', { map: winMap, emissive: 0xff6fd8, emissiveMap: winEmis }); roof = lam('#2a1528');
+  } else if (b.kind === 'mansion') {
+    h = 58; wall = lam('#ece6da', { map: winMap, emissive: 0xffd9a0, emissiveMap: winEmis }); roof = lam('#3a3430');
   } else if (b.kind === 'museum') {
     h = 72; unit = 24; wall = lam('#d9d4c8', { map: ribTex }); roof = lam('#8a8478');
   } else if (b.kind === 'ctower') {
@@ -2424,6 +2547,7 @@ for (const b of buildings) {
   }
   if (b.kind === 'casino') buildFront(x, z + d / 2, w, h, 1, 'casino');
   if (b.kind === 'museum') buildMuseumFront(x, z - d / 2, w);
+  if (b.kind === 'mansion') buildMansionFront(x, z, w, d, h);
   if (b.kind === 'apartment') buildFront(x, z - d / 2, w, h, -1, 'apartment');
   if (b.kind === 'house') {
     const r = new THREE.Mesh(prismGeo, lam(b.color));
@@ -3006,6 +3130,58 @@ const roulette = { spin: 0, wheel: null };
   INPC(I, 470, 205, Math.PI, { shirt: '#1d1d22', pants: '#1d1d22', skin: '#5a3a26', hair: '#1a1410', shoes: '#111' });
   INPC(I, 214, 342, -Math.PI / 2, { shirt: '#1d1d22', pants: '#1d1d22', skin: '#8d5a3b', hair: '#120e0c', shoes: '#111', buzz: true });
 }
+const marbleTex = canvasTex(64, 64, g => {
+  g.fillStyle = '#ece8e1'; g.fillRect(0, 0, 64, 64);
+  g.strokeStyle = 'rgba(120,110,100,0.18)'; g.lineWidth = 1;
+  for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(crand() * 64, 0); g.bezierCurveTo(crand() * 64, 20, crand() * 64, 44, crand() * 64, 64); g.stroke(); }
+  g.strokeStyle = 'rgba(0,0,0,0.12)'; g.strokeRect(0.5, 0.5, 63, 63);
+});
+marbleTex.repeat.set(480 / 48, 340 / 48);
+const fireMats = [];
+function buildMansionInterior(I) {
+  IRoom(I, lam('#ffffff', { map: marbleTex, emissive: 0xffffff, emissiveMap: marbleTex, emissiveIntensity: 0.5 }), ilam('#e6ddcc', 0.45), basic(0xd9a441));
+  // Bedroom behind a partition
+  IFloor(I, 322, 10, 470, 160, lam('#ffffff', { map: woodTex, emissive: 0xffffff, emissiveMap: woodTex, emissiveIntensity: 0.5 }), 0.7);
+  IB(I, 318, 10, 322, 124, 44, ilam('#e6ddcc', 0.45), { solid: true });
+  IB(I, 352, 12, 468, 18, 30, ilam('#3a2a20'));
+  IB(I, 360, 18, 460, 108, 10, ilam('#3a2a20'), { solid: true });
+  IB(I, 362, 20, 458, 106, 5, ilam('#f4f1ea', 0.5), { y: 10 });
+  IB(I, 362, 50, 458, 106, 3, ilam('#6b1f2a', 0.4), { y: 14 });
+  for (const x of [385, 435]) IB(I, x - 16, 24, x + 16, 40, 4, ilam('#ffffff', 0.5), { y: 14 });
+  IB(I, 324, 14, 340, 80, 50, ilam('#5a3a26'), { solid: true });
+  // Living room: rug, sofas, coffee table, fireplace
+  IFloor(I, 30, 196, 170, 316, ilam('#1f3a5a', 0.4), 0.7);
+  IB(I, 24, 196, 150, 222, 12, ilam('#e8e4dc', 0.4), { solid: true });
+  IB(I, 24, 196, 150, 204, 24, ilam('#d8d2c4', 0.4));
+  IB(I, 24, 222, 50, 310, 12, ilam('#e8e4dc', 0.4), { solid: true });
+  IB(I, 76, 244, 124, 272, 9, ilam('#2a2a2a'), { solid: true });
+  IB(I, 10, 140, 26, 186, 44, ilam('#8a8478'), { solid: true });
+  const fire = basic(0xff8a3a); fireMats.push(fire);
+  IB(I, 20, 150, 27, 176, 12, fire, { y: 3, shadow: false });
+  // Art studio: easel, paint table and finished canvases
+  for (const [dx, rot] of [[-8, 0.15], [8, -0.15]]) { const leg = IB(I, 108 + dx, 58, 111 + dx, 61, 44, ilam('#6b4a33')); leg.rotation.z = rot; }
+  const canvasTex2 = canvasTex(64, 48, g => { g.fillStyle = '#f4efe4'; g.fillRect(0, 0, 64, 48); for (let k = 0; k < 12; k++) { g.fillStyle = `hsl(${crand() * 360},55%,${40 + crand() * 30}%)`; g.beginPath(); g.arc(crand() * 64, crand() * 48, 4 + crand() * 12, 0, 7); g.fill(); } }, false);
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(34, 26), basic(0xffffff, { map: canvasTex2 })); art.position.set(I.ox + 110, 34, I.oy + 62); interiorGroup.add(art);
+  IB(I, 150, 14, 200, 40, 16, ilam('#6b4a33'), { solid: true });
+  for (let k = 0; k < 4; k++) IB(I, 26 + k * 16, 11, 40 + k * 16, 14, 26 + (k % 2) * 6, ilam(['#c0282e', '#2d6bff', '#d9a441', '#1f6b3a'][k], 0.4), { y: 6 });
+  // Heist board, piano, staircase, garage door, butler, chandeliers
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(56, 32), basic(0x8a6440)); board.position.set(I.ox + 240, 34, I.oy + 10.7); interiorGroup.add(board);
+  for (let k = 0; k < 5; k++) { const note = new THREE.Mesh(new THREE.PlaneGeometry(10, 8), basic(0xe8e4dc)); note.position.set(I.ox + 220 + k * 10, 30 + (k % 2) * 8, I.oy + 10.9); interiorGroup.add(note); }
+  IB(I, 180, 150, 232, 178, 16, ilam('#121212', 0.2), { solid: true });
+  IB(I, 180, 150, 232, 158, 10, ilam('#121212', 0.2), { y: 16 });
+  for (let k = 0; k < 7; k++) IB(I, 360 + k * 15, 236, 375 + k * 15, 326, 4 + k * 6, ilam('#d8d2c4', 0.45), { solid: true });
+  const gdoor = new THREE.Mesh(new THREE.PlaneGeometry(34, 30), ilam('#5a5f66', 0.35)); gdoor.position.set(I.ox + 469.4, 15, I.oy + 190); gdoor.rotation.y = -Math.PI / 2; interiorGroup.add(gdoor);
+  for (const [x, y] of [[160, 200], [260, 120], [400, 90]]) { const c = new THREE.Mesh(new THREE.SphereGeometry(6, 10, 8), basic(0xffe7b0)); c.position.set(I.ox + x, 58, I.oy + y); interiorGroup.add(c); }
+  for (const [x, y] of [[300, 40], [22, 110]]) {
+    IB(I, x - 8, y - 8, x + 8, y + 8, 12, ilam('#5a3a26'), { solid: true });
+    const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(12, 0), ilam('#2c6b3a', 0.35)); leaf.position.set(I.ox + x, 22, I.oy + y); interiorGroup.add(leaf);
+  }
+  INPC(I, 290, 236, Math.PI / 2, { shirt: '#1d1d22', pants: '#1d1d22', skin: '#e3b894', hair: '#8a8a86', shoes: '#111' });
+}
+buildMansionInterior(INTERIORS.mansionA);
+buildMansionInterior(INTERIORS.mansionB);
+const mansionSigns = {};
+for (const [id, M] of Object.entries(MANSIONS)) { const g = new THREE.Group(); scene.add(g); mansionSigns[id] = g; postSign(M.door.x - 60, M.door.y + 14, 'FOR SALE', fmtMoney(M.price), '#5a2a6a', '#f4f1ea', 18, g); }
 let luckyWheel = null;
 {
   const I = INTERIORS.casino;
@@ -3139,6 +3315,8 @@ function syncActivityScene() {
   for (const [c, m] of cashMeshes) if (!live.has(c)) { scene.remove(m); cashMeshes.delete(c); }
   for (const c of cashDrops) { let m = cashMeshes.get(c); if (!m) { m = new THREE.Mesh(cashGeo, cashMat); scene.add(m); cashMeshes.set(c, m); } m.position.set(c.x, 7 + bob * 0.5, c.y); m.rotation.y = time * 2; }
   for (const id in forSaleSigns) forSaleSigns[id].visible = !biz[id].owned;
+  for (const id in mansionSigns) mansionSigns[id].visible = !mansionState[id].owned;
+  if (player.interior && player.interior.startsWith('mansion')) for (const m of fireMats) m.color.setHSL(0.06 + Math.random() * 0.03, 1, 0.5 + Math.random() * 0.1);
   if (luckyWheel && player.interior === 'casino') luckyWheel.rotation.z += 0.004;
 }
 const arrowGeo = new THREE.ConeGeometry(6, 18, 4); arrowGeo.rotateZ(-Math.PI / 2);
@@ -3569,6 +3747,7 @@ function drawHud() {
   if (waypoint) dot(waypoint.x, waypoint.y, '#d66bff', 5);
   for (const B of Object.values(BUSINESSES)) dot(B.x, B.y, '#7fe0a0', 3);
   dot(PLACES.customs.x, PLACES.customs.y, '#f28a1e', 3);
+  for (const M of Object.values(MANSIONS)) dot(M.door.x, M.door.y, '#e0b0ff', 3);
   if (!activity) for (const R of RACES) dot(R.entry.x, R.entry.y, '#4fc3ff', 3);
   const aT = activityTarget();
   if (aT && !player.interior) dot(aT.x, aT.y, activity.race ? '#4fc3ff' : '#ffd35a', 5);
@@ -3736,6 +3915,7 @@ function drawMap() {
   for (const B of Object.values(BUSINESSES)) icon(B.x, B.y, '#7fe0a0', '$');
   icon(PLACES.customs.x, PLACES.customs.y, '#f28a1e', 'W');
   for (const R of RACES) icon(R.entry.x, R.entry.y, '#4fc3ff', 'R');
+  for (const [id, M] of Object.entries(MANSIONS)) icon(M.door.x, M.door.y, mansionState[id].owned ? '#e0b0ff' : '#8a6a9a', 'E');
   icon(PLACES.bank.x, PLACES.bank.y, '#ffd35a', 'B'); icon(PLACES.museum.x, PLACES.museum.y, '#ffd35a', 'M'); icon(PLACES.freighter.x, PLACES.freighter.y, '#ffd35a', 'F');
   const aT = activityTarget();
   if (aT && !player.interior) { const [a, b] = W(aT.x, aT.y); ctx.strokeStyle = activity.race ? '#4fc3ff' : '#ffd35a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(a, b, 13, 0, 7); ctx.stroke(); }
@@ -3757,7 +3937,7 @@ function drawMap() {
   ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-7, -7); ctx.lineTo(-3, 0); ctx.lineTo(-7, 7); ctx.closePath(); ctx.stroke(); ctx.fill();
   ctx.restore();
   // Legend
-  const items = [['#ff6fd8', 'Casino'], ['#f2e2c4', 'Apartment'], ['#e6e8ea', 'Hospital'], ['#8fb4ff', 'Police HQ'], ['#9fd4e8', 'Aircraft'], ['#ffd35a', 'Heist targets'], ['#7fe0a0', 'Businesses'], ['#4fc3ff', 'Races'], ['#f28a1e', 'Customs'], ['#ffb347', 'Job'], ['#d66bff', 'Waypoint'], ['#c9c3b5', 'Weapons']];
+  const items = [['#ff6fd8', 'Casino'], ['#f2e2c4', 'Apartment'], ['#e6e8ea', 'Hospital'], ['#8fb4ff', 'Police HQ'], ['#9fd4e8', 'Aircraft'], ['#ffd35a', 'Heist targets'], ['#7fe0a0', 'Businesses'], ['#4fc3ff', 'Races'], ['#f28a1e', 'Customs'], ['#e0b0ff', 'Mansions'], ['#ffb347', 'Job'], ['#d66bff', 'Waypoint'], ['#c9c3b5', 'Weapons']];
   ctx.font = `400 12px ${MONO}`; ctx.textAlign = 'left';
   let lx = mx, ly = my + mh + 26;
   for (const [col, label] of items) {
@@ -3800,6 +3980,8 @@ function boot(data) {
     if (OUTFITS[saved.outfit]) setOutfit(saved.outfit);
     if (saved.heists) for (const id in saved.heists) if (heistState[id] && saved.heists[id].preps?.length === heistState[id].preps.length) heistState[id] = saved.heists[id];
     if (saved.biz) for (const id in biz) Object.assign(biz[id], saved.biz[id] || {});
+    if (saved.mansions) for (const id in mansionState) Object.assign(mansionState[id], saved.mansions[id] || {});
+    if (saved.studio) Object.assign(studio, saved.studio);
     if (saved.anchors) for (const i of saved.anchors) anchorsFound.add(i);
     if (saved.day) day = saved.day;
     if (saved.daily && saved.daily.list) daily = saved.daily;
@@ -3813,6 +3995,7 @@ function boot(data) {
   cars.push(makeCar('heli', 66 * T, 7 * T, 0, { keep: true, color: '#2a3a5a' }));
   cars.push(makeCar('plane', 63.6 * T, 15.5 * T, 0, { keep: true }));
   cars.push(makeCar('heli', 15.5 * T, 38.5 * T, -Math.PI / 2, { keep: true, color: '#c83a3a' }));
+  for (const id in mansionState) if (mansionState[id].owned) spawnEstateHeli(id);
   for (let k = 0; k < 16; k++) spawnTraffic(160, 1800);
   for (let k = 0; k < 46; k++) spawnPed(60, 1500);
   let last = performance.now();
