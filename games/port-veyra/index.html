@@ -111,7 +111,10 @@
       <div><dt>Shift</dt><dd>Run · handbrake · climb</dd></div>
       <div><dt>Z</dt><dd>Descend in aircraft</dd></div>
       <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
-      <div><dt>Q</dt><dd>Switch weapon</dd></div>
+      <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
+      <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
+      <div><dt>X</dt><dd>Nitro boost</dd></div>
+      <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase or high camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
       <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
@@ -154,7 +157,10 @@
       <div><dt>Shift</dt><dd>Run · handbrake · climb</dd></div>
       <div><dt>Z</dt><dd>Descend in aircraft</dd></div>
       <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
-      <div><dt>Q</dt><dd>Switch weapon</dd></div>
+      <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
+      <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
+      <div><dt>X</dt><dd>Nitro boost</dd></div>
+      <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase or high camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
       <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
@@ -176,7 +182,7 @@
 
 <div id="touch" hidden>
   <div class="pad left"><button type="button" data-k="ArrowLeft" aria-label="Left">◀</button><button type="button" data-k="ArrowRight" aria-label="Right">▶</button></div>
-  <div class="pad mid"><button type="button" class="act" data-k="KeyQ">Gun</button><button type="button" class="act" data-k="KeyF">Fire</button><button type="button" class="act" data-k="Space">Use</button><button type="button" class="act" data-k="KeyM">Map</button><button type="button" class="act" data-k="ShiftLeft" aria-label="Run, handbrake or climb">Up</button><button type="button" class="act" data-k="KeyZ" aria-label="Descend">Down</button></div>
+  <div class="pad mid"><button type="button" class="act" data-k="KeyQ">Gun</button><button type="button" class="act" data-k="KeyF">Fire</button><button type="button" class="act" data-k="Space">Use</button><button type="button" class="act" data-k="KeyM">Map</button><button type="button" class="act" data-k="ShiftLeft" aria-label="Run, handbrake or climb">Up</button><button type="button" class="act" data-k="KeyZ" aria-label="Descend">Down</button><button type="button" class="act" data-k="KeyX" aria-label="Nitro boost">Nitro</button><button type="button" class="act" data-k="Enter" aria-label="Weapon wheel">Wheel</button></div>
   <div class="pad right"><button type="button" data-k="ArrowUp" aria-label="Up">▲</button><button type="button" data-k="ArrowDown" aria-label="Down">▼</button></div>
 </div>
 
@@ -785,26 +791,47 @@ function driveCar(c, inp, dt) {
   let vF = c.vx * fx + c.vy * fy;
   const ground = tileAtPx(c.x, c.y);
   const tuneK = 1 + 0.1 * ((c.tune && c.tune.engine) || 0);
-  const maxF = s.max * tuneK * (ground === SIDE ? 0.8 : ground === GRASS ? 0.6 : 1);
+  // Nitro: X burns the tank for extra thrust and top speed; it refills when you let go
+  if (c.nitro === undefined) c.nitro = 100;
+  const boosting = !!inp.boost && c.nitro > 1 && vF > -10 && !c.wreck;
+  c.nitro = clamp(c.nitro + (boosting ? -36 : inp.boost ? 0 : 11) * dt, 0, 100);
+  if (inp.boost && c.nitro <= 1 && !c.boostDry) { c.boostDry = true; if (c === player.car) toast('Nitro empty. It refills when you let go', '#4fc3ff'); }
+  if (!inp.boost) c.boostDry = false;
+  c.boosting = boosting;
+  const boostK = boosting ? 1.4 : 1;
+  const maxF = s.max * tuneK * boostK * (ground === SIDE ? 0.8 : ground === GRASS ? 0.6 : 1);
   let dv = 0;
-  if (inp.thr > 0) dv = (vF < 0 ? s.brake : s.accel * tuneK) * dt;
+  if (boosting) dv = s.accel * tuneK * 2.3 * dt;
+  else if (inp.thr > 0) dv = (vF < 0 ? s.brake : s.accel * tuneK) * dt;
   else if (inp.thr < 0) dv = -(vF > 0 ? s.brake : s.accel * 0.6) * dt;
   else { const d = s.coast * dt; dv = Math.abs(vF) < d ? -vF : -Math.sign(vF) * d; }
   if (vF + dv > maxF) dv = vF > maxF ? -(vF - maxF) * 2 * dt : maxF - vF;
   if (vF + dv < -s.rev) dv = -s.rev - vF;
   c.vx += fx * dv; c.vy += fy * dv; vF += dv;
+  // Drift: the handbrake breaks the rear loose; throttle while sliding keeps it going (power oversteer).
+  // Grip returns gradually instead of snapping, so you can catch and hold a slide with counter-steer.
+  const speed0 = Math.hypot(c.vx, c.vy), slipAng = speed0 > 30 ? Math.abs(Math.atan2(c.vx * -Math.sin(c.a) + c.vy * Math.cos(c.a), Math.abs(vF) + 1)) : 0;
+  const sliding = slipAng > 0.25 && speed0 > 90 && !s.bike;
+  const gripTarget = inp.hb ? 1.1 : sliding && inp.thr > 0 ? 2.6 : s.grip;
+  c.gripNow = c.gripNow === undefined ? s.grip : c.gripNow + (gripTarget - c.gripNow) * Math.min(1, dt * (gripTarget < c.gripNow ? 12 : 2.2));
+  const steerK = inp.hb ? 1.5 : sliding ? 1.3 : 1;
   // Steering scales with speed and flips in reverse
-  c.a += inp.steer * s.turn * clamp(Math.abs(vF) / 110, 0, 1) * Math.sign(vF) * (inp.hb ? 1.35 : 1) * dt;
+  c.a += inp.steer * s.turn * clamp(Math.abs(vF) / 110, 0, 1) * Math.sign(vF) * steerK * dt;
   fx = Math.cos(c.a); fy = Math.sin(c.a);
   const rx = -fy, ry = fx;
   vF = c.vx * fx + c.vy * fy;
   let vL = c.vx * rx + c.vy * ry;
-  vL *= Math.exp(-(inp.hb ? 1.6 : s.grip) * dt);
-  if (inp.hb) vF *= 1 - 1.1 * dt;
+  // Sideways momentum bleeds into forward speed instead of vanishing, so drifts keep their pace
+  const vL0 = vL;
+  vL *= Math.exp(-c.gripNow * dt);
+  if (sliding || inp.hb) vF += Math.sign(vF || 1) * Math.abs(vL0 - vL) * 0.35;
+  if (inp.hb) vF *= 1 - 0.45 * dt;
   vF *= 1 - 0.12 * dt;
   c.vx = fx * vF + rx * vL; c.vy = fy * vF + ry * vL;
   c.slip = Math.abs(vL);
-  moveCar(c, dt, prevA);
+  c.slipAng = slipAng;
+  const imp = moveCar(c, dt, prevA);
+  if (c === player.car) updateDrift(c, dt, imp);
   // Skid marks
   if (c.slip > 70 && Math.abs(vF) > 40) {
     const rear = [];
@@ -855,6 +882,34 @@ function flyCar(c, inp, dt) {
     if (g2 === 0 && tileAtPx(c.x, c.y) === WATER && !c.wreck) { damageCar(c, 999); if (c === player.car || !player.car) toast('Crashed into the bay', '#ff8a7a'); }
   } else c.z = nz;
   c.slip = 0;
+}
+
+// Drift scoring: slide at speed to build points, straighten out to cash them, crash and you lose them
+const drift = { active: false, score: 0, t: 0, calm: 0, mult: 1, lastBank: -99, flash: 0, flashText: '' };
+function updateDrift(c, dt, imp) {
+  const speed = Math.hypot(c.vx, c.vy), on = c.slipAng > 0.3 && speed > 110 && !c.spec.bike && !c.spec.air;
+  if (imp > 110 && drift.active) { drift.active = false; drift.flash = 2; drift.flashText = `Drift lost · ${Math.round(drift.score).toLocaleString('en-US')}`; drift.score = 0; return; }
+  if (on) {
+    if (!drift.active) { drift.active = true; drift.score = 0; drift.t = 0; }
+    drift.calm = 0; drift.t += dt;
+    drift.mult = 1 + Math.min(4, Math.floor(drift.t / 1.5));
+    drift.score += dt * speed * Math.min(1.2, c.slipAng) * 0.6 * drift.mult;
+  } else if (drift.active) {
+    drift.calm += dt;
+    if (drift.calm > 0.7) {
+      drift.active = false;
+      // Cash in, with a cooldown curve so chaining tiny drifts is not a money printer
+      const fresh = Math.min(1, (time - drift.lastBank) / 6);
+      const cash = Math.round(drift.score / 40 * (0.3 + 0.7 * fresh));
+      drift.lastBank = time;
+      if (drift.score > 150) {
+        player.money += cash;
+        drift.flash = 2.2; drift.flashText = `Drift ${Math.round(drift.score).toLocaleString('en-US')} pts · +${fmtMoney(cash)}`;
+        if (drift.score > 3000) progress('drift');
+      }
+      drift.score = 0;
+    }
+  }
 }
 
 function lightState(axis) {
@@ -1407,7 +1462,7 @@ const OBJECTIVE_POOL = [
   { id: 'slots', n: 5, text: 'Play the slots 5 times' }, { id: 'anchor', n: 1, text: 'Find a gold anchor' },
   { id: 'customs', n: 1, text: 'Buy something at Veyra Customs' }, { id: 'business', n: 1, text: 'Make a business sale or delivery' },
   { id: 'takedown', n: 1, text: 'Take down a bail-bond fugitive' }, { id: 'wanted', n: 1, text: 'Escape a three-star wanted level' },
-  { id: 'casino', n: 3, text: 'Play 3 table games at the casino' },
+  { id: 'casino', n: 3, text: 'Play 3 table games at the casino' }, { id: 'drift', n: 1, text: 'Score a 3,000 point drift' },
 ];
 function rollDaily() {
   const pool = [...OBJECTIVE_POOL].sort(() => Math.random() - 0.5).slice(0, 3);
@@ -2017,13 +2072,14 @@ addInteract('casino', 40, 150, 26, 'Bet on the horse races', () => openHorses())
 // ─── Input ──────────────────────────────────────────────────────────────────
 const keys = new Set();
 let usePressed = false, interactPressed = false, promptIt = null;
-const GAME_KEYS = ['KeyZ', 'KeyE', 'KeyM', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyQ'];
+const GAME_KEYS = ['KeyX', 'Enter', 'KeyZ', 'KeyE', 'KeyM', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyQ'];
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && mode === 'menu') { closeMenu(); return; }
   if (GAME_KEYS.includes(e.code) && (mode === 'play' || mode === 'map')) e.preventDefault();
   if (e.code === 'Space' && !e.repeat) usePressed = true;
   if (e.code === 'KeyM' && !e.repeat) toggleMap();
   if (e.code === 'KeyE' && !e.repeat && mode === 'play') interactPressed = true;
+  if (e.code === 'Escape' && wheel.open) { wheel.open = false; return; }
   if (e.code === 'Escape' && mode === 'map') { toggleMap(); return; }
   if (e.code === 'Escape' && mode === 'paused' && openPanel) showPanel(null);
   else if (e.code === 'KeyP' || e.code === 'Escape') togglePause();
@@ -2031,12 +2087,36 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyF' && !e.repeat && mode === 'play') fireQueued = true;
   if (e.code === 'KeyC' && mode === 'play') { camMode = camMode === 'chase' ? 'high' : 'chase'; toast(camMode === 'high' ? 'High camera' : 'Chase camera'); }
   if (e.code === 'Enter' && mode === 'title') startGame();
+  else if (e.code === 'Enter' && mode === 'play' && !e.repeat) { e.preventDefault(); toggleWheel(); }
+  if (mode === 'play' && /^Digit[1-6]$/.test(e.code)) selectWeapon(Object.keys(WEAPONS)[+e.code.slice(5) - 1]);
   keys.add(e.code);
 });
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('blur', () => { keys.clear(); mouseFire = false; if (mode === 'play') togglePause(); });
 const gameCanvas = document.getElementById('game');
-gameCanvas.addEventListener('pointerdown', e => { if (e.button === 0 && e.pointerType === 'mouse' && mode === 'play') { mouseFire = true; fireQueued = true; } });
+gameCanvas.addEventListener('pointerdown', e => {
+  if (wheel.open) { e.preventDefault(); mouse.x = e.clientX; mouse.y = e.clientY; wheelPick(); return; }
+  if (e.button === 0 && e.pointerType === 'mouse' && mode === 'play') { mouseFire = true; fireQueued = true; }
+});
+addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+// Weapon wheel: Enter opens it and slows time; point with the mouse and click (or press Enter again) to equip
+const wheel = { open: false, hover: -1 }, mouse = { x: 0, y: 0 };
+function weaponOwned(k) { return player.ammo[k] > 0; }
+function selectWeapon(k) {
+  if (!k || !weaponOwned(k)) { if (k) toast(`You don't have the ${WEAPONS[k].name.toLowerCase()} yet`); return false; }
+  if (player.weapon !== k) { player.weapon = k; toast(WEAPONS[k].melee ? WEAPONS[k].name : `${WEAPONS[k].name} · ${player.ammo[k]} rounds`); }
+  return true;
+}
+function toggleWheel() {
+  if (wheel.open) { wheelPick(); return; }
+  wheel.open = true; wheel.hover = Object.keys(WEAPONS).indexOf(player.weapon); mouseFire = false;
+  mouse.x = vw / 2; mouse.y = vh / 2;
+}
+function wheelPick() {
+  const k = Object.keys(WEAPONS)[wheel.hover];
+  if (k) selectWeapon(k);
+  wheel.open = false;
+}
 addEventListener('pointerup', () => { mouseFire = false; });
 gameCanvas.addEventListener('contextmenu', e => e.preventDefault());
 const down = (...codes) => codes.some(c => keys.has(c));
@@ -2045,7 +2125,7 @@ const touchEl = document.getElementById('touch');
 if (matchMedia('(pointer: coarse)').matches) touchEl.hidden = false;
 for (const b of touchEl.querySelectorAll('button')) {
   const k = b.dataset.k;
-  const on = e => { e.preventDefault(); b.classList.add('on'); if (k === 'Space') usePressed = true; else if (k === 'KeyQ') { if (mode === 'play') switchWeapon(); } else if (k === 'KeyM') toggleMap(); else { keys.add(k); if (k === 'KeyF' && mode === 'play') fireQueued = true; } };
+  const on = e => { e.preventDefault(); b.classList.add('on'); if (k === 'Space') usePressed = true; else if (k === 'KeyQ') { if (mode === 'play') switchWeapon(); } else if (k === 'KeyM') toggleMap(); else if (k === 'Enter') { if (mode === 'play') toggleWheel(); } else { keys.add(k); if (k === 'KeyF' && mode === 'play') fireQueued = true; } };
   const off = e => { e.preventDefault(); b.classList.remove('on'); keys.delete(k); };
   b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
 }
@@ -2059,6 +2139,7 @@ function startGame() {
   showBanner('Port Veyra', 'Your shift starts now. Grab the sedan beside you.', '#ffb347', 3.5);
 }
 function togglePause() {
+  wheel.open = false;
   if (mode === 'play') {
     mode = 'paused'; pauseEl.hidden = false; mouseFire = false;
     document.getElementById('pauseClock').textContent = clockText();
@@ -2209,7 +2290,7 @@ function updatePlayer(dt) {
   if (usePressed) { usePressed = false; if (player.car) exitCar(false); else tryEnter(); }
   const up = down('KeyW', 'ArrowUp'), dn = down('KeyS', 'ArrowDown'), lf = down('KeyA', 'ArrowLeft'), rt = down('KeyD', 'ArrowRight');
   const shift = down('ShiftLeft', 'ShiftRight');
-  if (player.car) return { thr: up ? 1 : dn ? -1 : 0, steer: (rt ? 1 : 0) - (lf ? 1 : 0), hb: shift, up: shift, dn: down('KeyZ') };
+  if (player.car) return { thr: up ? 1 : dn ? -1 : 0, steer: (rt ? 1 : 0) - (lf ? 1 : 0), hb: shift, up: shift, dn: down('KeyZ'), boost: down('KeyX') };
   player.a += ((rt ? 1 : 0) - (lf ? 1 : 0)) * 3.4 * dt;
   const m = (up ? 1 : 0) - (dn ? 0.6 : 0), sp = shift && m > 0 ? 165 : 92;
   player.vx = Math.cos(player.a) * m * sp; player.vy = Math.sin(player.a) * m * sp;
@@ -2226,6 +2307,10 @@ function updatePlayer(dt) {
 
 function emitCarParticles(c, inp, dt) {
   if (c.spec.air) return;
+  if (c.boosting) for (const side of c.spec.bike ? [0] : [-1, 1]) {
+    const fx = Math.cos(c.a), fy = Math.sin(c.a);
+    parts.push({ x: c.x - fx * (c.L / 2 + 3) - fy * side * 6, y: c.y - fy * (c.L / 2 + 3) + fx * side * 6, vx: -fx * 90 + c.vx * 0.6, vy: -fy * 90 + c.vy * 0.6, life: 0.22, max: 0.22, size: 6, grow: 26, kind: 'nitro', h: 6, vh: 0 });
+  }
   const pp = playerPos();
   if (Math.abs(c.x - pp.x) > 650 || Math.abs(c.y - pp.y) > 650) return;
   const fx = Math.cos(c.a), fy = Math.sin(c.a), sp = Math.hypot(c.vx, c.vy), rnd = () => (Math.random() - 0.5) * 16;
@@ -3487,6 +3572,7 @@ function syncEntities() {
     else if (q.kind === 'tyre') puffCloud.push(q.x, q.h, q.y, 0.75, 0.75, 0.78, 0.4 * a, q.size);
     else if (q.kind === 'fire') glowCloud.push(q.x, q.h, q.y, 1, 0.55, 0.15, a, 10 + q.size * a);
     else if (q.kind === 'flash') glowCloud.push(q.x, q.h, q.y, 1, 0.8, 0.45, 1, 34);
+    else if (q.kind === 'nitro') glowCloud.push(q.x, q.h, q.y, 0.45 + 0.4 * a, 0.7 + 0.2 * a, 1, a, q.size);
     else glowCloud.push(q.x, q.h, q.y, 1, 0.85, 0.5, a, 4);
   }
   if (muzzle.t > 0) glowCloud.push(muzzle.x, 15, muzzle.y, 1, 0.8, 0.45, 1, 30);
@@ -3610,7 +3696,7 @@ function updateCamera(dt) {
     if (camSnap) camYaw = heading;
     camera.position.lerp(camWant, camSnap ? 1 : k);
     camLook.set(p.x + Math.cos(camYaw) * (high ? 20 : 40), (pc ? 12 : 14) + az, p.y + Math.sin(camYaw) * (high ? 20 : 40));
-    const fov = 62 + Math.min(14, spd * 0.035);
+    const fov = 62 + Math.min(14, spd * 0.035) + (pc && pc.boosting ? 9 : 0);
     if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); }
   }
   if (FX.shake && cam.shake > 0) camera.position.add(new THREE.Vector3((Math.random() - 0.5) * cam.shake, (Math.random() - 0.5) * cam.shake, (Math.random() - 0.5) * cam.shake));
@@ -3650,6 +3736,17 @@ function render(dt) {
   if (mode === 'title') return;
   drawHud();
   if (mode === 'map') drawMap();
+  if (wheel.open && mode === 'play') drawWheel();
+  else if (wheel.open) wheel.open = false;
+  if (wheel.open) { /* the wheel covers the drift readout */ }
+  else if (drift.active && mode === 'play' && drift.score > 60) {
+    ctx.textAlign = 'center'; ctx.font = `800 ${Math.round(clamp(vw / 900, 0.72, 1) * 34)}px ${DISPLAY}`; ctx.fillStyle = '#ffb347';
+    ctx.fillText(`DRIFT  ${Math.round(drift.score).toLocaleString('en-US')}${drift.mult > 1 ? `  ×${drift.mult}` : ''}`, vw / 2, vh * 0.2);
+  } else if (drift.flash > 0 && mode === 'play') {
+    drift.flash -= dt;
+    ctx.globalAlpha = Math.min(1, drift.flash); ctx.textAlign = 'center'; ctx.font = `800 ${Math.round(clamp(vw / 900, 0.72, 1) * 30)}px ${DISPLAY}`;
+    ctx.fillStyle = drift.flashText.startsWith('Drift lost') ? '#ff6b5e' : '#7fe0a0'; ctx.fillText(drift.flashText.toUpperCase(), vw / 2, vh * 0.2); ctx.globalAlpha = 1;
+  }
   if (activity && activity.race && activity.race.countdown > 0 && mode === 'play') {
     ctx.textAlign = 'center'; ctx.font = `800 ${Math.round(Math.min(vw, vh) * 0.2)}px ${DISPLAY}`; ctx.fillStyle = '#4fc3ff';
     ctx.fillText(String(Math.ceil(activity.race.countdown)), vw / 2, vh * 0.45);
@@ -3677,11 +3774,12 @@ function drawHud() {
   if (player.car) {
     const c = player.car;
     bar(top + 44 * s + 16, c.hp / (c.maxHp || c.spec.hp), '#d8c7a0', 'CAR');
+    if (!c.spec.air) bar(top + 44 * s + 30, (c.nitro ?? 100) / 100, c.boosting ? '#9fe4ff' : '#4fc3ff', 'NITRO');
     ctx.fillStyle = '#efe6d2'; ctx.font = `600 ${Math.round(13 * s)}px ${MONO}`;
-    ctx.fillText(`${String(Math.round(Math.hypot(c.vx, c.vy) * 0.24)).padStart(3, ' ')} mph${c.spec.air ? `   ALT ${Math.round(c.z * 0.33)} ft` : ''}`, pad, top + 44 * s + 46);
+    ctx.fillText(`${String(Math.round(Math.hypot(c.vx, c.vy) * 0.24)).padStart(3, ' ')} mph${c.spec.air ? `   ALT ${Math.round(c.z * 0.33)} ft` : ''}`, pad, top + 44 * s + 56);
   }
   // Weapon and ammo
-  const wy = top + 44 * s + (player.car ? 76 : 40), wpn = WEAPONS[player.weapon], ammo = player.ammo[player.weapon] || 0;
+  const wy = top + 44 * s + (player.car ? 84 : 40), wpn = WEAPONS[player.weapon], ammo = player.ammo[player.weapon] || 0;
   ctx.textAlign = 'left'; ctx.font = `800 ${Math.round(20 * s)}px ${DISPLAY}`; ctx.fillStyle = ammo || wpn.melee ? wpn.color : '#6d6a63';
   ctx.fillText(wpn.name.toUpperCase(), pad, wy);
   const nameW = ctx.measureText(wpn.name.toUpperCase()).width;
@@ -3854,6 +3952,33 @@ function drawActivityCard(x, y, w, s) {
   }
   if (st.limit) { ctx.textAlign = 'right'; ctx.font = `800 ${Math.round(20 * s)}px ${DISPLAY}`; const left = Math.max(0, st.limit - A.t); ctx.fillStyle = left < 15 ? '#ff6b5e' : '#efe6d2'; ctx.fillText(`${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`, x + w - 12, y + h - 8); }
 }
+function drawWheel() {
+  const keysW = Object.keys(WEAPONS), n = keysW.length, cx = vw / 2, cy = vh / 2;
+  const R = Math.min(vw, vh) * 0.34, r0 = R * 0.38, seg = Math.PI * 2 / n;
+  const dx = mouse.x - cx, dy = mouse.y - cy;
+  if (Math.hypot(dx, dy) > r0 * 0.6) wheel.hover = Math.floor(((Math.atan2(dy, dx) + Math.PI / 2 + seg / 2) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) / seg);
+  ctx.fillStyle = 'rgba(6,8,12,0.55)'; ctx.fillRect(0, 0, vw, vh);
+  for (let i = 0; i < n; i++) {
+    const k = keysW[i], w = WEAPONS[k], owned = weaponOwned(k), a0 = -Math.PI / 2 - seg / 2 + i * seg, a1 = a0 + seg, hov = i === wheel.hover;
+    ctx.beginPath(); ctx.arc(cx, cy, R, a0 + 0.02, a1 - 0.02); ctx.arc(cx, cy, r0, a1 - 0.02, a0 + 0.02, true); ctx.closePath();
+    ctx.fillStyle = hov ? (owned ? 'rgba(255,179,71,0.9)' : 'rgba(120,110,100,0.7)') : 'rgba(18,20,26,0.88)'; ctx.fill();
+    ctx.strokeStyle = k === player.weapon ? '#ffb347' : 'rgba(239,230,210,0.18)'; ctx.lineWidth = k === player.weapon ? 3 : 1; ctx.stroke();
+    const am = (a0 + a1) / 2, tx = cx + Math.cos(am) * (r0 + R) / 2, ty = cy + Math.sin(am) * (r0 + R) / 2;
+    ctx.textAlign = 'center';
+    ctx.font = `800 ${Math.round(R * 0.1)}px ${DISPLAY}`; ctx.fillStyle = hov && owned ? '#17120a' : owned ? w.color : '#5a5750';
+    ctx.fillText(w.name.toUpperCase(), tx, ty, R * 0.5);
+    ctx.font = `600 ${Math.round(R * 0.06)}px ${MONO}`; ctx.fillStyle = hov && owned ? '#17120a' : owned ? '#b9b3a5' : '#5a5750';
+    ctx.fillText(!owned ? 'not found yet' : w.melee ? 'melee' : `${player.ammo[k]} rounds`, tx, ty + R * 0.09);
+    ctx.fillText(String(i + 1), cx + Math.cos(am) * (r0 + R * 0.08), cy + Math.sin(am) * (r0 + R * 0.08) + 4);
+  }
+  const hk = keysW[wheel.hover] || player.weapon, hw = WEAPONS[hk];
+  ctx.beginPath(); ctx.arc(cx, cy, r0 - 6, 0, 7); ctx.fillStyle = 'rgba(12,14,18,0.92)'; ctx.fill();
+  ctx.textAlign = 'center'; ctx.fillStyle = '#efe6d2'; ctx.font = `800 ${Math.round(R * 0.11)}px ${DISPLAY}`;
+  ctx.fillText(hw.name.toUpperCase(), cx, cy + 4, r0 * 1.6);
+  ctx.font = `600 ${Math.round(R * 0.055)}px ${MONO}`; ctx.fillStyle = '#9a978f';
+  ctx.fillText(weaponOwned(hk) ? 'click to equip' : 'not found yet', cx, cy + R * 0.1);
+  ctx.fillStyle = '#ffb347'; ctx.fillText('WEAPON WHEEL · MOUSE TO AIM · CLICK OR ENTER TO EQUIP · ESC TO CLOSE', cx, cy - R - 16);
+}
 function wrapText(text, x, y, maxW, lh) {
   const words = text.split(' '); let line = '';
   for (const w of words) {
@@ -4001,7 +4126,7 @@ function boot(data) {
   let last = performance.now();
   const frame = now => {
     const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
-    if (mode !== 'paused' && mode !== 'map') update(dt);
+    if (mode !== 'paused' && mode !== 'map') update(wheel.open ? dt * 0.25 : dt);
     render(dt);
     requestAnimationFrame(frame);
   };
