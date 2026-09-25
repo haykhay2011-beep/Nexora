@@ -1,7 +1,7 @@
-<title>Port Veyra</title>
+<title>Hayastan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Bungee&family=Russo+One&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
   :root {
     color-scheme: dark;
@@ -109,7 +109,55 @@
   .ph-home { display: flex; justify-content: center; padding-top: 8px; }
   .ph-home button { width: 96px; height: 5px; border-radius: 3px; border: 0; background: #3a3d44; cursor: pointer; padding: 0; }
   @media (prefers-reduced-motion: reduce) { #phone { animation: none; } }
-  .title-menu { display: grid; gap: 0.5rem; justify-items: start; }
+  /* ─── Title screen ─── */
+  .title-screen { overflow: hidden; background:
+      radial-gradient(ellipse 70% 55% at 50% 38%, rgba(20,110,120,0.55), rgba(6,40,50,0.82) 55%, rgba(2,12,18,0.96) 100%); }
+  .title-screen .rays { position: absolute; inset: -20% -10% 0; pointer-events: none; mix-blend-mode: screen; opacity: 0.55;
+    background: repeating-conic-gradient(from 168deg at 50% -8%, rgba(120,230,240,0.13) 0deg 3deg, transparent 3deg 9deg);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 75%); mask-image: linear-gradient(to bottom, #000 0%, transparent 75%);
+    animation: rays 14s ease-in-out infinite alternate; }
+  @keyframes rays { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+  .critters { position: absolute; inset: 0; pointer-events: none; }
+  .critter { position: absolute; width: var(--sz); height: var(--sz); border-radius: 45% 45% 40% 40%;
+    background: radial-gradient(circle at 50% 40%, #1a2226 0 55%, #0b0f12 56%); box-shadow: 0 0 calc(var(--sz) * 0.9) var(--glow);
+    animation: bob var(--dur) ease-in-out var(--delay) infinite alternate; opacity: 0.9; }
+  .critter::before, .critter::after { content: ""; position: absolute; top: 36%; width: 22%; height: 22%; border-radius: 50%;
+    background: var(--glow); box-shadow: 0 0 6px var(--glow); }
+  .critter::before { left: 22%; } .critter::after { right: 22%; }
+  .critter.one::after { display: none; } .critter.one::before { left: 39%; width: 26%; height: 26%; }
+  @keyframes bob { from { transform: translate(0, 0) rotate(-6deg); } to { transform: translate(var(--dx), var(--dy)) rotate(6deg); } }
+  .title-wrap { position: relative; width: 100%; max-width: 26rem; max-height: calc(100% - 24px); overflow-y: auto; display: grid; gap: 1.4rem; justify-items: center; padding-block: 12px; }
+  .logo { margin: 0; display: grid; justify-items: center; line-height: 0.82; text-transform: uppercase; text-shadow: none; }
+  .logo-top, .logo-bot { font: 400 clamp(3.2rem, 17vw, 5.4rem)/0.86 "Bungee", "Russo One", Impact, sans-serif; letter-spacing: 0.02em;
+    color: #f4e6c8; -webkit-text-stroke: 3px #10181c; paint-order: stroke fill;
+    text-shadow: 0 5px 0 #0a1014, 0 0 30px rgba(120,230,240,0.45); }
+  .logo-bot { background: linear-gradient(#ffcf7a 20%, #f2922c 90%); -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 5px 0 #0a1014) drop-shadow(0 0 18px rgba(255,160,60,0.35)); text-shadow: none; }
+  .logo-sub { margin-top: 0.55rem; font: 600 1rem/1 var(--mono); letter-spacing: 0.4em; color: #8fe3ea; text-transform: none; text-shadow: 0 0 10px rgba(120,230,240,0.6); }
+  .frame { position: relative; width: 100%; box-sizing: border-box; padding: 1.1rem 1.1rem 1.2rem; border-radius: 10px;
+    background: linear-gradient(#1a2a30, #0d171b); border: 2px solid #5d7c86;
+    box-shadow: inset 0 0 0 2px #0a1114, inset 0 2px 0 3px rgba(170,215,225,0.22), 0 0 0 2px #0a1114, 0 10px 40px rgba(0,0,0,0.6), 0 0 40px rgba(80,200,220,0.18); }
+  .frame::before { content: ""; position: absolute; left: 18%; right: 18%; top: -2px; height: 2px; background: linear-gradient(90deg, transparent, #bff4fa, transparent); }
+  .rivet { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c9e3ea, #45606a); }
+  .rivet.tl { top: 6px; left: 6px; } .rivet.tr { top: 6px; right: 6px; } .rivet.bl { bottom: 6px; left: 6px; } .rivet.br { bottom: 6px; right: 6px; }
+  .title-menu { display: grid; gap: 0.45rem; }
+  .gr-btn { width: 100%; font: 400 1.02rem/1 "Russo One", var(--display); letter-spacing: 0.04em; color: #eef6f7; cursor: pointer;
+    padding: 0.62rem 1rem; border-radius: 7px; border: 1px solid #06090b;
+    background: linear-gradient(#2a3a41 0%, #16242a 48%, #0e181c 52%, #142126 100%);
+    box-shadow: inset 0 1px 0 rgba(200,235,242,0.28), inset 0 -1px 0 rgba(0,0,0,0.5), 0 0 0 1px #3a5059; transition: box-shadow .12s, color .12s, transform .08s; }
+  .gr-btn:hover, .gr-btn:focus-visible { outline: none; color: #fff; background: linear-gradient(#2f5a64 0%, #1a3a42 48%, #12303a 52%, #184048 100%);
+    box-shadow: inset 0 1px 0 rgba(200,245,250,0.45), 0 0 0 1px #8fe3ea, 0 0 16px rgba(120,230,240,0.45); }
+  .gr-btn:active { transform: translateY(1px); }
+  #startBtn { color: #ffd896; }
+  .gr-btn.back { margin-top: 0.2rem; }
+  .tpanel { color: var(--paper); }
+  .tpanel .panel-head { font-family: "Russo One", var(--display); font-weight: 400; color: #bff4fa; }
+  .tpanel .keys { grid-template-columns: 1fr; border-top-color: #2a3e45; max-height: 46vh; overflow-y: auto; }
+  .story-hint { text-align: center; color: #8fb9c0; }
+  .tpanel .toggles { grid-template-columns: 1fr 1fr; gap: 0 0.8rem; }
+  .tpanel .toggles label { font-size: 0.72rem; padding: 0.25rem 0; }
+  .tpanel .toggles input { accent-color: #6fe3ff; }
+  @media (prefers-reduced-motion: reduce) { .title-screen .rays, .critter { animation: none; } }
   .field { display: grid; gap: 0.3rem; font-size: 0.78rem; color: var(--muted); }
   .field input, #chatInput { font: 600 0.95rem var(--mono); color: var(--paper); background: #15171d; border: 1px solid var(--line); border-radius: 3px; padding: 0.5rem 0.6rem; }
   .field input:focus-visible, #chatInput:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
@@ -138,51 +186,71 @@
   @media (prefers-reduced-motion: reduce) { h1 { text-shadow: none; } }
 </style>
 
-<canvas id="game" aria-label="Port Veyra game view"></canvas>
+<canvas id="game" aria-label="Hayastan game view"></canvas>
 <div id="grade" aria-hidden="true"></div>
 <div id="vignette" aria-hidden="true"></div>
 <canvas id="hud" aria-hidden="true"></canvas>
 <div id="inset"></div>
 
-<div id="title" class="overlay">
-  <div class="card">
-    <p class="eyebrow">Night shift · Saltmarsh County, U.S.A.</p>
-    <h1>Port Veyra</h1>
-    <p class="lede">A harbor city on two islands, after dark. Work your way up from parcel runs to heists, buy businesses and a mansion, race, and stay a step ahead of the police.</p>
-    <div class="title-menu">
-      <button class="btn" id="startBtn" type="button">Story mode</button>
-      <button class="menu-item" id="freeBtn" type="button">Free roam</button>
-      <button class="menu-item" id="onlineBtn" type="button">Online</button>
-      <button class="menu-item" id="keysBtn" type="button" aria-expanded="false">Controls</button>
+<div id="title" class="overlay title-screen">
+  <div class="rays" aria-hidden="true"></div>
+  <div class="critters" id="critters" aria-hidden="true"></div>
+  <div class="title-wrap">
+    <h1 class="logo"><span class="logo-top">HAYA</span><span class="logo-bot">STAN</span><span class="logo-sub" lang="hy">Հայաստան</span></h1>
+    <div class="frame">
+      <i class="rivet tl"></i><i class="rivet tr"></i><i class="rivet bl"></i><i class="rivet br"></i>
+      <nav class="title-menu" id="titleMain" aria-label="Main menu">
+        <button class="gr-btn" id="startBtn" type="button">Story Mode</button>
+        <button class="gr-btn" id="freeBtn" type="button">Free Roam</button>
+        <button class="gr-btn" id="onlineBtn" type="button">Online</button>
+        <button class="gr-btn" id="optionsBtn" type="button">Options</button>
+        <button class="gr-btn" id="keysBtn" type="button">Controls</button>
+        <button class="gr-btn" id="creditsBtn" type="button">Credits</button>
+      </nav>
+      <section class="panel tpanel" id="onlinePanel" hidden>
+        <p class="panel-head">Hayastan Online</p>
+        <p class="hint">Everyone who has this page open on claude.ai right now shares one city: you see each other, drive, chat with T and fight. Share the artifact with friends so they can join. Traffic, pedestrians and police stay separate for each player.</p>
+        <label class="field" for="nickInput">Nickname <input id="nickInput" maxlength="16" autocomplete="off" spellcheck="false"></label>
+        <div class="swatches" id="swatches" role="radiogroup" aria-label="Your color"></div>
+        <button class="gr-btn" id="joinBtn" type="button">Join online</button>
+        <p class="hint" id="onlineStatus" role="status"></p>
+        <button class="gr-btn back" type="button" data-tback>Back</button>
+      </section>
+      <section class="panel tpanel" id="optionsPanel" hidden>
+        <p class="panel-head">Options <span class="hint">Graphics effects. Turn some off if the game stutters.</span></p>
+        <div id="optionsSlot"></div>
+        <button class="gr-btn back" type="button" data-tback>Back</button>
+      </section>
+      <section class="panel tpanel" id="titleKeys" hidden>
+        <p class="panel-head">Controls</p>
+        <dl class="keys">
+          <div><dt>W / S</dt><dd>Forward · brake and reverse</dd></div>
+          <div><dt>A / D</dt><dd>Turn or steer</dd></div>
+          <div><dt>Space</dt><dd>Get in or out of a car</dd></div>
+          <div><dt>Shift</dt><dd>Run · handbrake · climb</dd></div>
+          <div><dt>Z</dt><dd>Descend in aircraft</dd></div>
+          <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
+          <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
+          <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
+          <div><dt>X</dt><dd>Nitro boost</dd></div>
+          <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
+          <div><dt>C</dt><dd>Chase or high camera</dd></div>
+          <div><dt>E</dt><dd>Enter doors · use things</dd></div>
+          <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
+          <div><dt>/</dt><dd>Phone</dd></div>
+          <div><dt>Esc</dt><dd>Pause menu</dd></div>
+          <div><dt>T / Tab</dt><dd>Online chat · scoreboard</dd></div>
+        </dl>
+        <button class="gr-btn back" type="button" data-tback>Back</button>
+      </section>
+      <section class="panel tpanel" id="creditsPanel" hidden>
+        <p class="panel-head">Credits</p>
+        <p class="lede">Hayastan is an open-world crime game set in the harbor city of Port Veyra. Built as a single web page with three.js, and written with Claude Code.</p>
+        <p class="hint">All characters, businesses and places are fictional.</p>
+        <button class="gr-btn back" type="button" data-tback>Back</button>
+      </section>
     </div>
-    <p class="hint" id="storyHint"></p>
-    <section class="panel" id="onlinePanel" hidden>
-      <p class="panel-head">Port Veyra Online</p>
-      <p class="hint">Everyone who has this page open on claude.ai right now shares one city: you see each other, drive, chat with T and fight. Share the artifact with friends so they can join. Traffic, pedestrians and police stay separate for each player.</p>
-      <label class="field" for="nickInput">Nickname <input id="nickInput" maxlength="16" autocomplete="off" spellcheck="false"></label>
-      <div class="swatches" id="swatches" role="radiogroup" aria-label="Your color"></div>
-      <button class="btn" id="joinBtn" type="button">Join online</button>
-      <p class="hint" id="onlineStatus" role="status"></p>
-      <button class="menu-item" id="onlineBack" type="button">Back</button>
-    </section>
-    <dl class="keys" id="titleKeys" hidden>    <dl class="keys">
-      <div><dt>W / S</dt><dd>Forward · brake and reverse</dd></div>
-      <div><dt>A / D</dt><dd>Turn or steer</dd></div>
-      <div><dt>Space</dt><dd>Get in or out of a car</dd></div>
-      <div><dt>Shift</dt><dd>Run · handbrake · climb</dd></div>
-      <div><dt>Z</dt><dd>Descend in aircraft</dd></div>
-      <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
-      <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
-      <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
-      <div><dt>X</dt><dd>Nitro boost</dd></div>
-      <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
-      <div><dt>C</dt><dd>Chase or high camera</dd></div>
-      <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-      <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
-      <div><dt>/</dt><dd>Phone</dd></div>
-      <div><dt>Esc</dt><dd>Pause menu</dd></div>
-      <div><dt>T / Tab</dt><dd>Online chat · scoreboard</dd></div>
-    </dl>
+    <p class="hint story-hint" id="storyHint"></p>
   </div>
 </div>
 
@@ -2365,13 +2433,13 @@ async function goOnline() {
   if (net.on) { startGame('online'); return; }
   status.textContent = 'Connecting…';
   const c = window.claude, room = c && c.use ? await c.use('room') : null;
-  if (!room) { status.textContent = 'Online is not available in this view. Open Port Veyra on claude.ai while signed in. Friends need the artifact shared with them.'; return; }
+  if (!room) { status.textContent = 'Online is not available in this view. Open Hayastan on claude.ai while signed in. Friends need the artifact shared with them.'; return; }
   net.room = room;
   net.user = await c.use('user');
   room.onPeers(ch => {
     for (const p of ch.left) { dropRemote(p.peer); }
-    for (const p of ch.joined) if (!p.sameTab && gameMode === 'online') pushChat('Port Veyra', `${nameOf(p)} joined`, '#9a978f');
-  }, () => { net.on = false; pushChat('Port Veyra', 'The online session ended', '#ff8a7a'); });
+    for (const p of ch.joined) if (!p.sameTab && gameMode === 'online') pushChat('Hayastan', `${nameOf(p)} joined`, '#9a978f');
+  }, () => { net.on = false; pushChat('Hayastan', 'The online session ended', '#ff8a7a'); });
   room.on('chat', m => { const t = cleanText(m.data && m.data.text); if (t) pushChat(nameOf(peerById(m.peer)), t, safeColor(peerById(m.peer)?.presence?.color)); });
   room.on('hit', onRemoteHit);
   room.on('kill', onRemoteKill);
@@ -2389,7 +2457,7 @@ function onRemoteHit(m) {
 function onRemoteKill(m) {
   const d = m.data || {}, victim = peerById(m.peer), killer = peerById(d.killer);
   if (d.killer === net.me) { net.kills++; toast(`You took out ${nameOf(victim)}`, '#7fe0a0'); }
-  pushChat('Port Veyra', `${nameOf(killer)} took out ${nameOf(victim)}`, '#ff8a7a');
+  pushChat('Hayastan', `${nameOf(killer)} took out ${nameOf(victim)}`, '#ff8a7a');
 }
 function netEmit(topic, data) { if (net.on && net.room) net.room.emit(topic, data).catch(() => {}); }
 function updateNet(dt) {
@@ -2420,7 +2488,7 @@ function closeChat() { document.getElementById('chatForm').hidden = true; net.ty
 document.getElementById('chatForm').addEventListener('submit', ev => {
   ev.preventDefault();
   const t = cleanText(document.getElementById('chatInput').value).trim();
-  if (t && net.room) net.room.emit('chat', { text: t }).catch(e => pushChat('Port Veyra', e && e.code === 'not_permitted' ? 'Chat needs edit or contribute access to this artifact' : 'Message not sent', '#ff8a7a'));
+  if (t && net.room) net.room.emit('chat', { text: t }).catch(e => pushChat('Hayastan', e && e.code === 'not_permitted' ? 'Chat needs edit or contribute access to this artifact' : 'Message not sent', '#ff8a7a'));
   closeChat();
 });
 
@@ -2439,7 +2507,11 @@ const keys = new Set();
 let usePressed = false, interactPressed = false, promptIt = null;
 const GAME_KEYS = ['Slash', 'KeyX', 'Enter', 'KeyZ', 'KeyE', 'KeyM', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyQ'];
 addEventListener('keydown', e => {
-  if (e.target && e.target.tagName === 'INPUT') { if (e.code === 'Escape' && net.typing) closeChat(); return; }
+  if (e.target && e.target.tagName === 'INPUT') {
+    if (e.code === 'Escape' && net.typing) closeChat();
+    else if (e.code === 'Escape' && mode === 'title' && titlePanel) showTitlePanel(null, titleFrom);
+    return;
+  }
   if (mode === 'talk') {
     if (['KeyE', 'Space', 'Enter'].includes(e.code) && !e.repeat) { e.preventDefault(); talkNext(); }
     else if (e.code === 'Escape') talkNext(true);
@@ -2462,7 +2534,8 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyQ' && !e.repeat && mode === 'play') switchWeapon();
   if (e.code === 'KeyF' && !e.repeat && mode === 'play') fireQueued = true;
   if (e.code === 'KeyC' && mode === 'play') { camMode = camMode === 'chase' ? 'high' : 'chase'; toast(camMode === 'high' ? 'High camera' : 'Chase camera'); }
-  if (e.code === 'Enter' && mode === 'title' && document.getElementById('onlinePanel').hidden) startGame('story');
+  if (e.code === 'Escape' && mode === 'title' && titlePanel) showTitlePanel(null, titleFrom);
+  if (e.code === 'Enter' && mode === 'title' && !titlePanel && !(document.activeElement && document.activeElement.classList.contains('gr-btn'))) startGame('story');
   else if (e.code === 'Enter' && mode === 'play' && !e.repeat) { e.preventDefault(); toggleWheel(); }
   if (mode === 'play' && /^Digit[1-6]$/.test(e.code)) selectWeapon(Object.keys(WEAPONS)[+e.code.slice(5) - 1]);
   keys.add(e.code);
@@ -2510,12 +2583,37 @@ for (const b of touchEl.querySelectorAll('button')) {
 const titleEl = document.getElementById('title'), pauseEl = document.getElementById('pause');
 document.getElementById('startBtn').addEventListener('click', () => startGame('story'));
 document.getElementById('freeBtn').addEventListener('click', () => startGame('free'));
-document.getElementById('keysBtn').addEventListener('click', ev => { const k = document.getElementById('titleKeys'); k.hidden = !k.hidden; ev.currentTarget.setAttribute('aria-expanded', String(!k.hidden)); });
+// Main menu sub-panels replace the button list inside the frame
+let titlePanel = null;
+function showTitlePanel(id, from) {
+  titlePanel = id;
+  document.getElementById('titleMain').hidden = !!id;
+  for (const pid of ['onlinePanel', 'optionsPanel', 'titleKeys', 'creditsPanel']) document.getElementById(pid).hidden = pid !== id;
+  if (id === 'optionsPanel') document.getElementById('optionsSlot').append(document.getElementById('fxToggles'));
+  if (id) document.querySelector(`#${id} input, #${id} button`)?.focus({ preventScroll: true });
+  else document.getElementById(from || 'startBtn').focus({ preventScroll: true });
+}
+let titleFrom = null;
+for (const [btn, panel] of [['optionsBtn', 'optionsPanel'], ['keysBtn', 'titleKeys'], ['creditsBtn', 'creditsPanel']])
+  document.getElementById(btn).addEventListener('click', () => { titleFrom = btn; showTitlePanel(panel); });
+for (const b of document.querySelectorAll('[data-tback]')) b.addEventListener('click', () => showTitlePanel(null, titleFrom));
+{
+  // Glowing drones drifting behind the main menu
+  const box = document.getElementById('critters'), glows = ['#ff9a3c', '#6fe3ff', '#ff5a5a', '#b98cff', '#9dff8a', '#ffd35a'];
+  for (let k = 0; k < 16; k++) {
+    const r = n => ((k + 1) * 9301 * (n + 7) + 49297) % 233280 / 233280, c = document.createElement('i');
+    const sz = 12 + r(1) * 26;
+    c.className = 'critter' + (r(2) < 0.4 ? ' one' : '');
+    c.style.cssText = `left:${(r(3) * 96).toFixed(1)}%;top:${(4 + r(4) * 90).toFixed(1)}%;--sz:${sz.toFixed(0)}px;--glow:${glows[k % glows.length]};` +
+      `--dur:${(3 + r(5) * 5).toFixed(1)}s;--delay:-${(r(6) * 5).toFixed(1)}s;--dx:${(r(7) * 60 - 30).toFixed(0)}px;--dy:${(r(8) * 50 - 25).toFixed(0)}px;` +
+      (sz < 20 ? 'opacity:0.55;filter:blur(1px);' : '');
+    box.append(c);
+  }
+}
 document.getElementById('onlineBtn').addEventListener('click', () => {
-  document.getElementById('onlinePanel').hidden = false;
+  titleFrom = 'onlineBtn'; showTitlePanel('onlinePanel');
   const i = document.getElementById('nickInput'); i.value = net.nick; i.focus();
 });
-document.getElementById('onlineBack').addEventListener('click', () => { document.getElementById('onlinePanel').hidden = true; document.getElementById('onlineBtn').focus(); });
 document.getElementById('joinBtn').addEventListener('click', goOnline);
 {
   const box = document.getElementById('swatches');
@@ -2534,9 +2632,9 @@ document.getElementById('resumeBtn').addEventListener('click', togglePause);
 function startGame(kind = 'story') {
   if (mode !== 'title') return;
   gameMode = kind;
-  mode = 'play'; titleEl.hidden = true; document.getElementById('onlinePanel').hidden = true; newOffer();
+  mode = 'play'; titleEl.hidden = true; showTitlePanel(null); newOffer();
   if (kind === 'story') showBanner(story.chapter < STORY.length ? `Chapter ${story.chapter + 1}` : 'Story complete', story.chapter < STORY.length ? `${STORY[story.chapter].title}. Follow the orange marker.` : 'Port Veyra is yours. Everything is unlocked.', '#ff7a3d', 3.5);
-  else if (kind === 'online') showBanner('Port Veyra Online', 'Press T to chat, hold Tab for the scoreboard', '#4fc3ff', 3.5);
+  else if (kind === 'online') showBanner('Hayastan Online', 'Press T to chat, hold Tab for the scoreboard', '#4fc3ff', 3.5);
   else showBanner('Free roam', 'Jobs, heists, races and businesses. Do what you like.', '#ffb347', 3.5);
 }
 function togglePause() {
@@ -2554,6 +2652,7 @@ function showPanel(name) {
   document.getElementById('pauseMenu').hidden = !!name;
   for (const id of ['settings', 'controls', 'progress']) document.getElementById('panel-' + id).hidden = name !== id;
   if (name === 'progress') document.getElementById('progressBody').innerHTML = progressHTML();
+  if (name === 'settings') document.getElementById('panel-settings').insertBefore(document.getElementById('fxToggles'), document.querySelector('#panel-settings [data-back]'));
   (name ? document.querySelector(`#panel-${name} input, #panel-${name} button`) : document.getElementById('resumeBtn')).focus();
 }
 for (const b of document.querySelectorAll('[data-panel]')) b.addEventListener('click', () => showPanel(b.dataset.panel));
@@ -3978,7 +4077,7 @@ function drawNetHud(s) {
       .sort((a, b) => b.k - a.k);
     const w = Math.min(460, vw - 32), x = (vw - w) / 2, y0 = vh * 0.2;
     ctx.fillStyle = 'rgba(12,14,18,0.9)'; ctx.fillRect(x, y0, w, 40 + rows.length * 24);
-    ctx.font = `800 ${Math.round(18 * s + 2)}px ${DISPLAY}`; ctx.fillStyle = '#efe6d2'; ctx.textAlign = 'left'; ctx.fillText('PORT VEYRA ONLINE', x + 14, y0 + 26);
+    ctx.font = `800 ${Math.round(18 * s + 2)}px ${DISPLAY}`; ctx.fillStyle = '#efe6d2'; ctx.textAlign = 'left'; ctx.fillText('HAYASTAN ONLINE', x + 14, y0 + 26);
     ctx.textAlign = 'right'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#9a978f'; ctx.fillText('KILLS  DEATHS', x + w - 14, y0 + 26);
     rows.forEach((r, i) => {
       const y = y0 + 52 + i * 24;
