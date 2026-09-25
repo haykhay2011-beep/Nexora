@@ -106,6 +106,17 @@
   .ph-row .ok { color: #7fe0a0; }
   .ph-msg { border-left: 3px solid var(--line); padding: 0.1rem 0 0.1rem 0.55rem; }
   .ph-msg small { display: block; color: var(--muted); font-size: 0.64rem; }
+  .hg-head { display: grid; gap: 2px; padding: 4px 4px 8px; border-bottom: 1px solid var(--line); }
+  .hg-head b { font-size: 0.9rem; } .hg-head span { color: var(--muted); font-size: 0.68rem; }
+  .hg-post { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .hg-top { display: flex; justify-content: space-between; font-size: 0.7rem; } .hg-top span { color: #7fe0a0; }
+  .hg-pic { height: 92px; border-radius: 8px; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; }
+  .hg-pic span { font: 800 1.1rem/1 var(--display); letter-spacing: 0.04em; text-transform: uppercase; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .hg-text { margin: 0; font-size: 0.7rem; line-height: 1.45; color: #cfc8b8; }
+  .hg-foot { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #ff6fd8; }
+  .hg-go { font: 800 0.8rem/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; border: 0; border-radius: 12px; padding: 6px 12px; cursor: pointer;
+    color: #fff; background: linear-gradient(90deg, #d90012, #0033a0 60%, #f2a800); }
+  .hg-go:disabled { opacity: 0.45; cursor: default; }
   .ph-home { display: flex; justify-content: center; padding-top: 8px; }
   .ph-home button { width: 96px; height: 5px; border-radius: 3px; border: 0; background: #3a3d44; cursor: pointer; padding: 0; }
   @media (prefers-reduced-motion: reduce) { #phone { animation: none; } }
@@ -182,6 +193,7 @@
   .talk-box { width: 100%; max-width: 40rem; background: rgba(10,12,16,0.92); border: 1px solid var(--line); border-left: 3px solid #ff7a3d; border-radius: 4px; padding: 0.9rem 1.1rem; cursor: pointer; }
   .talk-who { margin: 0 0 0.25rem; font: 800 1.1rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
   .talk-line { margin: 0; font-size: 0.92rem; line-height: 1.55; color: var(--paper); }
+  .talk-en { margin: 0.3rem 0 0; font-size: 0.78rem; font-style: italic; color: var(--muted); }
   .talk-hint { margin: 0.5rem 0 0; font-size: 0.66rem; color: var(--muted); }
   #chatForm { position: fixed; left: 16px; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); width: min(26rem, calc(100% - 32px)); z-index: 6; }
   #chatForm[hidden] { display: none !important; }
@@ -271,7 +283,7 @@
           <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
           <div><dt>B / X</dt><dd>Nitro boost</dd></div>
           <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
-          <div><dt>C</dt><dd>Chase or high camera</dd></div>
+          <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
           <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
           <div><dt>/</dt><dd>Phone</dd></div>
@@ -327,7 +339,7 @@
       <div><dt>Enter</dt><dd>Weapon wheel (pick with the mouse)</dd></div>
       <div><dt>B / X</dt><dd>Nitro boost</dd></div>
       <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
-      <div><dt>C</dt><dd>Chase or high camera</dd></div>
+      <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
       <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
       <div><dt>/</dt><dd>Phone</dd></div>
@@ -358,6 +370,7 @@
   <div class="talk-box">
     <p class="talk-who" id="talkWho"></p>
     <p class="talk-line" id="talkLine"></p>
+      <p class="talk-en" id="talkEn" hidden></p>
     <p class="talk-hint">E, Space or click to continue · Esc to skip</p>
   </div>
 </div>
@@ -488,7 +501,7 @@ let tod = 17.6;            // time of day in hours; the shift starts just before
 const grid = new Uint8Array(GW * GH);
 const tileAt = (tx, ty) => (tx < 0 || ty < 0 || tx >= GW || ty >= GH) ? BLDG : grid[ty * GW + tx];
 const tileAtPx = (x, y) => tileAt(Math.floor(x / T), Math.floor(y / T));
-const solidPx = (x, y) => { if (x < -1000) return interiorSolid(x, y); const t = tileAtPx(x, y); return t === BLDG || t === WATER; };
+const solidPx = (x, y) => { if (x < -1000) return x < -20000 ? regionSolid(x, y) : interiorSolid(x, y); const t = tileAtPx(x, y); return t === BLDG || t === WATER; };
 const onLand = x => x <= 51 || (x >= 60 && x <= 91);
 const isRoadCol = x => onLand(x) && x % 10 < 2;
 const isRoadRow = y => y <= 51 && y % 10 < 2;
@@ -727,7 +740,8 @@ function buyDrink() {
 function saveGame() {
   try {
     localStorage.setItem('port-veyra-save', JSON.stringify({ money: player.money, ammo: player.ammo, weapon: player.weapon, outfit: player.outfit,
-      heists: heistState, biz, anchors: [...anchorsFound], day, daily, mansions: mansionState, studio, story: story.chapter, outfitsBought: player.outfitsBought }));
+      heists: heistState, biz, anchors: [...anchorsFound], day, daily, mansions: mansionState, studio, story: story.chapter, outfitsBought: player.outfitsBought,
+      hayagram: { followers: hg.followers, visited: [...hg.visited], checkins: [...hg.checkins], pm: hg.pm } }));
     return true;
   }
   catch (e) { return false; }
@@ -2237,7 +2251,7 @@ function updateFreemode(dt) {
   if (player.car && player.car.spec.air && player.car.z > 20) progress('air', dt);
   if (stars() >= 3) escapeArmed = true; else if (escapeArmed && stars() === 0) { escapeArmed = false; progress('wanted'); }
   if (freeEvent) updateFreeEvent(dt);
-  else if (time > nextEventT && !activity && !player.interior) { nextEventT = time + 150 + Math.random() * 120; startFreeEvent(); }
+  else if (time > nextEventT && !activity && !player.interior && !player.region) { nextEventT = time + 150 + Math.random() * 120; startFreeEvent(); }
 }
 
 // ─── Mansions ────────────────────────────────────────────────────────────────
@@ -2397,9 +2411,10 @@ function talk(lines, done) {
   talkEl.hidden = false; showTalkLine();
 }
 function showTalkLine() {
-  const [who, text] = talkState.lines[talkState.i], c = CAST[who];
+  const [who, text, en] = talkState.lines[talkState.i], c = CAST[who];
   const w = document.getElementById('talkWho'); w.textContent = c[0]; w.style.color = c[1];
   document.getElementById('talkLine').textContent = text;
+  const e = document.getElementById('talkEn'); e.hidden = !en; e.textContent = en || '';
 }
 function talkNext(skip) {
   if (!talkState) return;
@@ -2636,7 +2651,7 @@ addEventListener('keydown', e => {
   else if (e.code === 'KeyP' || e.code === 'Escape') togglePause();
   if (e.code === 'KeyQ' && !e.repeat && mode === 'play') switchWeapon();
   if (e.code === 'KeyF' && !e.repeat && mode === 'play') fireQueued = true;
-  if (e.code === 'KeyC' && mode === 'play') { camMode = camMode === 'chase' ? 'high' : 'chase'; toast(camMode === 'high' ? 'High camera' : 'Chase camera'); }
+  if (e.code === 'KeyC' && mode === 'play') { camMode = camMode === 'chase' ? 'high' : camMode === 'high' ? 'first' : 'chase'; toast({ chase: 'Chase camera', high: 'High camera', first: 'First person' }[camMode]); }
   if (e.code === 'Escape' && mode === 'title' && titlePanel) showTitlePanel(null, titleFrom);
   if (e.code === 'Enter' && mode === 'title' && !titlePanel && !(document.activeElement && document.activeElement.classList.contains('gr-btn'))) startGame('story');
   else if (e.code === 'Enter' && mode === 'play' && !e.repeat) { e.preventDefault(); toggleWheel(); }
@@ -2780,6 +2795,7 @@ function phItem(title, sub, act, disabled) {
 const phNote = text => phBody.append(el('p', 'ph-note', text));
 function phRow(a, b, ok) { const r = el('div', 'ph-row'); r.append(el('span', '', a), el('span', ok ? 'ok' : '', b)); phBody.append(r); }
 const PHONE_APPS = [
+  ['hayagram', 'Hayagram', 'linear-gradient(135deg, #d90012, #0033a0 55%, #f2a800)', '◎'],
   ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'],
   ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
   ['taxi', 'Hayastan Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
@@ -2829,7 +2845,7 @@ function phoneApp(app) {
     if (daily) for (const o of daily.list) phRow(`${o.done ? '✓' : '○'} ${o.text}`, `${Math.floor(o.have)}/${o.n}`, o.done);
     phNote(`Gold anchors found: ${anchorsFound.size} of ${ANCHORS.length}`);
   } else if (app === 'taxi') {
-    const blocked = stars() > 0 ? 'Cabs will not pick up someone the police are chasing' : player.car ? 'Get out of your vehicle first' : player.interior ? 'Step outside first' : activity ? 'Not during a job' : '';
+    const blocked = player.region ? 'Cabs only run in the city. Use Hayagram to fly back' : stars() > 0 ? 'Cabs will not pick up someone the police are chasing' : player.car ? 'Get out of your vehicle first' : player.interior ? 'Step outside first' : activity ? 'Not during a job' : '';
     if (blocked) phNote(blocked);
     const dests = [['Your apartment', { x: 26 * T, y: 32.65 * T }], ['The Gilded Anchor', PLACES.casinoDoor], ['Hayastan Customs', PLACES.customs], ['Hayastan Municipal Airfield', { x: 68 * T, y: 12.6 * T }]];
     for (const [id, M] of Object.entries(MANSIONS)) if (mansionState[id].owned) dests.push([M.name, M.door]);
@@ -2838,6 +2854,8 @@ function phoneApp(app) {
       const d = Math.hypot(at.x - player.x, at.y - player.y), fare = Math.round(25 + d / 40);
       phItem(name, `${Math.round(d / 5)} m · ${fmtMoney(fare)}`, () => takeCab(at, fare, name), !!blocked || player.money < fare || d < 150);
     }
+  } else if (app === 'hayagram') {
+    hayagramApp();
   } else if (app === 'settings') {
     closePhone(); togglePause(); showPanel('settings');
   }
@@ -2852,6 +2870,7 @@ function takeCab(at, fare, name) {
   toast(`Hayastan Cabs dropped you at ${name}`, '#f2c230');
 }
 function callMechanic() {
+  if (player.region) { toast('Ray does not drive out this far', '#ff8a7a'); return; }
   if (!pay(250)) return;
   const car = player.lastCar && !player.lastCar.wreck && cars.includes(player.lastCar) ? player.lastCar : null;
   // Park it on the nearest stretch of road a few car lengths away
@@ -2917,7 +2936,7 @@ function endRun() {
 function respawn() {
   const [x, y] = respawnKind === 'police' ? [25.5 * T, 9.5 * T] : [9.5 * T, 45.5 * T];
   if (player.interior === 'generic') disposeGeneric();
-  player.x = x; player.y = y; player.hp = 100; player.car = null; player.interior = null; heat.v = 0; camSnap = true;
+  player.x = x; player.y = y; player.hp = 100; player.car = null; player.interior = null; player.region = null; heat.v = 0; camSnap = true;
   for (let k = cars.length - 1; k >= 0; k--) if (cars[k].police && cars[k].ai) cars.splice(k, 1);
   cam.x = x; cam.y = y; mode = 'play';
 }
@@ -3065,6 +3084,7 @@ function update(dt) {
   collideCars();
   for (const p of peds) updatePed(p, dt);
   updateSpeech(dt);
+  updateGps(dt);
   carVsBodies();
   if (player.car) { player.x = player.car.x; player.y = player.car.y; }
   if (mode === 'play') {
@@ -3088,7 +3108,7 @@ function update(dt) {
   cam.shake = Math.max(0, cam.shake - dt * 30);
 
   if (waypoint && !player.interior && Math.hypot(waypoint.x - playerPos().x, waypoint.y - playerPos().y) < 60) { waypoint = null; toast('Arrived at waypoint'); }
-  const dn = player.interior ? INTERIORS[player.interior].name : DISTRICTS[districtAtPx(player.x, player.y)].name;
+  const dn = player.region ? REGIONS[player.region].name : player.interior ? INTERIORS[player.interior].name : DISTRICTS[districtAtPx(player.x, player.y)].name;
   if (dn !== districtName) { districtName = dn; districtT = mode === 'play' ? 2.6 : 0; }
   districtT = Math.max(0, districtT - dt);
 
@@ -4213,6 +4233,509 @@ function drawNetHud(s) {
   }
 }
 
+// ─── Armenia: landmark destinations, reached through the Hayagram app ─────────
+// Each destination is its own outdoor area far west of the city (x < -20000), built the first time you visit.
+const REGION_SIZE = 1600;
+const DESTS = [
+  { key: 'yerevan', name: 'Yerevan', sub: 'The capital · the Pink City', user: '@yerevan.nights', likes: 4210,
+    blurb: 'The capital city, known as the "Pink City" for its rose-colored volcanic stone architecture.',
+    art: 'linear-gradient(#f7cfc4 0%, #eaa99c 48%, #c47a70 49%, #8f5450 100%)', col: '#f2a0a0', ground: '#9c9a7a', hills: '#8a7d68',
+    lines: [['Bari galust Yerevan, vardaguyn qaghaq!', 'Welcome to Yerevan, the pink city!'], ['Ays qarery tuf en, hraabkhayin qar.', 'These stones are tuff, a volcanic rock.'], ['Yereky shatrvany ergum e.', 'In the evening the fountain sings.']] },
+  { key: 'geghard', name: 'Geghard Monastery', sub: 'Carved into the mountain', user: '@ani.travels', likes: 2380,
+    blurb: 'UNESCO-listed monastery partially carved into a mountainside.',
+    art: 'linear-gradient(#b9c6c9 0%, #8f9690 50%, #6c6a62 51%, #4b4944 100%)', col: '#c9c1b2', ground: '#7d8060', hills: '#6f6a58',
+    lines: [['Geghardy kisov kerts e sari mej.', 'Geghard is half carved into the mountain.'], ['Ekeghetsum yergy hrashali e hnchum.', 'Singing sounds wonderful inside the church.']] },
+  { key: 'garni', name: 'Temple of Garni', sub: '1st century AD', user: '@hellenic.hayk', likes: 3120,
+    blurb: 'Ancient Greco-Roman pagan temple from the 1st century AD.',
+    art: 'linear-gradient(#cfe3ee 0%, #a8c3cf 50%, #9a948a 51%, #6a655e 100%)', col: '#d8d1c4', ground: '#8f8a5c', hills: '#7a7058', gorge: 300,
+    lines: [['Garnu tachary arajin dari e.', 'The Garni temple is from the 1st century.'], ['Nerqevum Qareri simfonian e.', 'Down below is the Symphony of Stones.']] },
+  { key: 'khorvirap', name: 'Khor Virap Monastery', sub: 'The best view of Ararat', user: '@masis.view', likes: 5230,
+    blurb: 'Famous for the best views of Mount Ararat.',
+    art: 'linear-gradient(#dbe8f2 0%, #f4f6f8 18%, #8a7466 36%, #c7ab86 62%, #8a7a5a 100%)', col: '#f2d29a', ground: '#a19a62', hills: '#8c7c5e', ararat: [800, -1750, 1.35],
+    lines: [['Aysteghits Araraty amenagheghetsikn e.', 'From here Ararat is at its most beautiful.'], ['Grigor Lusavorichy 13 tari ayste bantum er.', 'Gregory the Illuminator was imprisoned here for 13 years.']] },
+  { key: 'sevan', name: 'Lake Sevan', sub: 'High in the mountains', user: '@sevan.summer', likes: 3890,
+    blurb: "One of the world's largest high-altitude freshwater lakes.",
+    art: 'linear-gradient(#cfe6f4 0%, #7fb6d8 40%, #2f6f9a 41%, #1f4f74 100%)', col: '#7fc0ea', ground: '#8f9a62', hills: '#7c8466',
+    lines: [['Sevany mer tsovn e.', 'Sevan is our sea.'], ['Ishkhan dzuk kuzes?', 'Want some ishkhan trout?']] },
+  { key: 'etchmiadzin', name: 'Etchmiadzin Cathedral', sub: 'The oldest cathedral', user: '@mother.see', likes: 2970,
+    blurb: 'Considered the oldest cathedral in the world.',
+    art: 'linear-gradient(#e6eef2 0%, #cfd8dc 45%, #e3d8c4 46%, #a3947a 100%)', col: '#efe4cc', ground: '#8e9660', hills: '#8a8068',
+    lines: [['Mayr Ator Surb Echmiadzin.', 'The Mother See of Holy Etchmiadzin.'], ['Ashkharhi amenahin mayr tachary.', "The world's oldest cathedral."]] },
+  { key: 'noravank', name: 'Noravank Monastery', sub: 'In a red-rock canyon', user: '@red.canyon', likes: 3440,
+    blurb: 'Cliffside monastery in a striking red-rock canyon.',
+    art: 'linear-gradient(#f2d6b8 0%, #d99466 40%, #a24f36 41%, #6e2e1f 100%)', col: '#e58a5a', ground: '#9a7650', hills: '#a24f36',
+    lines: [['Qarery karmir en, inchpes krak.', 'The rocks are red, like fire.'], ['Astvatsatsni ekeghetsin erku harkani e.', 'The Holy Mother of God church has two floors.']] },
+  { key: 'dilijan', name: 'Dilijan', sub: "Armenia's Switzerland", user: '@forest.lover', likes: 2650,
+    blurb: 'Forested resort town known as "Armenia\'s Switzerland".',
+    art: 'linear-gradient(#d6ecd8 0%, #6f9a6a 45%, #3f6a34 46%, #24401f 100%)', col: '#8fd08a', ground: '#5f7a3e', hills: '#3f5e34',
+    lines: [['Dilijany Hayastani Shveytsarian e.', "Dilijan is Armenia's Switzerland."], ['Odn aystegh maqur e, antarn el khit.', 'The air is clean here and the forest is thick.']] },
+  { key: 'tatev', name: 'Tatev Monastery', sub: 'Wings of Tatev', user: '@wings.of.tatev', likes: 4480,
+    blurb: 'Accessed by the "Wings of Tatev", one of the world\'s longest cable cars.',
+    art: 'linear-gradient(#dcebf4 0%, #9fbfd4 44%, #6f7a52 45%, #3f4a30 100%)', col: '#c83a3a', ground: '#7a8452', hills: '#62704a', gorgeWest: 380,
+    lines: [['Tatevi Tevery amenaerkar chopanughinerits e.', 'The Wings of Tatev is among the longest cable cars.'], ['Tatevy mijnadaryan hamalsaran er.', 'Tatev was a medieval university.']] },
+  { key: 'jermuk', name: 'Jermuk', sub: 'Springs and a waterfall', user: '@jermuk.spa', likes: 1980,
+    blurb: 'Spa town known for mineral springs and a waterfall.',
+    art: 'linear-gradient(#e2eef2 0%, #b8d4dc 30%, #f4fbff 31%, #6d8a92 60%, #3f5058 100%)', col: '#9fe0f0', ground: '#6f8452', hills: '#5c6c48',
+    lines: [['Jermuki jury buzhum e.', 'Jermuk water heals.'], ['Jrvejy tes, inch geghetsik e!', 'Look at the waterfall, how beautiful!']] },
+  { key: 'gyumri', name: 'Gyumri', sub: 'Black and orange tuff', user: '@gyumretsi', likes: 2210,
+    blurb: "Armenia's second-largest city, known for 19th-century architecture.",
+    art: 'linear-gradient(#e8dccb 0%, #c89a74 44%, #3a3432 45%, #a85f3c 100%)', col: '#e0935f', ground: '#8a8a64', hills: '#7a7460',
+    lines: [['Gyumretsinery amenakatakasern en.', 'Gyumri folks are the funniest.'], ['Ays shenqery XIX dari en.', 'These buildings are from the 19th century.']] },
+  { key: 'aragats', name: 'Mount Aragats', sub: 'The highest peak', user: '@summit.hayk', likes: 1870,
+    blurb: "Armenia's highest peak, popular for hiking.",
+    art: 'linear-gradient(#e6f0f6 0%, #ffffff 25%, #9a9a8c 26%, #6c6a58 100%)', col: '#e6f0f6', ground: '#86826a', hills: '#8c8676', snow: true,
+    lines: [['Aragatsy Hayastani amenabardzr gagatn e.', "Aragats is Armenia's highest peak."], ['Qamin ujegh e, glkharkd dir.', 'The wind is strong, put your hat on.']] },
+  { key: 'ararat', name: 'Mount Ararat', sub: 'Seen from the Ararat Valley', user: '@apricot.valley', likes: 6120,
+    blurb: "Across the border in Turkey, but Armenia's national symbol, visible from Yerevan and Khor Virap.",
+    art: 'linear-gradient(#dbe8f2 0%, #ffffff 22%, #8a7466 40%, #b8a070 62%, #f2a800 100%)', col: '#f2a800', ground: '#9aa05a', hills: '#8c8060', ararat: [800, -2150, 1.7],
+    lines: [['Masisy mer sirtn e.', 'Masis, Mount Ararat, is our heart.'], ['Tsirany ayste amenaqaghtsrn e.', 'The apricots here are the sweetest.']] },
+];
+const REGIONS = {};
+DESTS.forEach((D, k) => { REGIONS[D.key] = { ...D, ox: -40000, oy: k * 12000, spawn: [800, 1250], guide: [880, 1180], solids: [], group: null, npcs: [], anims: [] }; });
+function regionAt(x, y) {
+  for (const k in REGIONS) { const R = REGIONS[k]; if (x >= R.ox - 60 && x <= R.ox + REGION_SIZE + 60 && y >= R.oy - 60 && y <= R.oy + REGION_SIZE + 60) return R; }
+  return null;
+}
+function regionSolid(x, y) {
+  const R = regionAt(x, y);
+  if (!R) return true;
+  const lx = x - R.ox, ly = y - R.oy;
+  if (lx < 24 || ly < 24 || lx > REGION_SIZE - 24 || ly > REGION_SIZE - 24) return true;
+  return R.solids.some(r => lx >= r[0] && lx <= r[2] && ly >= r[1] && ly <= r[3]);
+}
+let regionBack = null;
+const hg = { followers: 48, visited: new Set(), checkins: new Set(), pm: false };
+function travelBlocked() {
+  return stars() > 0 ? 'Lose the police before you travel' : activity ? 'Finish or abandon your current job first' : mode !== 'play' ? 'Not right now' : '';
+}
+function travelTo(key) {
+  const why = travelBlocked(); if (why) { toast(why, '#ff8a7a'); return; }
+  const R = REGIONS[key];
+  if (!player.region) regionBack = player.interior ? { ...INTERIORS[player.interior].street } : { x: playerPos().x, y: playerPos().y, a: player.car ? player.car.a : player.a };
+  if (player.car) exitCar(true);
+  if (player.interior === 'generic') disposeGeneric();
+  player.interior = null;
+  buildRegion(R);
+  player.region = key; player.x = R.ox + R.spawn[0]; player.y = R.oy + R.spawn[1]; player.a = -Math.PI / 2;
+  player.vx = player.vy = 0; fade = 1; camSnap = true; closePhone(); caption = null;
+  showBanner(R.name, R.sub, R.col, 4);
+  if (!hg.visited.has(key)) { hg.visited.add(key); hg.followers += 25; saveGame(); }
+  setTimeout(() => { if (player.region === key) say('guide:' + key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true); }, 1600);
+}
+function travelHome() {
+  if (!player.region) return;
+  const b = regionBack || { x: 26 * T, y: 32.65 * T, a: 0 };
+  player.region = null; player.x = b.x; player.y = b.y; player.a = b.a || 0; player.vx = player.vy = 0;
+  fade = 1; camSnap = true; closePhone(); caption = null;
+  toast('Back in Hayastan city', '#f2a800');
+}
+for (const R of Object.values(REGIONS)) {
+  SPEECH['guide:' + R.key] = R.lines;
+  interactables.push({ x: R.ox + R.spawn[0] - 70, y: R.oy + R.spawn[1] + 40, r: 30, label: 'Fly back to Hayastan city', act: travelHome });
+  interactables.push({ x: R.ox + R.guide[0], y: R.oy + R.guide[1], r: 30, label: 'Talk to the local', act: () => say('guide:' + R.key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true) });
+  interactables.push({ x: R.ox + R.spawn[0], y: R.oy + R.spawn[1] - 30, r: 26, when: () => player.region === R.key && !hg.checkins.has(R.key),
+    label: `Post a check-in on Hayagram`, act: () => { hg.checkins.add(R.key); hg.followers += 60 + Math.floor(Math.random() * 90); toast(`Checked in at ${R.name} · ${hg.followers} followers`, '#ff6fd8'); saveGame(); } });
+}
+
+// The Prime Minister greets visitors on Republic Square
+CAST.pm = ['Nikol Pashinyan', '#f2a23a'];
+{
+  const Y = REGIONS.yerevan;
+  interactables.push({ x: Y.ox + 800, y: Y.oy + 560, r: 34, label: 'Talk to Prime Minister Nikol Pashinyan', act: () => talk([
+    ['pm', 'Barev dzez! Bari galust Yerevan.', 'Hello! Welcome to Yerevan.'],
+    ['pm', 'Sa Hanrapetutyan hraparakn e, mer qaghaqi sirty.', 'This is Republic Square, the heart of our city.'],
+    ['you', 'Shat urakh em, varchapet.', 'Very glad to meet you, Prime Minister.'],
+    ['pm', 'Tes amboghj Hayastany: Garni, Sevan, Tatev, Gyumri...', 'See all of Armenia: Garni, Sevan, Tatev, Gyumri...'],
+    ['pm', 'Yev khndrum em, orenqy harkir.', 'And please, respect the law.'],
+  ], () => { if (!hg.pm) { hg.pm = true; hg.followers += 500; toast(`Selfie with the Prime Minister · ${hg.followers} followers`, '#ff6fd8'); saveGame(); } }) });
+}
+
+// ─── Region building helpers (local coordinates: x east, z south, 0..1600) ────
+function RB(R, x, z, w, d, h, color, o = {}) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), typeof color === 'string' ? cachedLam(color) : color);
+  m.position.set(R.ox + x, (o.y || 0) + h / 2, R.oy + z);
+  if (o.rot) m.rotation.y = o.rot;
+  m.castShadow = o.shadow !== false; m.receiveShadow = true; R.group.add(m);
+  if (o.solid) R.solids.push([x - w / 2 - 5, z - d / 2 - 5, x + w / 2 + 5, z + d / 2 + 5]);
+  return m;
+}
+function RCyl(R, x, z, rt, rb, h, color, seg = 12, y = 0, o = {}) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), typeof color === 'string' ? cachedLam(color) : color);
+  m.position.set(R.ox + x, y + h / 2, R.oy + z); m.castShadow = o.shadow !== false; m.receiveShadow = true; R.group.add(m);
+  if (o.solid) R.solids.push([x - rb - 5, z - rb - 5, x + rb + 5, z + rb + 5]);
+  return m;
+}
+const RCone = (R, x, z, r, h, color, seg = 8, y = 0, o = {}) => RCyl(R, x, z, 0, r, h, color, seg, y, o);
+function RPrism(R, x, z, len, w, h, color, y, alongX) {
+  const r = w / Math.sqrt(3), geo = new THREE.CylinderGeometry(r, r, len, 3);
+  geo.rotateX(-Math.PI / 2); geo.scale(1, h / (1.5 * r), 1); if (alongX) geo.rotateY(Math.PI / 2);
+  const m = new THREE.Mesh(geo, cachedLam(color)); m.position.set(R.ox + x, y + h / 3, R.oy + z); m.castShadow = true; R.group.add(m);
+  return m;
+}
+function RDisc(R, x, z, rx, rz, color, y = 0.6) {
+  const g = new THREE.CircleGeometry(1, 40); g.rotateX(-Math.PI / 2); g.scale(rx, 1, rz);
+  const m = new THREE.Mesh(g, cachedLam(color)); m.position.set(R.ox + x, y, R.oy + z); m.receiveShadow = true; R.group.add(m); return m;
+}
+const waterMat = lam('#2f6f9a', { emissive: new THREE.Color('#0b2a40'), transparent: true, opacity: 0.92 });
+function RWater(R, x, z, w, d, o = {}) {
+  const g = o.round ? new THREE.CircleGeometry(1, 40) : new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI / 2); g.scale(w / (o.round ? 2 : 1), 1, d / (o.round ? 2 : 1));
+  const m = new THREE.Mesh(g, waterMat); m.position.set(R.ox + x, o.y ?? 0.9, R.oy + z); R.group.add(m);
+  if (o.solid) R.solids.push([x - w / 2, z - d / 2, x + w / 2, z + d / 2]);
+  return m;
+}
+function RLine(R, a, b, radius, color) {
+  const A = new THREE.Vector3(R.ox + a[0], a[1], R.oy + a[2]), B = new THREE.Vector3(R.ox + b[0], b[1], R.oy + b[2]);
+  const dir = B.clone().sub(A), m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, dir.length(), 5), cachedLam(color));
+  m.position.copy(A).addScaledVector(dir, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()); R.group.add(m); return m;
+}
+function RTree(R, x, z, s = 1, kind = 'cone', col) {
+  RCyl(R, x, z, 1.6 * s, 2.2 * s, 12 * s, '#5a3e2a', 5);
+  if (kind === 'cone') { RCone(R, x, z, 13 * s, 34 * s, col || '#2f5a2c', 7, 10 * s); RCone(R, x, z, 10 * s, 24 * s, col || '#2f5a2c', 7, 26 * s); }
+  else {
+    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(12 * s, 0), cachedLam(col || '#4f7a3a')); m.position.set(R.ox + x, 20 * s, R.oy + z); m.castShadow = true; R.group.add(m);
+    if (kind === 'apricot') for (let k = 0; k < 5; k++) { const f = new THREE.Mesh(new THREE.IcosahedronGeometry(1.8 * s, 0), cachedLam('#f29a1e')); f.position.set(R.ox + x + Math.cos(k * 1.3) * 10 * s, 18 * s + (k % 3) * 3 * s, R.oy + z + Math.sin(k * 1.3) * 10 * s); R.group.add(f); }
+  }
+  R.solids.push([x - 5 * s, z - 5 * s, x + 5 * s, z + 5 * s]);
+}
+function RNPC(R, x, z, a, look) {
+  const g = buildPerson(look); g.position.set(R.ox + x, 0, R.oy + z); g.rotation.y = -a;
+  R.group.add(g); R.npcs.push({ g, x: R.ox + x, y: R.oy + z, a }); R.solids.push([x - 7, z - 7, x + 7, z + 7]);
+}
+const randomLook = () => { const p = makePed(0, 0); return { skin: p.skin, hair: p.hair, shirt: p.shirt, pants: p.pants, shoes: p.shoes, longHair: p.longHair }; };
+// A classic Armenian church: cross-shaped hall, drum and conical dome, door facing south (+z)
+function church(R, x, z, s, stone, roof, o = {}) {
+  const solid = o.solid !== false;
+  RB(R, x, z, 56 * s, 100 * s, 46 * s, stone, { solid });
+  RB(R, x, z - 12 * s, 96 * s, 44 * s, 46 * s, stone, { solid });
+  RPrism(R, x, z, 104 * s, 62 * s, 22 * s, roof, 46 * s, false);
+  RPrism(R, x, z - 12 * s, 100 * s, 50 * s, 22 * s, roof, 46 * s, true);
+  RCyl(R, x, z - 12 * s, 19 * s, 19 * s, (o.tall ? 54 : 34) * s, stone, 8, 52 * s);
+  const top = (o.tall ? 106 : 86) * s;
+  RCone(R, x, z - 12 * s, 23 * s, 30 * s, roof, 8, top);
+  RB(R, x, z - 12 * s, 1.6 * s, 1.6 * s, 14 * s, '#e0cf9a', { y: top + 28 * s, shadow: false });
+  RB(R, x, z - 12 * s, 8 * s, 1.6 * s, 1.6 * s, '#e0cf9a', { y: top + 36 * s, shadow: false });
+  RB(R, x, z + 50 * s + 0.6, 12 * s, 1.2, 24 * s, '#2a211c', { shadow: false });
+  if (o.belfry) {
+    const bz = z + 50 * s + 22 * s;
+    RB(R, x, bz, 34 * s, 34 * s, 44 * s, stone, { solid });
+    for (const dx of [-12, 12]) for (const dz of [-12, 12]) RB(R, x + dx * s, bz + dz * s, 5 * s, 5 * s, 22 * s, stone, { y: 44 * s });
+    RCone(R, x, bz, 22 * s, 22 * s, roof, 8, 66 * s);
+  }
+}
+function ararat(R, x, z, s) {
+  RCone(R, x, z, 1100 * s, 1500 * s, '#7d6a5c', 16, 0, { shadow: false });
+  RCone(R, x, z, 450 * s, 600 * s, '#f4f6f8', 16, 905 * s, { shadow: false });
+  const sx = x + 1500 * s, sz = z + 250 * s;
+  RCone(R, sx, sz, 620 * s, 760 * s, '#806e60', 14, 0, { shadow: false });
+  RCone(R, sx, sz, 150 * s, 185 * s, '#eef2f4', 14, 578 * s, { shadow: false });
+}
+// A gorge along one edge: the ground stops at a basalt cliff and drops away
+function gorge(R, at, west) {
+  const L = 14000, cliff = '#4d4943', far = 520;
+  const plane = (cx, cz, w, d, y, color) => { const g = new THREE.PlaneGeometry(w, d); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, cachedLam(color)); m.position.set(R.ox + cx, y, R.oy + cz); m.receiveShadow = true; R.group.add(m); };
+  if (!west) {
+    plane(800, at + L / 2, L, L, 0.3, R.ground); plane(800, at - far / 2, L, far, -420, '#3f4a34'); plane(800, at - far - L / 2, L, L, 0.3, R.ground);
+    RB(R, 800, at - 10, L, 20, 420, cliff, { y: -420, shadow: false }); RB(R, 800, at - far + 10, L, 20, 420, cliff, { y: -420, shadow: false });
+    R.solids.push([-100, -100, REGION_SIZE + 100, at + 8]);
+    for (let x = 20; x < REGION_SIZE; x += 22) RCyl(R, x, at - 24, 10, 10, 60 + (x * 37 % 50), '#3f3b36', 6, -60 - (x * 37 % 50) + 8, { shadow: false });
+  } else {
+    plane(at + L / 2, 800, L, L, 0.3, R.ground); plane(at - far / 2, 800, far, L, -420, '#3f4a34'); plane(at - far - L / 2, 800, L, L, 0.3, R.ground);
+    RB(R, at - 10, 800, 20, L, 420, cliff, { y: -420, shadow: false }); RB(R, at - far + 10, 800, 20, L, 420, cliff, { y: -420, shadow: false });
+    R.solids.push([-100, -100, at + 8, REGION_SIZE + 100]);
+  }
+  RWater(R, west ? at - far / 2 : 800, west ? 800 : at - far / 2, west ? 40 : L, west ? L : 40, { y: -418 });
+}
+
+const REGION_BUILD = {
+  yerevan(R, rnd) {
+    const pink = '#d9a08f', pink2 = '#c98b7e', trim = '#b87466';
+    RDisc(R, 800, 720, 330, 230, '#b3a097'); RDisc(R, 800, 720, 200, 130, '#a38d86', 0.8); RDisc(R, 800, 720, 70, 46, '#c7b3a8', 1);
+    // Government House with its clock tower
+    RB(R, 800, 380, 560, 90, 80, pink, { solid: true }); RB(R, 800, 380, 574, 100, 6, trim, { y: 80 });
+    for (let k = 0; k < 13; k++) RB(R, 560 + k * 40, 426, 22, 2, 36, '#5a3a34', { shadow: false });
+    RB(R, 800, 380, 64, 64, 160, pink); RB(R, 800, 380, 74, 74, 8, trim, { y: 160 }); RPrism(R, 800, 380, 70, 70, 26, trim, 168, true);
+    RCyl(R, 800, 413, 13, 13, 1.5, '#f4efe4', 20, 122).rotation.x = Math.PI / 2;
+    // The curved museum and hotel on either side
+    RB(R, 1190, 720, 150, 400, 72, pink2, { solid: true }); RB(R, 410, 720, 150, 400, 72, pink2, { solid: true });
+    for (let k = 0; k < 9; k++) { RB(R, 1114, 560 + k * 40, 2, 22, 30, '#5a3a34', { shadow: false }); RB(R, 486, 560 + k * 40, 2, 22, 30, '#5a3a34', { shadow: false }); }
+    RB(R, 1190, 720, 160, 410, 5, trim, { y: 72 }); RB(R, 410, 720, 160, 410, 5, trim, { y: 72 });
+    // Singing fountains
+    RB(R, 800, 1000, 380, 90, 6, '#9a8a80', { solid: true }); RWater(R, 800, 1000, 360, 70, { y: 6.5 });
+    const jetMat = basic(0xdff4ff, { transparent: true, opacity: 0.65 }), jets = [];
+    for (let k = 0; k < 9; k++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 3, 40, 6), jetMat); j.position.set(R.ox + 640 + k * 40, 26, R.oy + 1000); R.group.add(j); jets.push(j); }
+    R.anims.push(t => jets.forEach((j, i) => { const h = 0.5 + 0.5 * Math.abs(Math.sin(t * 1.6 + i * 0.7)); j.scale.y = h; j.position.y = 6 + 20 * h; }));
+    // Pink city blocks around the square
+    for (let k = 0; k < 7; k++) RB(R, 180 + k * 210, 150, 170, 120, 90 + rnd() * 70, rnd() < 0.5 ? pink : pink2, { solid: true });
+    for (const x of [150, 1450]) for (let k = 0; k < 4; k++) RB(R, x, 420 + k * 260, 150, 200, 70 + rnd() * 60, rnd() < 0.5 ? pink : pink2, { solid: true });
+    for (let k = 0; k < 12; k++) { RTree(R, 560 + k * 44, 1090, 0.9, 'round'); }
+    ararat(R, 800, -2600, 1.1);
+    // The Prime Minister and his security detail
+    RNPC(R, 800, 520, Math.PI / 2, { skin: '#c9a07e', hair: '#4a4540', shirt: '#1f2a44', pants: '#1f2a44', shoes: '#111111', goatee: true, buzz: true });
+    RNPC(R, 766, 506, Math.PI / 2, { skin: '#b98a66', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true });
+    RNPC(R, 834, 506, Math.PI / 2, { skin: '#c49673', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true });
+    RB(R, 800, 470, 50, 8, 1, '#8a1020', { y: 0.2, shadow: false });
+  },
+  geghard(R, rnd) {
+    RB(R, 800, 170, 1500, 280, 330, '#7b746a', { solid: true });
+    RB(R, 130, 800, 240, 1500, 260, '#857c70', { solid: true }); RB(R, 1470, 800, 240, 1500, 260, '#857c70', { solid: true });
+    for (let k = 0; k < 26; k++) { const x = 60 + rnd() * 1480; RB(R, x, 320 + rnd() * 20, 50 + rnd() * 80, 40, 40 + rnd() * 120, rnd() < 0.5 ? '#8a8276' : '#6f685e', { rot: rnd() * 0.6 }); }
+    church(R, 800, 420, 1.3, '#9b9388', '#6e675d', { solid: true });
+    for (const x of [600, 1000]) RB(R, x, 311, 54, 2, 70, '#1f1b18', { shadow: false });
+    for (let k = 0; k < 8; k++) { const x = 480 + k * 90 + rnd() * 20; RB(R, x, 700 + rnd() * 60, 14, 4, 26, '#a39a8c', { solid: true }); }
+    RB(R, 605, 900, 310, 14, 40, '#8a8276', { solid: true }); RB(R, 995, 900, 310, 14, 40, '#8a8276', { solid: true }); RB(R, 800, 900, 90, 16, 12, '#8a8276', { y: 40 });
+    for (let k = 0; k < 14; k++) RTree(R, 260 + rnd() * 1100, 980 + rnd() * 160, 0.9, 'round', '#5a7a3a');
+  },
+  garni(R, rnd) {
+    const basalt = '#8e8a84', basalt2 = '#a19c93';
+    RB(R, 800, 560, 200, 300, 24, basalt, { solid: true });
+    RB(R, 800, 722, 120, 26, 16, basalt); RB(R, 800, 738, 120, 14, 8, basalt);
+    for (let i = 0; i < 6; i++) for (const z of [420, 700]) RCyl(R, 715 + i * 34, z, 7, 7.5, 90, basalt2, 10, 24);
+    for (let k = 1; k < 7; k++) for (const x of [715, 885]) RCyl(R, x, 420 + k * 40, 7, 7.5, 90, basalt2, 10, 24);
+    RB(R, 800, 545, 120, 180, 90, '#8a857d', { y: 24 });
+    RB(R, 800, 560, 204, 304, 16, basalt, { y: 114 }); RPrism(R, 800, 560, 304, 206, 40, basalt2, 130, false);
+    for (let k = 0; k < 10; k++) RTree(R, 250 + rnd() * 1100, 900 + rnd() * 300, 0.9, 'round', '#6a8a3a');
+    RB(R, 1150, 800, 140, 90, 40, '#c9b9a0', { solid: true }); RPrism(R, 1150, 800, 140, 96, 24, '#8a3a2a', 40, true);
+  },
+  khorvirap(R, rnd) {
+    const wall = '#b59b7a';
+    RB(R, 800, 440, 380, 14, 46, wall, { solid: true });
+    RB(R, 610, 620, 14, 380, 46, wall, { solid: true }); RB(R, 990, 620, 14, 380, 46, wall, { solid: true });
+    RB(R, 690, 800, 160, 14, 46, wall, { solid: true }); RB(R, 910, 800, 160, 14, 46, wall, { solid: true });
+    for (const [x, z] of [[610, 440], [990, 440], [610, 800], [990, 800]]) RCyl(R, x, z, 18, 20, 62, wall, 10, 0, { solid: true });
+    church(R, 820, 600, 1.1, '#c2a887', '#8b7a66', { belfry: false });
+    church(R, 690, 530, 0.55, '#c2a887', '#8b7a66');
+    for (let r = 0; r < 8; r++) for (let k = 0; k < 10; k++) { RB(R, 180 + k * 40, 950 + r * 34, 30, 6, 10, '#4f7a2a', { shadow: false }); RB(R, 1080 + k * 40, 950 + r * 34, 30, 6, 10, '#4f7a2a', { shadow: false }); }
+    ararat(R, ...R.ararat);
+  },
+  sevan(R, rnd) {
+    RWater(R, 800, -2600, 14000, 6600);
+    RB(R, 800, 450, 230, 520, 2, '#8f9a62', { shadow: false }); RB(R, 800, 760, 1600, 120, 1.4, '#d8c49a', { shadow: false });
+    R.solids.push([0, 0, 685, 695], [915, 0, 1600, 695], [685, 0, 915, 185]);
+    church(R, 750, 330, 0.7, '#4a403c', '#3a322e'); church(R, 860, 410, 0.6, '#4a403c', '#3a322e');
+    const boats = [];
+    for (let k = 0; k < 4; k++) { const b = RB(R, 300 + k * 330, 300 + (k % 2) * 180, 20, 44, 8, k % 2 ? '#e8e4dc' : '#c83a3a'); boats.push(b); }
+    R.anims.push(t => boats.forEach((b, i) => { b.position.y = 4 + Math.sin(t * 1.5 + i) * 1.2; b.rotation.z = Math.sin(t * 1.1 + i) * 0.05; }));
+    for (let k = 0; k < 8; k++) RB(R, 150 + k * 190, 800, 30, 30, 3, k % 2 ? '#f2a800' : '#d90012', { y: 16 });
+  },
+  etchmiadzin(R, rnd) {
+    RB(R, 800, 700, 90, 800, 0.8, '#cfc4b0', { shadow: false }); RB(R, 800, 560, 520, 420, 0.6, '#6f8f44', { shadow: false });
+    church(R, 800, 520, 1.7, '#e3d8c4', '#8f989c', { tall: true, belfry: true });
+    for (const [dx, dz] of [[-72, -20], [72, -20], [0, -100]]) { RCyl(R, 800 + dx, 520 + dz, 11, 11, 18, '#e3d8c4', 8, 78); RCone(R, 800 + dx, 520 + dz, 14, 20, '#8f989c', 8, 96); }
+    RB(R, 740, 1000, 26, 26, 70, '#d8ccb6', { solid: true }); RB(R, 860, 1000, 26, 26, 70, '#d8ccb6', { solid: true }); RB(R, 800, 1000, 150, 30, 20, '#d8ccb6', { y: 70 });
+    for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2; RTree(R, 800 + Math.cos(a) * 330, 560 + Math.sin(a) * 250, 1, 'round'); }
+    RB(R, 420, 800, 180, 120, 50, '#d8ccb6', { solid: true }); RB(R, 1180, 800, 180, 120, 50, '#d8ccb6', { solid: true });
+  },
+  noravank(R, rnd) {
+    const reds = ['#a24f36', '#b8623f', '#8e4330', '#c06a44'];
+    for (let k = 0; k < 16; k++) { RB(R, 110 + rnd() * 90, 100 + k * 95, 200, 120, 240 + rnd() * 240, reds[k % 4], { solid: true, rot: rnd() * 0.3 }); RB(R, 1490 - rnd() * 90, 100 + k * 95, 200, 120, 240 + rnd() * 240, reds[(k + 2) % 4], { solid: true, rot: rnd() * 0.3 }); }
+    RB(R, 800, 120, 1500, 160, 380, '#9a4a32', { solid: true });
+    church(R, 690, 560, 1.1, '#c18a64', '#8f5d40');
+    const x = 950, z = 590, st = '#c99a74';
+    RB(R, x, z, 74, 84, 70, st, { solid: true });
+    for (let k = 0; k < 7; k++) RB(R, x - 30 + k * 7, z + 45 + k * 0.1, 7, 12, 3, st, { y: 8 + k * 9 });
+    RCyl(R, x, z, 30, 32, 44, st, 12, 70);
+    for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; RCyl(R, x + Math.cos(a) * 30, z + Math.sin(a) * 30, 2.5, 2.5, 34, '#e0c09a', 6, 114); }
+    RCone(R, x, z, 36, 34, '#8f5d40', 12, 148);
+    for (let k = 0; k < 10; k++) RTree(R, 400 + rnd() * 800, 900 + rnd() * 300, 0.8, 'round', '#6a7a3a');
+  },
+  dilijan(R, rnd) {
+    for (let k = 0; k < 7; k++) {
+      const x = 360 + (k % 4) * 260, z = 520 + Math.floor(k / 4) * 260;
+      RB(R, x, z, 90, 64, 48, '#e8dcc4', { solid: true }); RB(R, x, z + 36, 90, 10, 3, '#6b4a2e', { y: 26 });
+      for (let b = 0; b < 5; b++) RB(R, x - 40 + b * 20, z + 40, 2, 2, 12, '#6b4a2e', { y: 28 });
+      RPrism(R, x, z, 96, 72, 30, '#a3402e', 48, true);
+    }
+    RWater(R, 1260, 330, 360, 220, { round: true, solid: true });
+    for (let k = 0; k < 180; k++) {
+      const x = 60 + rnd() * 1480, z = 60 + rnd() * 1480;
+      if (Math.abs(x - 800) < 90 && z > 400) continue;
+      if (z > 440 && z < 860 && x > 270 && x < 1180) continue;
+      if (Math.hypot(x - 1260, z - 330) < 200 || Math.hypot(x - 800, z - 1250) < 140) continue;
+      RTree(R, x, z, 0.9 + rnd() * 0.8, 'cone', rnd() < 0.5 ? '#2f5a2c' : '#27492a');
+    }
+  },
+  tatev(R, rnd) {
+    gorge(R, 380, true);
+    const st = '#9c8f7c';
+    RB(R, 900, 380, 460, 14, 50, st, { solid: true }); RB(R, 670, 580, 14, 400, 50, st, { solid: true }); RB(R, 1130, 580, 14, 400, 50, st, { solid: true });
+    RB(R, 770, 780, 200, 14, 50, st, { solid: true }); RB(R, 1030, 780, 200, 14, 50, st, { solid: true });
+    church(R, 900, 540, 1.3, st, '#6e6456', { tall: true });
+    RCyl(R, 790, 680, 3, 3, 40, '#b8ab96', 8, 0, { solid: true }); RB(R, 790, 680, 10, 10, 6, '#b8ab96', { y: 40 });
+    RB(R, 1060, 700, 50, 50, 70, st, { solid: true }); RCone(R, 1060, 700, 32, 26, '#6e6456', 8, 70);
+    // The Wings of Tatev: a pylon on this side and cables across the gorge
+    RB(R, 470, 1060, 18, 18, 160, '#7a7f86', { solid: true }); RB(R, 470, 1060, 60, 8, 8, '#7a7f86', { y: 160 });
+    const A = [470, 166, 1046], B = [-3200, 380, 900], A2 = [470, 166, 1074], B2 = [-3200, 380, 928];
+    RLine(R, A, B, 0.9, '#2a2c30'); RLine(R, A2, B2, 0.9, '#2a2c30');
+    const cabin = (col) => { const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.BoxGeometry(40, 22, 26), cachedLam(col)); c.position.y = -26; const w = new THREE.Mesh(new THREE.BoxGeometry(41, 8, 27), basic(0x9fd4e8)); w.position.y = -22; const arm = new THREE.Mesh(new THREE.BoxGeometry(2, 16, 2), cachedLam('#2a2c30')); arm.position.y = -8; g.add(c, w, arm); R.group.add(g); return g; };
+    const c1 = cabin('#c83a3a'), c2 = cabin('#e8e4dc');
+    const lerp3 = (P, Q, u, g) => g.position.set(R.ox + P[0] + (Q[0] - P[0]) * u, P[1] + (Q[1] - P[1]) * u, R.oy + P[2] + (Q[2] - P[2]) * u);
+    R.anims.push(t => { const u = 0.5 + 0.5 * Math.sin(t * 0.05); lerp3(A, B, u, c1); lerp3(A2, B2, 1 - u, c2); });
+  },
+  jermuk(R, rnd) {
+    RB(R, 800, 170, 1500, 180, 280, '#5d5750', { solid: true });
+    RB(R, 800, 330, 280, 120, 1, '#3b5a66', { shadow: false }); RWater(R, 800, 330, 270, 110, { solid: true, y: 1.5 });
+    const fallMat = basic(0xf4fbff, { transparent: true, opacity: 0.8 }), falls = [];
+    for (let k = 0; k < 10; k++) { const f = new THREE.Mesh(new THREE.PlaneGeometry(9, 270), fallMat); f.position.set(R.ox + 752 + k * 11, 135, R.oy + 262 + (k % 2)); R.group.add(f); falls.push(f); }
+    const foam = []; for (let k = 0; k < 6; k++) { const f = new THREE.Mesh(new THREE.IcosahedronGeometry(10, 0), fallMat); f.position.set(R.ox + 760 + k * 16, 4, R.oy + 290); R.group.add(f); foam.push(f); }
+    R.anims.push(t => { falls.forEach((f, i) => { f.scale.x = 0.8 + 0.3 * Math.sin(t * 7 + i * 1.7); }); foam.forEach((f, i) => f.scale.setScalar(0.8 + 0.4 * Math.abs(Math.sin(t * 3 + i)))); });
+    RB(R, 800, 760, 440, 60, 6, '#d8ccb6', { solid: true });
+    for (let k = 0; k < 12; k++) for (const z of [735, 785]) RCyl(R, 600 + k * 36, z, 5, 5, 60, '#e8dfcc', 10, 6);
+    RB(R, 800, 760, 450, 70, 8, '#d8ccb6', { y: 66 });
+    for (let k = 0; k < 5; k++) RCyl(R, 640 + k * 80, 760, 5, 7, 16, '#b8ab96', 8, 6);
+    for (const x of [240, 1360]) for (let k = 0; k < 3; k++) RB(R, x, 480 + k * 280, 200, 180, 90 + rnd() * 50, '#e6e0d2', { solid: true });
+    for (let k = 0; k < 40; k++) { const x = 100 + rnd() * 1400, z = 950 + rnd() * 500; if (Math.hypot(x - 800, z - 1250) > 140) RTree(R, x, z, 0.9, 'cone'); }
+  },
+  gyumri(R, rnd) {
+    RB(R, 800, 760, 1300, 900, 0.7, '#6e645c', { shadow: false });
+    const tufs = ['#3a3432', '#a85f3c', '#4a4240', '#b86e48'];
+    const block = (x, z, w, d, rot) => {
+      const col = tufs[Math.floor(rnd() * 4)];
+      RB(R, x, z, w, d, 62, col, { solid: true, rot });
+      for (let k = 0; k < Math.floor(w / 30); k++) for (const y of [12, 40]) RB(R, x - w / 2 + 16 + k * 30, z + d / 2 + 0.6, 12, 1, 16, '#1c1816', { y, shadow: false });
+      RB(R, x, z, w + 6, d + 6, 5, '#2a2422', { y: 62 });
+    };
+    for (let k = 0; k < 6; k++) block(260 + k * 216, 250, 190, 90);
+    for (let k = 0; k < 3; k++) { block(170, 500 + k * 230, 120, 190); block(1430, 500 + k * 230, 120, 190); }
+    church(R, 800, 520, 1.4, '#6a4a3e', '#3a302c', { tall: true });
+    church(R, 1080, 620, 0.8, '#8a5a44', '#4a3a32');
+    for (let k = 0; k < 10; k++) RTree(R, 560 + k * 52, 900, 0.9, 'round');
+  },
+  aragats(R, rnd) {
+    for (const [x, z, r, h] of [[350, -900, 900, 1100], [1250, -800, 820, 1000], [800, -1500, 1200, 1350], [2350, -200, 700, 800]]) {
+      RCone(R, x, z, r, h, '#8c8676', 12, 0, { shadow: false }); RCone(R, x, z, r * 0.36, h * 0.36, '#f4f6f8', 12, h * 0.645, { shadow: false });
+    }
+    for (let k = 0; k < 60; k++) { const x = 60 + rnd() * 1480, z = 60 + rnd() * 1400; if (Math.hypot(x - 800, z - 1250) < 160 || Math.hypot(x - 1150, z - 650) < 200) continue; RB(R, x, z, 14 + rnd() * 30, 12 + rnd() * 24, 6 + rnd() * 20, rnd() < 0.5 ? '#77756a' : '#8f8c80', { rot: rnd() * 3, solid: true }); }
+    RWater(R, 1150, 650, 320, 220, { round: true, solid: true });
+    RB(R, 520, 700, 70, 44, 30, '#b8b2a4', { solid: true }); RPrism(R, 520, 700, 74, 50, 18, '#6a4a3a', 30, true);
+    RNPC(R, 700, 820, 0.5, { ...randomLook(), shirt: '#d90012' }); RNPC(R, 1000, 900, 2.4, { ...randomLook(), shirt: '#0033a0', cap: true });
+  },
+  ararat(R, rnd) {
+    ararat(R, ...R.ararat);
+    for (let r = 0; r < 6; r++) for (let k = 0; k < 8; k++) RTree(R, 220 + k * 64, 520 + r * 70, 0.9, 'apricot');
+    for (let r = 0; r < 10; r++) for (let k = 0; k < 10; k++) RB(R, 980 + k * 44, 520 + r * 40, 34, 6, 10, '#4f7a2a', { shadow: false });
+    RB(R, 800, 1000, 110, 80, 50, '#d8c4a0', { solid: true }); RPrism(R, 800, 1000, 116, 86, 26, '#a3402e', 50, true);
+    RB(R, 870, 1050, 60, 30, 8, '#c9a26a', { y: 10 });
+  },
+};
+function buildRegion(R) {
+  if (R.group) return;
+  const g = R.group = new THREE.Group(); scene.add(g);
+  let seed = R.oy + 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed & 0xffff) / 0x10000; };
+  if (!R.gorge && !R.gorgeWest) { const gr = new THREE.Mesh(new THREE.CircleGeometry(7000, 48).rotateX(-Math.PI / 2), cachedLam(R.ground)); gr.position.set(R.ox + 800, 0, R.oy + 800); gr.receiveShadow = true; g.add(gr); }
+  for (let k = 0; k < 24; k++) {
+    const a = k / 24 * Math.PI * 2 + rnd() * 0.2, d = 3000 + rnd() * 1500, h = 380 + rnd() * 700, r = 520 + rnd() * 620;
+    RCone(R, 800 + Math.cos(a) * d, 800 + Math.sin(a) * d, r, h, R.hills, 7, 0, { shadow: false });
+    if (R.snow || h > 980) RCone(R, 800 + Math.cos(a) * d, 800 + Math.sin(a) * d, r * 0.3, h * 0.3, '#eef2f4', 7, h * 0.705, { shadow: false });
+  }
+  if (R.gorge) gorge(R, R.gorge);
+  REGION_BUILD[R.key](R, rnd);
+  // Arrival point: a Hayagram pin and a helipad-style ring to fly home
+  const ring = new THREE.Mesh(new THREE.RingGeometry(20, 26, 32).rotateX(-Math.PI / 2), basic(0xff6fd8, { ...additive, opacity: 0.85 }));
+  ring.position.set(R.ox + R.spawn[0] - 70, 1.2, R.oy + R.spawn[1] + 40); g.add(ring);
+  RB(R, R.spawn[0] - 100, R.spawn[1] + 40, 4, 4, 44, '#2a2c30'); RB(R, R.spawn[0] - 100, R.spawn[1] + 40, 3, 34, 20, '#ff6fd8', { y: 44 });
+  R.solids.push([R.spawn[0] - 106, R.spawn[1] + 34, R.spawn[0] - 94, R.spawn[1] + 46]);
+  RNPC(R, R.guide[0], R.guide[1], Math.atan2(R.spawn[1] - R.guide[1], R.spawn[0] - R.guide[0]), { ...randomLook(), shirt: '#f2a800' });
+  for (let k = 0; k < 3; k++) { const x = 500 + rnd() * 600, z = 1080 + rnd() * 120; if (!regionSolid(R.ox + x, R.oy + z) && Math.hypot(x - R.spawn[0], z - R.spawn[1]) > 60) RNPC(R, x, z, rnd() * 6, randomLook()); }
+  // Anything built on the spawn point would trap the player: clear it
+  R.solids = R.solids.filter(r => !(R.spawn[0] >= r[0] - 8 && R.spawn[0] <= r[2] + 8 && R.spawn[1] >= r[1] - 8 && R.spawn[1] <= r[3] + 8));
+  g.visible = false;
+}
+function updateRegions() {
+  for (const R of Object.values(REGIONS)) if (R.group) {
+    const on = player.region === R.key; R.group.visible = on;
+    if (on) { for (const n of R.npcs) posePerson(n.g, n.x, n.y, n.a, 0, false, false, 1); for (const f of R.anims) f(time); }
+  }
+}
+
+// ─── Hayagram: the social app on your phone ──────────────────────────────────
+function hayagramApp() {
+  const head = el('div', 'hg-head');
+  head.append(el('b', '', '@you'), el('span', '', `${hg.followers.toLocaleString()} followers · ${hg.visited.size} of ${DESTS.length} places`));
+  phBody.append(head);
+  if (player.region) phItem('Back to Hayastan city', 'Fly home to where you left off', travelHome);
+  const why = travelBlocked();
+  if (why && !player.region) phNote(why);
+  for (const D of DESTS) {
+    const post = el('article', 'hg-post');
+    const top = el('div', 'hg-top'); top.append(el('b', '', D.user), el('span', '', hg.visited.has(D.key) ? 'visited' : ''));
+    const pic = el('div', 'hg-pic'); pic.style.background = D.art; pic.append(el('span', '', D.name));
+    const body = el('p', 'hg-text', D.blurb);
+    const foot = el('div', 'hg-foot');
+    foot.append(el('span', '', `♥ ${(D.likes + (hg.visited.has(D.key) ? 1 : 0)).toLocaleString()}`));
+    const go = el('button', 'hg-go', player.region === D.key ? 'You are here' : 'Teleport'); go.type = 'button';
+    go.disabled = player.region === D.key || !!why;
+    go.addEventListener('click', () => travelTo(D.key));
+    foot.append(go);
+    post.append(top, pic, body, foot); phBody.append(post);
+  }
+  phBody.querySelector('button')?.focus({ preventScroll: true });
+}
+
+// ─── GPS: a route along the streets to your waypoint or objective ────────────
+const gps = { goal: null, path: null, t: 0, text: '', dist: 0 };
+function nearestNode(x, y) {
+  let best = null, bd = 1e9;
+  for (let i = 0; i < NNX; i++) for (let j = 0; j < NN; j++) {
+    if (![0, 1, 2, 3].some(d => validDir([i, j], d))) continue;
+    const [nx, ny] = nodePos(i, j), d = Math.hypot(nx - x, ny - y);
+    if (d < bd) { bd = d; best = [i, j]; }
+  }
+  return best;
+}
+function gpsRoute(from, to) {
+  const a = nearestNode(from.x, from.y), b = nearestNode(to.x, to.y);
+  if (!a || !b) return null;
+  const key = n => n[0] * 100 + n[1], prev = new Map([[key(a), null]]), q = [a];
+  while (q.length) {
+    const n = q.shift(); if (n[0] === b[0] && n[1] === b[1]) break;
+    for (let d = 0; d < 4; d++) { if (!validDir(n, d)) continue; const m = [n[0] + DIRS[d][0], n[1] + DIRS[d][1]]; if (!prev.has(key(m))) { prev.set(key(m), n); q.push(m); } }
+  }
+  if (!prev.has(key(b))) return null;
+  const nodes = []; for (let n = b; n; n = prev.get(key(n))) nodes.unshift(n);
+  return nodes;
+}
+function updateGps(dt) {
+  gps.t -= dt;
+  const p = playerPos(), goal = gps.goal;
+  if (!goal || player.interior || player.region || (player.car && player.car.spec.air) || mode !== 'play') { gps.path = null; gps.text = ''; return; }
+  if (gps.t > 0) return;
+  gps.t = 0.5;
+  const nodes = gpsRoute(p, goal);
+  if (!nodes) { gps.path = null; gps.text = ''; return; }
+  const pts = [[p.x, p.y], ...nodes.map(n => nodePos(n[0], n[1])), [goal.x, goal.y]];
+  gps.path = pts;
+  let total = 0; for (let k = 1; k < pts.length; k++) total += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]);
+  gps.dist = total;
+  // Next turn: the first node where the street direction changes
+  const dirOf = (n, m) => DIRS.findIndex(D => D[0] === Math.sign(m[0] - n[0]) && D[1] === Math.sign(m[1] - n[1]));
+  let text = total < 90 ? 'Arriving' : 'Continue straight', acc = Math.hypot(pts[1][0] - p.x, pts[1][1] - p.y);
+  for (let k = 1; k < nodes.length - 1; k++) {
+    const d0 = dirOf(nodes[k - 1], nodes[k]), d1 = dirOf(nodes[k], nodes[k + 1]);
+    acc += Math.hypot(...nodePos(...nodes[k]).map((v, i) => v - nodePos(...nodes[k - 1])[i]));
+    if (d0 !== d1) {
+      const turn = (d1 - d0 + 4) % 4 === 1 ? 'Turn right' : (d1 - d0 + 4) % 4 === 3 ? 'Turn left' : 'Make a U-turn';
+      const street = d1 % 2 === 0 ? H_STREETS[nodes[k][1]] : V_STREETS[nodes[k][0]];
+      text = `${turn} in ${Math.max(10, Math.round(acc / 5 / 10) * 10)} m onto ${street}`; break;
+    }
+  }
+  gps.text = text;
+}
+function drawGpsRoute(toXY, width, color) {
+  if (!gps.path) return;
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath(); gps.path.forEach(([x, y], k) => { const [a, b] = toXY(x, y); if (k) ctx.lineTo(a, b); else ctx.moveTo(a, b); }); ctx.stroke(); ctx.restore();
+}
+function drawGpsPanel(s) {
+  if (!gps.path || !gps.text || mode === 'talk') return;
+  const w = Math.min(340, vw - 32), x = vw / 2 - w / 2, y = insetTop + 16 + 58 * s;
+  ctx.save(); ctx.fillStyle = 'rgba(12,14,18,0.8)'; ctx.beginPath(); ctx.roundRect(x, y, w, 30, 15); ctx.fill();
+  ctx.fillStyle = '#d66bff'; ctx.beginPath(); ctx.arc(x + 15, y + 15, 6, 0, 7); ctx.fill();
+  ctx.textAlign = 'left'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
+  ctx.fillText(`GPS · ${gps.text}`, x + 28, y + 19, w - 100);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#d66bff'; ctx.fillText(`${Math.round(gps.dist / 5)} m`, x + w - 14, y + 19);
+  ctx.restore();
+}
+
 let luckyWheel = null;
 {
   const I = INTERIORS.casino;
@@ -4441,7 +4964,7 @@ function syncEntities() {
     posePerson(g, p.x, p.y, p.a, p.phase, p.moving !== false, p.state === 'down', p.downT > 9 ? Math.max(0.01, 1 - (p.downT - 9) / 3) : 1, { run: p.fleeT > 0 });
   }
   const riding = !!(player.car && player.car.spec.bike), wpn = WEAPONS[player.weapon];
-  playerMesh.visible = (!player.car || riding) && mode !== 'title';
+  playerMesh.visible = (!player.car || riding) && mode !== 'title' && camMode !== 'first';
   const pSpeed = Math.hypot(player.vx, player.vy), armed = !wpn.melee && player.ammo[player.weapon] > 0;
   if (riding) {
     const bg = carMeshes.get(player.car);
@@ -4478,8 +5001,9 @@ function syncEntities() {
   if (waypoint) { wpMarker.position.set(waypoint.x, 0, waypoint.y); wpMarker.userData.ring.scale.setScalar(pulse); wpMarker.userData.box.position.y = 24 + bob; }
   const actT = activityTarget() || (freeEvent && !activity ? freeEvent.car || freeEvent.ped : null);
   const target = waypoint || actT || storyTarget() || (activity ? null : job.state === 'offer' ? job.pickup : job.state === 'active' ? job.drop : null);
+  gps.goal = target;
   const p = playerPos();
-  guideArrow.visible = !!(target && mode === 'play' && !player.interior && Math.hypot(target.x - p.x, target.y - p.y) > 160);
+  guideArrow.visible = !!(target && mode === 'play' && !player.interior && !player.region && Math.hypot(target.x - p.x, target.y - p.y) > 160);
   if (guideArrow.visible) {
     arrowMat.color.set(waypoint ? 0xd66bff : !actT && storyTarget() ? 0xff7a3d : actT ? (activity && activity.race ? 0x4fc3ff : activity ? 0xffd35a : 0xff5f5f) : job.state === 'active' ? 0x5fd4c4 : 0xffb347);
     guideArrow.position.set(p.x, (player.car ? 38 : 33) + bob * 0.3, p.y);
@@ -4489,6 +5013,7 @@ function syncEntities() {
 
   // Interiors: idle NPCs, slot screens, roulette wheel, TV flicker, windows follow the sky
   interiorGroup.visible = !!player.interior;
+  updateRegions();
   if (player.interior) {
     for (const n of interiorNPCs) posePerson(n.g, n.x, n.y, n.a, 0, false, false, 1);
     slotScreens.forEach((m, i) => {
@@ -4598,7 +5123,7 @@ function applyTimeOfDay() {
   lampBulbMat.color.set(night > 0.3 ? 0xffd08a : 0x8a8274);
   beamMat.opacity = 0.05 + 0.28 * night;
   headSpot.intensity = 0.3 + 1.5 * night;
-  if (mode !== 'title') scene.fog.density = 0.0011 + 0.0005 * night;
+  if (mode !== 'title') scene.fog.density = (0.0011 + 0.0005 * night) * (player.region ? 0.22 : 1);
   const g = A.grade.map((v, k) => lerp(v, B.grade[k]));
   gradeEl.hidden = !FX.colorGrade;
   if (FX.colorGrade) gradeEl.style.background = `rgba(${g[0] | 0},${g[1] | 0},${g[2] | 0},${g[3].toFixed(3)})`;
@@ -4623,6 +5148,17 @@ function updateCamera(dt) {
     camera.position.lerp(camWant, FX.smoothCamera ? Math.min(1, dt * 2) : 1);
     camLook.set(cx, 0, cz);
     scene.fog.density = 0.0009;
+  } else if (camMode === 'first') {
+    // Eyes of the player: on foot at head height, in a vehicle from the driver's seat
+    const p = playerPos(), pc = player.car, hd = pc ? pc.a : player.a;
+    const spd = pc ? Math.hypot(pc.vx, pc.vy) : 0, az = pc ? pc.z || 0 : 0;
+    const h = (pc ? (pc.spec.air ? 18 : pc.spec.bike ? 25 : pc.spec.bus ? 34 : 17) : 23) + az;
+    const fwd = pc ? (pc.spec.bike ? 4 : pc.spec.bus ? pc.L * 0.35 : 3) : 3.5;
+    camYaw = camSnap ? hd : camYaw + angDiff(hd, camYaw) * Math.min(1, dt * 12);
+    camera.position.set(p.x + Math.cos(camYaw) * fwd, h, p.y + Math.sin(camYaw) * fwd);
+    camLook.set(p.x + Math.cos(camYaw) * 200, h - (pc ? 4 : 8), p.y + Math.sin(camYaw) * 200);
+    const fov = 72 + Math.min(12, spd * 0.03) + (pc && pc.boosting ? 8 : 0);
+    if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
   } else if (player.interior) {
     // Cut-away view from the open front wall
     camWant.set(player.x, 250, player.y + 175);
@@ -4688,6 +5224,7 @@ function render(dt) {
   drawHud();
   drawNetHud(clamp(vw / 900, 0.72, 1));
   drawCaption();
+  drawGpsPanel(clamp(vw / 900, 0.72, 1));
   if (mode === 'map') drawMap();
   if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
@@ -4764,7 +5301,7 @@ function drawHud() {
   }
 
   // Location
-  const p = playerPos(), street = player.interior ? null : streetAt(p.x, p.y);
+  const p = playerPos(), street = player.interior || player.region ? null : streetAt(p.x, p.y);
   ctx.textAlign = 'center'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = 'rgba(239,230,210,0.72)';
   ctx.fillText(vw > 560 ? `${clockText()}  ·  ${street ? street + '  ·  ' : ''}${districtName}`.toUpperCase() : clockText(), vw / 2, top + 12);
   if (districtT > 0) {
@@ -4778,17 +5315,18 @@ function drawHud() {
   const S = Math.round(clamp(Math.min(vw, vh) * 0.26, 110, 180));
   const mx = vw - pad - S, my = touch ? top + 72 * s : vh - insetBottom - pad - S;
   const R = 900, span = R * 2 * MM / T, k = S / span, msx = p.x * MM / T - span / 2, msy = p.y * MM / T - span / 2;
-  if (player.interior) {
+  if (player.interior || player.region) {
     ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.beginPath(); ctx.roundRect(mx, my, S, S, 6); ctx.fill();
-    ctx.textAlign = 'center'; ctx.fillStyle = '#9a978f'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`;
-    ctx.fillText('INDOORS', mx + S / 2, my + S / 2 - 8);
-    ctx.fillStyle = '#efe6d2'; ctx.font = `800 ${Math.round(18 * s)}px ${DISPLAY}`; wrapText(INTERIORS[player.interior].name.toUpperCase(), mx + S / 2, my + S / 2 + 16, S - 20, 20);
+    ctx.textAlign = 'center'; ctx.fillStyle = player.region ? '#f2a800' : '#9a978f'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`;
+    ctx.fillText(player.region ? 'ARMENIA' : 'INDOORS', mx + S / 2, my + S / 2 - 8);
+    ctx.fillStyle = '#efe6d2'; ctx.font = `800 ${Math.round(18 * s)}px ${DISPLAY}`; wrapText((player.region ? REGIONS[player.region].name : INTERIORS[player.interior].name).toUpperCase(), mx + S / 2, my + S / 2 + 16, S - 20, 20);
   } else {
   ctx.save();
   ctx.beginPath(); ctx.roundRect(mx, my, S, S, 6); ctx.fillStyle = '#0b2430'; ctx.fill(); ctx.clip();
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(mini, msx, msy, span, span, mx, my, S, S);
   ctx.imageSmoothingEnabled = true;
+  drawGpsRoute((x, y) => [mx + (x * MM / T - msx) * k, my + (y * MM / T - msy) * k], 3.5, 'rgba(214,107,255,0.9)');
   const toMini = (x, y) => [clamp(mx + (x * MM / T - msx) * k, mx + 5, mx + S - 5), clamp(my + (y * MM / T - msy) * k, my + 5, my + S - 5)];
   const dot = (x, y, col, r) => { const [a, b] = toMini(x, y); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(a, b, r, 0, 7); ctx.fill(); };
   for (const c of cars) if (c.police && c.ai) dot(c.x, c.y, Math.floor(time * 6) % 2 ? '#ff3b4e' : '#3b82ff', 3.5);
@@ -4821,7 +5359,7 @@ function drawHud() {
     ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.fillRect(pad, cardY - 30, Math.min(cardW, ctx.measureText(label).width + 70), 24);
     ctx.fillStyle = '#ff8a7a'; ctx.fillText(`${label}  ${Math.max(0, Math.ceil(E.t))}s`, pad + 10, cardY - 13);
   }
-  if (mode === 'talk') {}
+  if (mode === 'talk' || player.region) {}
   else if (activity && cardW > 150) drawActivityCard(pad, cardY, cardW, s);
   else if (target && cardW > 150) {
     ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.beginPath(); ctx.roundRect(pad, cardY, cardW, 84, 4); ctx.fill();
@@ -5006,14 +5544,15 @@ function drawMap() {
   if (job.state === 'offer') icon(job.pickup.x, job.pickup.y, '#ffb347', 'J');
   if (job.state === 'active') icon(job.drop.x, job.drop.y, '#5fd4c4', 'D');
   for (const c of cars) if (c.police && c.ai) { const [a, b] = W(c.x, c.y); ctx.fillStyle = Math.floor(time * 6) % 2 ? '#ff3b4e' : '#3b82ff'; ctx.beginPath(); ctx.arc(a, b, 4, 0, 7); ctx.fill(); }
+  drawGpsRoute(W, 4, 'rgba(214,107,255,0.85)');
   if (waypoint) {
     const [a, b] = W(waypoint.x, waypoint.y);
     ctx.fillStyle = '#d66bff'; ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(a - 8, b - 16); ctx.arc(a, b - 18, 8, Math.PI * 0.85, Math.PI * 0.15); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#0a0c10'; ctx.beginPath(); ctx.arc(a, b - 18, 3, 0, 7); ctx.fill();
   }
   // Player: shown at the building door while indoors
-  const pl = player.interior ? INTERIORS[player.interior].street : playerPos();
-  const [pa, pb] = W(pl.x, pl.y), ang = player.car ? player.car.a : player.interior ? INTERIORS[player.interior].street.a : player.a;
+  const pl = player.region ? (regionBack || playerPos()) : player.interior ? INTERIORS[player.interior].street : playerPos();
+  const [pa, pb] = W(pl.x, pl.y), ang = player.region ? (regionBack?.a || 0) : player.car ? player.car.a : player.interior ? INTERIORS[player.interior].street.a : player.a;
   ctx.save(); ctx.translate(pa, pb); ctx.rotate(ang);
   ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#0a0c10'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-7, -7); ctx.lineTo(-3, 0); ctx.lineTo(-7, 7); ctx.closePath(); ctx.stroke(); ctx.fill();
@@ -5056,7 +5595,7 @@ function applyFX() { propsGroup.visible = FX.props; aoPlane.visible = FX.blobSha
 // ─── Loading screen ──────────────────────────────────────────────────────────
 const LOAD_TIPS = ['Press / to pull out your phone.', 'Walk up to people: most will say barev. Some will not.', 'Hold Shift and steer to drift. Drifting pays.',
   'Press B for nitro. It refills when you let off.', 'Almost every door in the city opens. Press E.', 'Lose the police by breaking line of sight, or by walking into a building.',
-  'Press Enter for the weapon wheel and pick with the mouse.', 'Press M for the map and click to set a waypoint.', 'Online: press T to chat and hold Tab for the scoreboard.'];
+  'Press Enter for the weapon wheel and pick with the mouse.', 'Set a waypoint on the map (M) and the GPS draws the route.', 'Open Hayagram on your phone (/) to teleport across Armenia.', 'Press C to switch to first person.', 'Online: press T to chat and hold Tab for the scoreboard.'];
 const LOAD_STEPS = ['Laying the streets', 'Raising the buildings', 'Parking the cars', 'Waking the neighbors', 'Brewing the surch', 'Lighting the khorovats'];
 const loadEl = document.getElementById('loading');
 let loadBusy = false;
@@ -5094,6 +5633,13 @@ function boot(data) {
     if (saved.anchors) for (const i of saved.anchors) anchorsFound.add(i);
     if (saved.day) day = saved.day;
     if (saved.daily && saved.daily.list) daily = saved.daily;
+    if (saved.hayagram) {
+      const H = saved.hayagram;
+      if (typeof H.followers === 'number') hg.followers = H.followers;
+      for (const k of H.visited || []) if (REGIONS[k]) hg.visited.add(k);
+      for (const k of H.checkins || []) if (REGIONS[k]) hg.checkins.add(k);
+      hg.pm = !!H.pm;
+    }
   }
   if (data && typeof data.money === 'number') player.money = data.money;
   if (!daily) rollDaily();
