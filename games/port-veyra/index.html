@@ -80,6 +80,35 @@
   .lane.mine b { background: var(--amber); }
   .lane span { position: absolute; left: 0.5rem; top: 0.2rem; font-size: 0.72rem; color: var(--paper); }
 
+  #phone { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 5;
+    width: min(290px, calc(100% - 32px)); height: min(540px, calc(100% - 120px)); display: flex; flex-direction: column;
+    background: #0d0f14; border: 1px solid #2c2f36; border-radius: 28px; padding: 14px 12px 10px; box-sizing: border-box;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 0 0 5px #16181e; font-family: var(--mono); color: var(--paper); animation: phoneIn 0.22s ease-out; }
+  #phone[hidden] { display: none !important; }
+  @keyframes phoneIn { from { transform: translateY(40px); opacity: 0; } }
+  .ph-status { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); padding: 2px 10px 8px; font-variant-numeric: tabular-nums; }
+  .ph-head { display: flex; align-items: center; gap: 0.4rem; padding: 0 6px 8px; border-bottom: 1px solid var(--line); }
+  .ph-head button { background: none; border: 0; color: var(--amber); font: 800 1.5rem/1 var(--display); cursor: pointer; width: 1.6rem; padding: 0; }
+  .ph-head button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  #phTitle { font: 800 1.25rem/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+  .ph-body { flex: 1; overflow-y: auto; padding: 10px 6px; display: grid; align-content: start; gap: 0.5rem; font-size: 0.76rem; }
+  .ph-apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 6px; padding-top: 6px; }
+  .ph-app { display: grid; justify-items: center; gap: 6px; background: none; border: 0; color: var(--paper); cursor: pointer; font: 600 0.66rem var(--mono); padding: 0; }
+  .ph-app i { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font: 800 1.35rem var(--display); font-style: normal; color: #0d0f14; }
+  .ph-app:focus-visible i, .ph-app:hover i { outline: 2px solid var(--paper); outline-offset: 2px; }
+  .ph-item { display: grid; gap: 2px; text-align: left; background: #15171d; border: 1px solid var(--line); border-radius: 10px; padding: 0.55rem 0.7rem; color: var(--paper); font: inherit; cursor: pointer; }
+  .ph-item:disabled { opacity: 0.45; cursor: default; }
+  .ph-item b { font: 800 0.95rem var(--display); letter-spacing: 0.04em; text-transform: uppercase; }
+  .ph-item span { color: var(--muted); font-size: 0.7rem; }
+  .ph-item:hover:not(:disabled), .ph-item:focus-visible { border-color: var(--amber); outline: none; }
+  .ph-note { color: var(--muted); font-size: 0.72rem; line-height: 1.5; margin: 0; }
+  .ph-row { display: flex; justify-content: space-between; gap: 0.6rem; border-bottom: 1px solid var(--line); padding-block: 0.35rem; }
+  .ph-row .ok { color: #7fe0a0; }
+  .ph-msg { border-left: 3px solid var(--line); padding: 0.1rem 0 0.1rem 0.55rem; }
+  .ph-msg small { display: block; color: var(--muted); font-size: 0.64rem; }
+  .ph-home { display: flex; justify-content: center; padding-top: 8px; }
+  .ph-home button { width: 96px; height: 5px; border-radius: 3px; border: 0; background: #3a3d44; cursor: pointer; padding: 0; }
+  @media (prefers-reduced-motion: reduce) { #phone { animation: none; } }
   #touch { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: flex-end;
     gap: 8px; padding: 0 16px calc(14px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
   #touch .pad { display: flex; gap: 10px; pointer-events: auto; }
@@ -118,6 +147,7 @@
       <div><dt>C</dt><dd>Chase or high camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
       <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
+      <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
     </dl>
     <button class="btn" id="startBtn" type="button">Start shift</button>
@@ -164,6 +194,7 @@
       <div><dt>C</dt><dd>Chase or high camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
       <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
+      <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
     </dl>
       <button class="menu-item" type="button" data-back>Back</button>
@@ -180,9 +211,16 @@
   </div>
 </div>
 
+<div id="phone" hidden>
+  <div class="ph-status"><span id="phTime">--:--</span><span>VEYRA TEL</span><span>86%</span></div>
+  <div class="ph-head"><button id="phBack" type="button" aria-label="Back">‹</button><span id="phTitle">Home</span></div>
+  <div class="ph-body" id="phBody"></div>
+  <div class="ph-home"><button id="phHome" type="button" aria-label="Home screen"></button></div>
+</div>
+
 <div id="touch" hidden>
   <div class="pad left"><button type="button" data-k="ArrowLeft" aria-label="Left">◀</button><button type="button" data-k="ArrowRight" aria-label="Right">▶</button></div>
-  <div class="pad mid"><button type="button" class="act" data-k="KeyQ">Gun</button><button type="button" class="act" data-k="KeyF">Fire</button><button type="button" class="act" data-k="Space">Use</button><button type="button" class="act" data-k="KeyM">Map</button><button type="button" class="act" data-k="ShiftLeft" aria-label="Run, handbrake or climb">Up</button><button type="button" class="act" data-k="KeyZ" aria-label="Descend">Down</button><button type="button" class="act" data-k="KeyX" aria-label="Nitro boost">Nitro</button><button type="button" class="act" data-k="Enter" aria-label="Weapon wheel">Wheel</button></div>
+  <div class="pad mid"><button type="button" class="act" data-k="KeyQ">Gun</button><button type="button" class="act" data-k="KeyF">Fire</button><button type="button" class="act" data-k="Space">Use</button><button type="button" class="act" data-k="KeyM">Map</button><button type="button" class="act" data-k="ShiftLeft" aria-label="Run, handbrake or climb">Up</button><button type="button" class="act" data-k="KeyZ" aria-label="Descend">Down</button><button type="button" class="act" data-k="KeyX" aria-label="Nitro boost">Nitro</button><button type="button" class="act" data-k="Enter" aria-label="Weapon wheel">Wheel</button><button type="button" class="act" data-k="Slash" aria-label="Phone">Phone</button></div>
   <div class="pad right"><button type="button" data-k="ArrowUp" aria-label="Up">▲</button><button type="button" data-k="ArrowDown" aria-label="Down">▼</button></div>
 </div>
 
@@ -706,7 +744,11 @@ let districtName = '', districtT = 0;
 
 const playerPos = () => player.car || player;
 const stars = () => Math.min(5, Math.floor(heat.v / 100));
-function toast(text, color = '#efe6d2') { toasts.unshift({ text, color, t: 3.2 }); if (toasts.length > 4) toasts.pop(); }
+const phoneLog = [];
+function toast(text, color = '#efe6d2') {
+  toasts.unshift({ text, color, t: 3.2 }); if (toasts.length > 4) toasts.pop();
+  phoneLog.unshift({ text, color, at: typeof clockText === 'function' ? clockText() : '' }); if (phoneLog.length > 40) phoneLog.pop();
+}
 function crime(amount, label) {
   const before = stars();
   heat.v = Math.min(599, heat.v + amount); heat.lastCrime = time;
@@ -1483,6 +1525,7 @@ function setHeat(n) { heat.v = Math.max(heat.v, n * 100 + 40); heat.lastCrime = 
 const menuEl = document.getElementById('menu');
 let menuState = null;
 function showMenu(m) {
+  closePhone();
   menuState = m;
   if (mode === 'play') mode = 'menu';
   keys.clear(); mouseFire = false;
@@ -1923,8 +1966,8 @@ function runHorseRace(mine) {
 }
 
 // ─── Freemode: collectibles, cash drops, random events ───────────────────────
-function startFreeEvent() {
-  if (Math.random() < 0.5) {
+function startFreeEvent(kind) {
+  if (kind ? kind === 'armored' : Math.random() < 0.5) {
     const c = spawnTraffic(500, 950, 'van');
     if (!c) return;
     Object.assign(c, { armored: true, color: '#5f6b5a', hp: 320, maxHp: 320, keep: true });
@@ -2072,13 +2115,16 @@ addInteract('casino', 40, 150, 26, 'Bet on the horse races', () => openHorses())
 // ─── Input ──────────────────────────────────────────────────────────────────
 const keys = new Set();
 let usePressed = false, interactPressed = false, promptIt = null;
-const GAME_KEYS = ['KeyX', 'Enter', 'KeyZ', 'KeyE', 'KeyM', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyQ'];
+const GAME_KEYS = ['Slash', 'KeyX', 'Enter', 'KeyZ', 'KeyE', 'KeyM', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyQ'];
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && mode === 'menu') { closeMenu(); return; }
   if (GAME_KEYS.includes(e.code) && (mode === 'play' || mode === 'map')) e.preventDefault();
   if (e.code === 'Space' && !e.repeat) usePressed = true;
   if (e.code === 'KeyM' && !e.repeat) toggleMap();
   if (e.code === 'KeyE' && !e.repeat && mode === 'play') interactPressed = true;
+  if (e.code === 'Slash' && !e.repeat && (mode === 'play' || phone.open)) { e.preventDefault(); togglePhone(); return; }
+  if (e.code === 'Escape' && phone.open) { closePhone(); return; }
+  if (e.code === 'Backspace' && phone.open) { e.preventDefault(); phoneApp('home'); return; }
   if (e.code === 'Escape' && wheel.open) { wheel.open = false; return; }
   if (e.code === 'Escape' && mode === 'map') { toggleMap(); return; }
   if (e.code === 'Escape' && mode === 'paused' && openPanel) showPanel(null);
@@ -2109,6 +2155,7 @@ function selectWeapon(k) {
 }
 function toggleWheel() {
   if (wheel.open) { wheelPick(); return; }
+  closePhone();
   wheel.open = true; wheel.hover = Object.keys(WEAPONS).indexOf(player.weapon); mouseFire = false;
   mouse.x = vw / 2; mouse.y = vh / 2;
 }
@@ -2125,7 +2172,7 @@ const touchEl = document.getElementById('touch');
 if (matchMedia('(pointer: coarse)').matches) touchEl.hidden = false;
 for (const b of touchEl.querySelectorAll('button')) {
   const k = b.dataset.k;
-  const on = e => { e.preventDefault(); b.classList.add('on'); if (k === 'Space') usePressed = true; else if (k === 'KeyQ') { if (mode === 'play') switchWeapon(); } else if (k === 'KeyM') toggleMap(); else if (k === 'Enter') { if (mode === 'play') toggleWheel(); } else { keys.add(k); if (k === 'KeyF' && mode === 'play') fireQueued = true; } };
+  const on = e => { e.preventDefault(); b.classList.add('on'); if (k === 'Space') usePressed = true; else if (k === 'KeyQ') { if (mode === 'play') switchWeapon(); } else if (k === 'KeyM') toggleMap(); else if (k === 'Enter') { if (mode === 'play') toggleWheel(); } else if (k === 'Slash') { if (mode === 'play' || phone.open) togglePhone(); } else { keys.add(k); if (k === 'KeyF' && mode === 'play') fireQueued = true; } };
   const off = e => { e.preventDefault(); b.classList.remove('on'); keys.delete(k); };
   b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
 }
@@ -2139,7 +2186,7 @@ function startGame() {
   showBanner('Port Veyra', 'Your shift starts now. Grab the sedan beside you.', '#ffb347', 3.5);
 }
 function togglePause() {
-  wheel.open = false;
+  wheel.open = false; closePhone();
   if (mode === 'play') {
     mode = 'paused'; pauseEl.hidden = false; mouseFire = false;
     document.getElementById('pauseClock').textContent = clockText();
@@ -2165,7 +2212,121 @@ document.getElementById('quitBtn').addEventListener('click', () => {
   mode = 'title'; pauseEl.hidden = true; titleEl.hidden = false; keys.clear();
   document.getElementById('startBtn').focus();
 });
+// ─── Phone (/) ───────────────────────────────────────────────────────────────
+// The game keeps running while the phone is up, like a real one; only menus it opens pause play.
+const phone = { open: false, app: 'home', hackT: -999 };
+const phoneEl = document.getElementById('phone'), phBody = document.getElementById('phBody');
+function togglePhone() { if (phone.open) closePhone(); else if (mode === 'play') { phone.open = true; wheel.open = false; phoneEl.hidden = false; phoneApp('home'); } }
+function closePhone() { if (!phone.open) return; phone.open = false; phoneEl.hidden = true; }
+document.getElementById('phBack').addEventListener('click', () => phoneApp('home'));
+document.getElementById('phHome').addEventListener('click', () => phoneApp('home'));
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+function phItem(title, sub, act, disabled) {
+  const b = el('button', 'ph-item'); b.type = 'button'; b.disabled = !!disabled;
+  b.append(el('b', '', title)); if (sub) b.append(el('span', '', sub));
+  b.addEventListener('click', act); phBody.append(b); return b;
+}
+const phNote = text => phBody.append(el('p', 'ph-note', text));
+function phRow(a, b, ok) { const r = el('div', 'ph-row'); r.append(el('span', '', a), el('span', ok ? 'ok' : '', b)); phBody.append(r); }
+const PHONE_APPS = [
+  ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'],
+  ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
+  ['taxi', 'Veyra Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
+function phoneApp(app) {
+  phone.app = app;
+  phBody.innerHTML = '';
+  document.getElementById('phBack').style.visibility = app === 'home' ? 'hidden' : 'visible';
+  document.getElementById('phTitle').textContent = app === 'home' ? 'Home' : PHONE_APPS.find(a => a[0] === app)?.[1] || app;
+  if (app === 'home') {
+    const grid = el('div', 'ph-apps');
+    for (const [id, label, col, glyph] of PHONE_APPS) {
+      const b = el('button', 'ph-app'); b.type = 'button';
+      const ic = el('i', '', glyph); ic.style.background = col; b.append(ic, el('span', '', label));
+      b.addEventListener('click', () => phoneApp(id)); grid.append(b);
+    }
+    phBody.append(grid);
+    const unread = phoneLog.length ? `Latest: ${phoneLog[0].text}` : 'No new messages.';
+    phNote(unread);
+    grid.querySelector('button').focus({ preventScroll: true });
+  } else if (app === 'contacts') {
+    const car = player.lastCar && !player.lastCar.wreck && cars.includes(player.lastCar) ? player.lastCar : null;
+    phItem('Ray · Mechanic', car ? `Deliver your ${(car.spec.name || 'car').toLowerCase()} nearby · $250` : 'Drop off a loaner sedan nearby · $250', callMechanic, !!player.car || !!player.interior || player.money < 250);
+    const wait = Math.max(0, Math.ceil(240 - (time - phone.hackT)));
+    phItem('Nova · Hacker', stars() ? `Wipe your wanted level · ${fmtMoney(800 * stars())}${wait ? ` (busy for ${wait}s)` : ''}` : 'Only useful when the police are after you', callHacker, !stars() || wait > 0 || player.money < 800 * stars());
+    phItem('Harbor Bail Bonds', freeEvent ? 'You already have an open job' : 'Ask for a fugitive to track down', () => { if (!freeEvent && !activity) { startFreeEvent('bounty'); closePhone(); } }, !!freeEvent || !!activity);
+    phItem('Veyra Cabs', 'Book a ride across town', () => phoneApp('taxi'));
+    phItem('Mom', 'Call your mother', () => { toast('Mom: "Are you eating? You never call."', '#e0b0ff'); phoneApp('messages'); });
+  } else if (app === 'messages') {
+    if (!phoneLog.length) phNote('No messages yet.');
+    for (const m of phoneLog) { const d = el('div', 'ph-msg'); d.style.borderColor = m.color; d.append(el('small', '', m.at), el('span', '', m.text)); phBody.append(d); }
+  } else if (app === 'heists') {
+    for (const h of HEISTS) { const st = heistState[h.id]; phRow(h.name, `${st.preps.filter(Boolean).length}/${st.preps.length} preps`, st.preps.every(Boolean)); }
+    phItem('Open the planning board', activity ? 'Finish or abandon your current job first' : 'Start preps and finales from anywhere', () => { closePhone(); openHeistBoard(); });
+    if (activity) phNote(`Current job: ${activity.title}`);
+  } else if (app === 'map') {
+    closePhone(); toggleMap();
+  } else if (app === 'bank') {
+    phRow('Balance', fmtMoney(player.money), true);
+    for (const [id, B] of Object.entries(BUSINESSES)) phRow(B.name, biz[id].owned ? bizStatus(id) : 'not owned', biz[id].owned);
+    for (const [id, M] of Object.entries(MANSIONS)) phRow(M.name, mansionState[id].owned ? 'owned' : 'for sale', mansionState[id].owned);
+    if (ownsMansion()) phRow('Art studio', `${Math.floor(studio.canvases)} canvases · ${Math.round(studio.market * 100)}% market`);
+    const safe = Math.floor(biz.club.safe);
+    phItem('Transfer the nightclub safe', biz.club.owned ? `${fmtMoney(safe)} minus a 10% wire fee` : 'You do not own the nightclub',
+      () => { const net = Math.floor(safe * 0.9); player.money += net; biz.club.safe = 0; toast(`Wired ${fmtMoney(net)} from the nightclub`, '#7fe0a0'); saveGame(); phoneApp('bank'); }, !biz.club.owned || safe < 1);
+  } else if (app === 'daily') {
+    phNote(`Day ${day} · $1,000 each, $2,500 bonus for all three`);
+    if (daily) for (const o of daily.list) phRow(`${o.done ? '✓' : '○'} ${o.text}`, `${Math.floor(o.have)}/${o.n}`, o.done);
+    phNote(`Gold anchors found: ${anchorsFound.size} of ${ANCHORS.length}`);
+  } else if (app === 'taxi') {
+    const blocked = stars() > 0 ? 'Cabs will not pick up someone the police are chasing' : player.car ? 'Get out of your vehicle first' : player.interior ? 'Step outside first' : activity ? 'Not during a job' : '';
+    if (blocked) phNote(blocked);
+    const dests = [['Your apartment', { x: 26 * T, y: 32.65 * T }], ['The Gilded Anchor', PLACES.casinoDoor], ['Veyra Customs', PLACES.customs], ['Veyra Municipal Airfield', { x: 68 * T, y: 12.6 * T }]];
+    for (const [id, M] of Object.entries(MANSIONS)) if (mansionState[id].owned) dests.push([M.name, M.door]);
+    if (waypoint) dests.unshift(['Your waypoint', waypoint]);
+    for (const [name, at] of dests) {
+      const d = Math.hypot(at.x - player.x, at.y - player.y), fare = Math.round(25 + d / 40);
+      phItem(name, `${Math.round(d / 5)} m · ${fmtMoney(fare)}`, () => takeCab(at, fare, name), !!blocked || player.money < fare || d < 150);
+    }
+  } else if (app === 'settings') {
+    closePhone(); togglePause(); showPanel('settings');
+  }
+}
+function takeCab(at, fare, name) {
+  if (!pay(fare)) return;
+  let spot = { x: at.x, y: at.y };
+  if (circleSolid(spot.x, spot.y, 7)) for (let r = 16; r < 200; r += 16) { const k = [0, 1, 2, 3].map(i => ({ x: at.x + DIRS[i][0] * r, y: at.y + DIRS[i][1] * r })).find(q => !circleSolid(q.x, q.y, 7)); if (k) { spot = k; break; } }
+  player.x = spot.x; player.y = spot.y; player.vx = player.vy = 0;
+  if (FX.dayNight) tod = (tod + 0.25) % 24;
+  fade = 1; camSnap = true; closePhone();
+  toast(`Veyra Cabs dropped you at ${name}`, '#f2c230');
+}
+function callMechanic() {
+  if (!pay(250)) return;
+  const car = player.lastCar && !player.lastCar.wreck && cars.includes(player.lastCar) ? player.lastCar : null;
+  // Park it on the nearest stretch of road a few car lengths away
+  let spot = null;
+  for (let r = 70; r < 400 && !spot; r += 24) for (let k = 0; k < 16 && !spot; k++) {
+    const x = player.x + Math.cos(k * Math.PI / 8) * r, y = player.y + Math.sin(k * Math.PI / 8) * r;
+    if (tileAtPx(x, y) === ROAD && !carNear(x, y, 60)) spot = { x, y };
+  }
+  if (!spot) { player.money += 250; toast('Ray: "Can\'t get a truck in there. Try somewhere with a road."', '#7fe0a0'); return; }
+  const a = Math.atan2(player.y - spot.y, player.x - spot.x);
+  const c = car || makeCar('sedan', spot.x, spot.y, a, { color: '#5c6773' });
+  Object.assign(c, { x: spot.x, y: spot.y, a, vx: 0, vy: 0 });
+  if (!car) cars.push(c);
+  c.hp = c.maxHp || c.spec.hp; player.lastCar = c;
+  toast(`Ray: "Your ride is out front, all fixed up."`, '#7fe0a0');
+  closePhone();
+}
+function callHacker() {
+  const cost = 800 * stars();
+  if (!pay(cost)) return;
+  heat.v = 0; phone.hackT = time;
+  toast('Nova: "Scrubbed your file. The cops just lost you."', '#8fb4ff');
+  phoneApp('messages');
+}
 function toggleMap() {
+  closePhone();
   if (mode === 'play') { mode = 'map'; keys.clear(); mouseFire = false; }
   else if (mode === 'map') { mode = 'play'; keys.clear(); }
 }
@@ -3736,6 +3897,7 @@ function render(dt) {
   if (mode === 'title') return;
   drawHud();
   if (mode === 'map') drawMap();
+  if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
   else if (wheel.open) wheel.open = false;
   if (wheel.open) { /* the wheel covers the drift readout */ }
