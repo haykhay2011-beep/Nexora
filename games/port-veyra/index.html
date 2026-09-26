@@ -418,7 +418,7 @@
           <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
           <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia</dd></div>
+          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
           <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
           <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -475,7 +475,7 @@
       <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia</dd></div>
+      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
       <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -495,7 +495,7 @@
 </div>
 
 <div id="mapTabs" class="map-tabs" hidden role="tablist" aria-label="Map">
-  <button type="button" role="tab" data-tab="city">Hayastan city</button><button type="button" role="tab" data-tab="armenia">Armenia</button><button type="button" id="mapClose" aria-label="Close map">Close ✕</button>
+  <button type="button" role="tab" data-tab="city">Hayastan city</button><button type="button" role="tab" data-tab="armenia">Armenia</button><button type="button" role="tab" data-tab="church" hidden>Church plan</button><button type="button" id="mapClose" aria-label="Close map">Close ✕</button>
 </div>
 <div id="phone" hidden>
   <div class="ph-status"><span id="phTime">--:--</span><span>HAYASTAN TEL</span><span>86%</span></div>
@@ -909,7 +909,7 @@ function saveGame() {
     localStorage.setItem('port-veyra-save', JSON.stringify({ money: player.money, ammo: player.ammo, weapon: player.weapon, outfit: player.outfit,
       heists: heistState, biz, anchors: [...anchorsFound], day, daily, mansions: mansionState, studio, story: story.chapter, outfitsBought: player.outfitsBought,
       hayagram: { followers: hg.followers, visited: [...hg.visited], checkins: [...hg.checkins], pm: hg.pm, ms: hg.ms },
-      more: { done: [...RG.done], rugs: RG.rugs.inv, profit: RG.rugs.profit, road: armRoad.chapter, gh, coll: [...collection], radio: radio.on } }));
+      more: { done: [...RG.done], rugs: RG.rugs.inv, profit: RG.rugs.profit, road: armRoad.chapter, gh, coll: [...collection], radio: radio.on }, hx: hxSave() }));
     return true;
   }
   catch (e) { return false; }
@@ -1661,12 +1661,15 @@ function fireRay(ox, oy, a, range, dmg, shooter) {
     if (t > 0 && t < end && Math.abs(rx * dy - ry * dx) < r) { end = t; hit = ent; }
   };
   for (const p of peds) if (p.state !== 'down') test(p, p.x, p.y, 7);
+  if (CH.id) for (const q of CH.people) if (q.hittable && q.state !== 'down' && q !== shooter && (shooter === 'player' || (shooter && shooter.kind && !!q.rival !== !!shooter.rival))) test(q, q.x, q.y, 7);
   for (const c of cars) if (c !== shooter && !(shooter === 'player' && c === player.car)) test(c, c.x, c.y, c.W / 2 + 4);
   if (shooter !== 'player' && !player.car && mode === 'play') test(player, player.x, player.y, 8);
   if (shooter === 'player' && net.on && gameMode === 'online') for (const R of remoteMeshes.values()) if (!R.s.dead) test({ remote: R }, R.x, R.y, R.car ? 14 : 8);
   const hx = ox + dx * end, hy = oy + dy * end;
   tracers.push({ x0: ox, y0: oy, x1: hx, y1: hy, life: 0.07, max: 0.07, police: shooter !== 'player' });
+  if (shooter === 'player' && CH.id && player.interior === 'church') hxAlarm('Gunfire in the church');
   if (!hit) { sparks(hx, hy, 3); return; }
+  if (CH.id && CH.people.includes(hit)) { sparks(hx, hy, 3); hxHit(hit, dx, dy, shooter); return; }
   if (hit.remote) { sparks(hx, hy, 4); netEmit('hit', { to: hit.remote.peer.peer, dmg: Math.round(dmg) }); return; }
   if (hit === player) { player.hp -= dmg; player.hitT = time; flash = 0.8; cam.shake = Math.max(cam.shake, 4); return; }
   if (hit.L) {
@@ -1696,6 +1699,7 @@ function startMelee(w) {
 function meleeHit(w) {
   const fx = Math.cos(player.a), fy = Math.sin(player.a);
   let hit = false;
+  if (CH.id && player.interior === 'church' && hxMelee(w)) { cam.shake = Math.max(cam.shake, 3); return; }
   if (net.on && gameMode === 'online') for (const R of remoteMeshes.values()) {
     const dx = R.x - player.x, dy = R.y - player.y;
     if (R.car || R.s.dead || Math.hypot(dx, dy) > w.range + 10 || Math.abs(angDiff(Math.atan2(dy, dx), player.a)) > 0.9) continue;
@@ -3001,7 +3005,7 @@ const PHONE_APPS = [
   ['hayagram', 'Hayagram', 'linear-gradient(135deg, #d90012, #0033a0 55%, #f2a800)', '◎'],
   ['portfolio', 'Portfolio', 'linear-gradient(135deg, #e0b0ff, #7fe0a0)', '★'],
   ['gpt', 'Hayastan GPT', 'linear-gradient(135deg, #0f766e, #f2a800)', 'Հ'], ['weather', 'Weather', 'linear-gradient(#6fb3ff, #d6e4ff)', '☂'],
-  ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'],
+  ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'], ['heritage', 'Heritage Jobs', 'linear-gradient(135deg, #f2a800, #8a1a22)', '✠'],
   ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
   ['taxi', 'Hayastan Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
 function phoneApp(app) {
@@ -3035,6 +3039,11 @@ function phoneApp(app) {
     for (const h of HEISTS) { const st = heistState[h.id]; phRow(h.name, `${st.preps.filter(Boolean).length}/${st.preps.length} preps`, st.preps.every(Boolean)); }
     phItem('Open the planning board', activity ? 'Finish or abandon your current job first' : 'Start preps and finales from anywhere', () => { closePhone(); openHeistBoard(); });
     if (activity) phNote(`Current job: ${activity.title}`);
+  } else if (app === 'heritage') {
+    phRow('Skill points', String(hx.points), hx.points > 0);
+    for (const op of HX_OPS) phRow(`${op.name} ${'★'.repeat(op.stars)}`, hx.done[op.id] ? (hx.choice[op.id] === 'return' ? 'returned' : 'fenced') : hxDone() >= HX_UNLOCK[op.stars] ? 'open' : 'locked', !!hx.done[op.id]);
+    phItem('Open the heritage board', HX ? `In progress: ${HX.op.name}` : 'Plan an operation, spend skill points', () => { closePhone(); openHeritageBoard(); });
+    if (HX) phNote(hxObjective()?.text || '');
   } else if (app === 'map') {
     closePhone(); toggleMap();
   } else if (app === 'bank') {
@@ -3230,6 +3239,7 @@ function updatePlayer(dt) {
     const d = Math.hypot(it.x - player.x, it.y - player.y);
     if (d < it.r && d < bd) { bd = d; promptIt = it; }
   }
+  if (CH.seat) promptIt = hxSeatPrompt();
   if (((usePressed && !player.car) || interactPressed) && promptIt) {
     usePressed = interactPressed = false;
     if (time - lastInteract > 0.4) { lastInteract = time; promptIt.act(); }
@@ -3238,9 +3248,10 @@ function updatePlayer(dt) {
   if (usePressed) { usePressed = false; if (player.car) exitCar(false); else tryEnter(); }
   const up = down('KeyW', 'ArrowUp'), dn = down('KeyS', 'ArrowDown'), lf = down('KeyA', 'ArrowLeft'), rt = down('KeyD', 'ArrowRight');
   const shift = down('ShiftLeft', 'ShiftRight');
+  if (CH.seat) { player.vx = player.vy = 0; if (up || dn || lf || rt) hxStand(); return null; }
   if (player.car) return { thr: up ? 1 : dn ? -1 : 0, steer: (rt ? 1 : 0) - (lf ? 1 : 0), hb: shift, up: shift, dn: down('KeyZ'), boost: down('KeyX') || down('KeyB') };
   player.a += ((rt ? 1 : 0) - (lf ? 1 : 0)) * 3.4 * dt;
-  const m = (up ? 1 : 0) - (dn ? 0.6 : 0), sp = (shift && m > 0 ? 165 : 92) * (time < (player.fitT || 0) ? 1.25 : 1);
+  const m = (up ? 1 : 0) - (dn ? 0.6 : 0), sp = (shift && m > 0 ? 165 : 92) * (time < (player.fitT || 0) ? 1.25 : 1) * hxSpeedMul();
   player.vx = Math.cos(player.a) * m * sp; player.vy = Math.sin(player.a) * m * sp;
   const nx = player.x + player.vx * dt; if (!circleSolid(nx, player.y, 7)) player.x = nx;
   const ny = player.y + player.vy * dt; if (!circleSolid(player.x, ny, 7)) player.y = ny;
@@ -4288,6 +4299,16 @@ function posePerson(g, x, y, a, phase, moving, down, fade, opts = {}) {
     return;
   }
   inner.scale.setScalar(1);
+  if (opts.sit || opts.kneel) {
+    // Seated in a pew or kneeling on a prayer stool; hands on the lap, or folded in prayer with the head bowed
+    const bow = opts.pray ? 0.3 : 0;
+    if (opts.sit) { inner.rotation.set(0, 0, -bow * 0.3); inner.position.set(-2.6, -4.4, 0); u.hipL.rotation.set(-0.08, 0, 1.5); u.hipR.rotation.set(0.08, 0, 1.5); u.kneeL.rotation.z = -1.5; u.kneeR.rotation.z = -1.5; }
+    else { inner.rotation.set(0, 0, -0.1); inner.position.set(0, -4.6, 0); u.hipL.rotation.set(-0.05, 0, 0.08); u.hipR.rotation.set(0.05, 0, 0.08); u.kneeL.rotation.z = -1.52; u.kneeR.rotation.z = -1.52; }
+    u.spine.rotation.set(0, 0, 0); u.spine.scale.set(1, 1, 1); u.head.rotation.set(0, opts.pray ? 0 : Math.sin(time * 0.4 + g.id) * 0.2, -bow);
+    if (opts.pray) { u.shoulderL.rotation.set(-0.42, 0, 0.95); u.shoulderR.rotation.set(0.42, 0, 0.95); u.elbowL.rotation.z = 1.35; u.elbowR.rotation.z = 1.35; }
+    else { u.shoulderL.rotation.set(-0.06, 0, 0.4); u.shoulderR.rotation.set(0.06, 0, 0.4); u.elbowL.rotation.z = 1.05; u.elbowR.rotation.z = 1.05; }
+    return;
+  }
   if (opts.ride) {
     // Seated on a motorcycle, leaning into the bars
     inner.rotation.set(0, 0, -0.3); inner.position.set(0, 0, 0);
@@ -4825,7 +4846,7 @@ function regionSolid(x, y) {
 let regionBack = null;
 const hg = { followers: 48, visited: new Set(), checkins: new Set(), pm: false };
 function travelBlocked() {
-  return stars() > 0 ? 'Lose the police before you travel' : activity ? 'Finish or abandon your current job first' : mode !== 'play' ? 'Not right now' : '';
+  return player.interior === 'church' ? 'Leave the church first' : stars() > 0 ? 'Lose the police before you travel' : activity ? 'Finish or abandon your current job first' : mode !== 'play' ? 'Not right now' : '';
 }
 // Hayagram and the fly-back pads go through the Quick Travel flight
 function travelTo(key) { quickTravelTo(destIndex(key)); }
@@ -6835,7 +6856,7 @@ const GPT_QUICK = [['What should I do?', () => `What should I do next? Be specif
 
 // ─── Per-frame hook for all of the above ───────────────────────────────────
 function updateMore(dt) {
-  updateRegionGame(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
+  updateRegionGame(dt); updateHeritage(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
 }
 
 for (const [id, def] of Object.entries(RG_DEF)) {
@@ -6855,6 +6876,7 @@ const mapView = { tab: 'city', cx: 0, cz: 0, dist: 2200, yaw: -Math.PI / 2, pitc
 const armView = { cx: 0, cz: 0, dist: 1500, yaw: -Math.PI / 2, pitch: 0.88 };
 const mapTabsEl = document.getElementById('mapTabs');
 function openMap3D() {
+  if (player.interior === 'church' && CH.id) { mapView.tab = 'church'; syncMapTabs(); return; }
   const p = player.region ? (regionBack || { x: 26 * T, y: 32.65 * T }) : player.interior ? INTERIORS[player.interior].street : playerPos();
   mapView.tab = player.region ? 'armenia' : 'city';
   mapView.cx = clamp(p.x, 0, GW * T); mapView.cz = clamp(p.y, 0, GH * T); mapView.dist = vw < vh ? 2800 : 2200; armView.dist = vw < vh ? 2050 : 1500; mapView.yaw = -Math.PI / 2; mapView.pitch = 1.0;
@@ -6864,6 +6886,7 @@ function openMap3D() {
 function syncMapTabs() {
   mapTabsEl.hidden = mode !== 'map';
   for (const b of mapTabsEl.querySelectorAll('[data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === mapView.tab));
+  mapTabsEl.querySelector('[data-tab="church"]').hidden = !(player.interior === 'church' && CH.id);
 }
 for (const b of mapTabsEl.querySelectorAll('[data-tab]')) b.addEventListener('click', () => { mapView.tab = b.dataset.tab; syncMapTabs(); });
 document.getElementById('mapClose').addEventListener('click', () => { if (mode === 'map') toggleMap(); });
@@ -6925,6 +6948,7 @@ addEventListener('pointerup', e => {
   const D = mapView.drag; mapView.drag = null;
   if (mode !== 'map' || !D) return;
   if (Math.hypot(e.clientX - D.x0, e.clientY - D.y0) > 6) return;       // it was a drag, not a click
+  if (mapView.tab === 'church') { hxPlanClick(e.clientX, e.clientY); return; }
   if (mapView.tab === 'city') {
     // Click → the ground point under the cursor → set or clear the waypoint
     const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(e.clientX / vw * 2 - 1, -(e.clientY / vh) * 2 + 1);
@@ -7135,14 +7159,1533 @@ function drawArmeniaMap() {
 // Full-screen map overlay for both tabs
 function drawMap() {
   const s = clamp(vw / 900, 0.72, 1), top = insetTop + 16;
-  if (mapView.tab === 'city') drawCityMap(); else drawArmeniaMap();
+  if (mapView.tab === 'church') drawChurchPlan(); else if (mapView.tab === 'city') drawCityMap(); else drawArmeniaMap();
   ctx.textAlign = 'left'; ctx.font = `800 ${Math.round(28 * s)}px ${DISPLAY}`; ctx.fillStyle = '#fff4dc';
   ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6;
-  ctx.fillText(mapView.tab === 'city' ? 'HAYASTAN CITY' : 'ARMENIA', 16, top + 70);
+  ctx.fillText(mapView.tab === 'church' ? CH.def.name.toUpperCase() : mapView.tab === 'city' ? 'HAYASTAN CITY' : 'ARMENIA', 16, top + 70);
   ctx.font = `400 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
   const city = mapView.tab === 'city';
+  if (mapView.tab === 'church') { ctx.fillText(`${touchUI ? 'Tap' : 'Click'} to drop route markers (up to 6), again to remove · sit to gather intel`, 16, top + 90); ctx.shadowBlur = 0; return; }
   ctx.fillText(touchUI ? (city ? 'Drag · pinch to zoom and turn · tap to set a waypoint' : 'Drag · pinch to zoom and turn · tap a pin to fly') : vw > 640 ? (city ? 'Drag to move · right-drag to rotate · scroll to zoom · click to set a waypoint' : 'Drag to move · right-drag to rotate · scroll to zoom · click a pin to fly there') : 'Drag · scroll · click', 16, top + 90);
   ctx.shadowBlur = 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ARMENIAN HERITAGE HEISTS
+// Nine operations against explorable church interiors. Every interior is built from a small layout
+// language (walls, pillars, pews, seats, zones, doors, guards, cameras, loot) and shares one stealth
+// model: guards, cameras and monks build a single suspicion meter, and where you sit decides how much
+// attention you draw. Sitting also heals, lets you observe (intel), hides loot and unlocks stories.
+// ═══════════════════════════════════════════════════════════════════════════════
+const HX_CAT = {
+  manuscript: { name: 'Religious manuscript', min: 50000, max: 200000, heat: 300, hold: 3, conceal: true, note: 'High heat · careful handling' },
+  khachkar:   { name: 'Khachkar stone', min: 15000, max: 80000, heat: 100, hold: 8, heavy: true, note: 'Low heat · needs the crew and the winch' },
+  urartian:   { name: 'Urartian artifact', min: 75000, max: 300000, heat: 400, hold: 6, note: 'Very high heat · careful extraction' },
+  metal:      { name: 'Metalwork and jewelry', min: 30000, max: 150000, heat: 200, hold: 3, conceal: true, metal: true, note: 'Medium heat · avoid the metal detectors' },
+  pottery:    { name: 'Pottery and ceramics', min: 10000, max: 50000, heat: 100, hold: 4, fragile: true, note: 'Low heat · breaks if you run with it' },
+  lance:      { name: 'The Holy Lance', min: 1000000, max: 1500000, heat: 599, hold: 6, sacred: true, metal: true, note: 'Maximum heat · desecration alarm unless security is hacked' },
+};
+// Sites: church interior id → region and the spot outside where its door is
+const HX_SITES = {
+  etch:     { region: 'etchmiadzin', at: [800, 690], name: 'Etchmiadzin Cathedral' },
+  khor:     { region: 'khorvirap', at: [820, 672], name: 'Khor Virap: the pit of St. Gregory' },
+  erebuni:  { region: 'yerevan', at: [1215, 1360], name: 'Erebuni Fortress' },
+  geghard:  { region: 'geghard', at: [800, 500], name: 'Geghard Monastery' },
+  tatev:    { region: 'tatev', at: [900, 618], name: 'Tatev Monastery' },
+  noraduz:  { region: 'sevan', at: [1380, 1198], name: 'Noraduz Cemetery' },
+  noravank: { region: 'noravank', at: [690, 632], name: 'Noravank treasury' },
+};
+const HX_OPS = [
+  { id: 'echmiadzin', name: 'The Echmiadzin Job', op: 'Operation Golden Gospels', stars: 4, cat: 'manuscript', legs: [{ site: 'etch' }],
+    target: "The cathedral library's illuminated 5th-century manuscripts", where: 'Echmiadzin Cathedral', contact: 'mesrop', rivals: true },
+  { id: 'khorvirap', name: 'The Khor Virap Gambit', op: 'Operation Holy Ground', stars: 3, cat: 'metal', legs: [{ site: 'khor' }],
+    target: "Religious artifacts from the pit where Christianity's founder was held", where: 'Khor Virap Church', contact: 'mesrop' },
+  { id: 'urartu', name: 'Operation Urartu Rising', op: 'The Erebuni Score', stars: 5, cat: 'urartian', legs: [{ site: 'erebuni' }],
+    target: '9th–6th century BCE inscriptions and reliefs', where: 'Erebuni Fortress', contact: 'anahit', rivals: true },
+  { id: 'lance', name: 'The Geghard Lance', op: 'Operation Holy Spear', stars: 5, cat: 'lance', legs: [{ site: 'geghard' }],
+    target: 'The legendary Holy Lance itself', where: 'Geghard Monastery', contact: 'gor', rivals: true },
+  { id: 'tatev', name: 'The Tatev Treasure', op: 'Monastery Manuscripts Job', stars: 4, cat: 'manuscript', legs: [{ site: 'tatev' }],
+    target: 'Rare texts and ancient artifacts from the old university', where: 'Tatev Monastery (clifftop)', contact: 'mesrop', rivals: true },
+  { id: 'noraduz', name: 'The Noraduz Nightfall', op: 'The Cross Collection', stars: 2, cat: 'khachkar', legs: [{ site: 'noraduz' }], crewNeeded: true,
+    target: 'Intricately carved khachkar stone crosses', where: 'Noraduz Cemetery', contact: 'keeper' },
+  { id: 'metals', name: 'Operation Precious Metals', op: "The Artisan's Jewel", stars: 3, cat: 'metal', legs: [{ site: 'noravank' }, { site: 'geghard' }, { site: 'tatev' }],
+    target: 'Ancient Armenian gold, bronze vessels and jewelry', where: 'Treasuries at Noravank, Geghard and Tatev', contact: 'anahit' },
+  { id: 'pottery', name: 'The Bronze Age Heist', op: 'Operation Terra Cotta', stars: 2, cat: 'pottery', legs: [{ site: 'erebuni' }],
+    target: 'Ancient pottery and ceramics', where: 'Archaeological storage at Erebuni', contact: 'anahit' },
+  { id: 'takeover', name: 'The Armenian Heritage Takeover', op: 'Operation Homeland Reclamation', stars: 6, cat: 'manuscript',
+    legs: [{ site: 'etch' }, { site: 'geghard' }, { site: 'tatev' }], timer: 900, rivals: true, crewNeeded: true,
+    target: 'All the major treasures at once', where: 'A coordinated multi-site operation', contact: 'mesrop' },
+];
+const HX_UNLOCK = { 2: 0, 3: 1, 4: 2, 5: 4, 6: 6 };      // heists finished before each difficulty opens
+const HX_SKILLS = {
+  stealth: ['Stealth', 'Seated and hidden for longer: less attention while seated, a grace period after you stand'],
+  observation: ['Observation', 'Gather intel faster from seated positions'],
+  climbing: ['Climbing', 'Reach balconies, galleries and rock ledges'],
+  lockpicking: ['Lockpicking', 'Open locked doors and chambers quietly'],
+  hacking: ['Hacking', 'Use security terminals: cameras off, gates stay open, detectors silenced'],
+};
+const hx = { done: {}, choice: {}, skills: { stealth: 0, observation: 0, climbing: 0, lockpicking: 0, hacking: 0 }, points: 1, stories: new Set(), ending: '' };
+let HX = null;                       // the operation in progress
+const CH = { id: null };             // the church interior you're standing in
+Object.assign(CAST, { fixer: ['Levon "Vardapet"', '#e0b0ff'], karo: ['Karo (rival crew)', '#ff6b5e'], mesrop: ['Brother Mesrop', '#d8c7a0'],
+  anahit: ['Dr. Anahit Petrosyan', '#7fe0a0'], gor: ['Gor (guard)', '#8fb4ff'], keeper: ['Old Sargis (caretaker)', '#c9a227'], priest: ['Father Hovhannes', '#f2e2c4'] });
+Object.assign(CAST_LOOKS, {
+  fixer: { skin: '#c49673', hair: '#8a8580', shirt: '#2a2230', pants: '#1d1d22', goatee: true, eyes: '#3a2a1a' },
+  karo: { skin: '#b98a66', hair: '#141214', shirt: '#7a1a1a', pants: '#1d1d22', buzz: true, eyes: '#2a1a12' },
+  mesrop: { skin: '#d0a47e', hair: '#3a2a20', shirt: '#141216', pants: '#141216', goatee: true, eyes: '#4a3a2a' },
+  anahit: { skin: '#e0b89a', hair: '#3b2618', shirt: '#6b8f71', pants: '#2b2f38', longHair: true, eyes: '#3a5a4a' },
+  gor: { skin: '#c68e63', hair: '#1a1410', shirt: '#23262d', pants: '#23262d', buzz: true, eyes: '#2a1a12' },
+  keeper: { skin: '#c9a07e', hair: '#d8d4cc', shirt: '#5a4a3a', pants: '#3a3228', goatee: true, eyes: '#4a3a2a' },
+  priest: { skin: '#e3b894', hair: '#2a1a12', shirt: '#141216', pants: '#141216', goatee: true, eyes: '#3a2a1a' },
+});
+const HX_CONTACT = {
+  mesrop: { cost: 1500, role: 'a monk who wants the church to fix its security',
+    lines: [['mesrop', 'Ari, nstir. Ays tegh aveli apahov e.', 'Come, sit. This place is safer.'],
+      ['mesrop', 'Pahaknery hert en poxum amen kes zham.', 'The guards change shifts every half hour.'],
+      ['mesrop', 'Ov nstum e nstaranin, nran voch voq chi nayum.', 'Nobody looks twice at someone sitting in a pew.'],
+      ['you', 'Isk gaghtni ancumy?', 'And the secret passage?'],
+      ['mesrop', 'Koghqi matury. Qandakvats vahanaky. Mnacatsy du gites.', 'The side chapel. The carved panel. You know the rest.']] },
+  anahit: { cost: 2000, role: 'an archaeologist who knows the storage rooms',
+    lines: [['anahit', 'Es ayntegh yot tari em peghel.', 'I excavated there for seven years.'],
+      ['anahit', 'Pahestum patrolnern amen erku rope anc en galis.', 'Patrols pass the storage every two minutes.'],
+      ['anahit', 'Hnagitakan seghani laptopy anvtangutyan hamakargin e mianum.', "The dig desk's laptop is wired into the security system."],
+      ['you', 'Isk karasnery?', 'And the karas jars?'],
+      ['anahit', 'Mi vazir. Du mi amboghj yerkatsi dar kjardes.', "Don't run. You'd break a whole Iron Age."]] },
+  gor: { cost: 5000, role: 'a guard with gambling debts',
+    lines: [['gor', 'Du aystegh chkas, es el qez chem tesel.', "You're not here, and I never saw you."],
+      ['gor', 'Nizaky verevi sraham e. Tunelov kam jarpov.', 'The Lance is in the upper chamber. Through the tunnel or up the rock.'],
+      ['gor', 'Ete vandakin dipches arants anvtangutyuny anjatelu, amboghj vanqy kzangi.', 'Touch the case without killing security first and the whole monastery rings.'],
+      ['gor', 'Avazani mot nstir. Ayntegh voch voq chi nayum.', 'Sit by the spring. Nobody watches there.']] },
+  keeper: { cost: 800, role: 'the old caretaker of the cemetery',
+    lines: [['keeper', 'Hazar khachkar, tgha. Amen mekn ir patmutyunn uni.', 'A thousand khachkars, son. Each has its own story.'],
+      ['keeper', 'Gishery erku pahak en shrjum lapterov.', 'At night two guards walk the rows with flashlights.'],
+      ['keeper', 'Qarerin hetevum pahvir. Stvery qez kpashtpanen.', 'Hide behind the stones. The shadows will protect you.']] },
+};
+const HX_ENDINGS = {
+  guardian: { title: 'Guardian of Hayastan', lines: [['pm', 'Du ayn mardn es, ov veradardzrets mer zhary.', 'You are the one who brought our heritage home.'],
+    ['pm', 'Hayastany qez partk uni.', 'Armenia owes you a debt.'], ['fixer', 'Hima du herosn es. Iskakan gogh chi darnum herose.', "Now you're a hero. A real thief never becomes one."]] },
+  collector: { title: 'The Collector', lines: [['fixer', 'Amen inch vacharvats e. Du Kovkasi amenaharust goghn es.', "Everything's sold. You're the richest thief in the Caucasus."],
+    ['karo', 'Hayastany qez erbeq chi neri.', 'Armenia will never forgive you.'], ['you', 'Kareli e. Bayc ays tuny hiasqanchi e.', 'Maybe not. But this house is beautiful.']] },
+  double: { title: 'The Double Life', lines: [['fixer', 'Mi dzerqov gogh, myusov veradardzr. Hetaqrqir es.', 'Steal with one hand, give back with the other. Interesting.'],
+    ['mesrop', 'Astvats gite, te inchu. Gonye mi masy tun ekav.', 'God knows why. At least some of it came home.']] },
+};
+
+// ─── Textures (built once, shared by every church) ───────────────────────────
+const HXT = {};
+function hxTex(key, w, h, draw) { return HXT[key] || (HXT[key] = canvasTex(w, h, draw)); }
+const hxNoise = (g, w, h, n, a) => { for (let i = 0; i < n; i++) { g.fillStyle = `rgba(${Math.random() < 0.5 ? '0,0,0' : '255,255,255'},${Math.random() * a})`; g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 4, 2 + Math.random() * 3); } };
+const tuffTex = col => hxTex('tuff' + col, 128, 128, g => {
+  g.fillStyle = col; g.fillRect(0, 0, 128, 128); hxNoise(g, 128, 128, 500, 0.08);
+  g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 2;
+  for (let r = 0; r < 4; r++) { g.beginPath(); g.moveTo(0, r * 32); g.lineTo(128, r * 32); g.stroke(); for (let c = 0; c < 3; c++) { const x = c * 48 + (r % 2) * 24; g.beginPath(); g.moveTo(x, r * 32); g.lineTo(x, r * 32 + 32); g.stroke(); } }
+});
+const slabTex = col => hxTex('slab' + col, 128, 128, g => {
+  g.fillStyle = col; g.fillRect(0, 0, 128, 128); hxNoise(g, 128, 128, 400, 0.07);
+  g.strokeStyle = 'rgba(0,0,0,0.22)'; g.lineWidth = 1.5; for (let k = 0; k <= 2; k++) { g.beginPath(); g.moveTo(0, k * 64); g.lineTo(128, k * 64); g.stroke(); g.beginPath(); g.moveTo(k * 64, 0); g.lineTo(k * 64, 128); g.stroke(); }
+});
+const rockTex = () => hxTex('rock', 128, 128, g => {
+  g.fillStyle = '#4a4540'; g.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 90; i++) { const v = 50 + Math.random() * 40; g.fillStyle = `rgb(${v},${v - 4},${v - 9})`; g.beginPath(); g.ellipse(Math.random() * 128, Math.random() * 128, 4 + Math.random() * 14, 3 + Math.random() * 8, Math.random() * 3, 0, 7); g.fill(); }
+  hxNoise(g, 128, 128, 300, 0.12);
+});
+const frescoTex = k => hxTex('fresco' + k, 128, 64, g => {
+  g.fillStyle = ['#2d4a78', '#7a5a2a', '#3a5a4a'][k % 3]; g.fillRect(0, 0, 128, 64); hxNoise(g, 128, 64, 200, 0.12);
+  for (let n = 0; n < 4; n++) {
+    const x = 16 + n * 32;
+    g.fillStyle = 'rgba(217,164,65,0.85)'; g.beginPath(); g.arc(x, 16, 8, 0, 7); g.fill();
+    g.fillStyle = '#e3b894'; g.beginPath(); g.arc(x, 17, 5, 0, 7); g.fill();
+    g.fillStyle = ['#8a1a22', '#e8e4dc', '#1f4a8a', '#5a2a6a'][(n + k) % 4]; g.beginPath(); g.moveTo(x - 9, 60); g.lineTo(x - 5, 24); g.lineTo(x + 5, 24); g.lineTo(x + 9, 60); g.fill();
+  }
+  g.strokeStyle = '#d9a441'; g.lineWidth = 3; g.strokeRect(2, 2, 124, 60);
+});
+const iconTex = () => hxTex('icon', 64, 96, g => {
+  g.fillStyle = '#b8862e'; g.fillRect(0, 0, 64, 96); hxNoise(g, 64, 96, 120, 0.15);
+  g.fillStyle = '#1f3a78'; g.beginPath(); g.moveTo(8, 92); g.quadraticCurveTo(32, 20, 56, 92); g.fill();
+  g.fillStyle = '#e8c878'; g.beginPath(); g.arc(32, 30, 13, 0, 7); g.fill(); g.fillStyle = '#c99a74'; g.beginPath(); g.arc(32, 31, 8, 0, 7); g.fill();
+  g.fillStyle = '#8a1a22'; g.beginPath(); g.arc(32, 58, 9, 0, 7); g.fill(); g.fillStyle = '#e8c878'; g.beginPath(); g.arc(32, 50, 6, 0, 7); g.fill();
+  g.strokeStyle = '#f4e6c8'; g.lineWidth = 3; g.strokeRect(2, 2, 60, 92);
+});
+const glassTex = () => hxTex('glass', 32, 64, g => {
+  for (let y = 0; y < 64; y += 8) for (let x = 0; x < 32; x += 8) { g.fillStyle = ['#d90012', '#0033a0', '#f2a800', '#2f9fb3', '#7a3aa6', '#1f7a3a'][Math.floor(Math.random() * 6)]; g.fillRect(x, y, 8, 8); }
+  g.strokeStyle = '#1a1410'; g.lineWidth = 1.5; for (let k = 0; k <= 64; k += 8) { g.beginPath(); g.moveTo(0, k); g.lineTo(32, k); g.stroke(); } for (let k = 0; k <= 32; k += 8) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k, 64); g.stroke(); }
+});
+const khachkarTex = () => hxTex('khachkar', 64, 128, g => {
+  g.fillStyle = '#9a8f80'; g.fillRect(0, 0, 64, 128); hxNoise(g, 64, 128, 300, 0.15);
+  g.strokeStyle = 'rgba(40,30,20,0.55)'; g.lineWidth = 2; g.strokeRect(5, 5, 54, 118);
+  for (let y = 12; y < 120; y += 6) { g.beginPath(); g.moveTo(8, y); g.lineTo(12, y + 3); g.stroke(); g.beginPath(); g.moveTo(56, y); g.lineTo(52, y + 3); g.stroke(); }
+  g.fillStyle = 'rgba(40,30,20,0.55)'; g.fillRect(28, 20, 8, 76); g.fillRect(14, 40, 36, 8);
+  for (const [x, y] of [[32, 18], [14, 44], [50, 44], [32, 98]]) { g.beginPath(); g.arc(x, y, 5, 0, 7); g.fill(); }
+  g.strokeStyle = 'rgba(40,30,20,0.4)'; g.beginPath(); g.arc(32, 104, 12, Math.PI, 0); g.stroke(); g.beginPath(); g.moveTo(20, 112); g.quadraticCurveTo(32, 90, 44, 112); g.stroke();
+});
+const cuneiformTex = () => hxTex('cune', 128, 64, g => {
+  g.fillStyle = '#b8743a'; g.fillRect(0, 0, 128, 64); hxNoise(g, 128, 64, 200, 0.1);
+  g.fillStyle = 'rgba(40,20,10,0.6)';
+  for (let r = 0; r < 6; r++) for (let x = 4; x < 124; x += 5 + Math.random() * 4) { const y = 6 + r * 10; g.beginPath(); if (Math.random() < 0.6) { g.moveTo(x, y); g.lineTo(x + 3, y + 1); g.lineTo(x, y + 6); } else { g.moveTo(x, y + 2); g.lineTo(x + 5, y); g.lineTo(x + 5, y + 4); } g.fill(); }
+});
+const valleyTex = () => hxTex('valley', 256, 64, g => {
+  const gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, '#6fa0d8'); gr.addColorStop(1, '#dfe8ef'); g.fillStyle = gr; g.fillRect(0, 0, 256, 64);
+  g.fillStyle = '#6a7a5a'; g.beginPath(); g.moveTo(0, 64); for (let x = 0; x <= 256; x += 16) g.lineTo(x, 30 + Math.sin(x * 0.05) * 10 + Math.random() * 6); g.lineTo(256, 64); g.fill();
+  g.fillStyle = '#4a5a3a'; g.beginPath(); g.moveTo(0, 64); for (let x = 0; x <= 256; x += 12) g.lineTo(x, 46 + Math.sin(x * 0.09 + 1) * 6); g.lineTo(256, 64); g.fill();
+});
+const grassTex = () => hxTex('grass', 64, 64, g => { g.fillStyle = '#2a3a26'; g.fillRect(0, 0, 64, 64); hxNoise(g, 64, 64, 400, 0.18); });
+const texMat = (tex, rep, e = 0.34, col = '#ffffff') => { const t = tex.clone(); t.needsUpdate = true; t.repeat.set(rep[0], rep[1]); return lam(col, { map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: e }); };
+
+// ─── Layout language ─────────────────────────────────────────────────────────
+// Everything is placed in the church's local plan (0..w across, 0..h down; the altar is north, the door south).
+const CI = () => INTERIORS.church;
+const hxW = (x, y) => [CI().ox + x, CI().oy + y];
+const L = {
+  mesh(geo, mat, x, y, h = 0, o = {}) { const m = new THREE.Mesh(geo, mat); m.position.set(CI().ox + x, h, CI().oy + y); m.castShadow = o.shadow !== false; m.receiveShadow = true; CH.group.add(m); return m; },
+  box(x0, y0, x1, y1, h, mat, o = {}) {
+    const m = L.mesh(new THREE.BoxGeometry(Math.max(0.5, x1 - x0), h, Math.max(0.5, y1 - y0)), mat, (x0 + x1) / 2, (y0 + y1) / 2, (o.y || 0) + h / 2, o);
+    if (o.solid) CI().solids.push([x0 - 2, y0 - 2, x1 + 2, y1 + 2]);
+    if (o.occ) CH.occ.push({ r: [CI().ox + x0, CI().oy + y0, CI().ox + x1, CI().oy + y1], low: o.occ === 'low' });
+    if (o.plan) CH.plan.push({ r: [x0, y0, x1, y1], k: o.plan });
+    return m;
+  },
+  wall(x0, y0, x1, y1, h = 74, mat = CH.wallMat) { return L.box(x0, y0, x1, y1, h, mat, { solid: true, occ: 'full', plan: 'wall' }); },
+  floor(x0, y0, x1, y1, mat, y = 0.4) { const g = new THREE.PlaneGeometry(x1 - x0, y1 - y0).rotateX(-Math.PI / 2); const m = L.mesh(g, mat, (x0 + x1) / 2, (y0 + y1) / 2, y, { shadow: false }); return m; },
+  room(floorMat, wallMat) {
+    const I = CI(); L.floor(0, 0, I.w, I.h, floorMat);
+    L.wall(0, 0, I.w, 10, 74, wallMat); L.wall(0, 0, 10, I.h, 74, wallMat); L.wall(I.w - 10, 0, I.w, I.h, 74, wallMat);
+    const d = I.door[0]; L.box(0, I.h - 10, d - 26, I.h, 10, wallMat, { solid: true, plan: 'wall' }); L.box(d + 26, I.h - 10, I.w, I.h, 10, wallMat, { solid: true, plan: 'wall' });
+    const ring = L.mesh(new THREE.RingGeometry(14, 18, 32).rotateX(-Math.PI / 2), basic(0x5fd4c4, { ...additive, opacity: 0.8 }), d, I.h - 24, 0.9, { shadow: false });
+    CH.plan.push({ r: [d - 24, I.h - 12, d + 24, I.h], k: 'exit' });
+    return ring;
+  },
+  pillar(x, y, r = 10, h = 96, mat = CH.wallMat) {
+    L.mesh(new THREE.CylinderGeometry(r, r * 1.08, h, 12), mat, x, y, h / 2);
+    L.mesh(new THREE.BoxGeometry(r * 2.6, 6, r * 2.6), mat, x, y, 3); L.mesh(new THREE.BoxGeometry(r * 2.8, 7, r * 2.8), mat, x, y, h - 3);
+    CI().solids.push([x - r - 3, y - r - 3, x + r + 3, y + r + 3]);
+    CH.occ.push({ r: [CI().ox + x - r, CI().oy + y - r, CI().ox + x + r, CI().oy + y + r] }); CH.plan.push({ r: [x - r, y - r, x + r, y + r], k: 'pillar' });
+  },
+  arch(x0, y0, x1, y1, h = 88, mat = CH.wallMat) {
+    const len = Math.hypot(x1 - x0, y1 - y0), m = L.mesh(new THREE.TorusGeometry(len / 2, 3.2, 6, 16, Math.PI), mat, (x0 + x1) / 2, (y0 + y1) / 2, h, { shadow: false });
+    m.rotation.y = -Math.atan2(y1 - y0, x1 - x0);
+  },
+  // A pew: bench plus back, its seats in a row facing north
+  pew(x0, y, len, o = {}) {
+    const wood = CH.woodMat;
+    L.box(x0, y - 5, x0 + len, y + 3, 7, wood, { solid: true, occ: 'low', plan: 'pew' });
+    L.box(x0, y + 3, x0 + len, y + 6, 17, wood); L.box(x0 - 1, y - 6, x0 + 2, y + 6, 13, wood); L.box(x0 + len - 2, y - 6, x0 + len + 1, y + 6, 13, wood);
+    if (o.kneeler) L.box(x0 + 2, y - 16, x0 + len - 2, y - 12, 3, CH.cushionMat);
+    const n = Math.max(1, Math.floor(len / 30));
+    for (let k = 0; k < n; k++) L.seatAt(o.kind || 'pew', x0 + len / (n * 2) + k * len / n, y, -Math.PI / 2, { stand: [0, -15], cache: o.cache && k === 0, h: 7, pray: true });
+  },
+  pews(x0, y0, len, rows, gap = 34, o = {}) { for (let r = 0; r < rows; r++) L.pew(x0, y0 + r * gap, len, { ...o, cache: o.cacheRow === r }); },
+  // Stone bench along a wall: seats every 26 px facing `a`
+  bench(x0, y0, x1, y1, a, o = {}) {
+    L.box(x0, y0, x1, y1, 8, o.mat || CH.benchMat, { solid: true, occ: 'low', plan: 'pew' });
+    const along = x1 - x0 > y1 - y0, len = along ? x1 - x0 : y1 - y0, n = Math.max(1, Math.floor(len / 26));
+    const sx = Math.cos(a) * 15, sy = Math.sin(a) * 15;
+    for (let k = 0; k < n; k++) { const t = (k + 0.5) / n, x = along ? x0 + t * len : (x0 + x1) / 2, y = along ? (y0 + y1) / 2 : y0 + t * len; L.seatAt(o.kind || 'bench', x, y, a, { stand: [sx, sy], h: 8, ...o }); }
+  },
+  // Single seats: carved chair, prayer stool, clergy stall, alcove niche, terminal chair, sacred seat
+  seat(kind, x, y, a, o = {}) {
+    const fx = Math.cos(a), fy = Math.sin(a), bx = x - fx * 6, by = y - fy * 6;
+    if (kind === 'stool') L.box(x - 5, y - 5, x + 5, y + 5, 4, CH.cushionMat);
+    else if (kind === 'alcove') {
+      L.box(bx - 11, by - 11, bx + 11, by + 11, 46, basic(0x0c0a0a), { y: 0.5 });          // the dark niche behind
+      L.box(x - 7, y - 7, x + 7, y + 7, 7, CH.benchMat);
+    } else {
+      const mat = kind === 'clergy' || kind === 'terminal' ? CH.stallMat : kind === 'sacred' ? CH.benchMat : kind === 'bench' ? CH.benchMat : CH.woodMat;
+      L.box(x - 6, y - 6, x + 6, y + 6, 7, mat);
+      const back = L.box(bx - 1.5, by - 1.5, bx + 1.5, by + 1.5, kind === 'clergy' ? 34 : 22, mat); back.scale.set(Math.abs(fy) > 0.5 ? 8 : 1, 1, Math.abs(fx) > 0.5 ? 8 : 1);
+      if (kind === 'clergy') L.box(bx - 8, by - 8, bx + 8, by + 8, 3, mat, { y: 34 });
+      if (kind === 'terminal') { const s = L.mesh(new THREE.BoxGeometry(10, 7, 1), basic(0x3fb8c8), x + fx * 9, y + fy * 9, 14); s.rotation.y = -a + Math.PI / 2; }
+      if (kind === 'sacred') L.mesh(new THREE.RingGeometry(9, 11, 24).rotateX(-Math.PI / 2), basic(0xf2a800, { ...additive, opacity: 0.6 }), x, y, 0.8, { shadow: false });
+    }
+    CI().solids.push([x - 6, y - 6, x + 6, y + 6]);
+    return L.seatAt(kind, x, y, a, { stand: [fx * 16, fy * 16], h: kind === 'stool' ? 0 : 7, ...o });
+  },
+  seatAt(kind, x, y, a, o = {}) { const s = { kind, x, y, a, i: CH.seats.length, ...o }; CH.seats.push(s); return s; },
+  zone(name, x0, y0, x1, y1) { CH.zones.push({ name, r: [x0, y0, x1, y1] }); },
+  elev(x0, y0, x1, y1, h, mat) { CH.elevs.push({ r: [x0, y0, x1, y1], h }); if (mat) L.box(x0, y0, x1, y1, h, mat, { plan: 'raised' }); },
+  // Doors: locked (pick or force), secret (hidden until found), gate (closes on alarm)
+  door(kind, x0, y0, x1, y1, o = {}) {
+    const d = { kind, r: [x0, y0, x1, y1], open: kind === 'gate', label: o.label || 'door', at: o.at || [(x0 + x1) / 2, (y0 + y1) / 2 + 16], found: kind !== 'secret', ...o };
+    d.mesh = L.box(x0, y0, x1, y1, kind === 'gate' ? 60 : 70, kind === 'secret' ? CH.wallMat : kind === 'gate' ? CH.gateMat : CH.doorMat);
+    d.solid = [x0 - 2, y0 - 2, x1 + 2, y1 + 2];
+    if (!d.open) CI().solids.push(d.solid);
+    if (kind === 'gate') d.mesh.visible = false;
+    CH.doors.push(d); return d;
+  },
+  guard(route, o = {}) { CH.guardDefs.push({ route, ...o }); },
+  monk(x, y, a, o = {}) { CH.monkDefs.push({ x, y, a, ...o }); },
+  cam(x, y, a, sweep = 0.8, o = {}) { CH.camDefs.push({ x, y, a, sweep, ...o }); },
+  loot(id, cat, name, x, y, ops, o = {}) { CH.lootDefs.push({ id, cat, name, x, y, ops, ...o }); },
+  climb(x, y, to, label, o = {}) { CH.climbs.push({ x, y, to, label, ...o }); },
+  altExit(x, y, label, o = {}) { CH.altExits.push({ x, y, label, ...o }); },
+  detector(x, y) { CH.detectors.push({ x, y }); const m = CH.metalMat; L.box(x - 22, y - 3, x - 18, y + 3, 50, m); L.box(x + 18, y - 3, x + 22, y + 3, 50, m); L.box(x - 22, y - 3, x + 22, y + 3, 4, m, { y: 50 }); },
+  // Decoration
+  altar(x, y, w = 60) {
+    L.box(x - w / 2, y - 12, x + w / 2, y + 12, 18, CH.benchMat, { solid: true, occ: 'low', plan: 'altar' });
+    L.box(x - w / 2 - 2, y - 13, x + w / 2 + 2, y + 13, 1.5, basic(0xe8e4dc), { y: 18 });
+    L.box(x - 1.5, y - 1.5, x + 1.5, y + 1.5, 16, basic(0xd9a441), { y: 19.5 }); L.box(x - 6, y - 1.5, x + 6, y + 1.5, 2, basic(0xd9a441), { y: 29 });
+    L.candles(x - w / 2 + 6, y, 3); L.candles(x + w / 2 - 6, y, 3);
+  },
+  candles(x, y, n = 6, stand = false) {
+    if (stand) { L.box(x - 12, y - 8, x + 12, y + 8, 22, CH.metalMat, { solid: true }); }
+    const top = stand ? 22 : 19.5;
+    for (let k = 0; k < n; k++) {
+      const cx = x + (k % 4 - 1.5) * 5, cy = y + (Math.floor(k / 4) - 0.5) * 5;
+      L.mesh(new THREE.CylinderGeometry(0.7, 0.7, 7, 5), basic(0xf4e6c8), cx, cy, top + 3.5, { shadow: false });
+      const f = L.mesh(new THREE.SphereGeometry(1.4, 6, 5), basic(0xffc46e, { ...additive, opacity: 0.95 }), cx, cy, top + 8, { shadow: false });
+      CH.flames.push(f);
+    }
+    const glow = L.mesh(new THREE.PlaneGeometry(40, 40).rotateX(-Math.PI / 2), basic(0xffa040, { ...additive, opacity: 0.16, map: glowDiscTex() }), x, y, 0.9, { shadow: false });
+    CH.glows.push(glow);
+  },
+  icon(x, y, w = 26, h = 38, face = 0) { const m = L.mesh(new THREE.PlaneGeometry(w, h), basic(0xffffff, { map: iconTex() }), x, y, 30 + h / 2, { shadow: false }); m.rotation.y = face; },
+  fresco(x0, y0, x1, y1, k = 0, h = 30) {
+    const horiz = Math.abs(x1 - x0) > Math.abs(y1 - y0), len = horiz ? Math.abs(x1 - x0) : Math.abs(y1 - y0);
+    const m = L.mesh(new THREE.PlaneGeometry(len, h), basic(0xffffff, { map: frescoTex(k) }), (x0 + x1) / 2, (y0 + y1) / 2, 40, { shadow: false });
+    m.rotation.y = horiz ? (y0 < CI().h / 2 ? 0 : Math.PI) : (x0 < CI().w / 2 ? Math.PI / 2 : -Math.PI / 2);
+  },
+  // A stained-glass window on a side wall, with a coloured shaft of light falling across the floor
+  window(x, y, side, w = 22) {
+    const m = L.mesh(new THREE.PlaneGeometry(w, 34), basic(0xffffff, { map: glassTex() }), x, y, 46, { shadow: false }); m.rotation.y = side === 'w' ? Math.PI / 2 : side === 'e' ? -Math.PI / 2 : 0;
+    const dir = side === 'w' ? 1 : side === 'e' ? -1 : 0;
+    const shaft = L.mesh(new THREE.PlaneGeometry(w, 70), basic(0xffe2a8, { ...additive, opacity: 0.1, side: THREE.DoubleSide }), x + dir * 30, dir ? y : y + 30, 26, { shadow: false });
+    shaft.rotation.set(dir ? 0 : -0.9, dir ? Math.PI / 2 : 0, dir ? dir * 0.9 : 0);
+    const pool = L.mesh(new THREE.PlaneGeometry(w * 1.3, 36).rotateX(-Math.PI / 2), basic(0xffffff, { ...additive, opacity: 0.2, map: glassTex() }), x + dir * 55, dir ? y : y + 55, 0.7, { shadow: false });
+    pool.rotation.y = dir ? Math.PI / 2 : 0; CH.shafts.push(shaft, pool);
+  },
+  oculus(x, y, r = 24) {
+    L.mesh(new THREE.CylinderGeometry(r * 0.6, r, 110, 16, 1, true), basic(0xfff4dc, { ...additive, opacity: 0.12, side: THREE.DoubleSide }), x, y, 55, { shadow: false });
+    L.mesh(new THREE.CircleGeometry(r, 24).rotateX(-Math.PI / 2), basic(0xfff4dc, { ...additive, opacity: 0.3 }), x, y, 0.8, { shadow: false });
+  },
+  water(x0, y0, x1, y1) { const m = L.floor(x0, y0, x1, y1, basic(0x3b6a8a, { transparent: true, opacity: 0.85 }), 0.9); CH.waters.push(m); CH.plan.push({ r: [x0, y0, x1, y1], k: 'water' }); },
+  khachkar(x, y, a = 0, s = 1, solid = true) {
+    const m = L.mesh(new THREE.BoxGeometry(18 * s, 34 * s, 5 * s), CH.khachkarMat, x, y, 17 * s); m.rotation.y = -a;
+    if (solid) { CI().solids.push([x - 10 * s, y - 10 * s, x + 10 * s, y + 10 * s]); CH.occ.push({ r: [CI().ox + x - 8 * s, CI().oy + y - 8 * s, CI().ox + x + 8 * s, CI().oy + y + 8 * s] }); CH.plan.push({ r: [x - 8 * s, y - 3, x + 8 * s, y + 3], k: 'khachkar' }); }
+    return m;
+  },
+  jar(x, y, s = 1, col = '#a8603a') {
+    const m = L.mesh(new THREE.SphereGeometry(9 * s, 10, 8), ilam(col, 0.3), x, y, 9 * s); m.scale.y = 1.25;
+    L.mesh(new THREE.CylinderGeometry(4 * s, 5 * s, 5 * s, 8), ilam(col, 0.3), x, y, 21 * s);
+  },
+  relief(x0, y0, x1, y1, h = 40) { const m = L.box(x0, y0, x1, y1, h, texMat(cuneiformTex(), [1, 1], 0.3)); return m; },
+  sign(x, y, text) { CH.signs.push({ x, y, text }); },
+};
+let _glowDisc = null;
+function glowDiscTex() { return _glowDisc || (_glowDisc = canvasTex(64, 64, g => { const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }, false)); }
+L.khachkar = (x, y, a = 0, s = 1, solid = true) => {
+  const m = new THREE.Mesh(CH.kgeo, CH.khachkarMat); m.position.set(CI().ox + x, 17 * s, CI().oy + y); m.rotation.y = -a; m.scale.setScalar(s); m.castShadow = true; CH.group.add(m);
+  if (solid) { CI().solids.push([x - 10 * s, y - 10 * s, x + 10 * s, y + 10 * s]); CH.occ.push({ r: [CI().ox + x - 8 * s, CI().oy + y - 8 * s, CI().ox + x + 8 * s, CI().oy + y + 8 * s] }); CH.plan.push({ r: [x - 8 * s, y - 3, x + 8 * s, y + 3], k: 'khachkar' }); }
+  return m;
+};
+// Each layout: size, door, palette, the build, and the stories its seats tell
+const CHURCHES = {
+  etch: { name: 'Etchmiadzin Cathedral', w: 640, h: 900, door: 320, wall: '#d8ccb6', floor: '#b9ad98', guards: 'church',
+    build() {
+      L.room(texMat(slabTex('#b9ad98'), [6, 8]), CH.wallMat);
+      // North band behind the altar wall: crypt, library, sacristy
+      L.wall(150, 10, 160, 60); L.door('locked', 150, 60, 160, 92, { label: 'crypt door', at: [140, 76], atB: [172, 76] }); L.wall(150, 92, 160, 140);
+      L.wall(480, 10, 490, 60); L.door('gate', 480, 60, 490, 92, { label: 'library gate' }); L.wall(480, 92, 490, 140);
+      L.wall(10, 140, 60, 150); L.door('secret', 60, 140, 100, 150, { label: 'carved panel', at: [80, 166] }); L.wall(100, 140, 520, 150);
+      L.door('locked', 520, 140, 560, 150, { label: 'sacristy door', at: [540, 166], atB: [540, 126] }); L.wall(560, 140, 630, 150);
+      L.zone('Crypt', 10, 10, 150, 140); L.zone('Library', 160, 10, 480, 140); L.zone('Sacristy', 490, 10, 630, 140);
+      for (let k = 0; k < 4; k++) { L.box(20, 20 + k * 30, 36, 34 + k * 30, 30, CH.woodMat, { solid: true, occ: 'full', plan: 'shelf' }); }
+      for (const x of [205, 435]) L.box(x - 10, 16, x + 10, 100, 58, CH.woodMat, { solid: true, occ: 'full', plan: 'shelf' });
+      for (const x of [230, 290, 350, 410]) L.box(x - 12, 100, x + 12, 116, 12, CH.woodMat, { solid: true, occ: 'low', plan: 'shelf' });
+      L.box(308, 40, 332, 52, 16, CH.woodMat, { solid: true, occ: 'low' });
+      L.box(590, 20, 626, 60, 40, CH.woodMat, { solid: true, occ: 'full', plan: 'shelf' });
+      L.loot('gospels', 'manuscript', 'The Golden Gospels (5th century)', 320, 62, ['echmiadzin', 'takeover']);
+      L.loot('codex', 'manuscript', 'Crypt codex of the Mother See', 90, 40, ['echmiadzin', 'takeover'], { bonus: 0.3 });
+      // Bema, altar, clergy stalls and the priest's chair with its terminal
+      L.floor(200, 150, 440, 244, lam('#ffffff', { map: carpetTex, emissive: 0xffffff, emissiveMap: carpetTex, emissiveIntensity: 0.4 }), 0.6);
+      L.box(200, 240, 440, 246, 3, CH.benchMat);
+      L.altar(320, 178, 70); L.icon(320, 152, 30, 44); L.zone('Bema (clergy only)', 200, 150, 440, 246);
+      L.box(200, 250, 246, 252, 52, CH.curtainMat); L.box(394, 250, 440, 252, 52, CH.curtainMat);
+      for (const y of [182, 206]) L.seat('clergy', 214, y, 0);
+      L.seat('terminal', 426, 182, Math.PI, { label: "the priest's chair" }); L.seat('clergy', 426, 206, Math.PI);
+      L.fresco(170, 151, 196, 151, 0); L.fresco(444, 151, 476, 151, 1);
+      // Side chapels
+      L.wall(150, 150, 160, 250); L.door('gate', 150, 250, 160, 300, { label: 'chapel gate' }); L.wall(150, 300, 160, 340); L.wall(10, 330, 150, 340);
+      L.wall(480, 150, 490, 250); L.door('gate', 480, 250, 490, 300, { label: 'chapel gate' }); L.wall(480, 300, 490, 340); L.wall(490, 330, 630, 340);
+      L.wall(10, 550, 150, 560); L.wall(150, 550, 160, 620); L.door('gate', 150, 620, 160, 680, { label: 'chapel gate' }); L.wall(150, 680, 160, 750); L.wall(10, 740, 150, 750);
+      L.wall(490, 550, 630, 560); L.wall(480, 550, 490, 620); L.door('gate', 480, 620, 490, 680, { label: 'chapel gate' }); L.wall(480, 680, 490, 750); L.wall(490, 740, 630, 750);
+      for (const [cx, face, cy] of [[34, Math.PI, 240], [606, 0, 240], [34, Math.PI, 650], [606, 0, 650]]) {
+        L.altar(cx, cy, 24); L.icon(cx + (face ? -22 : 22), cy, 20, 30, face ? Math.PI / 2 : -Math.PI / 2);
+        const sx = face ? 1 : -1;
+        for (const dy of [-34, 0, 34]) L.seat('stool', cx + sx * 50, cy + dy, face);
+        for (const dy of [-18, 18]) L.seat('chair', cx + sx * 88, cy + dy, face);
+      }
+      L.zone('North-west chapel', 10, 150, 150, 330);
+      // A loose bench in the south-west chapel can be dragged under the window: a second way out
+      CH.movable = { mesh: L.box(96, 712, 136, 722, 7, CH.woodMat), x: 116, y: 717, to: [30, 600], label: 'Drag the bench under the chapel window' };
+      L.window(11, 600, 'w', 20);
+      // Crossing: the four pillars under the dome, and the Altar of the Descent
+      for (const [x, y] of [[220, 270], [420, 270], [220, 410], [420, 410]]) L.pillar(x, y, 13, 100);
+      L.arch(220, 270, 420, 270, 96); L.arch(220, 410, 420, 410, 96); L.arch(220, 270, 220, 410, 96); L.arch(420, 270, 420, 410, 96);
+      const dome = L.mesh(new THREE.TorusGeometry(100, 4, 6, 40), CH.wallMat, 320, 340, 104, { shadow: false }); dome.rotation.x = Math.PI / 2;
+      L.altar(320, 330, 34);
+      L.seat('sacred', 320, 368, -Math.PI / 2, { label: 'Sit before the Altar of the Descent', story: 'etch' });
+      // Nave: two blocks of pews, eleven rows, with a cache under one of them
+      L.pews(185, 460, 110, 11, 34, { kneeler: true, cacheRow: 9 }); L.pews(345, 460, 110, 11, 34, { kneeler: true });
+      // East gallery (balcony) reached by climbing, with priests' seats looking down on the nave
+      L.elev(500, 350, 630, 540, 40, CH.woodMat);
+      CI().solids.push([494, 346, 502, 544], [494, 344, 630, 352], [494, 538, 630, 546]); CH.plan.push({ r: [500, 350, 630, 540], k: 'raised' });
+      L.box(498, 350, 502, 540, 14, CH.woodMat, { y: 40 });
+      L.climb(478, 450, [522, 450], 'Climb up to the gallery', { need: 'climbing', elev: true });
+      L.climb(516, 450, [470, 450], 'Climb down from the gallery', { down: true });
+      for (let k = 0; k < 5; k++) L.seatAt('balcony', 560, 372 + k * 38, Math.PI, { stand: [-14, 0], h: 47, vantage: true });
+      for (const y of [400, 480]) L.seatAt('clergy', 614, y, Math.PI, { stand: [-18, 0], h: 47 });
+      L.zone('Gallery (clergy seats)', 596, 380, 630, 500);
+      // Alcoves in the thick walls, windows, frescoes, candles, the guards' bench, the gates and the metal detector
+      L.seat('alcove', 22, 470, 0); L.seat('alcove', 22, 820, 0); L.seat('alcove', 618, 820, Math.PI);
+      L.window(11, 420, 'w'); L.window(11, 800, 'w'); L.window(629, 800, 'e'); L.window(629, 620, 'e');
+      L.fresco(11, 360, 11, 540, 2); L.fresco(629, 580, 629, 540, 0);
+      L.candles(250, 848, 8, true); L.candles(390, 848, 8, true);
+      L.bench(530, 856, 610, 866, -Math.PI / 2, { kind: 'guard' });
+      L.door('gate', 294, 876, 346, 884, { label: 'entrance gate' });
+      L.detector(320, 842);
+      L.guard([[320, 830], [320, 440], [262, 432], [378, 432], [320, 440]], { min: 2 });
+      L.guard([[172, 830], [172, 450], [90, 430], [90, 800]], { min: 2 });
+      L.guard([[468, 830], [468, 450], [560, 250], [468, 450]], { min: 3 });
+      L.guard([[180, 80], [462, 80], [462, 126], [180, 126]], { min: 4 });
+      L.guard([[520, 50], [610, 90], [520, 120]], { min: 5 });
+      L.cam(320, 16, Math.PI / 2, 0.8, { min: 3 }); L.cam(446, 156, 2.3, 0.5, { min: 2 }); L.cam(620, 884, -2.4, 0.5, { min: 4 });
+      L.monk(214, 182, 0, { seat: true }); L.monk(426, 206, Math.PI, { seat: true }); L.monk(320, 210, -Math.PI / 2, { route: [[250, 210], [390, 210]], priest: true });
+    },
+    backstory: [['priest', 'Ays tachary kangnel e 301-in, erb Hayastany arajiny yndunets qristoneutyuny.', 'This church stood in 301, when Armenia became the first Christian nation.'],
+      ['priest', 'Grigor Lusavorichy tesilq tesav: Miatsinn ijav ev tsuyts tvec ays tegh.', 'Gregory the Illuminator saw a vision: the Only-Begotten descended and pointed here.'],
+      ['priest', 'Ejmiatsin: "ijav Miatsiny". Ayd e anuny.', 'Ejmiatsin: "the Only-Begotten descended". That is the name.']],
+    story: [['you', '(You sit before the Altar of the Descent. The hymns echo off the dome.)', ''],
+      ['fixer', 'Tsnvel es Gyumrium, bayc tatikd ays tachari mot er aprum. Hishum es?', 'You were born in Gyumri, but your grandmother lived by this cathedral. Remember?'],
+      ['you', 'Na indz berum er aystegh amen kiraki. Morats ei.', 'She brought me here every Sunday. I had forgotten.'],
+      ['fixer', 'Hima voroshir: du galis es gogh, te zhary pahpanogh?', 'Now decide: are you here as a thief, or as the keeper of the treasure?']] },
+
+  khor: { name: 'Khor Virap: the pit of St. Gregory', w: 440, h: 540, door: 220, wall: '#6a5c50', floor: '#6b5a48', rock: true, guards: 'church',
+    build() {
+      L.room(texMat(rockTex(), [4, 5], 0.3), CH.wallMat);
+      for (const x of [210, 230]) L.box(x - 1.5, 524, x + 1.5, 527, 90, CH.woodMat); for (let k = 0; k < 8; k++) L.box(210, 524, 230, 527, 1.5, CH.woodMat, { y: 8 + k * 11 });   // the ladder up to the courtyard
+      L.pillar(140, 300, 18, 90, CH.wallMat); L.pillar(300, 300, 18, 90, CH.wallMat);
+      L.wall(10, 10, 60, 60); L.wall(380, 10, 430, 44);
+      L.altar(220, 92, 60); L.icon(220, 12, 26, 40); L.candles(330, 110, 8, true); L.zone('Underground altar (clergy only)', 150, 40, 290, 140);
+      L.box(386, 44, 430, 80, 20, CH.benchMat, { solid: true, occ: 'low' });
+      L.loot('chalice', 'metal', 'Silver chalice of Khor Virap', 220, 62, ['khorvirap']);
+      L.loot('reliquary', 'metal', 'Reliquary of St. Gregory the Illuminator', 404, 96, ['khorvirap'], { bonus: 0.5 });
+      L.bench(12, 170, 26, 420, 0); L.bench(414, 170, 428, 420, Math.PI);
+      L.water(40, 458, 400, 468); L.box(210, 456, 230, 470, 1, CH.metalMat);
+      L.seat('alcove', 24, 120, 0); L.seat('alcove', 416, 470, Math.PI);
+      L.seat('sacred', 220, 196, -Math.PI / 2, { label: 'Sit on the stone where St. Gregory was held', story: 'khor' });
+      L.seat('stool', 190, 150, -Math.PI / 2); L.seat('stool', 250, 150, -Math.PI / 2);
+      L.bench(300, 500, 380, 512, -Math.PI / 2, { kind: 'guard' });
+      L.fresco(11, 60, 11, 160, 1); L.fresco(429, 200, 429, 320, 2);
+      L.door('gate', 196, 518, 244, 526, { label: 'ladder gate' });
+      L.guard([[220, 480], [220, 170], [100, 140], [340, 150]], { min: 2 });
+      L.guard([[60, 450], [60, 160]], { min: 3 });
+      L.guard([[380, 450], [380, 160]], { min: 4 });
+      L.cam(424, 16, 2.4, 0.5, { min: 3 });
+      L.monk(220, 120, -Math.PI / 2, {});
+    },
+    backstory: [['mesrop', 'Tasnyerek tari Grigory aprel e ays khorum, otsi ev kari mej.', 'For thirteen years Gregory lived in this pit, among snakes and stone.'],
+      ['mesrop', 'Mi kin hats er nnetum nerqev. Ayd hatsy prkets Hayastany.', 'A widow threw bread down to him. That bread saved Armenia.']],
+    story: [['you', '(The stone is cold. Someone scratched a cross into it long ago.)', ''],
+      ['mesrop', 'Trdat tagavory nran netets ays khory. Heto hivandatsav, ev miayn Grigory karogh er nran bujel.', 'King Trdat threw him into this pit. Then the king fell ill, and only Gregory could heal him.'],
+      ['you', 'Ev Hayastany darav arajin qristonya erkiry.', 'And Armenia became the first Christian country.'],
+      ['mesrop', 'Mi dzeviv. Isk du inch es uzum darnal?', 'In a way. And what do you want to become?']] },
+
+  erebuni: { name: 'Erebuni Fortress', w: 780, h: 560, door: 390, wall: '#b86e48', floor: '#a8826a', guards: 'museum',
+    build() {
+      L.room(texMat(slabTex('#a8826a'), [7, 5]), CH.wallMat);
+      L.wall(385, 10, 395, 250); L.wall(385, 320, 395, 450);
+      L.zone('Storage magazine (staff only)', 395, 10, 770, 450);
+      for (const x of [120, 260]) for (const y of [110, 230, 350]) L.pillar(x, y, 9, 90, CH.woodMat);
+      L.relief(12, 90, 22, 210, 46); L.relief(150, 12, 250, 22, 46); L.relief(12, 280, 22, 380, 46);
+      L.box(24, 130, 50, 160, 30, CH.benchMat, { solid: true, occ: 'low' }); L.box(176, 24, 206, 46, 30, CH.benchMat, { solid: true, occ: 'low' });
+      L.loot('argishti', 'urartian', 'Foundation inscription of King Argishti I (782 BC)', 58, 146, ['urartu']);
+      L.loot('haldi', 'urartian', 'Bronze relief of the god Haldi', 191, 56, ['urartu'], { bonus: 0.4 });
+      L.seat('sacred', 300, 36, Math.PI / 2, { label: "Sit on King Argishti's throne stone", story: 'erebuni' });
+      for (let r = 0; r < 7; r++) for (const x of [430, 470, 510, 600, 640, 680, 720]) {
+        const y = 60 + r * 50; if ((x === 640 && r === 3) || (x === 470 && r === 6)) continue;
+        L.jar(x, y, 0.95, r % 2 ? '#a8603a' : '#b8703a'); CI().solids.push([x - 11, y - 11, x + 11, y + 11]); CH.occ.push({ r: [...hxW(x - 8, y - 8), ...hxW(x + 8, y + 8)], low: true }); CH.plan.push({ r: [x - 9, y - 9, x + 9, y + 9], k: 'jar' });
+      }
+      L.loot('jug', 'pottery', 'Painted Urartian ceramic jug', 640, 210, ['pottery']);
+      L.loot('karas', 'pottery', 'Iron Age karas storage jar', 470, 360, ['pottery'], { bonus: 0.6 });
+      L.loot('pitcher', 'pottery', 'Red-polished Bronze Age pitcher', 750, 120, ['pottery'], { bonus: 0.3 });
+      L.box(430, 410, 560, 430, 16, CH.woodMat, { solid: true, occ: 'low', plan: 'shelf' });
+      for (const x of [450, 500, 540]) L.seat('chair', x, 442, -Math.PI / 2, { stand: [0, 16] });
+      L.box(650, 404, 750, 424, 16, CH.woodMat, { solid: true, occ: 'low', plan: 'shelf' });
+      L.seat('terminal', 700, 436, -Math.PI / 2, { label: "the archaeologists' desk (security laptop)", stand: [0, 16] });
+      L.bench(120, 486, 260, 498, -Math.PI / 2); L.bench(520, 486, 660, 498, -Math.PI / 2);
+      L.seat('alcove', 368, 60, Math.PI); L.seat('alcove', 22, 430, 0);
+      L.bench(690, 530, 760, 540, -Math.PI / 2, { kind: 'guard' });
+      L.door('gate', 385, 250, 395, 320, { label: 'storage gate' }); L.door('gate', 366, 536, 414, 544, { label: 'entrance gate' });
+      L.guard([[390, 520], [200, 420], [200, 60], [330, 80]], { min: 2 });
+      L.guard([[555, 470], [555, 40], [575, 40], [575, 470]], { min: 2 });
+      L.guard([[60, 470], [60, 60], [330, 470]], { min: 4 });
+      L.guard([[750, 470], [750, 330], [700, 470]], { min: 5 });
+      L.cam(764, 16, 2.4, 0.6, { min: 3 }); L.cam(16, 16, 0.8, 0.6, { min: 4 }); L.cam(400, 470, -1.2, 0.6, { min: 5 });
+      L.monk(500, 442, -Math.PI / 2, { seat: true, look: 'staff' });
+    },
+    backstory: [['anahit', 'Argishti Arajiny himnadrets Erebunin mer tvarkutyunits 782 tari araj.', 'Argishti I founded Erebuni in 782 BC.'],
+      ['anahit', 'Ayd sepakan grutyuny Yerevani tsnndyan vkayakann e.', "That cuneiform inscription is Yerevan's birth certificate."]],
+    story: [['you', '(A throne stone, worn smooth by twenty-eight centuries.)', ''],
+      ['anahit', 'Yerevany Hromits hin e. Mtatsir: ays qarerin tagavornery nstel en.', 'Yerevan is older than Rome. Think about it: kings sat on these stones.'],
+      ['you', 'Ev hima es.', 'And now me.'], ['anahit', 'Hima du. Mi mornir, te ov es.', "Now you. Don't forget who you are."]] },
+
+  geghard: { name: 'Geghard Monastery', w: 720, h: 660, door: 360, wall: '#6a625a', floor: '#6e675d', rock: true, guards: 'elite',
+    build() {
+      L.room(texMat(rockTex(), [6, 6], 0.32), CH.wallMat);
+      // Gavit (entrance hall)
+      L.wall(170, 420, 180, 500); L.wall(170, 560, 180, 650); L.wall(540, 420, 550, 650);
+      L.wall(170, 410, 330, 420); L.wall(390, 410, 550, 420);
+      for (const [x, y] of [[270, 480], [450, 480], [270, 590], [450, 590]]) L.pillar(x, y, 12, 90);
+      L.bench(460, 620, 530, 632, -Math.PI / 2, { kind: 'guard' });
+      L.door('gate', 330, 410, 390, 420, { label: 'church gate' });
+      // Avazan: the chapel of the sacred spring
+      L.wall(10, 370, 60, 380); L.door('locked', 60, 370, 110, 380, { label: 'tunnel grate', at: [85, 394], atB: [85, 356] }); L.wall(110, 370, 170, 380);
+      L.water(40, 440, 120, 520); L.seat('sacred', 80, 548, -Math.PI / 2, { label: 'Sit by the sacred spring', story: 'geghard' });
+      L.bench(12, 560, 26, 630, 0);
+      L.fresco(11, 400, 11, 520, 1);
+      // Main church (Katoghike) with its oculus of light
+      L.wall(170, 150, 180, 410); L.wall(540, 150, 550, 300); L.wall(540, 360, 550, 410);
+      L.altar(360, 188, 60); L.icon(360, 152, 26, 40); L.zone('Altar (clergy only)', 280, 150, 440, 232);
+      L.oculus(360, 310, 28);
+      L.bench(182, 250, 196, 400, 0); L.bench(524, 222, 538, 290, Math.PI);
+      L.seat('terminal', 460, 204, Math.PI, { label: "the abbot's stone chair" }); L.seat('clergy', 260, 204, 0);
+      L.candles(300, 380, 8, true);
+      // Underground corridor and the upper chamber where the Lance is kept
+      L.zone('Underground corridor', 10, 10, 170, 370);
+      L.wall(170, 10, 180, 40); L.wall(170, 100, 180, 150); L.wall(180, 140, 540, 150); L.wall(540, 10, 550, 150);
+      L.elev(180, 10, 540, 140, 24, CH.benchMat); L.zone('Upper chamber (restricted)', 180, 10, 540, 140);
+      L.climb(220, 166, [220, 118], 'Climb the rock ledge to the upper chamber', { need: 'climbing' });
+      L.climb(220, 124, [220, 170], 'Climb down to the church', { down: true });
+      L.box(430, 44, 470, 76, 24, CH.metalMat, { y: 24, solid: true, occ: 'low' });
+      L.box(430, 44, 470, 76, 22, basic(0x9fd4e8, { transparent: true, opacity: 0.25 }), { y: 48 });
+      L.loot('lance', 'lance', 'The Holy Lance of Geghard', 450, 88, ['lance', 'takeover']);
+      // Jhamatun: rock-cut hall with carved pillars, alcoves and the treasury niche
+      L.elev(550, 150, 710, 330, 12, CH.benchMat);
+      L.pillar(630, 280, 14, 90); L.pillar(630, 470, 14, 90);
+      L.seatAt('alcove', 698, 250, Math.PI, { stand: [-18, 0], h: 19 }); L.box(704, 238, 710, 262, 46, basic(0x0c0a0a));
+      L.seat('alcove', 698, 400, Math.PI);
+      L.bench(560, 600, 640, 612, -Math.PI / 2);
+      L.box(680, 540, 708, 580, 24, CH.benchMat, { solid: true, occ: 'low' });
+      L.loot('chalice', 'metal', 'Gold chalice of the Proshyan princes', 666, 560, ['metals']);
+      L.zone('Treasury niche', 650, 520, 710, 600);
+      L.guard([[360, 630], [360, 440], [300, 300], [420, 300]], { min: 2 });
+      L.guard([[620, 620], [600, 380], [600, 200]], { min: 3 });
+      L.guard([[100, 620], [100, 420]], { min: 4 });
+      L.guard([[220, 80], [500, 100], [300, 40]], { min: 5 });
+      L.cam(530, 20, 2.4, 0.5, { min: 4 }); L.cam(190, 160, 0.8, 0.5, { min: 3 }); L.cam(700, 620, -2.3, 0.5, { min: 4 });
+      L.monk(260, 204, 0, { seat: true }); L.monk(360, 222, -Math.PI / 2, { route: [[300, 222], [420, 222]], priest: true });
+    },
+    backstory: [['gor', 'Geghard nshanakum e "nizak". Tomasy nizaky berel e aystegh.', 'Geghard means "spear". The apostle Thomas brought the Lance here.'],
+      ['gor', 'Hima ayn Ejmiatsnum e tsuytsadrvum. Bayc ays khaghum ayn veradarnum e aystegh.', "Today it's shown at Etchmiadzin. But in this story it has come home."]],
+    story: [['you', '(Spring water trickles out of the rock. The chapel is carved from one stone.)', ''],
+      ['gor', 'Ays aghbyury haytnvel e araj, qan vanqy. Mardik galis ein ayntegh aghotelu.', 'The spring was here before the monastery. People came to pray at it.'],
+      ['you', 'Isk hima es galis em gogh.', 'And now I come to steal.'], ['gor', 'Hima du galis es voroshelu.', 'Now you come to decide.']] },
+
+  tatev: { name: 'Tatev Monastery', w: 820, h: 580, door: 400, wall: '#9c8f7c', floor: '#8f846f', guards: 'church',
+    build() {
+      L.room(texMat(slabTex('#8f846f'), [8, 6]), CH.wallMat);
+      L.wall(210, 130, 220, 380); L.wall(210, 430, 220, 570);
+      L.wall(580, 130, 590, 250); L.wall(580, 300, 590, 570);
+      L.wall(10, 120, 380, 130); L.door('gate', 380, 120, 420, 130, { label: 'gallery gate' }); L.wall(420, 120, 810, 130);
+      // Gallery over the gorge: benches facing the valley windows
+      L.elev(10, 10, 810, 120, 18, CH.benchMat);
+      const view = L.mesh(new THREE.PlaneGeometry(780, 56), basic(0xffffff, { map: valleyTex() }), 410, 11, 60, { shadow: false }); view.rotation.y = 0;
+      for (let k = 0; k < 6; k++) L.seatAt('bench', 80 + k * 130, 40, -Math.PI / 2, { stand: [0, 18], h: 26, vantage: true });
+      for (let k = 0; k < 6; k++) L.box(66 + k * 130, 30, 94 + k * 130, 36, 8, CH.benchMat, { y: 18 });
+      L.zone('Gallery over the gorge', 10, 10, 810, 120);
+      // Church hall
+      L.altar(400, 160, 70); L.icon(400, 131, 28, 40); L.zone('Bema (clergy only)', 300, 130, 500, 220);
+      L.seat('terminal', 520, 172, Math.PI, { label: "the prior's chair" }); L.seat('clergy', 280, 172, 0); L.seat('clergy', 280, 200, 0);
+      L.pillar(300, 230, 12, 96); L.pillar(500, 230, 12, 96); L.arch(300, 230, 500, 230, 92);
+      L.pews(250, 270, 120, 6, 34, { kneeler: true, cacheRow: 4 }); L.pews(430, 270, 120, 6, 34, { kneeler: true });
+      L.seat('alcove', 232, 486, 0); L.seat('alcove', 568, 486, Math.PI);
+      L.bench(470, 546, 560, 558, -Math.PI / 2, { kind: 'guard' });
+      L.window(219, 300, 'e'); L.window(581, 420, 'w');
+      L.door('gate', 376, 556, 424, 564, { label: 'entrance gate' });
+      // Refectory: long tables and benches
+      for (const ty of [250, 400]) {
+        L.box(40, ty, 180, ty + 16, 14, CH.woodMat, { solid: true, occ: 'low', plan: 'shelf' });
+        L.bench(40, ty - 18, 180, ty - 8, Math.PI / 2, { stand: [0, -16] }); L.bench(40, ty + 24, 180, ty + 34, -Math.PI / 2, { stand: [0, 16] });
+      }
+      // Bell tower ledge: climb for the best view in the monastery
+      L.elev(10, 470, 120, 570, 50, CH.wallMat); CI().solids.push([118, 466, 126, 570], [10, 464, 126, 472]);
+      L.climb(140, 520, [70, 520], 'Climb the bell tower', { need: 'climbing' }); L.climb(96, 520, [150, 520], 'Climb down from the bell tower', { down: true });
+      L.seatAt('balcony', 50, 500, 0, { stand: [16, 0], h: 57, vantage: true }); L.seatAt('balcony', 50, 540, 0, { stand: [16, 0], h: 57, vantage: true });
+      // Scriptorium: the old university's manuscripts, scribes at their desks, the pulley over the cliff
+      L.zone('Scriptorium (monks only)', 590, 130, 810, 570);
+      for (const [x0, y0] of [[640, 250], [720, 250], [640, 380], [720, 380]]) { L.box(x0, y0, x0 + 50, y0 + 18, 16, CH.woodMat, { solid: true, occ: 'low', plan: 'shelf' }); L.seat('clergy', x0 + 25, y0 + 30, -Math.PI / 2, { stand: [0, 16] }); }
+      L.box(790, 140, 808, 230, 60, CH.woodMat, { solid: true, occ: 'full', plan: 'shelf' }); L.box(790, 440, 808, 560, 60, CH.woodMat, { solid: true, occ: 'full', plan: 'shelf' });
+      L.box(740, 160, 780, 180, 16, CH.woodMat, { solid: true, occ: 'low' });
+      L.loot('grigor', 'manuscript', 'Autograph manuscript of Grigor Tatevatsi', 760, 196, ['tatev', 'takeover']);
+      L.loot('gospel', 'manuscript', 'The Tatev Gospel (1297)', 690, 510, ['tatev'], { bonus: 0.5 });
+      L.loot('cover', 'metal', 'Silver gospel cover', 620, 520, ['metals']);
+      L.seat('sacred', 620, 470, 0, { label: 'Sit where Grigor Tatevatsi taught', story: 'tatev' });
+      L.altExit(800, 350, 'Lower the loot down the cliff by the pulley', { pulley: true });
+      L.box(796, 340, 810, 360, 70, CH.woodMat); L.mesh(new THREE.CylinderGeometry(0.6, 0.6, 70, 4), basic(0x8a7a5a), 804, 350, 35);
+      L.guard([[400, 550], [400, 236], [560, 460]], { min: 2 });
+      L.guard([[235, 460], [235, 240], [120, 320], [160, 520]], { min: 2 });
+      L.guard([[610, 540], [610, 150], [710, 330]], { min: 3 });
+      L.guard([[40, 70], [780, 70]], { min: 4 });
+      L.cam(800, 140, 2.4, 0.5, { min: 3 }); L.cam(596, 546, -2.3, 0.4, { min: 4 });
+      L.monk(665, 280, -Math.PI / 2, { seat: true }); L.monk(745, 410, -Math.PI / 2, { seat: true }); L.monk(400, 190, -Math.PI / 2, { route: [[340, 190], [460, 190]], priest: true });
+    },
+    backstory: [['mesrop', 'Tatevi hamalsaranum XIV darum sovorel en hazarits aveli usanoghner.', 'In the 14th century over a thousand students studied at the University of Tatev.'],
+      ['mesrop', 'Nranq grqery grel en dzerqov, amen mek tarinerov.', 'They copied the books by hand, each one over years.']],
+    story: [['you', '(The desk is scarred by six centuries of quills.)', ''],
+      ['mesrop', 'Grigor Tatevatsin sovoretsnum er, vor gitutyuny aveli tank e qan voskin.', 'Grigor Tatevatsi taught that knowledge is worth more than gold.'],
+      ['you', 'Ev es ekel em voski hanel.', 'And I came to take the gold.'], ['mesrop', 'Isk du voroshir, te inch es tanum.', 'Then decide what you are really taking.']] },
+
+  noraduz: { name: 'Noraduz Cemetery', w: 1040, h: 820, door: 520, wall: '#7a7266', floor: '#2a3a26', outdoor: true, guards: 'night',
+    build() {
+      const I = CI(); L.floor(0, 0, I.w, I.h, texMat(grassTex(), [14, 12], 0.22));
+      const fence = lam('#5a544c', { emissive: new THREE.Color('#5a544c').multiplyScalar(0.25) });
+      L.box(0, 0, I.w, 10, 14, fence, { solid: true, plan: 'wall' }); L.box(0, 0, 10, I.h, 14, fence, { solid: true, plan: 'wall' }); L.box(I.w - 10, 0, I.w, I.h, 14, fence, { solid: true, plan: 'wall' });
+      L.box(0, I.h - 10, 494, I.h, 14, fence, { solid: true, plan: 'wall' }); L.box(546, I.h - 10, I.w, I.h, 14, fence, { solid: true, plan: 'wall' });
+      L.mesh(new THREE.RingGeometry(14, 18, 32).rotateX(-Math.PI / 2), basic(0x5fd4c4, { ...additive, opacity: 0.8 }), 520, I.h - 24, 0.9, { shadow: false }); CH.plan.push({ r: [496, I.h - 12, 544, I.h], k: 'exit' });
+      L.floor(500, 250, 540, 800, lam('#6a5e4c', { emissive: new THREE.Color('#6a5e4c').multiplyScalar(0.2) }), 0.6); L.floor(20, 500, 1020, 530, lam('#6a5e4c', { emissive: new THREE.Color('#6a5e4c').multiplyScalar(0.2) }), 0.6);
+      // Chapel with pews and the crypt trapdoor
+      L.wall(420, 60, 620, 70, 60); L.wall(420, 60, 430, 240, 60); L.wall(610, 60, 620, 240, 60); L.wall(420, 230, 500, 240, 60); L.wall(540, 230, 620, 240, 60);
+      L.floor(430, 70, 610, 230, texMat(slabTex('#8a8276'), [2, 2]), 0.6);
+      L.altar(520, 92, 40); L.icon(520, 71, 22, 32);
+      L.pews(440, 150, 60, 3, 32); L.pews(540, 150, 60, 3, 32);
+      L.door('locked', 580, 100, 600, 124, { label: 'crypt trapdoor', at: [590, 136], hatch: true });
+      L.zone('Chapel crypt', 700, 20, 1030, 230);
+      L.wall(690, 10, 700, 240, 40); L.wall(700, 230, 1030, 240, 40);
+      L.floor(700, 10, 1030, 230, texMat(slabTex('#4a4540'), [3, 2], 0.2), 0.6);
+      L.climb(720, 40, [560, 132], 'Climb up into the chapel', { down: true });
+      for (let k = 0; k < 4; k++) L.box(760 + k * 60, 180, 790 + k * 60, 220, 22, CH.benchMat, { solid: true, occ: 'low' });
+      L.loot('crypt', 'metal', 'Crypt reliquary of Noraduz', 960, 60, ['noraduz'], { bonus: 0.5 });
+      L.bench(430, 262, 490, 272, Math.PI / 2, { stand: [0, 16] }); L.bench(550, 262, 610, 272, Math.PI / 2, { stand: [0, 16] });
+      // The field: hundreds of khachkars, with shadowed hiding spots between them
+      let s = 11; const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+      for (let y = 320; y < 780; y += 44) for (let x = 40; x < 1010; x += 34) {
+        if (Math.abs(x - 520) < 34 || Math.abs(y - 515) < 30 || r() < 0.18) continue;
+        if (y < 300 && x > 400 && x < 640) continue;
+        L.khachkar(x + (r() - 0.5) * 10, y + (r() - 0.5) * 10, (r() - 0.5) * 0.4, 0.8 + r() * 0.35);
+      }
+      for (const [x, k] of [[120, 0], [300, 1], [700, 0], [880, 2], [160, 5], [420, 7], [640, 5], [900, 7], [300, 8], [760, 8], [420, 2], [980, 6]])
+        L.seatAt('crouch', x, 342 + k * 44, -Math.PI / 2, { stand: [0, 0], h: 0 });
+      L.loot('kirakos', 'khachkar', 'The Kirakos khachkar (1562)', 300, 430, ['noraduz'], { heavyMesh: true });
+      L.loot('brothers', 'khachkar', 'Khachkar of the three brothers', 760, 650, ['noraduz'], { heavyMesh: true, bonus: 0.5 });
+      L.guard([[520, 780], [520, 300], [100, 515], [940, 515], [520, 300]], { min: 2, torch: true });
+      L.guard([[60, 738], [980, 738], [980, 342], [60, 342]], { min: 3, torch: true });
+      L.monk(460, 290, Math.PI / 2, { seat: true, look: 'keeper' });
+    },
+    backstory: [['keeper', 'Ays qarery XVI darits en. Mongolnery vakhetsin nranits, mtatsin, te zinvorner en.', 'These stones are from the 16th century. The Mongols fled from them, thinking they were soldiers.'],
+      ['keeper', 'Amen khachkar mi hogi e. Hishir ayd.', 'Every khachkar is a soul. Remember that.']],
+    story: [] },
+
+  noravank: { name: 'Noravank treasury', w: 440, h: 480, door: 220, wall: '#b8623f', floor: '#9a5a40', guards: 'church',
+    build() {
+      L.room(texMat(slabTex('#9a5a40'), [4, 5]), CH.wallMat);
+      L.altar(220, 92, 60); L.icon(220, 12, 26, 40); L.zone('Bema (clergy only)', 130, 40, 290, 150);
+      L.seat('clergy', 150, 130, 0); L.seat('terminal', 120, 64, 0, { label: "the sacristan's chair" });
+      L.pews(60, 280, 110, 3, 34, { kneeler: true, cacheRow: 2 }); L.pews(250, 280, 110, 3, 34, { kneeler: true });
+      L.wall(290, 10, 300, 120); L.door('locked', 290, 120, 300, 160, { label: 'treasury door', at: [278, 140], atB: [312, 140] }); L.wall(290, 160, 300, 210); L.wall(300, 200, 430, 210);
+      L.zone('Treasury', 300, 10, 430, 200);
+      L.box(380, 30, 420, 60, 20, CH.benchMat, { solid: true, occ: 'low' }); L.box(320, 40, 360, 70, 20, CH.benchMat, { solid: true, occ: 'low' });
+      L.loot('censer', 'metal', 'Bronze censer of Noravank', 400, 72, ['metals']);
+      L.loot('cross', 'metal', 'Jeweled processional cross', 340, 82, ['metals'], { bonus: 0.4 });
+      L.seat('alcove', 22, 420, 0); L.seat('sacred', 220, 196, -Math.PI / 2, { label: "Sit beneath Momik's carved tympanum", story: 'noravank' });
+      L.bench(300, 440, 380, 452, -Math.PI / 2, { kind: 'guard' });
+      L.window(11, 250, 'w'); L.window(429, 300, 'e'); L.candles(110, 446, 8, true);
+      L.door('gate', 196, 456, 244, 464, { label: 'entrance gate' });
+      L.guard([[220, 450], [220, 220], [60, 180], [260, 180]], { min: 2 });
+      L.guard([[40, 440], [40, 60]], { min: 3 });
+      L.cam(284, 20, 1.2, 0.5, { min: 3 });
+      L.monk(150, 130, 0, { seat: true });
+    },
+    backstory: [['priest', 'Momik varpetn e qandakel ays durpy XIV darum.', 'Master Momik carved this portal in the 14th century.'],
+      ['priest', 'Nra gerezmany aystegh e, mi pokrik khachkari tak.', 'His grave is here, under a small khachkar.']],
+    story: [['you', '(Above the door, God the Father holds the head of Adam.)', ''],
+      ['priest', 'Momiky aystegh e taghvats. Nra dzerqy der aprum e qari mej.', 'Momik is buried here. His hand still lives in the stone.'],
+      ['you', 'Qary hishum e. Mardik chen hishum.', 'Stone remembers. People forget.']] },
+};
+
+// ─── Building an interior ────────────────────────────────────────────────────
+INTERIORS.church = { name: '', ox: -3200, oy: 5200, w: 600, h: 800, spawn: [300, 740], door: [300, 776], street: { x: 0, y: 0, a: 0 }, solids: [] };
+const hxHour = () => Math.floor(tod) % 24;
+const hxService = () => { const h = hxHour(); return (h >= 8 && h < 11) || (h >= 17 && h < 20); };
+const hxNight = () => { const h = hxHour(); return h >= 21 || h < 6; };
+function hxCongregation() { if (CH.def && (CH.def.outdoor || CH.def.guards === 'museum')) return hxNight() ? 0 : 0.2; return hxService() ? 0.75 : hxNight() ? 0 : hxHour() >= 20 ? 0.12 : 0.3; }
+function hxLook(kind) {
+  const base = { skin: pick(SKINS), hair: pick(HAIR), shoes: '#141414' };
+  if (kind === 'guard') return { ...base, shirt: '#23262d', pants: '#23262d', buzz: true };
+  if (kind === 'elite') return { ...base, shirt: '#15171d', pants: '#15171d', cap: true };
+  if (kind === 'monk' || kind === 'priest') return { ...base, hair: '#2a1a12', shirt: '#141216', pants: '#141216', goatee: true, hood: true };
+  if (kind === 'staff') return { ...base, shirt: '#6b8f71', pants: '#2b2f38', longHair: true };
+  if (kind === 'keeper') return { ...CAST_LOOKS.keeper, shoes: '#141414' };
+  if (kind === 'rival') return { ...base, shirt: '#7a1a1a', pants: '#1d1d22', cap: true, buzz: true };
+  if (kind === 'crew') return { ...base, shirt: '#2f4f3a', pants: '#2b2f38', cap: true };
+  const L2 = randomLook(); if (L2.longHair && Math.random() < 0.6) L2.hood = true, L2.hoodCol = pick(['#e8e4dc', '#1d1d22', '#5a2a3a']); return L2;
+}
+function hxPerson(look) {
+  const g = buildPerson(look);
+  if (look.hood) { const h = new THREE.Mesh(new THREE.ConeGeometry(3.7, 7, 10), cachedLam(look.hoodCol || look.shirt)); h.position.set(-0.4, 2.3, 0); g.userData.head.add(h); }
+  CH.group.add(g); return g;
+}
+function hxSector(color) {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(1, 22, -0.5, 1).rotateX(-Math.PI / 2), basic(color, { ...additive, opacity: 0.16 }));
+  m.position.y = 0.8; CH.group.add(m); return m;
+}
+function buildChurch(id) {
+  const D = CHURCHES[id], I = CI();
+  if (CH.id) disposeChurch();
+  Object.assign(I, { name: D.name, w: D.w, h: D.h, solids: [], door: [D.door, D.h - 24], spawn: [D.door, D.h - 60] });
+  Object.assign(CH, { id, def: D, group: new THREE.Group(), seats: [], zones: [], doors: [], occ: [], plan: [], elevs: [], guardDefs: [], monkDefs: [], camDefs: [], lootDefs: [],
+    climbs: [], altExits: [], detectors: [], flames: [], glows: [], shafts: [], waters: [], signs: [], movable: null, people: [], loot: [], its: [], routes: null,
+    sus: 0, alarm: false, seat: null, seatT: 0, obs: 0, intel: 0, hold: null, carry: [], hacked: false, standT: -9, breakT: 38, warnT: 0, rivalsIn: false, t: 0,
+    markers: [], detT: 0, noticeT: 0, flee: 0 });
+  interiorGroup.add(CH.group);
+  CH.wallMat = D.rock ? texMat(rockTex(), [3, 1], 0.3) : texMat(tuffTex(D.wall), [3, 1], 0.36);
+  CH.woodMat = lam('#ffffff', { map: woodTex, emissive: 0xffffff, emissiveMap: woodTex, emissiveIntensity: 0.4 });
+  CH.benchMat = ilam(D.rock ? '#7a7066' : '#b8ab96', 0.3); CH.stallMat = ilam('#5a3a26', 0.35); CH.cushionMat = ilam('#8a1a22', 0.35);
+  CH.curtainMat = ilam('#8a1a22', 0.4, { side: THREE.DoubleSide }); CH.metalMat = ilam('#8a8f96', 0.4); CH.gateMat = ilam('#3a3c40', 0.3); CH.doorMat = ilam('#4a3222', 0.35);
+  CH.khachkarMat = texMat(khachkarTex(), [1, 1], D.outdoor ? 0.24 : 0.36); CH.kgeo = new THREE.BoxGeometry(18, 34, 5);
+  D.build();
+  hxNavBuild();
+  const op = HX && hxLegSite() === id ? HX.op : null, stars = op ? op.stars : 3;
+  // Congregation: worshippers fill the pews and prayer stools according to the hour
+  const frac = hxCongregation(), pewSeats = CH.seats.filter(s => s.kind === 'pew' || s.kind === 'stool' || (D.outdoor && s.kind === 'bench'));
+  let n = Math.min(26, Math.round(pewSeats.length * frac));
+  for (const s of [...pewSeats].sort(() => Math.random() - 0.5)) { if (n-- <= 0) break; if (s.cache) continue; hxNPC('worship', s.x, s.y, s.a, { seat: s }); }
+  // Clergy, staff, guards, cameras
+  for (const m of CH.monkDefs) {
+    let seat = null; if (m.seat) { let bd = 30; for (const s of CH.seats) { const d = Math.hypot(s.x - m.x, s.y - m.y); if (!s.occ && d < bd) { bd = d; seat = s; } } }
+    const w = hxNPC(m.look || (m.priest ? 'priest' : 'monk'), m.x, m.y, m.a, { seat, watcher: { fov: 1.8, range: 115, gain: 0.55 } });
+    if (m.route) { w.route = m.route.map(p => hxW(p[0], p[1])); w.ri = 0; w.state = 'walk'; }
+  }
+  const glook = D.guards === 'elite' ? 'elite' : 'guard', night = D.guards === 'night';
+  for (const gd of CH.guardDefs) {
+    if ((gd.min || 2) > stars) continue;
+    const [x, y] = gd.route[0];
+    const g = hxNPC(glook, x, y, 0, { watcher: { fov: night ? 0.9 : 1.25, range: (night ? 200 : 165) * (D.guards === 'elite' ? 1.12 : 1), gain: D.guards === 'elite' ? 1.25 : 1 } });
+    Object.assign(g, { route: gd.route.map(p => hxW(p[0], p[1])), ri: 0, state: 'patrol', guard: true, torch: gd.torch, hittable: true });
+  }
+  for (const c of CH.camDefs) {
+    if ((c.min || 2) > stars) continue;
+    const [x, y] = hxW(c.x, c.y), body = L.mesh(new THREE.BoxGeometry(8, 5, 5), CH.metalMat, c.x, c.y, 62);
+    const cam = { kind: 'cam', x, y, a: c.a, a0: c.a, sweep: c.sweep, fov: 0.85, range: 220, gain: 1.35, body, state: 'watch', watch: true };
+    cam.cone = hxSector(0xff5a5a); CH.people.push(cam);
+  }
+  // Loot: only the pieces the current operation is after can be taken; the rest are museum pieces
+  for (const l of CH.lootDefs) {
+    const [x, y] = hxW(l.x, l.y), active = !!(op && l.ops.includes(op.id) && !(HX.bag || []).some(b => b.uid === id + ':' + l.id));
+    const lt = { ...l, uid: id + ':' + l.id, x, y, active, taken: false, mesh: hxLootMesh(l, x, y) };
+    if (active) { lt.ring = new THREE.Mesh(new THREE.RingGeometry(10, 13, 28).rotateX(-Math.PI / 2), basic(0xf2a800, { ...additive, opacity: 0.8 })); lt.ring.position.set(x, 1, y); CH.group.add(lt.ring); }
+    CH.loot.push(lt);
+  }
+  // Crew lookout at the best vantage point
+  if (op && HX.crew) {
+    const s = CH.seats.find(s => s.vantage && !s.occ) || CH.seats.find(s => s.kind === 'alcove' && !s.occ);
+    if (s) hxNPC('crew', s.x, s.y, s.a, { seat: s, crew: true });
+  }
+  if (op && (HX.contact || HX.crew)) CH.intel = Math.max(CH.intel, 1);
+  if (op && HX.contact && id === 'etch') { const sd = CH.doors.find(d => d.kind === 'secret'); if (sd) sd.found = true; }
+  if (op && HX.approach === 'hacker') CH.hacked = true;
+  CH.obs = CH.intel;
+  hxRoutesBuild();
+  hxInteractables();
+  if (op && HX.approach === 'loud') setTimeout(() => { if (CH.id === id) hxAlarm('You came in loud'); }, 400);
+}
+function hxLootMesh(l, x, y) {
+  const g = new THREE.Group(); g.position.set(x, 0, y); CH.group.add(g);
+  const gold = basic(0xd9a441), add = (geo, mat, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.castShadow = true; g.add(m); return m; };
+  if (l.cat === 'manuscript') { add(new THREE.BoxGeometry(6, 16, 6), CH.woodMat, 0, 8, 0); const b = add(new THREE.BoxGeometry(12, 1.6, 9), ilam('#8a1a22', 0.4), 0, 17, 0); b.rotation.z = -0.3; add(new THREE.BoxGeometry(11, 0.8, 8), basic(0xf4e6c8), 0, 18, 0).rotation.z = -0.3; add(new THREE.BoxGeometry(3, 0.6, 8.4), gold, -3.5, 18.1, 0).rotation.z = -0.3; }
+  else if (l.cat === 'metal') { add(new THREE.CylinderGeometry(5, 5, 14, 10), CH.benchMat, 0, 7, 0); add(new THREE.CylinderGeometry(2.8, 1.2, 4, 12), gold, 0, 17, 0); add(new THREE.CylinderGeometry(0.6, 0.6, 3, 6), gold, 0, 14.5, 0); add(new THREE.CylinderGeometry(2, 2, 0.6, 12), gold, 0, 13.2, 0); }
+  else if (l.cat === 'urartian') { add(new THREE.BoxGeometry(18, 22, 4), texMat(cuneiformTex(), [1, 1], 0.4), 0, 11, 0); }
+  else if (l.cat === 'pottery') { add(new THREE.CylinderGeometry(5, 5, 10, 10), CH.benchMat, 0, 5, 0); const j = add(new THREE.SphereGeometry(5, 12, 10), ilam('#b8703a', 0.35), 0, 15, 0); j.scale.y = 1.2; add(new THREE.CylinderGeometry(2, 2.6, 4, 10), ilam('#b8703a', 0.35), 0, 21, 0); }
+  else if (l.cat === 'khachkar') { const k = add(CH.kgeo, CH.khachkarMat, 0, 17 * 1.15, 0); k.scale.setScalar(1.15); }
+  else if (l.cat === 'lance') { const sh = add(new THREE.CylinderGeometry(0.5, 0.5, 30, 6), ilam('#6a5a40', 0.3), 0, 40, 0); sh.rotation.z = Math.PI / 2; const t = add(new THREE.ConeGeometry(2.2, 8, 4), basic(0xd9d4c8), 17, 40, 0); t.rotation.z = -Math.PI / 2; }
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(26, 26).rotateX(-Math.PI / 2), basic(0xffd27a, { ...additive, opacity: 0.25, map: glowDiscTex() })); halo.position.y = 1; g.add(halo);
+  return g;
+}
+function hxNPC(kind, lx, ly, a, o = {}) {
+  const [x, y] = hxW(lx, ly), g = hxPerson(hxLook(kind));
+  const p = { kind, x, y, a, g, state: o.seat ? 'sit' : 'stand', seat: o.seat || null, path: [], wait: 0, phase: 0, fireCD: 1, hittable: kind !== 'worship', ...o };
+  if (o.seat) { o.seat.occ = p; p.a = o.seat.a; [p.x, p.y] = hxW(o.seat.x, o.seat.y); }
+  if (o.watcher) { Object.assign(p, o.watcher); p.cone = hxSector(kind === 'monk' || kind === 'priest' || kind === 'staff' || kind === 'keeper' ? 0xf2e2c4 : 0xfff4dc); p.watch = true; }
+  if (kind === 'worship') p.hittable = false;
+  CH.people.push(p); return p;
+}
+function disposeChurch() {
+  if (!CH.id) return;
+  interiorGroup.remove(CH.group);
+  CH.group.traverse(o => { if (o.geometry && o.geometry !== CH.kgeo && !o.userData.keepGeo) o.geometry.dispose(); });
+  CH.kgeo?.dispose();
+  for (let k = interactables.length - 1; k >= 0; k--) if (interactables[k].ch) interactables.splice(k, 1);
+  if (CH.seat) CH.seat = null;
+  CH.id = null; CH.people = []; hxAudioStop();
+  if (hxRobed) hxRobe(false);
+}
+
+// ─── Navigation grid (12 px cells) for guards, monks and rivals ─────────────
+function hxFreeLocal(x, y, r = 6) {
+  const I = CI(); if (interiorSolid(I.ox + x, I.oy + y)) return false;
+  for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; if (interiorSolid(I.ox + x + Math.cos(a) * r, I.oy + y + Math.sin(a) * r)) return false; }
+  return true;
+}
+function hxNavBuild() {
+  const I = CI(), C = 12, nx = Math.ceil(I.w / C), ny = Math.ceil(I.h / C), grid = new Uint8Array(nx * ny);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) grid[j * nx + i] = hxFreeLocal(i * C + C / 2, j * C + C / 2) ? 1 : 0;
+  CH.nav = { C, nx, ny, grid };
+}
+function hxNavRect(r) {
+  const N = CH.nav; if (!N) return;
+  for (let j = Math.max(0, Math.floor((r[1] - 12) / N.C)); j <= Math.min(N.ny - 1, Math.floor((r[3] + 12) / N.C)); j++)
+    for (let i = Math.max(0, Math.floor((r[0] - 12) / N.C)); i <= Math.min(N.nx - 1, Math.floor((r[2] + 12) / N.C)); i++) N.grid[j * N.nx + i] = hxFreeLocal(i * N.C + N.C / 2, j * N.C + N.C / 2) ? 1 : 0;
+}
+function hxCell(wx, wy) {
+  const N = CH.nav, I = CI(); let i = clamp(Math.floor((wx - I.ox) / N.C), 0, N.nx - 1), j = clamp(Math.floor((wy - I.oy) / N.C), 0, N.ny - 1);
+  if (N.grid[j * N.nx + i]) return j * N.nx + i;
+  for (let r = 1; r < 5; r++) for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) { const a = i + di, b = j + dj; if (a >= 0 && b >= 0 && a < N.nx && b < N.ny && N.grid[b * N.nx + a]) return b * N.nx + a; }
+  return -1;
+}
+function hxPath(ax, ay, bx, by) {
+  const N = CH.nav, I = CI(), s = hxCell(ax, ay), t = hxCell(bx, by); if (s < 0 || t < 0) return null;
+  const prev = new Int32Array(N.nx * N.ny).fill(-1), q = [s]; prev[s] = s;
+  for (let h = 0; h < q.length && prev[t] < 0; h++) {
+    const c = q[h], ci = c % N.nx, cj = (c / N.nx) | 0;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+      const a = ci + di, b = cj + dj; if (a < 0 || b < 0 || a >= N.nx || b >= N.ny) continue;
+      const n = b * N.nx + a; if (prev[n] >= 0 || !N.grid[n]) continue;
+      if (di && dj && (!N.grid[cj * N.nx + a] || !N.grid[b * N.nx + ci])) continue;
+      prev[n] = c; q.push(n);
+    }
+  }
+  if (prev[t] < 0) return null;
+  const pts = []; for (let c = t; c !== s; c = prev[c]) pts.push([I.ox + (c % N.nx) * N.C + N.C / 2, I.oy + ((c / N.nx) | 0) * N.C + N.C / 2]);
+  pts.reverse(); if (pts.length) pts[pts.length - 1] = [bx, by]; else pts.push([bx, by]);
+  // Drop points that lie on a straight run
+  const out = []; for (let k = 0; k < pts.length; k++) { const p = pts[k], a = pts[k - 1], b = pts[k + 1]; if (!a || !b || Math.abs((p[0] - a[0]) * (b[1] - p[1]) - (p[1] - a[1]) * (b[0] - p[0])) > 1) out.push(p); }
+  return out;
+}
+function hxWalk(p, speed, dt) {
+  const t = p.path[0]; if (!t) return true;
+  const dx = t[0] - p.x, dy = t[1] - p.y, d = Math.hypot(dx, dy), st = speed * dt;
+  if (d <= st) { p.x = t[0]; p.y = t[1]; p.path.shift(); }
+  else { p.x += dx / d * st; p.y += dy / d * st; p.a += angDiff(Math.atan2(dy, dx), p.a) * Math.min(1, dt * 8); }
+  p.phase += dt * speed * 0.11; p.moving = true;
+  return !p.path.length;
+}
+function hxGo(p, x, y) { p.path = hxPath(p.x, p.y, x, y) || []; return p.path.length > 0; }
+
+// ─── Vision ─────────────────────────────────────────────────────────────────
+function hxLOS(x0, y0, x1, y1, low) {
+  const d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 7);
+  for (let i = 1; i < n; i++) {
+    const t = i / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+    if (d * (1 - t) < 12 || d * t < 8) continue;
+    for (const o of CH.occ) if ((!o.low || low) && x >= o.r[0] && x <= o.r[2] && y >= o.r[1] && y <= o.r[3]) return false;
+    for (const dr of CH.doors) if (!dr.open) { const I = CI(); if (x >= I.ox + dr.r[0] && x <= I.ox + dr.r[2] && y >= I.oy + dr.r[1] && y <= I.oy + dr.r[3]) return false; }
+  }
+  return true;
+}
+function hxSees(w, px, py, low) {
+  if (w.state === 'down' || w.state === 'flee' || (w.kind === 'cam' && CH.hacked)) return 0;
+  const dx = px - w.x, dy = py - w.y, d = Math.hypot(dx, dy), range = w.range * (w.sitting ? 0.55 : 1) * (hxNight() && !CH.def.outdoor ? 1.1 : 1);
+  if (d > range) return 0;
+  if (d > 22 && Math.abs(angDiff(Math.atan2(dy, dx), w.a)) > w.fov / 2) return 0;
+  if (!hxLOS(w.x, w.y, px, py, low)) return 0;
+  return 1 - (d / range) * 0.55;
+}
+const hxLocal = (wx, wy) => [wx - CI().ox, wy - CI().oy];
+const hxZoneAt = (wx, wy) => { const [x, y] = hxLocal(wx, wy); return CH.zones.find(z => x >= z.r[0] && x <= z.r[2] && y >= z.r[1] && y <= z.r[3]); };
+const hxRestricted = z => z && !/chapel|gallery over|corridor/i.test(z.name);
+function hxElevAt(wx, wy) { const [x, y] = hxLocal(wx, wy); let h = 0; for (const e of CH.elevs) if (x >= e.r[0] && x <= e.r[2] && y >= e.r[1] && y <= e.r[3]) h = Math.max(h, e.h); return h; }
+const hxSkill = k => hx.skills[k] + (k === 'hacking' && HX && HX.approach === 'hacker' ? 2 : 0);
+let hxRobed = false;
+function hxRobe(on) {
+  hxRobed = on;
+  if (!on) { setOutfit(player.outfit || 0); return; }
+  playerMesh.parent?.remove(playerMesh);
+  playerMesh = buildPerson({ ...PLAYER_BASE, shirt: '#141216', pants: '#141216', shoes: '#0e0e10' });
+  const h = new THREE.Mesh(new THREE.ConeGeometry(3.7, 7, 10), cachedLam('#141216')); h.position.set(-0.4, 2.3, 0); playerMesh.userData.head.add(h);
+  playerMesh.userData.handR.add(handGroup); scene.add(playerMesh);
+}
+
+// ─── Interactions ────────────────────────────────────────────────────────────
+function hxIt(o) { const it = { ch: true, r: 22, ...o }; interactables.push(it); return it; }
+const SEAT_LABEL = { pew: 'Sit in the pew', stool: 'Kneel on the prayer stool', chair: 'Sit in the carved chair', clergy: 'Sit in the clergy stall (restricted)',
+  alcove: 'Hide in the alcove seat', balcony: 'Sit on the gallery bench', bench: 'Sit on the stone bench', guard: "Sit on the guards' bench", terminal: 'Sit in', sacred: '', crouch: 'Crouch in the shadow of the khachkar' };
+function hxInteractables() {
+  const I = CI(), D = CH.def;
+  hxIt({ x: I.ox + D.door, y: I.oy + D.h - 24, r: 28, label: () => CH.carry.length ? `Leave with the loot (${CH.carry.length})` : `Leave ${D.name}`, act: () => hxLeave() });
+  for (const s of CH.seats) {
+    const [x, y] = hxW(s.x, s.y);
+    hxIt({ x, y, r: s.kind === 'crouch' ? 20 : 15, when: () => !CH.seat && !s.occ && !CH.hold && Math.abs(hxElevAt(player.x, player.y) - Math.max(0, s.h - 7)) < 20,
+      label: () => s.label && s.kind === 'terminal' ? `Sit in ${s.label}` : s.label || SEAT_LABEL[s.kind], act: () => hxSit(s) });
+  }
+  for (const d of CH.doors) {
+    const spots = d.kind === 'gate' ? [[(d.r[0] + d.r[2]) / 2 + (d.r[2] - d.r[0] < 20 ? 18 : 0), (d.r[1] + d.r[3]) / 2 + (d.r[2] - d.r[0] < 20 ? 0 : 18)], [(d.r[0] + d.r[2]) / 2 - (d.r[2] - d.r[0] < 20 ? 18 : 0), (d.r[1] + d.r[3]) / 2 - (d.r[2] - d.r[0] < 20 ? 0 : 18)]] : [d.at, d.atB].filter(Boolean);
+    for (const [lx, ly] of spots) {
+      const [x, y] = hxW(lx, ly);
+      if (d.kind === 'secret') hxIt({ x, y, r: 26, when: () => !d.open, label: () => d.found ? `Open the hidden passage behind the ${d.label}` : `Examine the ${d.label}`, act: () => hxSecret(d) });
+      else hxIt({ x, y, r: 24, when: () => !d.open && !CH.hold,
+        label: () => d.kind === 'gate' ? (CH.hacked ? `Open the ${d.label} (hacked)` : `Force the ${d.label} (hold, noisy)`) : hxSkill('lockpicking') ? `Pick the lock: ${d.label} (hold)` : `Force the ${d.label} (hold, noisy)`,
+        act: () => hxDoorAct(d) });
+    }
+  }
+  for (const lt of CH.loot) hxIt({ x: lt.x, y: lt.y, r: 22, dyn: lt, when: () => !lt.taken && !lt.heldBy && !lt.lost && !CH.hold && !CH.seat,
+    label: () => lt.active ? `Take ${lt.name} (hold)` : `${lt.name} · museum piece`, act: () => lt.active ? hxStartGrab(lt) : toast('Plan an operation for this on the Heritage board (phone)', '#f2a800') });
+  for (const c of CH.climbs) { const [x, y] = hxW(c.x, c.y); hxIt({ x, y, r: 20, when: () => !CH.seat && !CH.hold, label: () => c.need && !hxSkill(c.need) ? `${c.label} (needs Climbing)` : c.label, act: () => hxClimb(c) }); }
+  for (const e of CH.altExits) { const [x, y] = hxW(e.x, e.y); hxIt({ x, y, r: 24, when: () => !CH.seat && (!e.pulley || CH.carry.length > 0), label: e.label, act: () => hxAltExit(e) }); }
+  if (CH.movable) { const M = CH.movable, [x, y] = hxW(M.x, M.y); hxIt({ x, y, r: 22, when: () => !M.moved && !CH.seat, label: M.label, act: () => hxMoveBench() }); }
+  // Decoys: a few worshippers at the end of a pew can be paid to cause a stir
+  let k = 0;
+  for (const p of CH.people) if (p.kind === 'worship' && k < 5 && Math.random() < 0.5) {
+    k++; hxIt({ x: p.x, y: p.y + 14, r: 13, when: () => !CH.alarm && !CH.seat && p.state === 'sit' && !CH.hold, label: 'Pay a worshipper to cause a stir ($200)', act: () => hxDecoy(p) });
+  }
+}
+function hxSit(s) {
+  const [x, y] = hxW(s.x, s.y);
+  CH.seat = s; CH.seatT = 0; player.x = x; player.y = y; player.a = s.a; player.vx = player.vy = 0;
+  s.pose = s.kind === 'stool' || s.kind === 'crouch' ? 'kneel' : 'sit';
+  if ((s.kind === 'clergy' || s.kind === 'terminal' || s.kind === 'guard') && !hxRobed) { CH.clergyWarn = true; }
+  if (s.kind === 'sacred' && s.story && !hx.stories.has('s:' + s.story)) {
+    hx.stories.add('s:' + s.story); CH.obs = Math.max(CH.obs, Math.floor(CH.obs) + 1);
+    setTimeout(() => { if (CH.seat === s) talk(CH.def.story, () => toast('A memory surfaces · +intel', '#f2a800')); }, 500);
+  }
+}
+function hxStand() {
+  const s = CH.seat; if (!s) return;
+  const [x, y] = hxW(s.x + s.stand[0], s.y + s.stand[1]);
+  CH.seat = null; CH.standT = time; player.x = x; player.y = y;
+  if (s.kind === 'balcony' || (s.h || 0) > 20) { /* stays on the raised floor */ }
+}
+function hxSeatPrompt() {
+  const s = CH.seat;
+  if (CH.carry.length && s.cache && !CH.cachedHere) return { label: 'Stash the loot in the pew cache (the crew collects it later)', act: () => hxCache() };
+  if (s.kind === 'terminal' && !CH.hacked) return { label: hxSkill('hacking') ? 'Hack the security system (hold)' : 'Security terminal · needs Hacking', act: () => { if (!hxSkill('hacking')) { toast('You need the Hacking skill (Heritage board) or a hacker approach', '#ff8a7a'); return; } CH.hold = { kind: 'hack', t: 0, need: 5 - hxSkill('hacking'), x: player.x, y: player.y, label: 'Hacking the security system' }; } };
+  return { label: 'Stand up', act: () => hxStand() };
+}
+function hxDoorAct(d) {
+  if (d.kind === 'gate' && CH.hacked) { hxOpenDoor(d); toast(`The ${d.label} unlocks (you hacked security)`, '#5fd4c4'); return; }
+  const pick = d.kind !== 'gate' && hxSkill('lockpicking') > 0;
+  CH.hold = { kind: 'door', d, t: 0, need: pick ? 4.5 - hxSkill('lockpicking') : 6, noisy: !pick, x: player.x, y: player.y, label: pick ? `Picking the lock: ${d.label}` : `Forcing the ${d.label}` };
+}
+function hxOpenDoor(d) {
+  d.open = true; d.mesh.visible = false;
+  const I = CI(), k = I.solids.indexOf(d.solid); if (k >= 0) I.solids.splice(k, 1);
+  hxNavRect(d.r);
+  if (d.hatch) { CH.climbs.push({ x: d.at[0], y: d.at[1], to: [720, 70], label: 'Climb down into the crypt' }); const [x, y] = hxW(d.at[0], d.at[1]); hxIt({ x, y: y - 14, r: 20, when: () => !CH.seat, label: 'Climb down into the crypt', act: () => hxClimb({ to: [720, 70] }) }); }
+}
+function hxCloseGate(d) {
+  if (d.open === false) return;
+  d.open = false; d.mesh.visible = true; CI().solids.push(d.solid); hxNavRect(d.r);
+  const [px, py] = hxLocal(player.x, player.y);
+  if (px > d.solid[0] - 6 && px < d.solid[2] + 6 && py > d.solid[1] - 6 && py < d.solid[3] + 6) { player.y += 20; }
+}
+function hxSecret(d) {
+  if (!d.found) { d.found = true; toast('The carved panel is hollow. A hidden passage!', '#f2a800'); return; }
+  hxOpenDoor(d); toast('The panel swings open onto the crypt stairs', '#f2a800');
+}
+function hxClimb(c) {
+  if (c.need && !hxSkill(c.need)) { toast('You need the Climbing skill. Spend a skill point on the Heritage board', '#ff8a7a'); return; }
+  const carryHeavy = CH.carry.some(l => HX_CAT[l.cat].heavy); if (carryHeavy) { toast('Not while carrying a stone cross', '#ff8a7a'); return; }
+  const [x, y] = hxW(c.to[0], c.to[1]); player.x = x; player.y = y; fade = 0.6; camSnap = true;
+  CH.sus = Math.min(99, CH.sus + (hxSeenNow() ? 18 : 0));
+}
+function hxMoveBench() {
+  const M = CH.movable; M.moved = true;
+  const [x, y] = hxW(M.to[0] + 10, M.to[1]); M.mesh.position.set(x, 3.5, y); M.mesh.rotation.y = Math.PI / 2;
+  CH.sus = Math.min(99, CH.sus + (hxSeenNow() ? 25 : 4));
+  CH.altExits.push({ x: 34, y: 600, label: 'Climb out through the chapel window' });
+  const [ex, ey] = hxW(40, 600); hxIt({ x: ex, y: ey, r: 22, when: () => !CH.seat, label: 'Climb out through the chapel window', act: () => hxLeave(true) });
+  toast('You drag the bench under the window. A new way out', '#f2a800');
+}
+function hxAltExit(e) {
+  if (e.pulley) {
+    if (!(HX && HX.crew)) { toast('Nobody is waiting at the foot of the cliff. Bring the crew next time', '#ff8a7a'); return; }
+    for (const l of CH.carry) hxBank(l, { pulley: true });
+    toast(`The crew catches the loot at the foot of the cliff (${CH.carry.length})`, '#7fe0a0'); CH.carry = []; return;
+  }
+  hxLeave(true);
+}
+function hxDecoy(p) {
+  if (!pay(200)) return;
+  toast('"Vay! Mama jan, my purse!" The worshipper shrieks and points at the altar', '#ffd35a');
+  for (const g of CH.people) if (g.guard && g.state !== 'down' && g.state !== 'alarm') { g.state = 'investigate'; g.target = [p.x, p.y - 30]; g.look = 10; hxGo(g, p.x, p.y - 30); }
+}
+function hxCache() {
+  for (const l of CH.carry) hxBank(l, { cached: true });
+  toast(`Stashed under the pew. The crew will collect it (${CH.carry.length})`, '#7fe0a0'); CH.carry = []; CH.cachedHere = true;
+}
+function hxStartGrab(lt) {
+  const C = HX_CAT[lt.cat];
+  if (C.heavy && !(HX && HX.crew)) { toast("Too heavy. You need the crew and the winch: plan it with 'Bring the crew'", '#ff8a7a'); return; }
+  if (CH.carry.some(l => HX_CAT[l.cat].heavy)) { toast('Your hands are full with the stone cross', '#ff8a7a'); return; }
+  CH.hold = { kind: 'grab', lt, t: 0, need: C.hold, x: player.x, y: player.y, label: `Taking ${lt.name}` };
+}
+function hxBank(l, o = {}) { HX.bag.push({ uid: l.uid, id: l.id, name: l.name, cat: l.cat, bonus: l.bonus || 0, broken: !!l.broken, ...o }); l.lost = true; if (l.mesh) l.mesh.visible = false; }
+function hxSeenNow() { for (const w of CH.people) if (w.watch && hxSees(w, player.x, player.y, false) > 0) return true; return false; }
+
+// ─── Alarm, damage, rivals ───────────────────────────────────────────────────
+function hxAlarm(reason) {
+  if (CH.alarm || !CH.id) return;
+  CH.alarm = true; CH.sus = 100; if (HX) HX.alarmed = true;
+  showBanner('ALARM', reason, '#ff3b4e', 3); crime(160, 'Church alarm');
+  for (const d of CH.doors) if (d.kind === 'gate' && !CH.hacked) hxCloseGate(d);
+  if (!CH.hacked) toast('Security gates slam shut. Force them or hack the terminal', '#ff8a7a');
+  for (const p of CH.people) {
+    if (p.guard && p.state !== 'down') { p.state = 'alarm'; p.path = []; if (p.sitting) p.sitting = false; if (p.seat) { p.seat.occ = null; p.seat = null; } }
+    else if ((p.kind === 'worship' || p.watch) && p.kind !== 'cam' && p.state !== 'down' && !p.crew && !p.rival) { if (p.seat) { p.seat.occ = null; p.seat = null; } p.state = 'flee'; p.path = []; }
+  }
+  if (CH.seat) hxStand();
+}
+function hxHit(t, dx, dy, shooter) {
+  if (t.state === 'down') return;
+  t.state = 'down'; t.downT = 0; t.a = Math.atan2(dy, dx);
+  if (t.seat) { t.seat.occ = null; t.seat = null; }
+  if (t.heldLoot) { const l = t.heldLoot; l.heldBy = null; l.x = t.x; l.y = t.y; l.mesh.visible = true; l.mesh.position.set(t.x, 0, t.y); t.heldLoot = null; toast(`${l.name} dropped. Grab it`, '#f2a800'); }
+  if (shooter === 'player' && !CH.alarm) hxAlarm(t.rival ? 'Gunfire in the church' : 'A guard went down');
+}
+function hxMelee(w) {
+  const fx = Math.cos(player.a), fy = Math.sin(player.a);
+  for (const p of CH.people) {
+    if (!p.hittable || p.state === 'down' || p.kind === 'cam') continue;
+    const dx = p.x - player.x, dy = p.y - player.y;
+    if (Math.hypot(dx, dy) > w.range + 8 || Math.abs(angDiff(Math.atan2(dy, dx), player.a)) > 0.9) continue;
+    const unaware = !p.seeT || time - p.seeT > 1.5, silent = unaware && Math.abs(angDiff(p.a, player.a)) < 1.2;
+    hxHit(p, fx, fy, 'melee');
+    if (silent) toast('Silent takedown', '#7fe0a0'); else if (!CH.alarm) CH.sus = Math.min(99, CH.sus + 45);
+    return true;
+  }
+  return false;
+}
+function hxRivals() {
+  CH.rivalsIn = true;
+  const I = CI(), D = CH.def;
+  for (let k = 0; k < 3; k++) {
+    const r = hxNPC('rival', D.door - 20 + k * 20, D.h - 40, -Math.PI / 2, {});
+    Object.assign(r, { rival: true, side: 'rival', state: 'hunt', hittable: true, fireCD: 2 + k, range: 260, fov: 2.2 });
+  }
+  talkLine('karo', 'Ays mekn mern e, siraki!', "This one's ours, amateur!");
+}
+function talkLine(who, hy, en) { const c = CAST[who]; toast(`${c[0]}: "${hy}" (${en})`, c[1]); }
+
+// ─── Entering and leaving a church ───────────────────────────────────────────
+const hxLegSite = () => HX && HX.op.legs[HX.leg] ? HX.op.legs[HX.leg].site : null;
+function enterChurch(id) {
+  if (player.car) { toast('Get out of the vehicle first', '#ff8a7a'); return; }
+  const site = HX_SITES[id], R = REGIONS[site.region];
+  CH.fromRegion = player.region;
+  buildChurch(id);
+  const I = CI(); I.street = { x: R.ox + site.at[0], y: R.oy + site.at[1] + 26, a: Math.PI / 2 };
+  const mine = HX && hxLegSite() === id;
+  if (mine) HX.legNeed = CH.loot.filter(l => l.active && !l.bonus).map(l => l.uid);
+  player.region = null;
+  enterInterior('church');
+  if (mine && HX.approach === 'worshipper') { const s = CH.seats.find(s => s.kind === 'pew' && !s.occ && !s.cache); if (s) hxSit(s); }
+  if (mine && HX.approach === 'monk') hxRobe(true);
+  const D = CHURCHES[id];
+  showBanner(D.name, D.outdoor ? (hxNight() ? 'Night · flashlights between the stones' : 'Open ground · high visibility') : hxService() ? 'Service in progress · the pews are full' : hxNight() ? 'Night · empty pews, nowhere to blend in' : 'A few worshippers in the pews', '#f2a800', 3.5);
+  hxAudioStart();
+  if (mine) { HX.stage = 'inside'; if (HX.approach !== 'loud') toast('Tip: sit down to blend in, heal and observe the guards', '#9fd4e8'); }
+}
+function hxLeave(alt) {
+  const I = CI();
+  if (!alt) { const gate = CH.doors.find(d => d.kind === 'gate' && !d.open && (d.r[1] + d.r[3]) / 2 > I.h - 50); if (gate) { toast(`The ${gate.label} is locked down. Force it or hack security`, '#ff8a7a'); return; } }
+  if (CH.hold) CH.hold = null;
+  if (CH.seat) hxStand();
+  let heatAdd = 0;
+  if (HX) for (const l of CH.carry) { hxBank(l); heatAdd = Math.max(heatAdd, HX_CAT[l.cat].heat); }
+  if (HX && HX.bag.some(b => b.cached && !b.heatDone)) { for (const b of HX.bag) b.heatDone = true; heatAdd = Math.max(heatAdd, 100); }
+  CH.carry = [];
+  const rk = CH.fromRegion, st = I.street;
+  disposeChurch();
+  player.interior = null; player.region = rk; player.x = st.x; player.y = st.y; player.a = st.a; player.vx = player.vy = 0; fade = 1; camSnap = true;
+  if (heatAdd) { heat.v = Math.min(599, Math.max(heat.v, heatAdd)); heat.lastCrime = time; toast('The theft is discovered. Police are searching the roads', '#8fb4ff'); }
+  if (HX) hxAfterLeave();
+}
+function hxAfterLeave() {
+  const need = HX.legNeed || [], got = HX.bag.some(b => need.includes(b.uid));
+  if (!got) { if (HX.stage === 'inside') { HX.stage = 'travel'; toast('You left without the target. Go back in when you are ready', '#ffd35a'); } return; }
+  HX.leg++; HX.legNeed = null;
+  if (HX.leg < HX.op.legs.length) { HX.stage = 'travel'; const s = HX_SITES[hxLegSite()]; showBanner('Leg complete', `Next: ${s.name}`, '#f2a800', 3); }
+  else { HX.stage = 'getaway'; showBanner('Loot extracted', 'Get to the extraction point: the pink helipad', '#f2a800', 3); }
+}
+function hxFail(reason) {
+  if (!HX) return;
+  showBanner('Operation failed', reason, '#ff6b5e', 4); HX = null;
+  if (hxMark) hxMark.visible = false;
+}
+function hxCheckLegLost() {
+  if (!HX || !HX.legNeed) return;
+  if (HX.legNeed.every(u => { const l = CH.loot.find(l => l.uid === u); return l && l.lost && !HX.bag.some(b => b.uid === u); })) hxFail('The rival crew got away with the treasure');
+}
+let hxMark = null;
+function hxObjective() {
+  if (!HX) return null;
+  const site = HX_SITES[hxLegSite()] || null, R = site && REGIONS[site.region];
+  if (HX.stage === 'travel') {
+    if (player.region === site.region) return { text: `Enter ${site.name}`, x: R.ox + site.at[0], y: R.oy + site.at[1] };
+    return { text: stars() > 0 ? 'Lose the heat, then fly on with Hayagram' : `Fly to ${R.name} with Hayagram (phone, or G in Armenia)` };
+  }
+  if (HX.stage === 'inside') {
+    if (!CH.id) return { text: `Go back into ${site.name}` };
+    const left = CH.loot.filter(l => l.active && !l.taken && !l.lost), names = left.filter(l => !l.bonus).map(l => l.name);
+    if (CH.carry.length) return { text: 'Get it out: the door, a pew cache, or another way out' };
+    return { text: names.length ? `Take ${names[0]}${CH.intel < 1 ? ' · sit to observe the guards' : ''}` : 'Leave the church' };
+  }
+  if (HX.stage === 'getaway') { const G = REGIONS[player.region]; return G ? { text: 'Reach the extraction point (the pink helipad)', x: G.ox + G.spawn[0] - 70, y: G.oy + G.spawn[1] + 40 } : { text: 'Lay low' }; }
+  if (HX.stage === 'lose') return { text: 'Lay low until the heat dies down' };
+  return null;
+}
+function hxOpUpdate(dt) {
+  if (mode === 'down') { hxFail('You went down. The operation is off'); return; }
+  if (HX.op.timer && (mode === 'play' || mode === 'travel')) { HX.timeLeft -= dt; if (HX.timeLeft <= 0) { hxFail('Out of time. The crew scatters'); return; } }
+  if (HX.stage === 'getaway' && mode === 'play') {
+    const o = hxObjective();
+    if (!player.region || (o && o.x !== undefined && Math.hypot(player.x - o.x, player.y - o.y) < 44)) { HX.stage = 'lose'; toast('Extraction point reached', '#7fe0a0'); }
+  }
+  if (HX.stage === 'lose' && mode === 'play' && stars() === 0) { HX.stage = 'deliver'; hxDeliver(); }
+}
+function hxMarkerUpdate() {
+  const o = mode === 'play' && !player.interior ? hxObjective() : null;
+  if (!o || o.x === undefined) { if (hxMark) hxMark.visible = false; return; }
+  if (!hxMark) hxMark = buildMarker(0xf2a800);
+  hxMark.visible = true; hxMark.position.set(o.x, 0, o.y); hxMark.userData.box.position.y = 24 + Math.sin(time * 3) * 3;
+}
+
+// ─── Per-frame: people, suspicion, seating, holds ───────────────────────────
+const hxSpeedMul = () => CH.id && CH.carry.some(l => HX_CAT[l.cat].heavy) ? 0.5 : 1;
+function updateHeritage(dt) {
+  if (CH.id && player.interior !== 'church') disposeChurch();
+  if (HX) hxOpUpdate(dt);
+  hxMarkerUpdate();
+  if (!CH.id) return;
+  hxAudioUpdate(dt);
+  for (const f of CH.flames) f.scale.setScalar(0.75 + Math.random() * 0.45);
+  for (const gl of CH.glows) gl.material.opacity = 0.13 + Math.random() * 0.05;
+  if (mode === 'play') hxSim(dt);
+  hxPose();
+}
+function hxSim(dt) {
+  CH.t += dt;
+  const I = CI(), doorW = hxW(CH.def.door, CH.def.h - 20);
+  // Seated: heal, observe, remember
+  if (CH.seat) {
+    const s = CH.seat; CH.seatT += dt; player.vx = player.vy = 0;
+    player.hp = Math.min(100, player.hp + 5 * dt);
+    const rate = (1 / 7) * (1 + 0.5 * hxSkill('observation')) * (s.vantage ? 2 : 1) * (s.kind === 'terminal' ? 2 : 1) * (HX && HX.crew ? 1.25 : 1);
+    if (CH.obs < 3 && !CH.alarm) { const b = Math.floor(CH.obs); CH.obs = Math.min(3, CH.obs + rate * dt); if (Math.floor(CH.obs) > b) hxIntel(Math.floor(CH.obs)); }
+    if (CH.seatT > 20 && CH.def.backstory && !hx.stories.has('b:' + CH.id) && !CH.alarm) { hx.stories.add('b:' + CH.id); talk(CH.def.backstory, () => toast('You listened. The guards paid you no mind', '#9fd4e8')); }
+  }
+  // Hold actions: taking loot, picking locks, forcing gates, hacking
+  if (CH.hold) {
+    const H = CH.hold;
+    if (Math.hypot(player.x - H.x, player.y - H.y) > 12 || (H.kind === 'hack' && !CH.seat)) { CH.hold = null; toast('Interrupted', '#9a978f'); }
+    else {
+      H.t += dt;
+      if (H.noisy) for (const g of CH.people) if (g.guard && g.state === 'patrol' && Math.hypot(g.x - player.x, g.y - player.y) < 240) { CH.sus = Math.min(99, CH.sus + 8 * dt); if (Math.random() < dt * 0.4) { g.state = 'investigate'; g.look = 3; hxGo(g, player.x, player.y); } }
+      if (H.t >= H.need) { CH.hold = null; hxHoldDone(H); }
+    }
+  }
+  // Carrying: fragile pottery breaks if you run, metal sets off detectors
+  const pv = Math.hypot(player.vx, player.vy), moving = !CH.seat && pv > 5, running = moving && pv > 120;
+  if (running) for (const l of CH.carry) if (HX_CAT[l.cat].fragile && !l.broken) { l.broken = true; toast(`Crack! ${l.name} is damaged. Don't run with pottery`, '#ff8a7a'); }
+  if (!CH.hacked && CH.carry.some(l => HX_CAT[l.cat].metal)) for (const d of CH.detectors) { const [x, y] = hxW(d.x, d.y); if (Math.hypot(player.x - x, player.y - y) < 18 && time - CH.detT > 3) { CH.detT = time; toast('The metal detector shrieks!', '#ff3b4e'); CH.sus = Math.min(100, CH.sus + 60); if (CH.sus >= 100) hxAlarm('The metal detector went off'); } }
+  // People
+  for (const p of CH.people) {
+    p.moving = false;
+    if (p.state === 'down') { p.downT = (p.downT || 0) + dt; continue; }
+    if (p.kind === 'cam') { p.a = p.a0 + Math.sin(CH.t * 0.55 + p.x * 0.01) * p.sweep; continue; }
+    if (p.state === 'flee') { if (!p.fled) { hxGo(p, doorW[0], doorW[1]); p.fled = true; } if (hxWalk(p, 90, dt)) { p.state = 'down'; p.hide = true; p.g.visible = false; if (p.cone) p.cone.visible = false; } continue; }
+    if (p.rival) { hxRivalAI(p, dt, doorW); continue; }
+    if (p.guard) { hxGuardAI(p, dt); continue; }
+    if (p.route && p.state === 'walk') { if (!p.path.length) { if ((p.wait -= dt) <= 0) { p.ri = (p.ri + 1) % p.route.length; hxGo(p, p.route[p.ri][0], p.route[p.ri][1]); p.wait = 3; } else p.a += Math.sin(CH.t + p.x) * dt; } else hxWalk(p, 22, dt); }
+    else if (p.watch && p.seat) { p.sitting = true; p.a = p.seat.a + Math.sin(CH.t * 0.35 + p.x) * 0.55; }
+    else if (p.watch) p.a += Math.sin(CH.t * 0.5 + p.x) * dt * 0.6;
+  }
+  // Suspicion
+  const z = hxZoneAt(player.x, player.y), seated = !!CH.seat;
+  const restricted = hxRestricted(z) || (seated && ['clergy', 'terminal', 'guard'].includes(CH.seat.kind));
+  const kneel = seated && CH.seat.pose === 'kneel', hidden = seated && (CH.seat.kind === 'alcove' || CH.seat.kind === 'crouch');
+  const visibleLoot = CH.carry.some(l => !HX_CAT[l.cat].conceal);
+  let mult = moving ? (running ? 3 : 1) : 0.6;
+  if (seated) mult = (kneel ? 0.2 : 0.3) * (1 - 0.15 * hxSkill('stealth')) * (CH.seatT > 3 && !restricted && !visibleLoot ? 0.2 : 1);
+  if (hidden) mult = 0;
+  if (!seated && time - CH.standT < 1 + hxSkill('stealth')) mult *= 0.25;
+  if (restricted) mult *= hxRobed ? 0.8 : seated ? 4 : 2.5;
+  if (visibleLoot) mult *= 1.8; else if (CH.carry.length && !seated) mult *= 1.2;
+  const cong = CH.people.filter(p => p.kind === 'worship' && p.state === 'sit').length;
+  if (cong >= 8 && !restricted) mult *= seated ? 0.5 : 0.8;
+  if (hxNight()) mult *= 1.3;
+  if (HX && HX.approach === 'worshipper' && seated) mult *= 0.7;
+  if (hxRobed && !restricted) mult *= 0.8;
+  if (CH.hold && CH.hold.kind === 'grab') mult = Math.max(mult, 1.4);
+  let exposure = 0, seer = null;
+  for (const w of CH.people) {
+    if (!w.watch) continue;
+    const v = hxSees(w, player.x, player.y, seated);
+    if (v > 0) { exposure += v * w.gain; w.seeT = time; if (!seer || v > seer.v) seer = { w, v }; }
+  }
+  if (running) for (const g of CH.people) if (g.guard && g.state !== 'down' && Math.hypot(g.x - player.x, g.y - player.y) < 90) exposure += 0.35;
+  CH.exposed = exposure > 0 && mult > 0; CH.seer = seer;
+  if (!CH.alarm) {
+    if (CH.exposed) CH.sus = Math.min(100, CH.sus + 26 * exposure * mult * dt);
+    else CH.sus = Math.max(0, CH.sus - (seated ? 18 : 6) * dt);
+    if (CH.clergyWarn && seer) { CH.clergyWarn = false; CH.sus = Math.min(99, CH.sus + 22); talkLine('priest', 'Ayd teghy hogevorakannerin e!', 'That seat is for the clergy!'); for (const g of CH.people) if (g.guard && g.state === 'patrol') { g.state = 'investigate'; g.look = 4; hxGo(g, player.x, player.y); break; } }
+    if (CH.sus >= 100) hxAlarm(seer ? (seer.w.kind === 'cam' ? 'A camera caught you' : seer.w.guard ? 'A guard raised the alarm' : 'The clergy raised the alarm') : 'Someone heard you');
+    else if (seer && seer.w.guard && CH.sus > 40 && seer.w.state === 'patrol') { seer.w.state = 'investigate'; seer.w.look = 3; hxGo(seer.w, player.x, player.y); }
+    else if (seer && !seer.w.guard && CH.sus > 55 && time - CH.noticeT > 6) { CH.noticeT = time; for (const g of CH.people) if (g.guard && g.state === 'patrol') { g.state = 'investigate'; g.look = 3; hxGo(g, player.x, player.y); break; } }
+  }
+  // Rivals turn up once you have the goods, or if you take too long
+  if (HX && HX.op.rivals && hxLegSite() === CH.id && !CH.rivalsIn && (CH.carry.length ? (CH.rivalT = (CH.rivalT ?? 7) - dt) <= 0 : CH.t > 130)) hxRivals();
+  // Crew lookout warnings
+  CH.warnT -= dt;
+  if (HX && HX.crew && CH.warnT <= 0 && !CH.alarm && !hidden) for (const g of CH.people) if (g.guard && g.state === 'patrol' && Math.hypot(g.x - player.x, g.y - player.y) < 140 && Math.abs(angDiff(Math.atan2(player.y - g.y, player.x - g.x), g.a)) < 1.1) { toast('Crew: "Guard coming your way. Sit down and blend in."', '#7fe0a0'); CH.warnT = 8; break; }
+  // Shift change: a guard goes to sit on the guards' bench for a while
+  if ((CH.breakT -= dt) <= 0 && !CH.alarm) {
+    CH.breakT = 40 + Math.random() * 25;
+    const cand = CH.people.filter(g => g.guard && g.state === 'patrol'), seat = CH.seats.find(s => s.kind === 'guard' && !s.occ);
+    if (cand.length > 1 && seat) { const g = pick(cand); g.state = 'break'; g.breakSeat = seat; seat.occ = g; hxGo(g, ...hxW(seat.x + seat.stand[0], seat.y + seat.stand[1])); if (CH.intel >= 2) toast("Shift change: a guard is heading to the guards' bench", '#9fd4e8'); }
+  }
+}
+function hxIntel(n) {
+  CH.intel = Math.max(CH.intel, n);
+  if (n === 1) toast('Intel: guard patrol routes marked on the floor and the plan (M)', '#9fd4e8');
+  if (n === 2) toast('Intel: cameras and the shift-change schedule', '#9fd4e8');
+  if (n === 3) { toast('Intel: artifact locations confirmed · +15% payout', '#f2a800'); if (HX && hxLegSite() === CH.id) HX.intelBonus = true; }
+  if (CH.routes) CH.routes.visible = CH.intel >= 1;
+}
+function hxHoldDone(H) {
+  if (H.kind === 'door') { hxOpenDoor(H.d); toast(H.noisy ? `The ${H.d.label} gives way with a crack` : `Click. The ${H.d.label} is open`, H.noisy ? '#ffd35a' : '#7fe0a0'); if (H.noisy && hxSeenNow()) CH.sus = Math.min(99, CH.sus + 30); }
+  else if (H.kind === 'hack') { CH.hacked = true; for (const d of CH.doors) if (d.kind === 'gate' && !d.open) hxOpenDoor(d); toast('Security hacked: cameras off, gates open, detectors silent', '#5fd4c4'); }
+  else if (H.kind === 'grab') {
+    const lt = H.lt; lt.taken = true; CH.carry.push(lt); if (lt.ring) lt.ring.visible = false; lt.mesh.visible = !HX_CAT[lt.cat].conceal;
+    toast(HX_CAT[lt.cat].conceal ? `${lt.name} is under your jacket` : `You have ${lt.name}`, '#f2a800');
+    if (HX_CAT[lt.cat].sacred && !CH.hacked) hxAlarm('Desecration alarm: the reliquary case was opened');
+  }
+}
+function hxGuardAI(g, dt) {
+  switch (g.state) {
+    case 'patrol':
+      if (!g.path.length) {
+        if (g.wait > 0) { g.wait -= dt; g.a += Math.sin(CH.t * 1.3 + g.x) * dt * 1.4; return; }
+        g.ri = (g.ri + 1) % g.route.length; if (!hxGo(g, g.route[g.ri][0], g.route[g.ri][1])) { g.wait = 2; return; } g.wait = 1.4;
+      } else hxWalk(g, 34, dt);
+      break;
+    case 'investigate':
+      if (g.path.length) hxWalk(g, 52, dt);
+      else { g.look -= dt; g.a += dt * 2.4; if (g.look <= 0) { g.state = 'patrol'; hxGo(g, g.route[g.ri][0], g.route[g.ri][1]); } }
+      break;
+    case 'break':
+      if (g.path.length && !g.sitting) hxWalk(g, 30, dt);
+      else if (!g.sitting) { g.sitting = true; g.seat = g.breakSeat; [g.x, g.y] = hxW(g.seat.x, g.seat.y); g.a = g.seat.a; g.breakT = 18; }
+      else { g.a = g.seat.a + Math.sin(CH.t * 0.3 + g.x) * 0.4; if ((g.breakT -= dt) <= 0) { const s = g.seat; g.sitting = false; s.occ = null; g.seat = null; [g.x, g.y] = hxW(s.x + s.stand[0], s.y + s.stand[1]); g.state = 'patrol'; hxGo(g, g.route[g.ri][0], g.route[g.ri][1]); } }
+      break;
+    case 'alarm': {
+      let tx = player.x, ty = player.y, vis = Math.hypot(tx - g.x, ty - g.y) < 330 && hxLOS(g.x, g.y, tx, ty, false);
+      for (const r of CH.people) if (r.rival && r.state !== 'down' && !r.hide) { const dr = Math.hypot(r.x - g.x, r.y - g.y); if (dr < 240 && hxLOS(g.x, g.y, r.x, r.y, false) && (!vis || dr < Math.hypot(tx - g.x, ty - g.y))) { tx = r.x; ty = r.y; vis = true; } }
+      const d = Math.hypot(tx - g.x, ty - g.y);
+      if (vis && d < 320) { g.a = Math.atan2(ty - g.y, tx - g.x); g.aim = true; if ((g.fireCD -= dt) <= 0) { g.fireCD = 0.8 + Math.random() * 0.7; fireRay(g.x, g.y, g.a + (Math.random() - 0.5) * 0.14, 330, CH.def.guards === 'elite' ? 9 : 6, g); } } else g.aim = false;
+      if (d > 80 || !vis) { if ((g.repath = (g.repath || 0) - dt) <= 0) { g.repath = 0.7; hxGo(g, tx, ty); } hxWalk(g, 64, dt); }
+      break;
+    }
+  }
+}
+function hxRivalAI(r, dt, doorW) {
+  if (r.heldLoot) {
+    const l = r.heldLoot; if (!r.path.length && !r.leaving) { hxGo(r, doorW[0], doorW[1]); r.leaving = true; }
+    l.mesh.position.set(r.x, 6, r.y);
+    if (hxWalk(r, 58, dt) && r.leaving) { l.lost = true; l.heldBy = null; r.heldLoot = null; r.state = 'down'; r.hide = true; r.g.visible = false; l.mesh.visible = false; talkLine('karo', 'Hajogh, siraki!', 'Bye, amateur!'); hxCheckLegLost(); }
+    return;
+  }
+  const target = CH.loot.find(l => l.active && !l.taken && !l.lost && !l.heldBy);
+  const hiddenP = CH.seat && (CH.seat.kind === 'alcove' || CH.seat.kind === 'crouch');
+  const d = Math.hypot(player.x - r.x, player.y - r.y), see = !hiddenP && d < 260 && hxLOS(r.x, r.y, player.x, player.y, !!CH.seat);
+  if (see) { r.a = Math.atan2(player.y - r.y, player.x - r.x); r.aim = true; if ((r.fireCD -= dt) <= 0) { r.fireCD = 1.1 + Math.random(); fireRay(r.x, r.y, r.a + (Math.random() - 0.5) * 0.18, 300, 6, r); if (!CH.alarm) hxAlarm('The rival crew opened fire'); } } else r.aim = false;
+  const gx = target ? target.x : player.x, gy = target ? target.y : player.y;
+  if ((r.repath = (r.repath || 0) - dt) <= 0) { r.repath = 0.8; hxGo(r, gx, gy); }
+  if (!see || target) hxWalk(r, target ? 46 : 50, dt);
+  if (target && Math.hypot(target.x - r.x, target.y - r.y) < 16) { target.heldBy = r; r.heldLoot = target; target.mesh.visible = true; if (target.ring) target.ring.visible = false; r.path = []; talkLine('karo', 'Vercrinq! Mery che, dzerinn e!', "Got it! Too slow!"); }
+}
+// Posing every figure, the cones of vision, the route lines, carried loot
+function hxPose() {
+  for (const p of CH.people) {
+    if (p.kind === 'cam') { const vis = !CH.hacked && (CH.intel >= 2 || CH.alarm); p.cone.visible = vis; if (vis) { p.cone.position.set(p.x, 0.8, p.y); p.cone.rotation.y = -p.a; p.cone.scale.set(p.range, 1, p.range); p.cone.material.color.set(CH.alarm ? 0xff3b4e : 0xff7a7a); } p.body.rotation.y = -p.a; continue; }
+    if (p.hide) continue;
+    const sit = p.state === 'sit' || p.sitting, kneel = sit && p.seat && p.seat.kind === 'stool';
+    posePerson(p.g, p.x, p.y, p.a, p.phase, p.moving, p.state === 'down', 1, { sit: sit && !kneel, kneel, pray: sit && p.kind === 'worship' && (kneel || hxService()), run: p.moving && (p.state === 'alarm' || p.state === 'flee' || !!p.rival), aim: !!p.aim && !p.moving });
+    p.g.position.y = sit && p.seat ? (kneel ? 0 : Math.max(0, p.seat.h - 7)) : hxElevAt(p.x, p.y);
+    if (p.cone) {
+      const on = p.state !== 'down' && p.state !== 'flee';
+      p.cone.visible = on; if (!on) continue;
+      const r = p.range * (p.sitting ? 0.55 : 1);
+      p.cone.position.set(p.x, 0.8 + p.g.position.y, p.y); p.cone.rotation.y = -p.a; p.cone.scale.set(r, 1, r);
+      p.cone.geometry !== p._geo && (p._geo = p.cone.geometry);
+      const st = p.state === 'alarm' ? 0xff3b4e : p.state === 'investigate' ? 0xffd35a : p.torch ? 0xfff0b0 : p.guard ? 0xfff4dc : 0xf2e2c4;
+      p.cone.material.color.set(st); p.cone.material.opacity = p.state === 'alarm' ? 0.22 : p.torch ? 0.26 : 0.13;
+    }
+  }
+  // Player: sitting or kneeling pose, and the height of galleries and ledges
+  if (player.interior === 'church' && playerMesh.visible) {
+    if (CH.seat) {
+      const s = CH.seat, pray = s.pose === 'kneel' ? s.kind !== 'crouch' : s.kind === 'pew' && hxService();
+      posePerson(playerMesh, player.x, player.y, player.a, 0, false, false, 1, { sit: s.pose === 'sit', kneel: s.pose === 'kneel', pray });
+      playerMesh.position.y = s.pose === 'kneel' ? hxElevAt(player.x, player.y) : Math.max(0, s.h - 7);
+    } else playerMesh.position.y = hxElevAt(player.x, player.y);
+  }
+  for (const l of CH.carry) if (l.mesh.visible) {
+    const heavy = HX_CAT[l.cat].heavy, f = heavy ? 12 : 6;
+    l.mesh.position.set(player.x + Math.cos(player.a) * f, (heavy ? -6 : 4) + playerMesh.position.y, player.y + Math.sin(player.a) * f); l.mesh.rotation.y = -player.a; l.mesh.scale.setScalar(heavy ? 0.8 : 0.7);
+  }
+  for (const l of CH.loot) if (l.ring) { l.ring.visible = l.active && !l.taken && !l.lost && !l.heldBy; l.ring.material.opacity = 0.5 + 0.4 * Math.sin(time * 4); }
+}
+function hxRoutesBuild() {
+  const g = new THREE.Group();
+  for (const p of CH.people) if (p.guard && p.route.length > 1) {
+    const pts = []; for (let k = 0; k <= p.route.length; k++) { const a = p.route[k % p.route.length], b = p.route[(k + 1) % p.route.length]; const seg = hxPath(a[0], a[1], b[0], b[1]) || [b]; if (!k) pts.push(new THREE.Vector3(a[0], 1.4, a[1])); for (const q of seg) pts.push(new THREE.Vector3(q[0], 1.4, q[1])); if (k >= p.route.length - 1) break; }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts), line = new THREE.Line(geo, new THREE.LineDashedMaterial({ color: 0xffd35a, dashSize: 8, gapSize: 6 }));
+    line.computeLineDistances(); g.add(line); p.routePts = pts;
+  }
+  g.visible = CH.intel >= 1; CH.group.add(g); CH.routes = g;
+}
+
+// ─── Operations: board, planning, the choice at the end ─────────────────────
+const hxDone = () => Object.values(hx.done).reduce((a, b) => a + b, 0);
+const hxStarStr = n => '★'.repeat(n) + '☆'.repeat(Math.max(0, 5 - n));
+function openHeritageBoard() {
+  const total = hxDone(), vals = Object.values(hx.choice), f = vals.filter(c => c === 'fence').length, r = vals.filter(c => c === 'return').length;
+  const rows = HX_OPS.map(op => {
+    const lock = total < HX_UNLOCK[op.stars], C = HX_CAT[op.cat], st = hx.done[op.id] ? (hx.choice[op.id] === 'return' ? 'returned home' : 'fenced') : lock ? `locked · finish ${HX_UNLOCK[op.stars]}` : 'open';
+    return `<div class="row"><div><b class="gold">${op.name}</b> <span class="muted">· ${op.op}</span><br>${hxStarStr(op.stars)} <span class="muted">${op.where}</span><br><span class="muted">${op.target} · ${fmtMoney(C.min)}–${fmtMoney(C.max)}${C.max >= 1e6 ? '+' : ''}</span></div><div class="${hx.done[op.id] ? 'ok' : 'muted'}">${st}</div></div>`;
+  }).join('');
+  const body = `<p class="muted">Levon "Vardapet" keeps the board. Nine jobs against Armenia's holiest places, easiest first. Sit, watch, plan, and decide at the end: profit or preservation.</p>`
+    + (HX ? `<p class="gold">In progress: ${HX.op.name}. ${hxObjective()?.text || ''}</p>` : '')
+    + `<div class="row"><span>Skill points</span><span class="gold">${hx.points}</span></div><div class="row"><span>Returned · fenced</span><span>${r} · ${f}</span></div>`
+    + (hx.ending ? `<div class="row"><span>Ending reached</span><span class="gold">${HX_ENDINGS[hx.ending].title}</span></div>` : '') + rows;
+  const options = [{ label: `Skills · ${hx.points} point${hx.points === 1 ? '' : 's'} to spend`, sub: Object.entries(HX_SKILLS).map(([k, v]) => `${v[0]} ${hx.skills[k]}`).join(' · '), act: () => { hxSkillsMenu(); return true; } }];
+  if (HX) options.push({ label: 'Abandon the current operation', sub: HX.op.name, act: () => { HX = null; if (hxMark) hxMark.visible = false; toast('Operation abandoned', '#9a978f'); } });
+  for (const op of HX_OPS) if (total >= HX_UNLOCK[op.stars]) options.push({ label: `${op.name} · ${hxStarStr(op.stars)}`, sub: `${op.op} · ${op.where}`, disabled: !!HX, act: () => { hxOpenPlan(op); return true; } });
+  showMenu({ eyebrow: 'Heritage heists · planning board', title: 'The Armenian jobs', body, options });
+}
+function hxSkillsMenu() {
+  showMenu({ eyebrow: 'Heritage heists · character', title: `Skill points: ${hx.points}`, body: '<p class="muted">Every finished heist earns a point, two for five-star jobs.</p>',
+    options: [...Object.entries(HX_SKILLS).map(([k, [n, d]]) => ({ label: `${n} ${'■'.repeat(hx.skills[k])}${'□'.repeat(3 - hx.skills[k])}`, sub: d, disabled: !hx.points || hx.skills[k] >= 3,
+      act: () => { hx.points--; hx.skills[k]++; saveGame(); toast(`${n} is now level ${hx.skills[k]}`, '#7fe0a0'); hxSkillsMenu(); return true; } })),
+      { label: 'Back to the board', act: () => { openHeritageBoard(); return true; } }] });
+}
+let hxPlanState = null;
+const HX_APPROACH = { stealth: ['Stealth', 'Seats, shadows and alcoves. No cut'], worshipper: ['Worshipper', 'Walk in with the congregation and start seated in a pew. Best during a service'],
+  monk: ["Monk's robe ($500)", 'Disguise: clergy seats and restricted rooms draw far less attention'], hacker: ['Hacker (crew, −10%)', 'Cameras off, gates open and detectors silent from the start'],
+  loud: ['Loud (−20%)', 'Guns out. The alarm goes off the moment you walk in'] };
+function hxOpenPlan(op) {
+  const P = hxPlanState && hxPlanState.op === op ? hxPlanState : (hxPlanState = { op, approach: 'stealth', crew: !!op.crewNeeded, contact: false });
+  const C = HX_CAT[op.cat], K = HX_CONTACT[op.contact], sites = op.legs.map(l => HX_SITES[l.site].name).join(' → ');
+  const why = HX ? 'Finish or abandon your current operation first' : activity ? 'Finish your current job first' : '';
+  const time = hxService() ? 'A service is on: the pews are full, good cover' : hxNight() ? 'Night: empty pews and dark halls, but nowhere to blend in' : 'Daytime: a few worshippers';
+  const body = `<p>${op.target}.</p><div class="row"><span>Where</span><span>${sites}</span></div><div class="row"><span>Difficulty</span><span class="gold">${hxStarStr(op.stars)}</span></div>`
+    + `<div class="row"><span>${C.name}</span><span class="gold">${fmtMoney(C.min)}–${fmtMoney(C.max)}</span></div><div class="row"><span>Heat</span><span>${C.note}</span></div>`
+    + `<div class="row"><span>Now (${clockText()})</span><span>${time}</span></div>` + (op.timer ? `<div class="row"><span>Time limit</span><span class="gold">${Math.round(op.timer / 60)} minutes for every site</span></div>` : '')
+    + (op.rivals ? '<p class="muted">Karo\'s rival crew is after the same treasure.</p>' : '');
+  showMenu({ eyebrow: `${op.op} · ${hxStarStr(op.stars)}`, title: op.name, body, options: [
+    ...Object.entries(HX_APPROACH).map(([k, [n, sub]]) => ({ label: `${P.approach === k ? '●' : '○'} Approach: ${n}`, sub, act: () => { P.approach = k; hxOpenPlan(op); return true; } })),
+    { label: `${P.crew ? '●' : '○'} Bring the crew (−15% cut)`, sub: op.crewNeeded ? 'Required for this job: heavy lifting, lookouts and the winch' : 'A lookout on the best seat: routes marked and warnings when a guard comes', disabled: !!op.crewNeeded, act: () => { P.crew = !P.crew; hxOpenPlan(op); return true; } },
+    { label: `${P.contact ? '●' : '○'} Meet the inside contact · ${fmtMoney(K.cost)}`, sub: `${CAST[op.contact][0]}, ${K.role}. Intel from the start`, disabled: P.contact, act: () => { if (!pay(K.cost)) return true; P.contact = true; closeMenu(); talk(K.lines, () => hxOpenPlan(op)); return true; } },
+    { label: 'Wait for the next service', sub: hxService() ? 'A service is on right now' : 'Pass the time at a café until the pews fill up', disabled: hxService(), act: () => { const h = hxHour(); tod = h < 8 ? 8.05 : h < 17 ? 17.05 : 8.05; if (h >= 17) newDay(); hxOpenPlan(op); return true; } },
+    { label: 'Start the operation', sub: why || `First stop: ${HX_SITES[op.legs[0].site].name}`, disabled: !!why, act: () => hxStart(P) }] });
+}
+function hxStart(P) {
+  if (P.approach === 'monk' && !pay(500)) return true;
+  const op = P.op;
+  HX = { op, leg: 0, stage: 'travel', approach: P.approach, crew: P.crew || P.approach === 'hacker', contact: P.contact, bag: [], alarmed: false, intelBonus: false, timeLeft: op.timer || 0, legNeed: null };
+  hxPlanState = null;
+  showBanner(op.op, `${op.name} · first stop: ${HX_SITES[op.legs[0].site].name}`, '#f2a800', 4);
+  talkLine('fixer', 'Hajoghutyun. Ev hishir: nstir, nayir, spasir.', 'Good luck. And remember: sit, watch, wait.');
+}
+function hxValue() {
+  const op = HX.op; let q = 0.3 + 0.08 * (op.stars - 2) + (HX.intelBonus ? 0.15 : 0) + (HX.alarmed ? 0 : 0.2) + (HX.contact ? 0.05 : 0); q = clamp(q, 0, 1);
+  const lines = []; let total = 0;
+  for (const b of HX.bag) { const C = HX_CAT[b.cat], v = lerp(C.min, C.max, q) * (b.bonus || 1) * (b.broken ? 0.4 : 1) * (b.cached ? 0.9 : 1); lines.push([b.name + (b.broken ? ' (damaged)' : ''), v]); total += v; }
+  const cut = (HX.crew ? 0.85 : 1) * (HX.approach === 'hacker' ? 0.9 : 1) * (HX.approach === 'loud' ? 0.8 : 1);
+  return { total: Math.round(total * cut), lines, cut };
+}
+function hxDeliver() {
+  const op = HX.op, V = hxValue();
+  const body = `<p>${op.op}: ${HX.bag.length} piece${HX.bag.length === 1 ? '' : 's'} out${HX.alarmed ? ', alarms and all' : ', clean'}.</p>` + V.lines.map(([n, v]) => `<div class="row"><span>${n}</span><span class="gold">${fmtMoney(v)}</span></div>`).join('')
+    + `<div class="row"><span>Crew and approach cut</span><span class="muted">×${V.cut.toFixed(2)}</span></div><p class="muted">Levon can fence it tonight. Or you can return it anonymously, and the Ministry of Culture pays a finder's reward.</p>`;
+  showMenu({ eyebrow: 'Heritage heist · the choice', title: 'Preservation or profit?', body, noClose: true, options: [
+    { label: `Fence it through Levon · ${fmtMoney(V.total)}`, sub: 'Profit. The pieces vanish into private collections abroad', act: () => hxFinish('fence', V.total) },
+    { label: `Return it to Armenia · reward ${fmtMoney(Math.round(V.total * 0.25))}`, sub: 'Patriot. Anonymous delivery to the church and the Ministry of Culture', act: () => hxFinish('return', Math.round(V.total * 0.25)) }] });
+}
+function hxFinish(choice, money) {
+  const op = HX.op; player.money += money;
+  hx.done[op.id] = (hx.done[op.id] || 0) + 1; hx.choice[op.id] = choice; hx.points += op.stars >= 5 ? 2 : 1;
+  if (choice === 'return') { hg.followers += 250; heat.v = 0; }
+  HX = null; saveGame();
+  showBanner(choice === 'fence' ? 'Fenced' : 'Returned home', `${op.name} · +${fmtMoney(money)} · +${op.stars >= 5 ? 2 : 1} skill point${op.stars >= 5 ? 's' : ''}`, choice === 'fence' ? '#ffd35a' : '#7fe0a0', 4);
+  if (op.id === 'takeover') setTimeout(() => hxEnding(), 1200);
+}
+function hxEnding() {
+  const v = Object.values(hx.choice), f = v.filter(c => c === 'fence').length, r = v.filter(c => c === 'return').length;
+  const key = r >= Math.max(1, (f + r) * 0.7) ? 'guardian' : f >= Math.max(1, (f + r) * 0.7) ? 'collector' : 'double', E = HX_ENDINGS[key];
+  const crew = Math.min(3, 1 + Math.floor((hxDone() + Object.values(hx.skills).reduce((a, b) => a + b, 0)) / 5));
+  hx.ending = key; saveGame();
+  talk([['fixer', `Ekipazhy ${crew} ayl vayreric ${crew} maqur ancav: Khor Virap, Noraduz, Erebuni.`, `Crew report: ${crew} of the 3 other sites (Khor Virap, Noraduz, Erebuni) went clean.`], ...E.lines],
+    () => showBanner(`Ending · ${E.title}`, `${r} returned home · ${f} fenced`, '#f2a800', 7));
+}
+
+// ─── HUD: suspicion meter, seat status, holds, guard marks, objective ───────
+function drawHeritageHud(s) {
+  if (mode !== 'play' && mode !== 'talk') return;
+  const o = hxObjective();
+  if (o) {
+    const txt = (HX.op.timer ? `${Math.floor(HX.timeLeft / 60)}:${String(Math.floor(HX.timeLeft % 60)).padStart(2, '0')} · ` : '') + o.text;
+    ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; const w = Math.min(vw - 32, ctx.measureText(txt).width + 44), x = vw / 2 - w / 2, y = CH.id && player.interior === 'church' ? insetTop + (vw < 560 ? 176 : 16 + 72 * s) + 52 : insetTop + (vw < 560 ? 244 : 106 * s + 16);
+    ctx.fillStyle = 'rgba(12,14,18,0.84)'; ctx.beginPath(); ctx.roundRect(x, y, w, 26, 13); ctx.fill();
+    ctx.fillStyle = '#f2a800'; ctx.beginPath(); ctx.arc(x + 14, y + 13, 5, 0, 7); ctx.fill();
+    ctx.textAlign = 'left'; ctx.fillStyle = '#efe6d2'; ctx.fillText(txt, x + 26, y + 17, w - 34);
+  }
+  if (!CH.id || player.interior !== 'church') return;
+  // Suspicion meter
+  const my = insetTop + (vw < 560 ? 176 : 16 + 72 * s), bw = Math.min(220, vw - 120), bx = vw / 2 - bw / 2;
+  const lv = CH.alarm ? 'ALARM' : CH.sus > 75 ? 'SEARCHING' : CH.sus > 40 ? 'SUSPICIOUS' : CH.exposed ? 'NOTICED' : 'UNSEEN';
+  const col = CH.alarm ? (Math.floor(time * 4) % 2 ? '#ff3b4e' : '#8a1a22') : CH.sus > 75 ? '#ff6b3d' : CH.sus > 40 ? '#ffd35a' : CH.exposed ? '#f2e2c4' : '#7fe0a0';
+  ctx.fillStyle = 'rgba(12,14,18,0.8)'; ctx.beginPath(); ctx.roundRect(bx - 34, my, bw + 44, 24, 12); ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(bx - 18, my + 12, 8, 5, 0, 0, 7); ctx.stroke();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(bx - 18, my + 12, CH.exposed ? 3 : 1.5, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(bx, my + 9, bw, 6); ctx.fillStyle = col; ctx.fillRect(bx, my + 9, bw * CH.sus / 100, 6);
+  ctx.font = `700 10px ${MONO}`; ctx.textAlign = 'right'; ctx.fillStyle = col; ctx.fillText(lv, bx + bw + 4, my + 7);
+  // Status line
+  const st = [], z = hxZoneAt(player.x, player.y);
+  if (CH.seat) { const k = CH.seat.kind; st.push(k === 'alcove' || k === 'crouch' ? 'Hidden' : CH.seat.pose === 'kneel' ? 'Kneeling in prayer · you blend in' : `Seated · ${Math.round(70 + 10 * hxSkill('stealth'))}% less attention`); if (CH.obs < 3) st.push(`Observing ${Math.round((CH.obs % 1) * 100)}%`); }
+  if (hxRestricted(z)) st.push(`Restricted: ${z.name}${hxRobed ? ' (robed)' : ''}`);
+  if (CH.carry.length) st.push(`Carrying ${CH.carry.length}${CH.carry.every(l => HX_CAT[l.cat].conceal) ? ' (concealed)' : ''}`);
+  if (CH.hacked) st.push('Security hacked');
+  if (CH.intel) st.push(`Intel ${CH.intel}/3`);
+  if (st.length) { ctx.font = `600 ${Math.round(10 * s + 1)}px ${MONO}`; ctx.textAlign = 'center'; const t = st.join(' · '), w = Math.min(vw - 24, ctx.measureText(t).width + 20); ctx.fillStyle = 'rgba(12,14,18,0.72)'; ctx.beginPath(); ctx.roundRect(vw / 2 - w / 2, my + 28, w, 18, 9); ctx.fill(); ctx.fillStyle = '#d8d2c4'; ctx.fillText(t, vw / 2, my + 41, w - 12); }
+  // Hold progress ring over the player
+  const [px, py] = toScreen(camera, player.x, player.y, 30 + playerMesh.position.y);
+  if (CH.hold) {
+    const H = CH.hold, k = Math.min(1, H.t / H.need);
+    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.arc(px, py - 20, 16, 0, 7); ctx.stroke();
+    ctx.strokeStyle = H.noisy ? '#ffd35a' : '#7fe0a0'; ctx.beginPath(); ctx.arc(px, py - 20, 16, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); ctx.stroke();
+    ctx.font = `600 11px ${MONO}`; ctx.textAlign = 'center'; ctx.fillStyle = '#fff4dc'; ctx.fillText(H.label, px, py - 44);
+  }
+  // Guard state marks
+  for (const p of CH.people) {
+    if (!(p.guard || p.rival) || p.state === 'down' || p.hide) continue;
+    const mark = p.rival ? '☠' : p.state === 'alarm' ? '!' : p.state === 'investigate' ? '?' : p.state === 'break' && p.sitting ? 'z' : '';
+    if (!mark) continue;
+    const [a, b, v] = toScreen(camera, p.x, p.y, 36 + p.g.position.y); if (!v) continue;
+    ctx.font = `800 20px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.fillStyle = p.rival ? '#ff6b5e' : mark === '!' ? '#ff3b4e' : mark === '?' ? '#ffd35a' : '#9fd4e8'; ctx.fillText(mark, a, b);
+  }
+  // Plan markers you placed on the church plan
+  CH.markers.forEach((m, i) => { const [x, y] = hxW(m[0], m[1]), [a, b, v] = toScreen(camera, x, y, 4); if (v) { ctx.fillStyle = 'rgba(95,212,196,0.9)'; ctx.beginPath(); ctx.arc(a, b, 9, 0, 7); ctx.fill(); ctx.fillStyle = '#10181c'; ctx.font = `800 11px ${MONO}`; ctx.textAlign = 'center'; ctx.fillText(String(i + 1), a, b + 4); } });
+}
+
+// ─── Church plan (M inside a church): the interior map for planning routes ──
+function drawChurchPlan() {
+  const I = CI(), top = insetTop + 104, bottom = vh - insetBottom - 64;
+  const sc = Math.min((vw - 32) / I.w, (bottom - top) / I.h), W = I.w * sc, H = I.h * sc, ox = (vw - W) / 2, oy = top;
+  CH.planRect = { ox, oy, sc };
+  const X = x => ox + x * sc, Y = y => oy + y * sc, R = (r, f) => { ctx.fillStyle = f; ctx.fillRect(X(r[0]), Y(r[1]), (r[2] - r[0]) * sc, (r[3] - r[1]) * sc); };
+  ctx.fillStyle = 'rgba(6,8,12,0.94)'; ctx.fillRect(0, 0, vw, vh);
+  ctx.fillStyle = CH.def.outdoor ? '#1d2a1c' : '#23211e'; ctx.fillRect(ox, oy, W, H);
+  for (const z of CH.zones) R(z.r, hxRestricted(z) ? 'rgba(255,90,90,0.13)' : 'rgba(242,168,0,0.09)');
+  const COL = { wall: '#8a8276', pillar: '#b8ab96', pew: '#7a5a3a', altar: '#d9a441', shelf: '#5a4030', raised: 'rgba(160,140,110,0.3)', water: '#2f6f9a', khachkar: '#9a8f80', jar: '#a8603a', exit: '#5fd4c4' };
+  for (const p of CH.plan) R(p.r, COL[p.k] || '#6a625a');
+  for (const d of CH.doors) { if (d.kind === 'secret' && !d.found) continue; R(d.r, d.open ? 'rgba(127,224,160,0.35)' : d.kind === 'gate' ? '#ff3b4e' : d.kind === 'secret' ? '#f2a800' : '#ff9a4a'); }
+  for (const s of CH.seats) { ctx.fillStyle = s.kind === 'alcove' || s.kind === 'crouch' ? '#b07aff' : s.kind === 'clergy' || s.kind === 'terminal' ? '#ff7a7a' : s.kind === 'sacred' ? '#f2a800' : s.vantage ? '#5fd4c4' : s.cache ? '#7fe0a0' : 'rgba(239,230,210,0.55)'; ctx.beginPath(); ctx.arc(X(s.x), Y(s.y), Math.max(1.6, 3.2 * sc), 0, 7); ctx.fill(); }
+  const I0 = [I.ox, I.oy];
+  if (CH.intel >= 1) { ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(255,211,90,0.8)'; ctx.lineWidth = 1.5; for (const p of CH.people) if (p.routePts && p.state !== 'down') { ctx.beginPath(); p.routePts.forEach((q, k) => { const x = X(q.x - I0[0]), y = Y(q.z - I0[1]); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); } ctx.setLineDash([]); }
+  for (const l of CH.loot) { if (l.lost || l.taken) continue; const x = X(l.x - I0[0]), y = Y(l.y - I0[1]); ctx.fillStyle = l.active ? (CH.intel >= 3 || !l.bonus ? '#f2a800' : 'rgba(242,168,0,0.4)') : '#6a6a6a'; ctx.font = `800 ${l.active ? 16 : 11}px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.fillText('★', x, y + 5); }
+  for (const p of CH.people) {
+    if (p.hide || p.state === 'down' && p.kind !== 'cam') continue;
+    if (p.kind === 'cam' && (CH.hacked || CH.intel < 2)) continue;
+    const x = X(p.x - I0[0]), y = Y(p.y - I0[1]);
+    if (p.watch || p.kind === 'cam') { const r = p.range * sc * (p.sitting ? 0.55 : 1); ctx.fillStyle = p.state === 'alarm' ? 'rgba(255,59,78,0.25)' : p.kind === 'cam' ? 'rgba(255,122,122,0.2)' : 'rgba(255,244,220,0.14)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, p.a - p.fov / 2, p.a + p.fov / 2); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = p.kind === 'cam' ? '#ff7a7a' : p.guard ? '#8fb4ff' : p.rival ? '#ff6b5e' : p.crew ? '#7fe0a0' : p.watch ? '#f2e2c4' : 'rgba(239,230,210,0.4)';
+    ctx.beginPath(); ctx.arc(x, y, p.guard || p.rival ? 4 : p.kind === 'cam' ? 3.5 : 2.2, 0, 7); ctx.fill();
+  }
+  CH.markers.forEach((m, i) => { ctx.fillStyle = '#5fd4c4'; ctx.beginPath(); ctx.arc(X(m[0]), Y(m[1]), 8, 0, 7); ctx.fill(); ctx.fillStyle = '#10181c'; ctx.font = `800 10px ${MONO}`; ctx.textAlign = 'center'; ctx.fillText(String(i + 1), X(m[0]), Y(m[1]) + 3.5); });
+  if (CH.markers.length > 1) { ctx.strokeStyle = 'rgba(95,212,196,0.6)'; ctx.lineWidth = 2; ctx.beginPath(); CH.markers.forEach((m, i) => i ? ctx.lineTo(X(m[0]), Y(m[1])) : ctx.moveTo(X(m[0]), Y(m[1]))); ctx.stroke(); }
+  const px = X(player.x - I0[0]), py = Y(player.y - I0[1]);
+  ctx.save(); ctx.translate(px, py); ctx.rotate(player.a); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#10181c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-6, -6); ctx.lineTo(-3, 0); ctx.lineTo(-6, 6); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.restore();
+  mapLegend([['#8fb4ff', '●', 'Guard'], ['#f2e2c4', '●', 'Clergy'], ['#ff7a7a', '●', 'Camera · clergy seat'], ['#b07aff', '●', 'Hiding seat'], ['#5fd4c4', '●', 'Vantage · your markers'], ['#7fe0a0', '●', 'Pew cache'], ['#f2a800', '★', 'Target'], ['#ff9a4a', '▮', 'Locked door'], ['#ff3b4e', '▮', 'Gate (closed)']], clamp(vw / 900, 0.72, 1));
+}
+function hxPlanClick(cx, cy) {
+  const R = CH.planRect; if (!R || !CH.id) return;
+  const lx = (cx - R.ox) / R.sc, ly = (cy - R.oy) / R.sc, I = CI(); if (lx < 0 || ly < 0 || lx > I.w || ly > I.h) return;
+  const k = CH.markers.findIndex(m => Math.hypot(m[0] - lx, m[1] - ly) * R.sc < 12);
+  if (k >= 0) CH.markers.splice(k, 1); else if (CH.markers.length < 6) CH.markers.push([lx, ly]); else toast('Six markers at most. Tap one to remove it', '#9a978f');
+}
+
+// ─── Ambience: drone and hymns, muffled while seated, guards' footsteps, water and wind ─
+const hxA = { on: false };
+function hxAudioStart() {
+  hxAudioStop();
+  if (!radio.ctx && !radioInit()) return;
+  const c = radio.ctx; c.resume?.();
+  const out = c.createGain(); out.gain.value = 0; out.connect(c.destination);
+  const filt = c.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 2200; filt.connect(out);
+  const voices = [];
+  for (const [semi, g] of [[-17, 0.03], [-10, 0.026], [-5, 0.02], [-22, 0.026]]) {
+    const o = c.createOscillator(), og = c.createGain(), bp = c.createBiquadFilter(), l = c.createOscillator(), lg = c.createGain();
+    o.type = 'sawtooth'; o.frequency.value = hz(semi); bp.type = 'bandpass'; bp.frequency.value = 650; bp.Q.value = 1.4; og.gain.value = g;
+    l.frequency.value = 4.2 + Math.random(); lg.gain.value = 2; l.connect(lg); lg.connect(o.frequency);
+    o.connect(bp); bp.connect(og); og.connect(filt); o.start(); l.start(); voices.push(o, l);
+  }
+  const D = CH.def;
+  if (radio.noise && (D.rock || D.outdoor || CH.id === 'tatev')) {
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = radio.noise; s.loop = true;
+    f.type = CH.id === 'khor' || CH.id === 'geghard' ? 'bandpass' : 'lowpass'; f.frequency.value = CH.id === 'khor' || CH.id === 'geghard' ? 900 : 380; g.gain.value = 0.06;
+    s.connect(f); f.connect(g); g.connect(filt); s.start(); voices.push(s);
+  }
+  Object.assign(hxA, { on: true, out, filt, voices, next: c.currentTime + 1, step: 0, stepT: 0, bell: 0 });
+}
+function hxAudioStop() {
+  if (!hxA.on) return;
+  const c = radio.ctx, { out, voices } = hxA; hxA.on = false;
+  out.gain.setTargetAtTime(0, c.currentTime, 0.2);
+  setTimeout(() => { for (const v of voices) try { v.stop(); } catch (e) { } out.disconnect(); }, 900);
+}
+function hxAudioUpdate(dt) {
+  if (!hxA.on) return;
+  const c = radio.ctx, now = c.currentTime, service = hxService() && !CH.def.outdoor && !CH.alarm;
+  hxA.out.gain.setTargetAtTime(mode === 'paused' || mode === 'title' ? 0 : service ? 0.5 : 0.26, now, 0.4);
+  hxA.filt.frequency.setTargetAtTime(CH.seat ? 620 : 2200, now, 0.3);
+  if (service && now > hxA.next) { const SC = [0, 2, 3, 5, 7, 8, 10, 12], TUNE = [0, 1, 2, 1, 3, 2, 1, 0, 4, 3, 2, 3, 1, 0]; rTone(now + 0.02, hz(SC[TUNE[hxA.step++ % TUNE.length]] - 5), 1.6, { type: 'triangle', gain: 0.045, cutoff: 1400, vib: 3, dest: hxA.filt }); hxA.next = now + 1.3; }
+  hxA.stepT -= dt; let best = 1e9;
+  for (const g of CH.people) if ((g.guard || g.rival) && g.moving) best = Math.min(best, Math.hypot(g.x - player.x, g.y - player.y));
+  if (best < 260 && hxA.stepT <= 0 && radio.noise) {
+    hxA.stepT = 0.5; const gn = (1 - best / 260) * (CH.seat ? 0.14 : 0.07), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = radio.noise; f.type = 'bandpass'; f.frequency.value = 1300; g.gain.setValueAtTime(gn, now); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+    s.connect(f); f.connect(g); g.connect(c.destination); s.start(now, Math.random() * 0.3, 0.08);
+  }
+  if (CH.alarm && now > hxA.bell) { hxA.bell = now + 0.9; rTone(now, 880, 0.3, { type: 'square', gain: 0.035, cutoff: 3000, dest: hxA.out }); }
+}
+
+// ─── Saving, the phone app, the doors outside each site ─────────────────────
+const hxSave = () => ({ done: hx.done, choice: hx.choice, skills: hx.skills, points: hx.points, stories: [...hx.stories], ending: hx.ending });
+function hxLoad(X) {
+  if (!X) return;
+  Object.assign(hx.done, X.done || {}); Object.assign(hx.choice, X.choice || {});
+  for (const k in hx.skills) if (typeof X.skills?.[k] === 'number') hx.skills[k] = clamp(X.skills[k], 0, 3);
+  if (typeof X.points === 'number') hx.points = X.points; for (const s of X.stories || []) hx.stories.add(s); hx.ending = X.ending || '';
+}
+for (const [id, site] of Object.entries(HX_SITES)) {
+  const R = REGIONS[site.region];
+  interactables.push({ x: R.ox + site.at[0], y: R.oy + site.at[1], r: 30, when: () => player.region === site.region && !player.car,
+    label: () => `Enter ${site.name}${HX && hxLegSite() === id ? ' · operation target' : ''}`, act: () => enterChurch(id) });
+}
+// Noraduz on the shore of Lake Sevan, and the Erebuni ruins at the edge of Yerevan
+{
+  const sevan = REGION_BUILD.sevan, yerevan = REGION_BUILD.yerevan;
+  REGION_BUILD.sevan = (R, rnd) => {
+    sevan(R, rnd);
+    church(R, 1380, 1150, 0.55, '#7a7266', '#4a443e');
+    for (let k = 0; k < 30; k++) { const x = 1090 + (k % 6) * 34 + rnd() * 8, z = 1060 + Math.floor(k / 6) * 44 + rnd() * 8; RB(R, x, z, 16, 5, 28 + rnd() * 8, rnd() < 0.5 ? '#8a8276' : '#9a8f80', { solid: true, rot: (rnd() - 0.5) * 0.3 }); }
+  };
+  REGION_BUILD.yerevan = (R, rnd) => {
+    yerevan(R, rnd);
+    const t = '#b86e48', t2 = '#a85f3c';
+    RB(R, 1215, 1180, 240, 14, 34, t, { solid: true }); RB(R, 1100, 1260, 14, 160, 34, t2, { solid: true }); RB(R, 1330, 1260, 14, 160, 34, t2, { solid: true });
+    RB(R, 1140, 1336, 94, 14, 34, t, { solid: true }); RB(R, 1290, 1336, 94, 14, 34, t, { solid: true });
+    for (const x of [1180, 1250]) RB(R, x, 1336, 18, 18, 46, t2, { solid: true });
+    RB(R, 1215, 1260, 120, 80, 1, '#8a6a58', { shadow: false });
+  };
 }
 
 let luckyWheel = null;
@@ -7556,7 +9099,7 @@ const adaptFov = f => camera.aspect >= 1 ? f : Math.min(100, 2 * Math.atan(Math.
 function updateCamera(dt) {
   if (QT.sky) { flightCamera(dt, performance.now() / 1000); return; }   // the flight owns the camera
   camera.up.set(0, 1, 0);                                                // the barrel roll borrows camera.up; give it back
-  if (mode === 'map') { mapCamera(dt); return; }                         // the 3D map owns it while open
+  if (mode === 'map' && mapView.tab !== 'church') { mapCamera(dt); return; }                         // the 3D map owns it while open
   const k = FX.smoothCamera ? Math.min(1, dt * 5) : 1;
   if (mode === 'title') {
     const a = time * 0.05, cx = 26 * T, cz = 25 * T;
@@ -7660,6 +9203,7 @@ function render(dt) {
   drawGpsPanel(clamp(vw / 900, 0.72, 1));
   drawWeatherHud();
   drawRegionGameHud(clamp(vw / 900, 0.72, 1));
+  drawHeritageHud(clamp(vw / 900, 0.72, 1));
   if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
   else if (wheel.open) wheel.open = false;
@@ -7997,6 +9541,7 @@ function boot(data) {
       if (X.gh) for (const k in gh) if (X.gh[k]) Object.assign(gh[k], X.gh[k]);
       for (const t of X.coll || []) if (COLLECTABLE.includes(t)) collection.add(t);
     }
+    if (saved.hx) hxLoad(saved.hx);
     if (saved.hayagram) {
       const H = saved.hayagram;
       if (typeof H.followers === 'number') hg.followers = H.followers;
