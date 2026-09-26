@@ -2957,6 +2957,7 @@ function beginGame(kind) {
   if (mode !== 'title') return;
   gameMode = kind;
   mode = 'play'; titleEl.hidden = true; showTitlePanel(null); newOffer();
+  enterInterior('apartment');   // start the game at home, in your apartment
   if (kind === 'story') showBanner(story.chapter < STORY.length ? `Chapter ${story.chapter + 1}` : 'Story complete', story.chapter < STORY.length ? `${STORY[story.chapter].title}. Follow the orange marker.` : 'Hayastan is yours. Everything is unlocked.', '#ff7a3d', 3.5);
   else if (kind === 'online') showBanner('Hayastan Online', 'Press T to chat, hold Tab for the scoreboard', '#4fc3ff', 3.5);
   else showBanner('Free roam', 'Jobs, heists, races and businesses. Do what you like.', '#ffb347', 3.5);
