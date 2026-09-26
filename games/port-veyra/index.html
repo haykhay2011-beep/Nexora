@@ -7051,6 +7051,7 @@ function drawCityMap() {
   if (near) for (const e of enterables) { const B = SHOP_BADGES[e.type]; if (!B) continue; const [a, b, v] = toScreen(camera, e.door.x, e.door.y, 20); if (v) badge(a, b, B[0], B[1], mapView.dist < 900 ? e.name : '', false); }
   for (const [x, y, col, g, label] of cityPlaces()) { const [a, b, v] = toScreen(camera, x, y, 40); if (v) badge(a, b, col, g, label); }
   for (const c of cars) if (c.spec.boat && !c.wreck) { const [a, b, v] = toScreen(camera, c.x, c.y, 12); if (v) badge(a, b, '#4fc3ff', '⛵', 'Motorboat', false); }
+  if (window.__yerLm) for (const L of window.__yerLm.map) { const [a, b, v] = toScreen(camera, L.x, L.y, 60); if (v) badge(a, b, L.col, L.g, L.label); }
   // Objectives, route, waypoint, player
   const tag = (pt, col, g, label) => { if (!pt) return; const [a, b, v] = toScreen(camera, pt.x, pt.y, 60); if (v) badge(a, b, col, g, label); };
   tag(storyTarget(), '#ff7a3d', 'S', 'Story');
@@ -9194,70 +9195,64 @@ function updateCockpit(dt) {
 // ═══════════════════════════════════════════════════════════════════════════════
 {
   const T2 = T, lamE = (c, e = 0.32) => lam(c, { emissive: new THREE.Color(c).multiplyScalar(e) });
-  const pink = lamE('#d9a08f'), pink2 = lamE('#c98b7e'), trim = lamE('#b87466'), stone = lamE('#cfc4b0'), tuff = lamE('#b8623f');
+  const pink = lamE('#d9a08f'), trim = lamE('#b87466'), stone = lamE('#cfc4b0'), tuff = lamE('#b8623f');
   const LB = (x0, y0, x1, y1, h, mat, o = {}) => { const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, h, y1 - y0), mat); m.position.set((x0 + x1) / 2, (o.y || 0) + h / 2, (y0 + y1) / 2); m.castShadow = o.shadow !== false; m.receiveShadow = true; scene.add(m); return m; };
   const LCyl = (x, z, rt, rb, h, mat, y = 0, seg = 16) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat); m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; scene.add(m); return m; };
   const solidTiles = (tx0, ty0, tx1, ty1) => { for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) grid[ty * GW + tx] = BLDG; };
-  // Plaza paving over the park interior
-  LB(13.4 * T2, 33.4 * T2, 18.2 * T2, 38 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
+  const jets = [], jetMat = basic(0xdff4ff, { transparent: true, opacity: 0.6 }), flags = [];
 
-  // ── Republic Square: Government House with its clock tower, on the north edge ──
+  // ═══ REPUBLIC SQUARE (Hraparak) — the central park, Kentron ═══
+  LB(13.4 * T2, 33.4 * T2, 18.2 * T2, 38 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
   solidTiles(14, 33, 17, 33);
   const gx = 15.6 * T2, gz = 33.5 * T2;
-  LB(gx - 110, gz - 20, gx + 110, gz + 20, 66, pink, { }); LB(gx - 112, gz - 22, gx + 112, gz + 22, 5, trim, { y: 66 });
+  LB(gx - 110, gz - 20, gx + 110, gz + 20, 66, pink, {}); LB(gx - 112, gz - 22, gx + 112, gz + 22, 5, trim, { y: 66 });
   for (let k = 0; k < 11; k++) LB(gx - 96 + k * 19, gz + 18, gx - 92 + k * 19, gz + 22, 40, trim, { y: 2, shadow: false });
   LB(gx - 30, gz - 24, gx + 30, gz + 16, 128, pink); LB(gx - 32, gz - 26, gx + 32, gz + 18, 6, trim, { y: 128 });
   const clock = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 1.4, 20).rotateX(Math.PI / 2), basic(0xf4efe4)); clock.position.set(gx, 100, gz + 19); scene.add(clock);
-  // ── The singing fountains in the pond ──
-  const basin = LB(14.6 * T2, 34.6 * T2, 17 * T2, 37 * T2, 5, lamE('#8a8078', 0.4), { });
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(2.3 * T2, 2.3 * T2).rotateX(-Math.PI / 2), basic(0x2f6f9a, { transparent: true, opacity: 0.86 })); water.position.set(15.8 * T2, 5.4, 35.8 * T2); scene.add(water);
-  const fx = 15.8 * T2, fz = 35.8 * T2, jets = [], jetMat = basic(0xdff4ff, { transparent: true, opacity: 0.6 });
-  for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, r = 34; const j = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 3, 46, 6), jetMat); j.position.set(fx + Math.cos(a) * r, 26, fz + Math.sin(a) * r); scene.add(j); jets.push(j); }
-  const big = new THREE.Mesh(new THREE.CylinderGeometry(2, 5, 70, 8), jetMat); big.position.set(fx, 40, fz); scene.add(big); jets.push(big);
-  window.__yerLm = { jets };
-
-  // ── The Cascade: a monumental stairway on the west edge ──
-  solidTiles(13, 34, 13, 37);
-  const cx = 13.6 * T2, cz = 35.8 * T2;
-  for (let k = 0; k < 6; k++) { const w = 150 - k * 8; LB(cx - 8, cz - w / 2, cx + 40 - k * 2, cz + w / 2, 14, stone, { y: k * 14 }); }
-  for (let k = 0; k < 5; k++) LB(cx + 40 - k * 2, cz - 4, cx + 44 - k * 2, cz + 4, 6, basic(0xdff4ff, { transparent: true, opacity: 0.5 }), { y: 14 + k * 14, shadow: false });
-  for (const dz of [-52, 52]) { LCyl(cx + 6, cz + dz, 6, 7, 16, stone, 84); const st = new THREE.Mesh(new THREE.BoxGeometry(7, 20, 7), lamE('#8a8276', 0.35)); st.position.set(cx + 6, 110, cz + dz); scene.add(st); }
-
-  // ── The Opera and Ballet Theatre: a rounded classical hall on the south edge ──
-  solidTiles(14, 38, 17, 38);
-  const ox = 15.6 * T2, oz = 38.4 * T2;
-  LCyl(ox, oz, 62, 66, 60, stone, 0, 28); LCyl(ox, oz, 64, 64, 5, trim, 60, 28);
-  for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI - Math.PI / 2; LCyl(ox + Math.cos(a) * 62, oz + Math.sin(a) * 62, 4, 4, 56, stone, 2, 10); }
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(48, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), tuff); dome.position.set(ox, 60, oz); dome.castShadow = true; scene.add(dome);
-  LB(ox - 20, oz - 70, ox + 20, oz - 58, 40, stone, { }); LB(ox - 24, oz - 72, ox + 24, oz - 56, 4, trim, { y: 40 });
-
-  // ── Prime Minister Nikol Pashinyan greets visitors by the fountains ──
+  LB(14.6 * T2, 34.6 * T2, 17 * T2, 37 * T2, 5, lamE('#8a8078', 0.4), {});
+  const fx = 15.8 * T2, fz = 35.8 * T2;
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(2.3 * T2, 2.3 * T2).rotateX(-Math.PI / 2), basic(0x2f6f9a, { transparent: true, opacity: 0.86 })); water.position.set(fx, 5.4, fz); scene.add(water);
+  for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; const j = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 3, 46, 6), jetMat.clone()); j.position.set(fx + Math.cos(a) * 34, 26, fz + Math.sin(a) * 34); scene.add(j); jets.push(j); }
+  const big = new THREE.Mesh(new THREE.CylinderGeometry(2, 5, 70, 8), jetMat.clone()); big.position.set(fx, 40, fz); scene.add(big); jets.push(big);
+  for (const dx of [-90, 90]) { LCyl(gx + dx, gz + 30, 1.2, 1.2, 90, lamE('#8a8a86', 0.3)); const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), basic(0xd90012)); fl.position.set(gx + dx + 16, 82, gz + 30); scene.add(fl); flags.push(fl); }
   const pm = buildPerson({ skin: '#c9a07e', hair: '#4a4540', shirt: '#1f2a44', pants: '#1f2a44', shoes: '#111111', goatee: true, buzz: true, face: true });
   pm.position.set(fx, 0, fz + 58); pm.rotation.y = -Math.PI / 2; pm.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(pm);
-  const guards = [];
-  for (const dx of [-28, 28]) { const gd = buildPerson({ skin: '#b98a66', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true }); gd.position.set(fx + dx, 0, fz + 50); gd.rotation.y = -Math.PI / 2; scene.add(gd); guards.push(gd); }
-  window.__yerLm.people = [pm, ...guards];
-  window.__yerLm.pm = { x: fx, y: fz + 58 };
-
-  // Flags on Republic Square
-  for (const dx of [-90, 90]) { const pole = LCyl(gx + dx, gz + 30, 1.2, 1.2, 90, lamE('#8a8a86', 0.3)); const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), basic(0xd90012)); fl.position.set(gx + dx + 16, 82, gz + 30); scene.add(fl); window.__yerLm.flags = window.__yerLm.flags || []; window.__yerLm.flags.push(fl); }
-
-  // Signs
+  const people = [pm];
+  for (const dx of [-28, 28]) { const gd = buildPerson({ skin: '#b98a66', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true }); gd.position.set(fx + dx, 0, fz + 50); gd.rotation.y = -Math.PI / 2; scene.add(gd); people.push(gd); }
   postSign(13 * T2, 32.4 * T2, 'REPUBLIC SQUARE', 'Hraparak · Հանրապետության հրապարակ', '#123a52', '#f2e2c4', 30);
-  postSign(12.4 * T2, 35.8 * T2, 'THE CASCADE', 'Kaskad · Կասկադ', '#2a2a30', '#e0b0ff', 26);
-  postSign(18.6 * T2, 38.4 * T2, 'OPERA THEATRE', 'Ballet & Opera · Օպերա', '#3a1a2a', '#ffd35a', 26);
 
-  // Interactions
-  const near = (x, y, r) => Math.hypot(playerPos().x - x, playerPos().y - y) < r;
+  // ═══ THE OPERA & BALLET THEATRE — its own square, south-west ═══
+  const ox = 15.5 * T2, oz = 45.6 * T2;
+  solidTiles(14, 45, 17, 45);
+  LB(13.4 * T2, 44.6 * T2, 18 * T2, 47 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
+  LCyl(ox, oz, 42, 46, 54, stone, 0, 26); LCyl(ox, oz, 44, 44, 5, trim, 54, 26);
+  for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI - Math.PI / 2; LCyl(ox + Math.cos(a) * 42, oz + Math.sin(a) * 42, 3, 3, 50, stone, 2, 8); }
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(32, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), tuff); dome.position.set(ox, 54, oz); dome.castShadow = true; scene.add(dome);
+  LB(ox - 16, oz - 50, ox + 16, oz - 40, 36, stone, {}); LB(ox - 20, oz - 52, ox + 20, oz - 38, 4, trim, { y: 36 });
+  postSign(18.6 * T2, 45.6 * T2, 'OPERA THEATRE', 'Ballet & Opera · Օպերա', '#3a1a2a', '#ffd35a', 26);
+
+  // ═══ THE CASCADE (Kaskad) — its own park, south-east ═══
+  const cx = 24.4 * T2, cz = 45.5 * T2;
+  solidTiles(24, 45, 27, 46);
+  LB(23.4 * T2, 44.6 * T2, 28.4 * T2, 47 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
+  for (let k = 0; k < 6; k++) { const w = 150 - k * 8; LB(cx - 8, cz - w / 2, cx + 44 - k * 3, cz + w / 2, 14, stone, { y: k * 14 }); }
+  for (let k = 0; k < 5; k++) LB(cx + 40 - k * 3, cz - 4, cx + 46 - k * 3, cz + 4, 6, basic(0xdff4ff, { transparent: true, opacity: 0.5 }), { y: 14 + k * 14, shadow: false });
+  for (const dz of [-52, 52]) { LCyl(cx + 6, cz + dz, 6, 7, 16, stone, 84); const st = new THREE.Mesh(new THREE.BoxGeometry(7, 20, 7), lamE('#8a8276', 0.35)); st.position.set(cx + 6, 110, cz + dz); scene.add(st); }
+  postSign(23 * T2, 44.4 * T2, 'THE CASCADE', 'Kaskad · Կասկադ', '#2a2a30', '#e0b0ff', 26);
+
+  window.__yerLm = { jets, flags, people, pm: { x: fx, y: fz + 58 }, map: [
+    { x: fx, y: fz, col: '#3fd0ff', g: '⛲', label: 'Republic Square' },
+    { x: ox, y: oz, col: '#ffd35a', g: '♪', label: 'Opera Theatre' },
+    { x: cx + 34, y: cz, col: '#e0b0ff', g: '⛰', label: 'The Cascade' } ] };
+
   interactables.push({ x: fx, y: fz + 58, r: 34, when: () => !player.region && !player.car, label: 'Talk to Prime Minister Nikol Pashinyan', act: () => talk([
     ['pm', 'Barev dzez! Bari galust Yerevan, mer masnavor qaghaq.', 'Hello! Welcome to Yerevan, our special city.'],
     ['pm', 'Sa Hanrapetutyan hraparakn e — qaghaqi sirty, jrachaghery yerg en asum.', 'This is Republic Square, the heart of the city, where the fountains sing.'],
-    ['you', 'Isk Kaskady?', 'And the Cascade?'],
-    ['pm', 'Ayntegh — ver bardzratsir astichannerov, u amboghj Yerevany ktesnes.', 'There — climb the stairs, and you will see all of Yerevan.'],
-    ['pm', 'Yerekoyan gna Opera. Aram Khachaturyani erazhshtutyuny lsir.', "In the evening, go to the Opera. Hear Aram Khachaturian's music."]]) });
+    ['you', 'Isk Kaskady u Operan?', 'And the Cascade and the Opera?'],
+    ['pm', 'Erkusn el motik en — nayir qarti vra. Amboghj Yerevany qonn e.', 'Both are close by — look on the map. All of Yerevan is yours.']]) });
   interactables.push({ x: fx, y: fz + 6, r: 30, when: () => !player.region && !player.car, label: 'Watch the singing fountains', act: () => toast('The fountains of Republic Square dance and change colour to the music', '#3fd0ff') });
-  interactables.push({ x: cx + 30, y: cz, r: 34, when: () => !player.region && !player.car, label: 'Climb the Cascade viewpoint', act: () => { player.hp = Math.min(100, player.hp + 10); showBanner('The Cascade', 'From the top: all of Yerevan, with Mount Ararat beyond', '#e0b0ff', 3.5); } });
-  interactables.push({ x: ox, y: oz - 66, r: 34, when: () => !player.region && !player.car, label: 'Read about the Opera Theatre', act: () => showMenu({ eyebrow: 'Yerevan', title: 'Opera & Ballet Theatre', body: '<p>The Armenian National Academic Theatre of Opera and Ballet, opened in 1933, stands on Freedom Square. Its rounded hall was designed by the architect Alexander Tamanyan, who planned modern Yerevan.</p>', options: [] }) });
+  interactables.push({ x: cx + 34, y: cz, r: 36, when: () => !player.region && !player.car, label: 'Climb the Cascade viewpoint', act: () => { player.hp = Math.min(100, player.hp + 10); showBanner('The Cascade', 'From the top: all of Yerevan, with Mount Ararat beyond', '#e0b0ff', 3.5); } });
+  interactables.push({ x: ox, y: oz - 46, r: 34, when: () => !player.region && !player.car, label: 'Read about the Opera Theatre', act: () => showMenu({ eyebrow: 'Yerevan', title: 'Opera & Ballet Theatre', body: '<p>The Armenian National Academic Theatre of Opera and Ballet, opened in 1933, stands on Freedom Square. Its rounded hall was designed by the architect Alexander Tamanyan, who planned modern Yerevan.</p>', options: [] }) });
 }
 function updateLandmarks(dt) {
   const L = window.__yerLm; if (!L) return;
@@ -9908,6 +9903,7 @@ function drawHud() {
   for (const M of Object.values(MANSIONS)) dot(M.door.x, M.door.y, '#e0b0ff', 3);
   if (!activity) for (const R of RACES) dot(R.entry.x, R.entry.y, '#4fc3ff', 3);
   for (const c of cars) if (c.spec.boat && !c.wreck) dot(c.x, c.y, '#4fc3ff', 3);
+  if (window.__yerLm) for (const L of window.__yerLm.map) dot(L.x, L.y, L.col, 4);
   const aT = activityTarget();
   if (aT && !player.interior) dot(aT.x, aT.y, activity.race ? '#4fc3ff' : '#ffd35a', 5);
   if (freeEvent) { const e = freeEvent.car || freeEvent.ped; dot(e.x, e.y, '#ff5f5f', 5); }
