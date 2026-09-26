@@ -418,7 +418,7 @@
           <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
           <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
+          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>E</dt><dd>Enter Saltmarsh Harbor on the docks · Areni cellars from Noravank</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
           <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
           <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -475,7 +475,7 @@
       <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
+      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>E</dt><dd>Enter Saltmarsh Harbor on the docks · Areni cellars from Noravank</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
       <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -8877,6 +8877,86 @@ function enterAreni() {
 {
   const R = REGIONS.noravank;
   interactables.push({ x: R.ox + 690, y: R.oy + 940, r: 34, when: () => player.region === 'noravank' && !player.car, label: 'Enter the Areni wine cellars', act: enterAreni });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SALTMARSH HARBOR — an explorable wharf on the Hayastan waterfront
+// A covered dock building opening onto the water: the harbor master's office, a cargo shed, a repair
+// bench, a fuel booth, a moored fishing boat, nets and rope. Dock workers, a fisherman and a mechanic
+// work the wharf. Entered on foot from the Saltmarsh Docks, near the freighter.
+// ═══════════════════════════════════════════════════════════════════════════════
+INTERIORS.harbor = { name: 'Saltmarsh Harbor', ox: -3200, oy: 7200, w: 560, h: 420, spawn: [280, 388], door: [280, 412], street: { x: 0, y: 0, a: 0 }, solids: [] };
+CAST.harbor = ['Harbor master Sero', '#9fd4e8'];
+CAST_LOOKS.harbor = { skin: '#c68e63', hair: '#8a8580', shirt: '#1f3a5a', pants: '#1f2a38', cap: true, goatee: true, eyes: '#3a4a5a' };
+{
+  const I = INTERIORS.harbor, il = (c, e = 0.4) => ilam(c, e);
+  IRoom(I, il('#b0b4b8', 0.42), il('#8a8f96', 0.4), il('#c9d6e2', 0.4));
+  // The open water along the north wall, with a plank pier and dock posts
+  IFloor(I, 20, 12, 540, 96, basic(0x3b6a8a, { transparent: true, opacity: 0.9 }), 0.6);
+  for (let k = 0; k < 20; k++) IB(I, 24 + k * 26, 96, 24 + k * 26 + 22, 108, 3, il('#6a4a30', 0.35));
+  IB(I, 20, 96, 540, 100, 5, il('#5a3a26', 0.35));
+  const post = (x) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(5, 6, 26, 8), il('#4a3222', 0.35)); m.position.set(I.ox + x, 8, I.oy + 100); m.castShadow = true; interiorGroup.add(m); const cap = new THREE.Mesh(new THREE.CylinderGeometry(6, 5, 4, 8), il('#2a1c12', 0.35)); cap.position.set(I.ox + x, 22, I.oy + 100); interiorGroup.add(cap); I.solids.push([x - 6, 96, x + 6, 106]); };
+  for (const x of [40, 130, 300, 430, 520]) post(x);
+  // A moored fishing boat rocking at the pier
+  const boat = new THREE.Group(); boat.position.set(I.ox + 210, 3, I.oy + 60);
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(120, 18, 44), il('#c83a3a', 0.32)); hull.position.y = 4; boat.add(hull);
+  const trim = new THREE.Mesh(new THREE.BoxGeometry(122, 5, 46), il('#e8e4dc', 0.35)); trim.position.y = 13; boat.add(trim);
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(34, 20, 34), il('#e8e4dc', 0.35)); cabin.position.set(-20, 22, 0); boat.add(cabin);
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 46, 8), il('#8a7a5a', 0.35)); mast.position.set(20, 34, 0); boat.add(mast);
+  boat.traverse(o => { if (o.isMesh) o.castShadow = true; }); interiorGroup.add(boat);
+  I.solids.push([150, 30, 270, 90]);
+  // A little rowboat further along
+  const row = new THREE.Mesh(new THREE.BoxGeometry(46, 10, 20), il('#5a7a9a', 0.32)); row.position.set(I.ox + 470, 5, I.oy + 55); row.castShadow = true; interiorGroup.add(row);
+  // Cargo shed on the left: shelving, stacked crates, a container, a forklift block
+  IB(I, 20, 150, 34, 340, 52, il('#6b6f60', 0.38), { solid: true });
+  const crate = (x, y, s, c) => { const m = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), lam('#ffffff', { map: woodTex, emissive: 0xffffff, emissiveMap: woodTex, emissiveIntensity: 0.42 })); m.position.set(I.ox + x, s / 2, I.oy + y); m.castShadow = true; interiorGroup.add(m); I.solids.push([x - s / 2, y - s / 2, x + s / 2, y + s / 2]); };
+  for (const [x, y, s] of [[70, 170, 30], [70, 205, 26], [70, 235, 22], [110, 175, 34], [110, 215, 30], [150, 185, 28], [70, 300, 30], [110, 300, 30], [95, 275, 24]]) crate(x, y, s);
+  IB(I, 40, 350, 170, 400, 40, il('#c05a2a', 0.32), { solid: true });      // shipping container
+  IB(I, 200, 300, 250, 360, 22, il('#f2c230', 0.35), { solid: true }); IB(I, 240, 314, 250, 346, 40, il('#1d1d22', 0.3));   // forklift
+  // Repair bench in the centre with tools and boat parts
+  IB(I, 300, 270, 400, 296, 20, il('#5a4a3a', 0.38), { solid: true }); IB(I, 300, 268, 400, 298, 1.5, il('#8a8f96', 0.4), { y: 20 });
+  for (let k = 0; k < 6; k++) IB(I, 306 + k * 15, 262, 306 + k * 15 + 3, 266, 6 + (k % 3) * 4, il('#2a2c30', 0.3), { y: 20 });
+  IB(I, 430, 250, 470, 330, 3, il('#3a3c40', 0.3), { solid: true });        // tool wall
+  const coil = (x, y) => { const m = new THREE.Mesh(new THREE.TorusGeometry(9, 3.5, 6, 14), il('#8a7a4a', 0.35)); m.rotation.x = Math.PI / 2; m.position.set(I.ox + x, 3, I.oy + y); interiorGroup.add(m); };
+  for (const [x, y] of [[350, 130], [390, 140], [500, 300]]) coil(x, y);
+  const net = new THREE.Mesh(new THREE.PlaneGeometry(60, 40), basic(0x3a5a4a, { transparent: true, opacity: 0.5, side: THREE.DoubleSide, wireframe: true })); net.position.set(I.ox + 500, 20, I.oy + 150); net.rotation.y = -Math.PI / 2; interiorGroup.add(net);
+  // Fuel booth by the water
+  IB(I, 500, 110, 536, 150, 40, il('#e8e4dc', 0.4), { solid: true }); IB(I, 500, 108, 536, 112, 44, il('#c0282e', 0.32));
+  const pump = new THREE.Mesh(new THREE.BoxGeometry(12, 24, 10), il('#c0282e', 0.32)); pump.position.set(I.ox + 480, 12, I.oy + 120); pump.castShadow = true; interiorGroup.add(pump); I.solids.push([472, 112, 488, 128]);
+  // Harbor master's office on the right: desk, radio, wall map, logbook, coffee
+  IB(I, 430, 350, 540, 356, 60, il('#8a8f96', 0.4), { solid: true }); IB(I, 434, 150, 438, 250, 60, il('#8a8f96', 0.4), { solid: true });
+  const wallmap = new THREE.Mesh(new THREE.PlaneGeometry(60, 40), basic(0x9fb8c8)); wallmap.position.set(I.ox + 500, 40, I.oy + 353); wallmap.rotation.y = Math.PI; interiorGroup.add(wallmap);
+  IB(I, 470, 300, 530, 326, 18, il('#5a3a26', 0.38), { solid: true }); IB(I, 468, 298, 532, 328, 1.5, il('#7a5a3a', 0.4), { y: 18 });
+  const radio = new THREE.Mesh(new THREE.BoxGeometry(14, 10, 8), il('#2a2c30', 0.3)); radio.position.set(I.ox + 512, 23, I.oy + 312); interiorGroup.add(radio);
+  const paper = new THREE.Mesh(new THREE.PlaneGeometry(16, 12).rotateX(-Math.PI / 2), basic(0xf4efe4)); paper.position.set(I.ox + 484, 19, I.oy + 312); interiorGroup.add(paper);
+  const coffee = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 10, 8), il('#2a2c30', 0.3)); coffee.position.set(I.ox + 450, 23, I.oy + 340); interiorGroup.add(coffee);
+  IB(I, 445, 336, 465, 348, 16, il('#5a4a3a', 0.38), { solid: true });     // break table
+  // The people of the wharf
+  INPC(I, 505, 322, Math.PI, { ...CAST_LOOKS.harbor, face: true });                                   // harbor master at the desk
+  INPC(I, 100, 250, 0, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#f28a1e', pants: '#3a3026', cap: true, shoes: '#241a10' });   // dock worker (cargo)
+  INPC(I, 175, 320, -Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#f2c230', pants: '#2b2f38', cap: true });          // dock worker (forklift)
+  INPC(I, 350, 250, -Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#5a6773', pants: '#2a2c30' });                     // mechanic at the bench
+  INPC(I, 250, 110, Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#2f6b3a', pants: '#3a3026', cap: true });           // fisherman by the boat
+  // Interactions
+  addInteract('harbor', 280, 412, 26, 'Leave the harbor', exitInterior);
+  addInteract('harbor', 505, 348, 30, 'Talk to the harbor master', () => talk([
+    ['harbor', 'Bari galust Saltmarsh nավահangist. Aysor hangist or e.', 'Welcome to Saltmarsh harbor. Quiet day today.'],
+    ['harbor', 'Dzknorsnery lusadem en durs galis, gorcavornery beռnery en berum.', 'The fishermen head out at dawn, the workers bring in the cargo.'],
+    ['you', 'Inch e berum bernanավy?', 'What does the freighter carry?'],
+    ['harbor', 'Amen inch — hatik, meqenaner, gini. Qaghaqy sranov e aprum.', 'Everything — grain, cars, wine. The city lives on it.'],
+    ['harbor', 'Uzum es navark? Gnա navahangsti ezrin, mекy misht kangnած e.', 'Want a boat? Go to the pier edge, there is always one moored.']]));
+  addInteract('harbor', 500, 300, 28, 'Read the harbor logbook', () => showMenu({ eyebrow: 'Harbor master\'s station', title: 'The logbook',
+    body: '<p>Weathered pages of arrivals and departures. The radio crackles with harbor chatter; a tide chart and a river map are pinned to the wall.</p><p class="muted">Freighter <b>Sevan Star</b> — grain and vehicles, berth 3. Fishing boats out since 05:40. Fuel delivery expected midday.</p>', options: [] }));
+  addInteract('harbor', 450, 350, 26, 'Take a coffee at the break table (+15 health)', () => { player.hp = Math.min(100, player.hp + 15); toast('Hot coffee by the water. +15 health', '#c9a227'); });
+  addInteract('harbor', 210, 96, 34, 'Look over the moored fishing boat', () => toast('A red trawler, nets drying on the mast, rocking gently at the pier', '#9fd4e8'));
+  addInteract('harbor', 480, 130, 26, 'Read the fuel-station sign', () => toast('DIESEL · No smoking · Attendant on call at the booth', '#f2c230'));
+}
+// A harbor door on the Saltmarsh Docks, at the walkable tile nearest the waterfront
+{
+  const target = { x: 49 * T, y: 22 * T };
+  const spot = WALK_TILES.map(([x, y]) => ({ x: (x + 0.5) * T, y: (y + 0.5) * T })).reduce((best, p) => { const d = Math.hypot(p.x - target.x, p.y - target.y); return d < best.d ? { x: p.x, y: p.y, d } : best; }, { d: 1e9 });
+  INTERIORS.harbor.street = { x: spot.x, y: spot.y, a: -Math.PI / 2 };
+  interactables.push({ x: spot.x, y: spot.y, r: 26, when: () => !player.region && !player.car && mode === 'play', label: 'Enter Saltmarsh Harbor', act: () => { if (player.car) { toast('Get out of the vehicle first', '#ff8a7a'); return; } enterInterior('harbor'); showBanner('Saltmarsh Harbor', 'The wharf on the Hayastan waterfront', '#9fd4e8', 3.5); } });
 }
 
 let luckyWheel = null;
