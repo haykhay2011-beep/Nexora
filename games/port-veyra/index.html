@@ -152,6 +152,15 @@
   .dest-top { display: flex; justify-content: space-between; align-items: baseline; font: 600 0.7rem/1 var(--mono); letter-spacing: 0.14em; color: var(--muted); }
   #destHy { font: 500 1rem/1.2 "Noto Serif Armenian", serif; letter-spacing: 0; color: #f2a800; }
   .dest h2 { margin: 0; font: 800 clamp(1.6rem, 5vw, 2.2rem)/0.95 var(--display); text-transform: uppercase; letter-spacing: 0.01em; text-wrap: balance; }
+  .dest-x { margin-left: 0.6rem; width: 1.7rem; height: 1.7rem; display: grid; place-items: center; font: 600 1.1rem/1 var(--mono); color: var(--paper); background: none; border: 1px solid var(--line); border-radius: 50%; cursor: pointer; }
+  .dest-x:hover, .dest-x:focus-visible { border-color: var(--amber); color: var(--amber); outline: none; }
+  .dest-top #destHy { margin-left: auto; }
+  .dest-pill { position: fixed; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 3; display: flex; align-items: center; gap: 0.5rem;
+    font: 600 0.75rem/1 var(--mono); color: var(--paper); background: rgba(12,14,18,0.86); border: 1px solid var(--line); border-left: 3px solid #f2a800; border-radius: 999px; padding: 0.5rem 0.9rem 0.5rem 0.6rem; cursor: pointer; }
+  .dest-pill span { display: grid; place-items: center; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: #f2a800; color: #10181c; font: 800 0.8rem/1 var(--display); }
+  .dest-pill b { font: 800 0.9rem/1 var(--display); letter-spacing: 0.05em; text-transform: uppercase; }
+  .dest-pill:hover, .dest-pill:focus-visible { border-color: var(--amber); outline: none; }
+  @media (hover: none) { .dest-pill { bottom: auto; top: calc(96px + env(safe-area-inset-top, 0px)); } }
   .dest-meta { margin: 0; font: 400 0.7rem/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
   .dest-fact { margin: 0; font-size: 0.8rem; line-height: 1.55; color: #d9d2c4; }
   .dest-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; padding-top: 0.2rem; }
@@ -297,7 +306,7 @@
 <div id="qtVeil" aria-hidden="true"></div>
 <p id="qtEnroute" class="qt-enroute" hidden aria-live="polite"></p>
 <section id="dest" class="dest" hidden aria-live="polite">
-  <div class="dest-top"><span id="destCount">01 / 13</span><span id="destHy" lang="hy"></span></div>
+  <div class="dest-top"><span id="destCount">01 / 13</span><span id="destHy" lang="hy"></span><button id="destClose" class="dest-x" type="button" aria-label="Hide the destination card" title="Hide (I)">×</button></div>
   <h2 id="destName"></h2>
   <p id="destMeta" class="dest-meta"></p>
   <p id="destFact" class="dest-fact"></p>
@@ -307,8 +316,9 @@
     <button id="destQuick" type="button" class="qt" aria-haspopup="dialog">Quick Travel</button>
     <button id="destHome" type="button">Fly home</button>
   </div>
-  <p class="dest-hint">Drag to look around · scroll to zoom · G picks a destination · [ ] step through</p>
+  <p class="dest-hint">Drag to look around · scroll to zoom · G picks a destination · [ ] step through · I hides this card</p>
 </section>
+<button id="destPill" class="dest-pill" type="button" hidden aria-label="Show the destination card"><span aria-hidden="true">i</span> <b id="destPillName"></b></button>
 <div id="picker" class="picker" hidden role="dialog" aria-modal="true" aria-labelledby="pickTitle">
   <div class="picker-card">
     <div class="picker-head"><h2 id="pickTitle">Quick Travel</h2><p>Pick a destination and fly there.</p><button id="pickClose" type="button">Close</button></div>
@@ -4580,31 +4590,49 @@ function syncRemotes(dt) {
   }
   for (const id of [...remoteMeshes.keys()]) if (!seen.has(id)) dropRemote(id);
 }
+// Word-wrap for the HUD canvas (at most 3 lines)
+function wrapLines(text, maxW) {
+  const out = []; let cur = '';
+  for (const w of String(text).split(' ')) { const t = cur ? cur + ' ' + w : w; if (cur && ctx.measureText(t).width > maxW) { out.push(cur); cur = w; } else cur = t; }
+  if (cur) out.push(cur); return out.slice(0, 3);
+}
+// Street talk shows as a speech bubble beside the person speaking, with a tail pointing at them.
+// When the speaker is off-screen or unknown (a shopkeeper's greeting), it tucks into the lower-left corner instead.
 function drawCaption() {
-  if (!caption || mode === 'talk' || mode === 'title') return;
-  const a = clamp(caption.t / 0.4, 0, 1) * clamp((3.6 - caption.t) / 0.15, 0, 1), maxW = Math.min(560, vw - 32);
-  const cy = vh - insetBottom - (touch ? 290 : 150);
-  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';
-  // A small speech mark over the speaker's head
+  if (!caption || mode === 'talk' || mode === 'title' || mode === 'travel') return;
+  const a = clamp(caption.t / 0.4, 0, 1) * clamp((3.6 - caption.t) / 0.15, 0, 1), small = vw < 600;
+  const maxW = Math.min(small ? 220 : 280, vw * 0.6), F0 = `800 ${small ? 12 : 13}px ${DISPLAY}`, F1 = `600 ${small ? 13 : 15}px ${MONO}`, F2 = `italic 400 ${small ? 11 : 12}px ${MONO}`;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.font = F1; const hy = wrapLines(caption.hy, maxW), hyW = Math.max(...hy.map(l => ctx.measureText(l).width));
+  ctx.font = F2; const en = caption.en ? wrapLines(caption.en, maxW) : [], enW = en.length ? Math.max(...en.map(l => ctx.measureText(l).width)) : 0;
+  ctx.font = F0; const whoW = ctx.measureText(caption.who.toUpperCase()).width;
+  const w = Math.max(hyW, enW, whoW) + 24, h = 14 + 14 + hy.length * (small ? 17 : 19) + en.length * (small ? 14 : 15) + 6;
+  // Where is the speaker on screen?
+  let ax = null, ay = null;
   const sp = caption.speaker;
   if (sp && sp.x != null) {
-    const v = new THREE.Vector3(sp.x, sp.L ? 30 : 34, sp.y).project(camera);
-    if (v.z < 1) {
-      const sx = (v.x + 1) / 2 * vw, sy = (1 - v.y) / 2 * vh;
-      ctx.fillStyle = 'rgba(255,244,220,0.95)'; ctx.beginPath(); ctx.roundRect(sx - 15, sy - 22, 30, 18, 8); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(sx - 4, sy - 5); ctx.lineTo(sx, sy + 2); ctx.lineTo(sx + 4, sy - 5); ctx.fill();
-      ctx.fillStyle = '#10181c'; ctx.font = `800 14px ${MONO}`; ctx.fillText('···', sx, sy - 9);
-    }
+    const v = new THREE.Vector3(sp.x, sp.L ? 30 : 37, sp.y).project(camera);
+    const sx = (v.x + 1) / 2 * vw, sy = (1 - v.y) / 2 * vh;
+    if (v.z < 1 && sx > 20 && sx < vw - 20 && sy > insetTop + 60 && sy < vh - 60) { ax = sx; ay = sy; }
   }
-  ctx.font = `600 ${vw < 600 ? 15 : 18}px ${MONO}`;
-  const line = `${caption.who}: ${caption.hy}`, w = Math.min(maxW, ctx.measureText(line).width + 28);
-  ctx.fillStyle = 'rgba(8,10,14,0.72)'; ctx.beginPath(); ctx.roundRect(vw / 2 - w / 2, cy - 22, w, 50, 6); ctx.fill();
-  ctx.fillStyle = '#f2a23a'; const whoW = ctx.measureText(caption.who + ': ').width, lineW = Math.min(maxW - 28, ctx.measureText(line).width);
-  const scale = lineW / ctx.measureText(line).width, x0 = vw / 2 - lineW / 2;
-  ctx.textAlign = 'left'; ctx.fillText(caption.who + ':', x0, cy, whoW * scale);
-  ctx.fillStyle = '#fff4dc'; ctx.fillText(caption.hy, x0 + whoW * scale, cy, lineW - whoW * scale);
-  ctx.textAlign = 'center'; ctx.font = `italic 400 ${vw < 600 ? 11 : 12}px ${MONO}`; ctx.fillStyle = '#b9b3a6';
-  ctx.fillText(caption.en, vw / 2, cy + 18, maxW - 28);
+  let bx, by;
+  if (ax !== null) {
+    bx = ax > vw * 0.62 ? ax - 18 - w : ax + 18;                                            // open toward the middle of the screen
+    by = ay - h - 14;
+    bx = clamp(bx, 12, vw - w - 12); by = clamp(by, insetTop + 100, vh - insetBottom - h - 200);
+  } else { bx = 16; by = vh - insetBottom - (touch ? 300 : 210) - h; }
+  // Bubble and tail
+  ctx.fillStyle = 'rgba(255,248,236,0.96)'; ctx.strokeStyle = 'rgba(16,24,28,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(bx, by, w, h, 10); ctx.fill(); ctx.stroke();
+  if (ax !== null) {
+    const tx = clamp(ax, bx + 16, bx + w - 16), below = ay > by + h, ty = below ? by + h : by;
+    ctx.beginPath(); ctx.moveTo(tx - 7, ty); ctx.lineTo(ax, ay - 4); ctx.lineTo(tx + 7, ty); ctx.closePath(); ctx.fill();
+  } else { ctx.fillStyle = '#f2a23a'; ctx.fillRect(bx, by + 8, 3, h - 16); }
+  // Text: speaker, Armenian line, English translation
+  ctx.textAlign = 'left'; let y = by + 18;
+  ctx.font = F0; ctx.fillStyle = '#b0561c'; ctx.fillText(caption.who.toUpperCase(), bx + 12, y); y += small ? 17 : 19;
+  ctx.font = F1; ctx.fillStyle = '#10181c'; for (const l of hy) { ctx.fillText(l, bx + 12, y); y += small ? 17 : 19; }
+  ctx.font = F2; ctx.fillStyle = '#5a5048'; for (const l of en) { ctx.fillText(l, bx + 12, y - 3); y += small ? 14 : 15; }
   ctx.restore();
 }
 function drawNetHud(s) {
@@ -5811,10 +5839,21 @@ function renderFrame(dt) {
 // UI: destination placard, Quick Travel picker, locked controls
 // ═══════════════════════════════════════════════════════════════════════════════
 const placardEl = document.getElementById('dest'), pickerEl = document.getElementById('picker'), pickGrid = document.getElementById('pickGrid');
+// The card can be closed; it then collapses to a small tab. The choice is remembered in this browser.
+let destCollapsed = false;
+try { destCollapsed = localStorage.getItem('hayastan-dest-collapsed') === '1'; } catch (e) { /* storage unavailable */ }
+const destPill = document.getElementById('destPill');
+function setDestCollapsed(on) {
+  destCollapsed = on; try { localStorage.setItem('hayastan-dest-collapsed', on ? '1' : '0'); } catch (e) { /* storage unavailable */ }
+  updatePlacard();
+  (on ? destPill : document.getElementById('destClose')).focus({ preventScroll: true });
+}
 function updatePlacard() {
   const show = !!player.region && (mode === 'play' || mode === 'picker') && QT.state === 'idle' && !RG.active;
-  placardEl.hidden = !show;
+  placardEl.hidden = !show || destCollapsed;
+  destPill.hidden = !show || !destCollapsed;
   if (!show) return;
+  document.getElementById('destPillName').textContent = DESTS[destIndex(player.region)].name;
   const i = destIndex(player.region), D = DESTS[i], [hy, meta, fact] = DEST_INFO[D.key];
   document.getElementById('destCount').textContent = `${String(i + 1).padStart(2, '0')} / ${DESTS.length}`;
   document.getElementById('destHy').textContent = hy; document.getElementById('destName').textContent = D.name;
@@ -5824,7 +5863,7 @@ function setTravelLocked(on) {
   for (const id of ['destPrev', 'destNext', 'destQuick', 'destHome', 'pickClose']) document.getElementById(id).disabled = on;
   for (const b of pickGrid.querySelectorAll('button')) b.disabled = on || b.dataset.here === '1';
   if (on) for (const b of phBody.querySelectorAll('.hg-go')) b.disabled = true;
-  placardEl.hidden = on || !player.region;
+  if (on) { placardEl.hidden = true; destPill.hidden = true; } else updatePlacard();
 }
 function openPicker() {
   if (QT.state !== 'idle' || (mode !== 'play')) return;
@@ -5847,7 +5886,7 @@ function openPicker() {
   };
   if (player.region) card(-1, 'Hayastan city', 'Fly home to where you left off', 'Քաղաք', 'linear-gradient(#0b1019 0%, #3a2a44 45%, #ffb347 46%, #6b4046 100%)');
   DESTS.forEach((D, i) => card(i, D.name, D.sub, DEST_INFO[D.key][0], D.art));
-  pickerEl.hidden = false; mode = 'picker'; keys.clear(); mouseFire = false; placardEl.hidden = true;
+  pickerEl.hidden = false; mode = 'picker'; keys.clear(); mouseFire = false; placardEl.hidden = true; destPill.hidden = true;
   (pickGrid.querySelector('button:not(:disabled)') || document.getElementById('pickClose')).focus({ preventScroll: true });
 }
 function closePicker(silent) {
@@ -5872,6 +5911,8 @@ document.getElementById('pickClose').addEventListener('click', () => closePicker
 }
 pickerEl.addEventListener('click', e => { if (e.target === pickerEl) closePicker(); });
 document.getElementById('destQuick').addEventListener('click', openPicker);
+document.getElementById('destClose').addEventListener('click', () => setDestCollapsed(true));
+destPill.addEventListener('click', () => setDestCollapsed(false));
 document.getElementById('destPrev').addEventListener('click', () => quickTravelTo(destIndex(player.region) - 1));
 document.getElementById('destNext').addEventListener('click', () => quickTravelTo(destIndex(player.region) + 1));
 document.getElementById('destHome').addEventListener('click', () => quickTravelTo(-1));
@@ -5882,6 +5923,7 @@ addEventListener('keydown', e => {
     if (e.code === 'BracketLeft') quickTravelTo(destIndex(player.region) - 1);
     else if (e.code === 'BracketRight') quickTravelTo(destIndex(player.region) + 1);
     else if (e.code === 'KeyG') openPicker();
+    else if (e.code === 'KeyI') setDestCollapsed(!destCollapsed);
   }
 });
 // Warm the flight sky in idle time so the first trip never waits on it
