@@ -1205,6 +1205,7 @@ function carPoints(c, x, y, a) {
   for (const [lx, ly] of [[hl, hw], [hl, -hw], [-hl, hw], [-hl, -hw], [hl, 0], [-hl, 0], [0, hw], [0, -hw]]) pts.push([x + ca * lx - sa * ly, y + sa * lx + ca * ly]);
   return pts;
 }
+const boardRange = c => c.L / 2 + (c.spec.air ? 30 : c.spec.boat ? 52 : 18);
 const carHitsWorld = (c, x, y, a) => { const test = c && c.spec.boat ? boatBlockedPx : solidPx; return carPoints(c, x, y, a).some(([px, py]) => test(px, py)); };
 
 function moveCar(c, dt, prevA) {
@@ -1593,7 +1594,7 @@ function tryEnter() {
   for (const c of cars) {
     if (c.wreck || c.z > groundAt(c.x, c.y) + 6 || c.z > 6) continue;
     const d = Math.hypot(c.x - player.x, c.y - player.y);
-    if (d < c.L / 2 + (c.spec.air ? 30 : 18) && d < bd) { bd = d; best = c; }
+    if (d < boardRange(c) && d < bd) { bd = d; best = c; }
   }
   if (!best) { toast('No car close enough'); return; }
   if (best.ai) {
@@ -7048,6 +7049,7 @@ function drawCityMap() {
   // Shops as small badges (names when zoomed in), then the major places
   if (near) for (const e of enterables) { const B = SHOP_BADGES[e.type]; if (!B) continue; const [a, b, v] = toScreen(camera, e.door.x, e.door.y, 20); if (v) badge(a, b, B[0], B[1], mapView.dist < 900 ? e.name : '', false); }
   for (const [x, y, col, g, label] of cityPlaces()) { const [a, b, v] = toScreen(camera, x, y, 40); if (v) badge(a, b, col, g, label); }
+  for (const c of cars) if (c.spec.boat && !c.wreck) { const [a, b, v] = toScreen(camera, c.x, c.y, 12); if (v) badge(a, b, '#4fc3ff', '⛵', 'Motorboat', false); }
   // Objectives, route, waypoint, player
   const tag = (pt, col, g, label) => { if (!pt) return; const [a, b, v] = toScreen(camera, pt.x, pt.y, 60); if (v) badge(a, b, col, g, label); };
   tag(storyTarget(), '#ff7a3d', 'S', 'Story');
@@ -8988,7 +8990,7 @@ function buildBoat(c) {
   return g;
 }
 // Moored motorboats along the bay quays
-for (const [tx, ty, a] of [[53.3, 22.5, -Math.PI / 2], [53.3, 42.5, -Math.PI / 2], [58.6, 32.5, -Math.PI / 2], [93.5, 23, Math.PI]])
+for (const [tx, ty, a] of [[53.3, 22.5, -Math.PI / 2], [53.3, 42.5, -Math.PI / 2], [58.6, 32.5, -Math.PI / 2], [58.6, 42.5, -Math.PI / 2]])
   cars.push(makeCar('boat', tx * T, ty * T, a, { keep: true }));
 
 // ─── The voyage to Lake Sevan ────────────────────────────────────────────────
@@ -9659,6 +9661,7 @@ function drawHud() {
   { const st = storyTarget(); if (st) dot(st.x, st.y, '#ff7a3d', 5); }
   for (const M of Object.values(MANSIONS)) dot(M.door.x, M.door.y, '#e0b0ff', 3);
   if (!activity) for (const R of RACES) dot(R.entry.x, R.entry.y, '#4fc3ff', 3);
+  for (const c of cars) if (c.spec.boat && !c.wreck) dot(c.x, c.y, '#4fc3ff', 3);
   const aT = activityTarget();
   if (aT && !player.interior) dot(aT.x, aT.y, activity.race ? '#4fc3ff' : '#ffd35a', 5);
   if (freeEvent) { const e = freeEvent.car || freeEvent.ped; dot(e.x, e.y, '#ff5f5f', 5); }
@@ -9722,7 +9725,7 @@ function drawHud() {
   }
   // Hint for getting in a car
   if (!player.car && !promptIt && mode === 'play') {
-    const near = cars.some(c => !c.wreck && Math.hypot(c.x - player.x, c.y - player.y) < c.L / 2 + 18);
+    const near = cars.some(c => !c.wreck && Math.hypot(c.x - player.x, c.y - player.y) < boardRange(c));
     if (near) {
       ctx.textAlign = 'center'; ctx.font = `600 ${Math.round(12 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
       ctx.fillText(touch ? 'Tap USE to get in' : 'Press SPACE to get in', vw / 2, touch ? Math.min(vh * 0.7, cardY - 40) : vh * 0.7);
