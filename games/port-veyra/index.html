@@ -564,7 +564,7 @@ const DISTRICTS = {
   downtown:    { name: 'Meridian' },
   residential: { name: 'Larkfield' },
   park:        { name: 'Larkfield Commons' },
-  docks:       { name: 'Saltmarsh Docks' },
+  docks:       { name: 'Port Zeytun' },
   bay:         { name: 'Hayastan Bay' },
   airfield:    { name: 'Hayastan Municipal Airfield' },
   eastshore:   { name: 'Eastshore' },
@@ -1609,7 +1609,7 @@ function tryEnter() {
   }
   player.car = best; best.lastRear = null;
   if (best.spec.air) toast(best.spec.air === 'heli' ? 'Helicopter · Shift climb · Z descend · W/S fly · A/D turn' : 'Plane · W throttle up · S throttle down · Shift pull up past 80 mph · Z dive', '#8fb4ff');
-  else if (best.spec.boat) toast('Motorboat · sail the bay · G or Phone → Cabs to sail to Lake Sevan', '#4fc3ff');
+  else if (best.spec.boat) toast(best.spec.name + ' · sail the bay · G or Phone → Cabs to sail to Lake Sevan', '#4fc3ff');
   else if (best.spec.name && best.type !== 'sedan') toast(best.spec.name);
 }
 function exitCar(bail) {
@@ -3853,7 +3853,7 @@ const taxiSignMat = basic(0xfff2c0), busStripeMat = lam('#1d1d22'), chromeMat = 
 function buildCarMesh(c) {
   if (c.spec.bike) return buildBike(c);
   if (c.spec.air) return c.spec.air === 'heli' ? buildHeli(c) : buildPlane(c);
-  if (c.spec.boat) return buildBoat(c);
+  if (c.spec.boat) return c.spec.yacht ? buildYacht(c) : buildBoat(c);
   const g = new THREE.Group(), G = carGeo(c), s = c.spec, L = c.L, W = c.W, base = 3.5, bh = G.bodyH;
   g.rotation.order = 'YXZ';
   const add = (geo, mat, x, y, z, shadow) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (shadow) m.castShadow = true; g.add(m); return m; };
@@ -6371,7 +6371,7 @@ const gptTools = [
 function gptBrief() {
   return `You are Hayastan GPT, the assistant app on the player's phone in the open-world game "Hayastan". Reply in 1-4 short sentences, friendly, plain text, no markdown. `
     + `You can speak English or Armenian (write Armenian in Latin letters unless asked otherwise). `
-    + `The game: a harbor city called Hayastan (districts Meridian, Larkfield, Saltmarsh Docks, Eastshore, Cedar Heights, an airfield and the Gilded Anchor casino) plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
+    + `The game: a harbor city called Hayastan (districts Meridian, Larkfield, Port Zeytun, Eastshore, Cedar Heights, an airfield and the Gilded Anchor casino) plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
     + `Controls: WASD move, Space enter/exit vehicles, F shoot, E interact, M map, / phone, C camera, B nitro, G Quick Travel in Armenia. `
     + (gpt.tools ? 'Use the tools when the player asks you to change the weather, start a disaster, travel, set a waypoint, or asks about their status; say briefly what you did. Never start a disaster unless the player asks for it. ' : '')
     + `Current state: ${JSON.stringify(gptTools[0].execute())}.`;
@@ -7030,7 +7030,7 @@ function drawCityMap() {
   const s = clamp(vw / 900, 0.72, 1), near = mapView.dist < 1500;
   // District names float above their neighbourhoods
   ctx.textAlign = 'center';
-  for (const [name, x, y] of [['MERIDIAN', 20 * T, 16 * T], ['LARKFIELD', 20 * T, 44 * T], ['SALTMARSH DOCKS', 46 * T, 20 * T], ['AIRFIELD', 75 * T, 9 * T], ['EASTSHORE', 75 * T, 28 * T], ['CEDAR HEIGHTS', 80 * T, 44 * T]]) {
+  for (const [name, x, y] of [['MERIDIAN', 20 * T, 16 * T], ['LARKFIELD', 20 * T, 44 * T], ['PORT ZEYTUN', 46 * T, 20 * T], ['AIRFIELD', 75 * T, 9 * T], ['EASTSHORE', 75 * T, 28 * T], ['CEDAR HEIGHTS', 80 * T, 44 * T]]) {
     const [a, b, v] = toScreen(camera, x, y, 260); if (!v) continue;
     ctx.font = `800 ${clamp(52000 / mapView.dist, 14, 34) | 0}px ${DISPLAY}`; ctx.fillStyle = 'rgba(255,248,236,0.55)'; ctx.fillText(name, a, b);
   }
@@ -9027,6 +9027,45 @@ addEventListener('keydown', e => {
   if (e.target && e.target.tagName === 'INPUT') return;
   if (e.code === 'KeyG' && !e.repeat && mode === 'play' && !player.region && player.car && player.car.spec.boat) startBoatVoyage();
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PORT ZEYTUN — a yacht moored at the freighter port on the east bay
+// A big luxury yacht you can board from the east-shore road by the freighter, then sail the bay or
+// set out for Lake Sevan. The freighter port is dressed with a pier and named Port Zeytun.
+// ═══════════════════════════════════════════════════════════════════════════════
+VEHICLES.yacht = { name: 'Zeytun yacht', L: 120, W: 40, accel: 150, brake: 260, rev: 70, max: 300, coast: 34, grip: 4, turn: 1.5, hp: 200,
+  colors: ['#1f5aa8', '#8a1a2a', '#1f7a3a', '#3a3c46'], boat: true, yacht: true };
+function buildYacht(c) {
+  const g = new THREE.Group(); g.rotation.order = 'YXZ';
+  const white = cachedLam('#eef2f4'), blue = cachedLam(c.color), wood = cachedLam('#8a6a44'), rail = cachedLam('#c9d6e2'), L = c.L, W = c.W;
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
+  add(new THREE.BoxGeometry(L * 0.82, 16, W * 0.85), white, -L * 0.04, 9, 0);        // hull
+  add(new THREE.BoxGeometry(L * 0.86, 5, W * 0.9), blue, -L * 0.04, 4, 0);           // waterline stripe
+  const bow = add(new THREE.ConeGeometry(W * 0.45, L * 0.34, 4), white, L * 0.4, 9, 0); bow.rotation.z = -Math.PI / 2; bow.rotation.y = Math.PI / 4; bow.scale.z = 0.6;
+  add(new THREE.BoxGeometry(L * 0.24, 3, W * 0.72), wood, L * 0.2, 18, 0);           // aft sun deck
+  add(new THREE.BoxGeometry(L * 0.5, 15, W * 0.72), white, -L * 0.06, 22, 0);        // main cabin
+  add(new THREE.BoxGeometry(L * 0.46, 9, W * 0.64), glassMat, -L * 0.06, 28, 0);
+  add(new THREE.BoxGeometry(L * 0.3, 11, W * 0.5), white, -L * 0.12, 35, 0);         // flybridge
+  add(new THREE.BoxGeometry(L * 0.26, 6, W * 0.44), glassMat, -L * 0.12, 40, 0);
+  for (const zs of [-1, 1]) add(new THREE.BoxGeometry(L * 0.72, 1.4, 1.4), rail, -L * 0.04, 18, zs * W * 0.42);   // side rails
+  add(new THREE.CylinderGeometry(1, 1, 28, 8), rail, -L * 0.12, 53, 0);              // mast
+  add(new THREE.PlaneGeometry(15, 10), basic(0xf2a800), -L * 0.12 + 3, 60, 0);       // pennant
+  const blob = new THREE.Mesh(blobGeo, blobMat); blob.scale.set(L * 0.85, 1, W * 0.92); blob.position.y = 0.3; g.add(blob);
+  g.userData = { body: g.children[0], cabin: null, beam: null, blob, wreck: false, bw: L * 0.85, bd: W * 0.92, bob: true };
+  return g;
+}
+// Moor the yacht just off the east-shore road, by the freighter
+cars.push(makeCar('yacht', 92.7 * T, 23 * T, -Math.PI / 2, { keep: true }));
+
+// Port Zeytun dressing: a pier out over the water and a harbour sign on the shore
+{
+  const plankMat = lam('#6a4a30', { emissive: new THREE.Color('#6a4a30').multiplyScalar(0.22) });
+  const postMat = lam('#4a3222', { emissive: new THREE.Color('#4a3222').multiplyScalar(0.22) });
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(150, 5, 46), plankMat); deck.position.set(92 * T, 3, 23 * T); deck.receiveShadow = true; scene.add(deck);
+  for (let k = 0; k < 5; k++) { const px = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 46), postMat); px.position.set(91.4 * T + k * 18, 6, 23 * T); scene.add(px); }
+  for (const dz of [-1, 1]) for (let k = 0; k < 4; k++) { const post = new THREE.Mesh(new THREE.CylinderGeometry(3, 4, 22, 8), postMat); post.position.set((91.6 + k * 0.55) * T, 7, 23 * T + dz * 26); post.castShadow = true; scene.add(post); }
+  postSign(90.4 * T, 21.4 * T, 'PORT ZEYTUN', 'Marina · deep-water berths', '#123a52', '#9fd4e8', 34);
+}
 
 let luckyWheel = null;
 {
