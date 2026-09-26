@@ -418,7 +418,7 @@
           <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
           <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>E</dt><dd>Enter Saltmarsh Harbor on the docks · Areni cellars from Noravank</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
+          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>E</dt><dd>Enter Saltmarsh Harbor on the docks · Areni cellars from Noravank</dd></div><div><dt>Boat</dt><dd>Board a motorboat at the bay quays · G sails to Lake Sevan</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
           <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
           <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -475,7 +475,7 @@
       <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>E</dt><dd>Enter Saltmarsh Harbor on the docks · Areni cellars from Noravank</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
+      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>E</dt><dd>Enter Saltmarsh Harbor on the docks · Areni cellars from Noravank</dd></div><div><dt>Boat</dt><dd>Board a motorboat at the bay quays · G sails to Lake Sevan</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
       <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -1205,7 +1205,7 @@ function carPoints(c, x, y, a) {
   for (const [lx, ly] of [[hl, hw], [hl, -hw], [-hl, hw], [-hl, -hw], [hl, 0], [-hl, 0], [0, hw], [0, -hw]]) pts.push([x + ca * lx - sa * ly, y + sa * lx + ca * ly]);
   return pts;
 }
-const carHitsWorld = (c, x, y, a) => carPoints(c, x, y, a).some(([px, py]) => solidPx(px, py));
+const carHitsWorld = (c, x, y, a) => { const test = c && c.spec.boat ? boatBlockedPx : solidPx; return carPoints(c, x, y, a).some(([px, py]) => test(px, py)); };
 
 function moveCar(c, dt, prevA) {
   if (carHitsWorld(c, c.x, c.y, c.a)) c.a = prevA;
@@ -1251,7 +1251,7 @@ function driveCar(c, inp, dt) {
   // Drift: the handbrake breaks the rear loose; throttle while sliding keeps it going (power oversteer).
   // Grip returns gradually instead of snapping, so you can catch and hold a slide with counter-steer.
   const speed0 = Math.hypot(c.vx, c.vy), slipAng = speed0 > 30 ? Math.abs(Math.atan2(c.vx * -Math.sin(c.a) + c.vy * Math.cos(c.a), Math.abs(vF) + 1)) : 0;
-  const sliding = slipAng > 0.25 && speed0 > 90 && !s.bike;
+  const sliding = slipAng > 0.25 && speed0 > 90 && !s.bike && !s.boat;
   const gripTarget = (inp.hb ? 1.1 : sliding && inp.thr > 0 ? 2.6 : s.grip) * weatherGrip();   // wet and snowy roads are slippery
   c.gripNow = c.gripNow === undefined ? s.grip : c.gripNow + (gripTarget - c.gripNow) * Math.min(1, dt * (gripTarget < c.gripNow ? 12 : 2.2));
   const steerK = inp.hb ? 1.5 : sliding ? 1.3 : 1;
@@ -1273,7 +1273,7 @@ function driveCar(c, inp, dt) {
   const imp = moveCar(c, dt, prevA);
   if (c === player.car) updateDrift(c, dt, imp);
   // Skid marks
-  if (c.slip > 70 && Math.abs(vF) > 40) {
+  if (c.slip > 70 && Math.abs(vF) > 40 && !s.boat) {
     const rear = [];
     for (const side of [-1, 1]) rear.push([c.x - fx * c.L * 0.32 + rx * side * c.W * 0.38, c.y - fy * c.L * 0.32 + ry * side * c.W * 0.38]);
     if (c.lastRear) for (let k = 0; k < 2; k++) addSkid(c.lastRear[k][0], c.lastRear[k][1], rear[k][0], rear[k][1]);
@@ -1327,7 +1327,7 @@ function flyCar(c, inp, dt) {
 // Drift scoring: slide at speed to build points, straighten out to cash them, crash and you lose them
 const drift = { active: false, score: 0, t: 0, calm: 0, mult: 1, lastBank: -99, flash: 0, flashText: '' };
 function updateDrift(c, dt, imp) {
-  const speed = Math.hypot(c.vx, c.vy), on = c.slipAng > 0.3 && speed > 110 && !c.spec.bike && !c.spec.air;
+  const speed = Math.hypot(c.vx, c.vy), on = c.slipAng > 0.3 && speed > 110 && !c.spec.bike && !c.spec.air && !c.spec.boat;
   if (imp > 110 && drift.active) { drift.active = false; drift.flash = 2; drift.flashText = `Drift lost · ${Math.round(drift.score).toLocaleString('en-US')}`; drift.score = 0; return; }
   if (on) {
     if (!drift.active) { drift.active = true; drift.score = 0; drift.t = 0; }
@@ -1608,6 +1608,7 @@ function tryEnter() {
   }
   player.car = best; best.lastRear = null;
   if (best.spec.air) toast(best.spec.air === 'heli' ? 'Helicopter · Shift climb · Z descend · W/S fly · A/D turn' : 'Plane · W throttle up · S throttle down · Shift pull up past 80 mph · Z dive', '#8fb4ff');
+  else if (best.spec.boat) toast('Motorboat · sail the bay · G or Phone → Cabs to sail to Lake Sevan', '#4fc3ff');
   else if (best.spec.name && best.type !== 'sedan') toast(best.spec.name);
 }
 function exitCar(bail) {
@@ -3063,6 +3064,7 @@ function phoneApp(app) {
     if (daily) for (const o of daily.list) phRow(`${o.done ? '✓' : '○'} ${o.text}`, `${Math.floor(o.have)}/${o.n}`, o.done);
     phNote(`Gold anchors found: ${anchorsFound.size} of ${ANCHORS.length}`);
   } else if (app === 'taxi') {
+    if (player.car && player.car.spec.boat && !player.region) { const onWater = grid[Math.floor(player.car.y / T) * GW + Math.floor(player.car.x / T)] === WATER; phItem('Sail to Lake Sevan', onWater ? 'Cast off across the bay' : 'Sail out onto open water first', () => { closePhone(); startBoatVoyage(); }, !onWater || stars() > 0); }
     const blocked = player.region ? 'Cabs only run in the city. Use Hayagram to fly back' : stars() > 0 ? 'Cabs will not pick up someone the police are chasing' : player.car ? 'Get out of your vehicle first' : player.interior ? 'Step outside first' : activity ? 'Not during a job' : '';
     if (blocked) phNote(blocked);
     const dests = [['Your apartment', { x: 26 * T, y: 32.65 * T }], ['The Gilded Anchor', PLACES.casinoDoor], ['Hayastan Customs', PLACES.customs], ['Hayastan Municipal Airfield', { x: 68 * T, y: 12.6 * T }]];
@@ -3270,6 +3272,7 @@ function updatePlayer(dt) {
 
 function emitCarParticles(c, inp, dt) {
   if (c.spec.air) return;
+  if (c.spec.boat) { const sp = Math.hypot(c.vx, c.vy); if (sp > 20 && Math.random() < dt * 34) { const fx = Math.cos(c.a), fy = Math.sin(c.a); parts.push({ x: c.x - fx * c.L * 0.45 + (Math.random() - 0.5) * 14, y: c.y - fy * c.L * 0.45 + (Math.random() - 0.5) * 14, vx: -fx * 16, vy: -fy * 16, life: 0.5, max: 0.5, size: 4, kind: 'splash', h: 6, vh: 18 }); } return; }
   if (c.boosting) for (const side of c.spec.bike ? [0] : [-1, 1]) {
     const fx = Math.cos(c.a), fy = Math.sin(c.a);
     parts.push({ x: c.x - fx * (c.L / 2 + 3) - fy * side * 6, y: c.y - fy * (c.L / 2 + 3) + fx * side * 6, vx: -fx * 90 + c.vx * 0.6, vy: -fy * 90 + c.vy * 0.6, life: 0.22, max: 0.22, size: 6, grow: 26, kind: 'nitro', h: 6, vh: 0 });
@@ -3849,6 +3852,7 @@ const taxiSignMat = basic(0xfff2c0), busStripeMat = lam('#1d1d22'), chromeMat = 
 function buildCarMesh(c) {
   if (c.spec.bike) return buildBike(c);
   if (c.spec.air) return c.spec.air === 'heli' ? buildHeli(c) : buildPlane(c);
+  if (c.spec.boat) return buildBoat(c);
   const g = new THREE.Group(), G = carGeo(c), s = c.spec, L = c.L, W = c.W, base = 3.5, bh = G.bodyH;
   g.rotation.order = 'YXZ';
   const add = (geo, mat, x, y, z, shadow) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (shadow) m.castShadow = true; g.add(m); return m; };
@@ -8764,7 +8768,7 @@ SPEECH['vardavar'] = [['Shnorhavor Vardavar!', 'Happy Vardavar!'], ['Djur, djur!
   ['Haha, tacnvecir!', 'Haha, you got wet!'], ['Amenqs tosht enq!', "We're all drenched!"], ['Amarn e, djur lini!', 'It\'s summer, let there be water!']];
 const festival = { on: false, wet: 0, nextSplash: 0, autoDay: -1 };
 let _tradT = 0;
-function updateFestivalsEtc(dt) { festivalUpdate(dt); _tradT -= dt; if (_tradT <= 0) { _tradT = 1.5; checkTradUnlocks(); } }
+function updateFestivalsEtc(dt) { updateBoatVoyage(dt); festivalUpdate(dt); _tradT -= dt; if (_tradT <= 0) { _tradT = 1.5; checkTradUnlocks(); } }
 function splash(x, y, n, vy0 = 40) { for (let k = 0; k < n; k++) parts.push({ x, y, vx: (Math.random() - 0.5) * 140, vy: (Math.random() - 0.5) * 140, life: 0.4 + Math.random() * 0.3, max: 0.7, size: 5, kind: 'splash', h: 12, vh: vy0 + Math.random() * 60 }); }
 function toggleVardavar(on) {
   festival.on = on ?? !festival.on;
@@ -8958,6 +8962,68 @@ CAST_LOOKS.harbor = { skin: '#c68e63', hair: '#8a8580', shirt: '#1f3a5a', pants:
   INTERIORS.harbor.street = { x: spot.x, y: spot.y, a: -Math.PI / 2 };
   interactables.push({ x: spot.x, y: spot.y, r: 26, when: () => !player.region && !player.car && mode === 'play', label: 'Enter Saltmarsh Harbor', act: () => { if (player.car) { toast('Get out of the vehicle first', '#ff8a7a'); return; } enterInterior('harbor'); showBanner('Saltmarsh Harbor', 'The wharf on the Hayastan waterfront', '#9fd4e8', 3.5); } });
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DRIVABLE BOATS — sail Hayastan Bay, and set out for Lake Sevan
+// A motorboat that floats on water and is blocked by land (the inverse of a car). Board it from the
+// quays along the bay. From open water you can sail to Lake Sevan with a short cinematic voyage.
+// ═══════════════════════════════════════════════════════════════════════════════
+VEHICLES.boat = { name: 'Motorboat', L: 62, W: 26, accel: 210, brake: 320, rev: 90, max: 320, coast: 42, grip: 5, turn: 2.2, hp: 120,
+  colors: ['#c83a3a', '#e8e4dc', '#2d6bff', '#f2c230', '#1f7a3a'], boat: true };
+// Boats are free on water, blocked everywhere else (city grid only)
+function boatBlockedPx(x, y) { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx < 0 || ty < 0 || tx >= GW || ty >= GH) return true; return grid[ty * GW + tx] !== WATER; }
+function buildBoat(c) {
+  const g = new THREE.Group(); g.rotation.order = 'YXZ';
+  const col = cachedLam(c.color), L = c.L, W = c.W;
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
+  const body = add(new THREE.BoxGeometry(L * 0.86, 11, W * 0.82), col, -L * 0.02, 7, 0);
+  const bow = add(new THREE.ConeGeometry(W * 0.42, L * 0.3, 4), col, L * 0.42, 7, 0); bow.rotation.z = -Math.PI / 2; bow.rotation.y = Math.PI / 4; bow.scale.z = 0.6;
+  add(new THREE.BoxGeometry(L * 0.9, 3, W * 0.86), cachedLam('#e8e4dc'), -L * 0.02, 12.5, 0);
+  const cabin = add(new THREE.BoxGeometry(L * 0.3, 13, W * 0.62), cachedLam('#eef2f4'), -L * 0.14, 19, 0);
+  add(new THREE.BoxGeometry(L * 0.28, 8, W * 0.58), glassMat, -L * 0.14, 23, 0);
+  add(new THREE.CylinderGeometry(1.1, 1.1, 26, 8), cachedLam('#8a7a5a'), L * 0.16, 27, 0);
+  const blob = new THREE.Mesh(blobGeo, blobMat); blob.scale.set(L * 0.9, 1, W * 0.95); blob.position.y = 0.3; g.add(blob);
+  g.userData = { body, cabin, beam: null, blob, wreck: false, bw: L * 0.9, bd: W * 0.95, bob: true };
+  return g;
+}
+// Moored motorboats along the bay quays
+for (const [tx, ty, a] of [[53.3, 22.5, -Math.PI / 2], [53.3, 42.5, -Math.PI / 2], [58.6, 32.5, -Math.PI / 2], [93.5, 23, Math.PI]])
+  cars.push(makeCar('boat', tx * T, ty * T, a, { keep: true }));
+
+// ─── The voyage to Lake Sevan ────────────────────────────────────────────────
+const boatVoyage = { on: false, t: 0, dur: 4.2 };
+function startBoatVoyage() {
+  const c = player.car;
+  if (!(c && c.spec.boat)) { toast('Get in a boat first', '#ff8a7a'); return; }
+  if (player.region) return;
+  if (boatVoyage.on) return;
+  if (stars() > 0) { toast('Lose the police before you sail', '#ff8a7a'); return; }
+  if (grid[Math.floor(c.y / T) * GW + Math.floor(c.x / T)] !== WATER) { toast('Sail out onto open water first', '#ff8a7a'); return; }
+  boatVoyage.on = true; boatVoyage.t = 0; mode = 'travel'; keys.clear(); mouseFire = false;
+  showBanner('Setting sail', 'Bound for Lake Sevan', '#4fc3ff', 3.5);
+}
+function updateBoatVoyage(dt) {
+  if (!boatVoyage.on) return;
+  boatVoyage.t += dt;
+  const c = player.car;
+  if (c) { const fx = Math.cos(c.a), fy = Math.sin(c.a), v = 300 + boatVoyage.t * 60; c.vx = fx * v; c.vy = fy * v; c.x += c.vx * dt; c.y += c.vy * dt; c.z = 0;
+    if (Math.random() < dt * 40) splash(c.x - fx * 30 + (Math.random() - 0.5) * 20, c.y - fy * 30 + (Math.random() - 0.5) * 20, 3, 90);
+    cam.shake = Math.max(cam.shake, 1); }
+  if (scene.fog) scene.fog.density = Math.min(0.012, scene.fog.density + dt * 0.004);
+  fade = Math.min(1, (boatVoyage.t - 1.2) / (boatVoyage.dur - 1.5));
+  if (boatVoyage.t >= boatVoyage.dur) { boatVoyage.on = false; arriveSevanByBoat(); }
+}
+function arriveSevanByBoat() {
+  if (player.car) { player.lastCar = player.car; player.car = null; }   // the boat waits at the Hayastan quay
+  mode = 'play';
+  travelToInstant('sevan');
+  fade = 1; camSnap = true;
+  toast('You sail in to the shore of Lake Sevan', '#4fc3ff');
+}
+addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.code === 'KeyG' && !e.repeat && mode === 'play' && !player.region && player.car && player.car.spec.boat) startBoatVoyage();
+});
 
 let luckyWheel = null;
 {
@@ -9173,6 +9239,7 @@ function syncEntities() {
       g.rotation.set(0, -c.a, 0); u.lean.rotation.x = c.leanV;
       if (u.rider) u.rider.visible = !!c.ai;
     } else g.rotation.set(0, -c.a, 0);
+    if (u.bob) { g.position.y += Math.sin(time * 1.6 + c.id) * 1.1; g.rotation.z = Math.sin(time * 1.1 + c.id) * 0.05 - (c.steerIn || 0) * Math.min(1, spd / 220) * 0.12; }
     if (c.wreck && !u.wreck) { u.wreck = true; u.body.material = charMat; if (u.cabin) u.cabin.material = charMat; }
     if (u.pglow) u.pglow.visible = !!(c.ai && (hunting || c.emergency));
     u.blob.visible = FX.blobShadows;
