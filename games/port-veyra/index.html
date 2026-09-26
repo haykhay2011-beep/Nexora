@@ -688,6 +688,50 @@ function districtAtPx(x, y) {
   return districtOfBlock(bx, by);
 }
 
+// The twelve administrative districts of Yerevan, laid over the city as its named neighbourhoods.
+// (Building generation still uses districtOfBlock above; this overlay only names the ground you walk.)
+const YER_DISTRICTS = {
+  kentron:    { name: 'Kentron', hy: 'Կենտրոն', sub: 'The heart of the city' },
+  arabkir:    { name: 'Arabkir', hy: 'Արաբկիր', sub: 'Northern heights and gardens' },
+  kanaker:    { name: 'Kanaker-Zeytun', hy: 'Քանաքեռ-Զեյթուն', sub: 'The old village on the plateau' },
+  ajapnyak:   { name: 'Ajapnyak', hy: 'Աջափնյակ', sub: 'The right bank of the Hrazdan' },
+  davtashen:  { name: 'Davtashen', hy: 'Դավթաշեն', sub: 'Terraced blocks above the gorge' },
+  malatia:    { name: 'Malatia-Sebastia', hy: 'Մալաթիա-Սեբաստիա', sub: 'The great western sprawl' },
+  shengavit:  { name: 'Shengavit', hy: 'Շենգավիթ', sub: 'An ancient settlement in the south-west' },
+  erebuni:    { name: 'Erebuni', hy: 'Էրեբունի', sub: 'The Urartian fortress hill' },
+  nubarashen: { name: 'Nubarashen', hy: 'Նուբարաշեն', sub: 'The quiet southern ridge' },
+  norkmarash: { name: 'Nork-Marash', hy: 'Նորք-Մարաշ', sub: 'Balconied hills over the centre' },
+  nornork:    { name: 'Nor Nork', hy: 'Նոր Նորք', sub: 'The great eastern massifs' },
+  avan:       { name: 'Avan', hy: 'Ավան', sub: 'North-east on the old road' },
+  hrazdan:    { name: 'Hrazdan Gorge', hy: 'Հրազդանի կիրճ', sub: 'The river that divides the city' },
+};
+const YER_W = [
+  ['davtashen', 'davtashen', 'arabkir',  'arabkir',  'kanaker'],
+  ['ajapnyak',  'arabkir',   'arabkir',  'arabkir',  'kanaker'],
+  ['ajapnyak',  'malatia',   'kentron',  'kentron',  'norkmarash'],
+  ['malatia',   'kentron',   'kentron',  'kentron',  'norkmarash'],
+  ['shengavit', 'kentron',   'kentron',  'erebuni',  'norkmarash'],
+  ['shengavit', 'shengavit', 'erebuni',  'erebuni',  'nubarashen'],
+];
+const YER_E = [
+  ['avan',      'avan',       'avan',       'avan'],
+  ['avan',      'avan',       'nornork',    'nornork'],
+  ['nornork',   'nornork',    'nornork',    'nornork'],
+  ['nornork',   'nornork',    'nornork',    'nornork'],
+  ['nornork',   'nubarashen', 'nubarashen', 'nubarashen'],
+  ['nubarashen','nubarashen', 'nubarashen', 'nubarashen'],
+];
+function yerDistrictOfBlock(bx, by) {
+  by = clamp(by, 0, 5);
+  if (bx === 5) return 'hrazdan';
+  if (bx <= 4) return YER_W[by][clamp(bx, 0, 4)];
+  return YER_E[by][clamp(bx - 6, 0, 3)];
+}
+function yerDistrictAtPx(x, y) {
+  if (x >= 92 * T) return 'hrazdan';
+  return yerDistrictOfBlock(clamp(Math.floor(x / T / 10), 0, 9), clamp(Math.floor(y / T / 10), 0, 5));
+}
+
 const buildings = [], trees = [], lamps = [], pools = [], helipads = [];
 // A mansion estate fills one residential block: house, lawn, pool and a private helipad
 function buildEstate(ix, iy, id, fill) {
@@ -807,7 +851,7 @@ const CORNERS = [];
 for (let j = 0; j < NN; j++) for (let i = 0; i < NNX; i++) for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
   const [cx, cy] = nodePos(i, j), x = cx + sx * 1.5 * T, y = cy + sy * 1.5 * T, t = tileAtPx(x, y);
   if (x > 0 && y > 0 && y < GH * T && (t === SIDE || t === YARD)) {
-    CORNERS.push({ x, y, label: `${V_STREETS[i]} & ${H_STREETS[j]}`, district: DISTRICTS[districtAtPx(x, y)].name });
+    CORNERS.push({ x, y, label: `${V_STREETS[i]} & ${H_STREETS[j]}`, district: YER_DISTRICTS[yerDistrictAtPx(x, y)].name });
   }
 }
 // ─── Interiors ───────────────────────────────────────────────────────────────
@@ -1071,7 +1115,7 @@ const heat = { v: 0, lastCrime: -99, seen: false };
 const job = { state: 'offer', type: null, pickup: null, drop: null, timeLeft: 0, pay: 0, cool: 0 };
 const cam = { x: player.x, y: player.y, z: 1, shake: 0 };
 let mode = 'title', time = 0, banner = null, respawnT = 0, respawnKind = '', bustT = 0, policeTimer = 0, flash = 0;
-let districtName = '', districtT = 0;
+let districtName = '', districtHy = '', districtT = 0;
 
 const playerPos = () => player.car || player;
 const stars = () => Math.min(5, Math.floor(heat.v / 100));
@@ -3341,8 +3385,9 @@ function update(dt) {
   cam.shake = Math.max(0, cam.shake - dt * 30);
 
   if (waypoint && !player.interior && Math.hypot(waypoint.x - playerPos().x, waypoint.y - playerPos().y) < 60) { waypoint = null; toast('Arrived at waypoint'); }
-  const dn = player.region ? REGIONS[player.region].name : player.interior ? INTERIORS[player.interior].name : DISTRICTS[districtAtPx(player.x, player.y)].name;
-  if (dn !== districtName) { districtName = dn; districtT = mode === 'play' ? 2.6 : 0; }
+  const yd = player.region || player.interior ? null : YER_DISTRICTS[yerDistrictAtPx(player.x, player.y)];
+  const dn = player.region ? REGIONS[player.region].name : player.interior ? INTERIORS[player.interior].name : yd.name;
+  if (dn !== districtName) { districtName = dn; districtHy = yd ? yd.hy + ' · ' + yd.sub : ''; districtT = mode === 'play' ? 2.8 : 0; }
   districtT = Math.max(0, districtT - dt);
 
 }
@@ -6384,7 +6429,7 @@ const gptTools = [
 function gptBrief() {
   return `You are Hayastan GPT, the assistant app on the player's phone in the open-world game "Hayastan". Reply in 1-4 short sentences, friendly, plain text, no markdown. `
     + `You can speak English or Armenian (write Armenian in Latin letters unless asked otherwise). `
-    + `The game: the city of Yerevan (districts Meridian, Larkfield, Port Zeytun, Eastshore, Cedar Heights, an airfield and the Gilded Anchor casino) plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
+    + `The game: the city of Yerevan, laid out in its twelve real districts (${Object.values(YER_DISTRICTS).filter(d => d.name !== 'Hrazdan Gorge').map(d => d.name).join(', ')}), with an airfield and the Gilded Anchor casino, plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
     + `Controls: WASD move, Space enter/exit vehicles, F shoot, E interact, M map, / phone, C camera, B nitro, G Quick Travel in Armenia. `
     + (gpt.tools ? 'Use the tools when the player asks you to change the weather, start a disaster, travel, set a waypoint, or asks about their status; say briefly what you did. Never start a disaster unless the player asks for it. ' : '')
     + `Current state: ${JSON.stringify(gptTools[0].execute())}.`;
@@ -7043,9 +7088,11 @@ function drawCityMap() {
   const s = clamp(vw / 900, 0.72, 1), near = mapView.dist < 1500;
   // District names float above their neighbourhoods
   ctx.textAlign = 'center';
-  for (const [name, x, y] of [['MERIDIAN', 20 * T, 16 * T], ['LARKFIELD', 20 * T, 44 * T], ['PORT ZEYTUN', 46 * T, 20 * T], ['AIRFIELD', 75 * T, 9 * T], ['EASTSHORE', 75 * T, 28 * T], ['CEDAR HEIGHTS', 80 * T, 44 * T]]) {
+  for (const [name, x, y] of [['DAVTASHEN', 7 * T, 5 * T], ['ARABKIR', 25 * T, 7 * T], ['KANAKER-ZEYTUN', 45 * T, 6 * T],
+    ['AJAPNYAK', 5 * T, 19 * T], ['MALATIA-SEBASTIA', 8 * T, 28 * T], ['KENTRON', 25 * T, 37 * T], ['NORK-MARASH', 46 * T, 33 * T],
+    ['SHENGAVIT', 7 * T, 50 * T], ['EREBUNI', 33 * T, 50 * T], ['AVAN', 72 * T, 7 * T], ['NOR NORK', 78 * T, 27 * T], ['NUBARASHEN', 85 * T, 49 * T]]) {
     const [a, b, v] = toScreen(camera, x, y, 260); if (!v) continue;
-    ctx.font = `800 ${clamp(52000 / mapView.dist, 14, 34) | 0}px ${DISPLAY}`; ctx.fillStyle = 'rgba(255,248,236,0.55)'; ctx.fillText(name, a, b);
+    ctx.font = `800 ${clamp(46000 / mapView.dist, 12, 30) | 0}px ${DISPLAY}`; ctx.fillStyle = 'rgba(255,248,236,0.55)'; ctx.fillText(name, a, b);
   }
   // Street names along the roads (only real segments)
   for (let i = 0; i < NNX; i++) {
@@ -9851,6 +9898,7 @@ function updateCamera(dt) {
 
 const DISPLAY = '"Big Shoulders Display", "Arial Narrow", Impact, sans-serif';
 const MONO = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
+const SERIF_HY = '"Noto Serif Armenian", serif';
 
 function drawStar(x, y, r, fill, stroke) {
   ctx.beginPath();
@@ -9973,6 +10021,7 @@ function drawHud() {
     ctx.globalAlpha = Math.min(1, districtT);
     ctx.font = `800 ${Math.round(34 * s)}px ${DISPLAY}`; ctx.fillStyle = '#efe6d2';
     ctx.fillText(districtName.toUpperCase(), vw / 2, top + 56 * s);
+    if (districtHy) { ctx.font = `500 ${Math.round(13 * s + 1)}px ${SERIF_HY}`; ctx.fillStyle = 'rgba(242,226,196,0.82)'; ctx.fillText(districtHy, vw / 2, top + 78 * s); }
     ctx.globalAlpha = 1;
   }
 
