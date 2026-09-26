@@ -282,17 +282,43 @@
   #chatForm { position: fixed; left: 16px; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); width: min(26rem, calc(100% - 32px)); z-index: 6; }
   #chatForm[hidden] { display: none !important; }
   #chatInput { width: 100%; box-sizing: border-box; }
-  #touch { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: flex-end;
-    gap: 8px; padding: 0 16px calc(14px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
-  #touch .pad { display: flex; gap: 10px; pointer-events: auto; }
-  #touch .pad.right { flex-direction: column; }
-  #touch .pad.mid { display: grid; grid-template-columns: repeat(2, auto); gap: 8px; }
-  #touch .pad.mid button.act { width: 62px; height: 48px; border-radius: 24px; }
-  #touch button { width: 64px; height: 64px; border-radius: 50%; border: 1px solid rgba(239,230,210,0.25);
-    background: rgba(12,14,18,0.55); color: var(--paper); font: 600 1.1rem var(--mono); touch-action: none; user-select: none; -webkit-user-select: none; }
-  #touch button.act { width: 76px; border-radius: 38px; font: 800 1rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); }
-  #touch button.on { background: rgba(255,179,71,0.3); }
+  /* Touch controls: a thumbstick on the left, actions on the right, small utility buttons above them */
+  #touch { --joy: 132px; --btn: 58px; --gap: 8px; position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px); --sb: env(safe-area-inset-bottom, 0px); }
+  #touch[hidden] { display: none !important; }
+  @media (max-height: 520px) { #touch { --joy: 112px; --btn: 50px; --gap: 6px; } }
+  #touch .joy { position: absolute; left: calc(18px + var(--sl)); bottom: calc(18px + var(--sb)); width: var(--joy); height: var(--joy);
+    border-radius: 50%; background: radial-gradient(circle, rgba(12,14,18,0.25), rgba(12,14,18,0.6)); border: 1px solid rgba(239,230,210,0.3);
+    pointer-events: auto; touch-action: none; }
+  #touch .joy::before, #touch .joy::after { content: ""; position: absolute; left: 50%; top: 50%; background: rgba(239,230,210,0.14); transform: translate(-50%, -50%); }
+  #touch .joy::before { width: 70%; height: 2px; } #touch .joy::after { width: 2px; height: 70%; }
+  #touch .knob { position: absolute; left: 50%; top: 50%; width: 44%; height: 44%; margin: -22% 0 0 -22%; border-radius: 50%; z-index: 1;
+    background: radial-gradient(circle at 40% 35%, rgba(255,244,220,0.55), rgba(239,230,210,0.22)); border: 1px solid rgba(255,244,220,0.6); pointer-events: none; }
+  #touch .acts { position: absolute; right: calc(16px + var(--sr)); bottom: calc(16px + var(--sb)); display: grid; gap: var(--gap);
+    grid-template-columns: var(--btn) var(--btn) calc(var(--btn) * 1.3); grid-template-rows: var(--btn) var(--btn);
+    grid-template-areas: "nitro up use" "gun down fire"; }
+  #touch .utils { position: absolute; right: calc(16px + var(--sr)); bottom: calc(16px + var(--sb) + var(--btn) * 2 + var(--gap) + 10px); display: flex; gap: 6px; }
+  #touch button { pointer-events: auto; margin: 0; padding: 0; width: 100%; height: 100%; border-radius: 999px; border: 1px solid rgba(239,230,210,0.28);
+    background: rgba(12,14,18,0.58); color: var(--amber); font: 800 0.86rem/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+  #touch .acts .big { font-size: 1.02rem; background: rgba(40,20,14,0.62); border-color: rgba(255,179,71,0.55); }
+  #touch .utils button { width: auto; height: 38px; padding: 0 0.8rem; font: 600 0.72rem/1 var(--mono); color: var(--paper); letter-spacing: 0.02em; }
+  #touch button.on { background: rgba(255,179,71,0.35); color: #fff4dc; }
   @media (prefers-reduced-motion: reduce) { h1 { text-shadow: none; } }
+  @media (max-height: 520px) and (orientation: landscape) {
+    .title-wrap { max-width: 50rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: center; gap: 1.2rem; }
+    .logo-top, .logo-bot { font-size: clamp(2.4rem, 14vh, 4rem); }
+    .logo-sub { font-size: 0.8rem; }
+    .frame { padding: 0.8rem; }
+    .title-menu { gap: 0.3rem; } .gr-btn { padding: 0.48rem 1rem; font-size: 0.92rem; }
+    .tpanel .keys { max-height: 60vh; }
+    .card { padding: 1rem 1.2rem; gap: 0.7rem; }
+    .pause-card h1 { font-size: 2.3rem; }
+    .pause-card .menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pause-card .menu-item { min-width: 0; width: 100%; padding: 0.5rem 0.8rem; font-size: 0.95rem; }
+    #phone { height: calc(100% - 24px); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); width: min(270px, calc(100% - 32px)); }
+  }
+  @media (max-width: 420px) { .card { padding: 1.2rem 1rem; } .menu-item { min-width: 0; width: 100%; } .menu { justify-items: stretch; } }
 </style>
 
 <div id="loading" role="status" aria-live="polite">
@@ -492,9 +518,17 @@
 <form id="chatForm" hidden><input id="chatInput" maxlength="140" autocomplete="off" aria-label="Chat message" placeholder="Say something. Enter sends, Esc cancels"></form>
 
 <div id="touch" hidden>
-  <div class="pad left"><button type="button" data-k="ArrowLeft" aria-label="Left">◀</button><button type="button" data-k="ArrowRight" aria-label="Right">▶</button></div>
-  <div class="pad mid"><button type="button" class="act" data-k="KeyQ">Gun</button><button type="button" class="act" data-k="KeyF">Fire</button><button type="button" class="act" data-k="Space">Use</button><button type="button" class="act" data-k="KeyM">Map</button><button type="button" class="act" data-k="ShiftLeft" aria-label="Run, handbrake or climb">Up</button><button type="button" class="act" data-k="KeyZ" aria-label="Descend">Down</button><button type="button" class="act" data-k="KeyX" aria-label="Nitro boost">Nitro</button><button type="button" class="act" data-k="Enter" aria-label="Weapon wheel">Wheel</button><button type="button" class="act" data-k="Slash" aria-label="Phone">Phone</button></div>
-  <div class="pad right"><button type="button" data-k="ArrowUp" aria-label="Up">▲</button><button type="button" data-k="ArrowDown" aria-label="Down">▼</button></div>
+  <div class="joy" id="joy" aria-label="Move and steer"><i class="knob" id="knob"></i></div>
+  <div class="utils"><button type="button" data-k="KeyM">Map</button><button type="button" data-k="Slash">Phone</button><button type="button" data-k="Enter" aria-label="Weapon wheel">Wheel</button><button type="button" data-k="Escape" aria-label="Pause menu">❚❚</button></div>
+  <div class="acts">
+    <button type="button" data-k="KeyX" style="grid-area: nitro" aria-label="Nitro boost">Nitro</button>
+    <button type="button" data-k="ShiftLeft" style="grid-area: up" aria-label="Run, handbrake or climb">Up</button>
+    <button type="button" data-k="Space" class="big" style="grid-area: use">Use</button>
+    <button type="button" data-k="KeyQ" style="grid-area: gun" aria-label="Switch weapon">Gun</button>
+    <button type="button" data-k="KeyZ" style="grid-area: down" aria-label="Descend">Down</button>
+    <button type="button" data-k="KeyF" class="big" style="grid-area: fire">Fire</button>
+  </div>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -2830,10 +2864,39 @@ gameCanvas.addEventListener('contextmenu', e => e.preventDefault());
 const down = (...codes) => codes.some(c => keys.has(c));
 
 const touchEl = document.getElementById('touch');
-if (matchMedia('(pointer: coarse)').matches) touchEl.hidden = false;
+// Touch controls appear on touch screens (phones, tablets, touch laptops) the moment a finger is used,
+// and step aside again when a keyboard is used on a device whose main pointer is a mouse.
+const coarse = matchMedia('(pointer: coarse)');
+let touchUI = coarse.matches;
+addEventListener('pointerdown', e => { if (e.pointerType === 'touch') touchUI = true; }, true);
+addEventListener('keydown', e => { if (touchUI && !coarse.matches && !e.repeat && !/^(Tab|Alt|Meta|Control)/.test(e.code)) touchUI = false; }, true);
+const JOY_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+const joyEl = document.getElementById('joy'), knobEl = document.getElementById('knob'), joy = { id: null };
+function joySet(nx, ny) {
+  const r = joyEl.offsetWidth * 0.3; knobEl.style.transform = `translate(${(nx * r).toFixed(1)}px, ${(ny * r).toFixed(1)}px)`;
+  const T = 0.32;
+  const want = { ArrowUp: ny < -T, ArrowDown: ny > T, ArrowLeft: nx < -T, ArrowRight: nx > T };
+  for (const k of JOY_KEYS) want[k] ? keys.add(k) : keys.delete(k);
+}
+function joyMove(e) {
+  const r = joyEl.getBoundingClientRect(), R = r.width / 2;
+  let nx = (e.clientX - r.left - R) / R, ny = (e.clientY - r.top - R) / R; const m = Math.hypot(nx, ny); if (m > 1) { nx /= m; ny /= m; }
+  joySet(nx, ny);
+}
+function joyEnd() { joy.id = null; knobEl.style.transform = ''; for (const k of JOY_KEYS) keys.delete(k); }
+joyEl.addEventListener('pointerdown', e => { e.preventDefault(); joy.id = e.pointerId; joyEl.setPointerCapture?.(e.pointerId); joyMove(e); });
+joyEl.addEventListener('pointermove', e => { if (e.pointerId === joy.id) { e.preventDefault(); joyMove(e); } });
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) joyEl.addEventListener(ev, e => { if (e.pointerId === joy.id) joyEnd(); });
+// Shown only while actually playing (not in menus, the map, conversations or with the phone out)
+function syncTouch() {
+  const want = touchUI && mode === 'play' && !phone.open;
+  if (touchEl.hidden !== want) return;
+  touchEl.hidden = !want;
+  if (!want) { joyEnd(); for (const b of touchEl.querySelectorAll('button')) { b.classList.remove('on'); keys.delete(b.dataset.k); } }
+}
 for (const b of touchEl.querySelectorAll('button')) {
   const k = b.dataset.k;
-  const on = e => { e.preventDefault(); b.classList.add('on'); if (k === 'Space') usePressed = true; else if (k === 'KeyQ') { if (mode === 'play') switchWeapon(); } else if (k === 'KeyM') toggleMap(); else if (k === 'Enter') { if (mode === 'play') toggleWheel(); } else if (k === 'Slash') { if (mode === 'play' || phone.open) togglePhone(); } else { keys.add(k); if (k === 'KeyF' && mode === 'play') fireQueued = true; } };
+  const on = e => { e.preventDefault(); b.classList.add('on'); if (k === 'Space') usePressed = true; else if (k === 'KeyQ') { if (mode === 'play') switchWeapon(); } else if (k === 'KeyM') toggleMap(); else if (k === 'Escape') { if (mode === 'play') togglePause(); } else if (k === 'Enter') { if (mode === 'play') toggleWheel(); } else if (k === 'Slash') { if (mode === 'play' || phone.open) togglePhone(); } else { keys.add(k); if (k === 'KeyF' && mode === 'play') fireQueued = true; } };
   const off = e => { e.preventDefault(); b.classList.remove('on'); keys.delete(k); };
   b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
 }
@@ -5188,7 +5251,7 @@ function drawGpsRoute(toXY, width, color) {
 }
 function drawGpsPanel(s) {
   if (!gps.path || !gps.text || mode === 'talk') return;
-  const w = Math.min(340, vw - 32), x = vw / 2 - w / 2, y = insetTop + 16 + 58 * s;
+  const w = Math.min(340, vw - 32), x = vw / 2 - w / 2, y = insetTop + 16 + (vw < 560 ? 200 : 58 * s);
   ctx.save(); ctx.fillStyle = 'rgba(12,14,18,0.8)'; ctx.beginPath(); ctx.roundRect(x, y, w, 30, 15); ctx.fill();
   ctx.fillStyle = '#d66bff'; ctx.beginPath(); ctx.arc(x + 15, y + 15, 6, 0, 7); ctx.fill();
   ctx.textAlign = 'left'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
@@ -6794,8 +6857,8 @@ const mapTabsEl = document.getElementById('mapTabs');
 function openMap3D() {
   const p = player.region ? (regionBack || { x: 26 * T, y: 32.65 * T }) : player.interior ? INTERIORS[player.interior].street : playerPos();
   mapView.tab = player.region ? 'armenia' : 'city';
-  mapView.cx = clamp(p.x, 0, GW * T); mapView.cz = clamp(p.y, 0, GH * T); mapView.dist = 2200; mapView.yaw = -Math.PI / 2; mapView.pitch = 1.0;
-  if (player.region) { const c = armXZ(...destLatLon(destIndex(player.region))); armView.cx = c[0]; armView.cz = c[1]; armView.dist = 1300; }
+  mapView.cx = clamp(p.x, 0, GW * T); mapView.cz = clamp(p.y, 0, GH * T); mapView.dist = vw < vh ? 2800 : 2200; armView.dist = vw < vh ? 2050 : 1500; mapView.yaw = -Math.PI / 2; mapView.pitch = 1.0;
+  if (player.region) { const c = armXZ(...destLatLon(destIndex(player.region))); armView.cx = c[0]; armView.cz = c[1]; armView.dist = vw < vh ? 1700 : 1300; }
   syncMapTabs();
 }
 function syncMapTabs() {
@@ -6818,7 +6881,7 @@ function mapCamera(dt) {
   V.cx += (fx * f - fz * r) * k; V.cz += (fz * f + fx * r) * k;
   if (keys.has('KeyQ')) V.yaw -= dt * 1.2; if (keys.has('KeyE')) V.yaw += dt * 1.2;
   if (V === mapView) { V.cx = clamp(V.cx, 0, GW * T); V.cz = clamp(V.cz, 0, GH * T); }
-  camera.fov = 50; camera.far = 16000; camera.updateProjectionMatrix();
+  camera.fov = adaptFov(50); camera.far = 16000; camera.updateProjectionMatrix();
   placeOrbitCam(camera, mapView);
   // Bright, clear air for the map: little fog and a lifted sky light
   scene.fog.density = 0.00006; hemi.intensity = Math.max(hemi.intensity, 0.85); moon.intensity = Math.max(moon.intensity, 0.55);
@@ -6827,14 +6890,25 @@ function mapCamera(dt) {
   moon.position.set(mapView.cx + 600, 1400, mapView.cz + 300); moon.target.position.set(mapView.cx, 0, mapView.cz);
 }
 // ─── Map input: drag pans, right-drag (or Shift-drag) rotates and tilts, wheel zooms, click acts ──
+const mapPtrs = new Map();
+const mapZoomLim = V => V === mapView ? [450, 4600] : [300, 3600];
+const pinchNow = () => { const [a, b] = [...mapPtrs.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, a: Math.atan2(b.y - a.y, b.x - a.x) }; };
 glCanvas.addEventListener('pointerdown', e => {
   if (mode !== 'map') return;
+  mapPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); mapView.mouse = { x: e.clientX, y: e.clientY };
+  if (mapPtrs.size === 2) { mapView.drag = null; mapView.pinch = pinchNow(); return; }
+  if (mapPtrs.size > 2) return;
   mapView.drag = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, rot: e.button === 2 || e.shiftKey, t: performance.now() };
   glCanvas.setPointerCapture?.(e.pointerId);
 });
 glCanvas.addEventListener('contextmenu', e => { if (mode === 'map') e.preventDefault(); });
 addEventListener('pointermove', e => {
-  const D = mapView.drag; if (mode !== 'map') { mapView.drag = null; return; }
+  const D = mapView.drag; if (mode !== 'map') { mapView.drag = null; mapPtrs.clear(); mapView.pinch = null; return; }
+  if (mapPtrs.has(e.pointerId)) mapPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (mapView.pinch && mapPtrs.size === 2) {
+    const V = activeView(), n = pinchNow(), [lo, hi] = mapZoomLim(V);
+    V.dist = clamp(V.dist * mapView.pinch.d / n.d, lo, hi); V.yaw += n.a - mapView.pinch.a; mapView.pinch = n; return;
+  }
   if (!D) { mapView.mouse = { x: e.clientX, y: e.clientY }; return; }
   const V = activeView(), dx = e.clientX - D.x, dy = e.clientY - D.y; D.x = e.clientX; D.y = e.clientY;
   if (D.rot) { V.yaw += dx * 0.006; V.pitch = clamp(V.pitch - dy * 0.004, 0.45, 1.5); }
@@ -6844,7 +6918,10 @@ addEventListener('pointermove', e => {
   }
   mapView.mouse = { x: e.clientX, y: e.clientY };
 });
+addEventListener('pointercancel', e => { mapPtrs.delete(e.pointerId); if (mapPtrs.size < 2) mapView.pinch = null; mapView.drag = null; });
 addEventListener('pointerup', e => {
+  mapPtrs.delete(e.pointerId);
+  if (mapView.pinch) { if (mapPtrs.size < 2) mapView.pinch = null; mapView.drag = null; return; }
   const D = mapView.drag; mapView.drag = null;
   if (mode !== 'map' || !D) return;
   if (Math.hypot(e.clientX - D.x0, e.clientY - D.y0) > 6) return;       // it was a drag, not a click
@@ -6856,11 +6933,15 @@ addEventListener('pointerup', e => {
     const x = clamp(hit.x, 0, GW * T), y = clamp(hit.z, 0, GH * T);
     if (waypoint && Math.hypot(waypoint.x - x, waypoint.y - y) < 80) { waypoint = null; toast('Waypoint cleared'); }
     else { waypoint = { x, y }; toast('Waypoint set', '#d66bff'); }
-  } else if (mapView.hover >= 0 && mapView.hoverOk) {
-    const i = mapView.hover; toggleMap(); quickTravelTo(i);
+  } else {
+    // Nearest pin to where the click or tap landed (a finger has no hover)
+    const here = player.region ? destIndex(player.region) : -2, reach = e.pointerType === 'touch' ? 44 : 34;
+    let i = -1, bd = reach;
+    for (const P of arm.pins) { const [a, b, v] = toScreen(arm.cam, P.x, P.z, P.y + 12); const d = Math.hypot(e.clientX - a, e.clientY - b); if (v && d < bd) { bd = d; i = P.i; } }
+    if (i >= 0 && i !== here) { toggleMap(); quickTravelTo(i); }
   }
 });
-glCanvas.addEventListener('wheel', e => { if (mode !== 'map') return; e.preventDefault(); const V = activeView(); V.dist = clamp(V.dist * Math.exp(e.deltaY * 0.0012), V === mapView ? 450 : 300, V === mapView ? 4600 : 2600); }, { passive: false });
+glCanvas.addEventListener('wheel', e => { if (mode !== 'map') return; e.preventDefault(); const V = activeView(), [lo, hi] = mapZoomLim(V); V.dist = clamp(V.dist * Math.exp(e.deltaY * 0.0012), lo, hi); }, { passive: false });
 
 // ─── Screen projection helper for the overlay ────────────────────────────────
 const _mp = new THREE.Vector3();
@@ -7008,7 +7089,7 @@ function buildArmeniaMap() {
 const DEST_GLYPH = { yerevan: 'Y', geghard: '✝', garni: '⌂', khorvirap: '✝', sevan: '≈', etchmiadzin: '✝', noravank: '✝', dilijan: '♣', tatev: '✝', jermuk: '≈', gyumri: 'G', aragats: '▲', ararat: '▲' };
 function renderArmeniaMap() {
   buildArmeniaMap();
-  arm.cam.aspect = vw / vh; arm.cam.updateProjectionMatrix();
+  arm.cam.aspect = vw / vh; arm.cam.fov = adaptFov(45); arm.cam.updateProjectionMatrix();
   placeOrbitCam(arm.cam, armView);
   const t = performance.now() / 1000;
   arm.pins.forEach(P => { P.head.position.y = 36 + Math.sin(t * 2 + P.i) * 2; P.g.scale.setScalar(P.i === mapView.hover ? 1.35 : 1); });
@@ -7043,10 +7124,10 @@ function drawArmeniaMap() {
   for (const d of draw.reverse()) badge(...d, true);                    // far ones first, the hovered pin on top
   mapView.hover = best; mapView.hoverOk = best >= 0 && best !== here;
   if (best >= 0) {
-    const D = DESTS[best], txt = best === here ? 'You are here' : `Click to fly to ${D.name}`;
-    ctx.font = `600 ${Math.round(12 * s + 1)}px ${MONO}`; const w = ctx.measureText(txt).width + 20;
-    ctx.fillStyle = 'rgba(242,168,0,0.95)'; ctx.beginPath(); ctx.roundRect(m.x + 14, m.y + 10, w, 24, 12); ctx.fill();
-    ctx.fillStyle = '#10181c'; ctx.textAlign = 'left'; ctx.fillText(txt, m.x + 24, m.y + 26);
+    const D = DESTS[best], txt = best === here ? 'You are here' : `${touchUI ? 'Tap' : 'Click'} to fly to ${D.name}`;
+    ctx.font = `600 ${Math.round(12 * s + 1)}px ${MONO}`; const w = ctx.measureText(txt).width + 20, tx = Math.max(8, Math.min(m.x + 14, vw - w - 8));
+    ctx.fillStyle = 'rgba(242,168,0,0.95)'; ctx.beginPath(); ctx.roundRect(tx, m.y + 10, w, 24, 12); ctx.fill();
+    ctx.fillStyle = '#10181c'; ctx.textAlign = 'left'; ctx.fillText(txt, tx + 10, m.y + 26);
   }
   glCanvas.style.cursor = best >= 0 && best !== here ? 'pointer' : '';
   mapLegend([['#f2a800', '—', 'Border (approx.)'], ['#2f6f9a', '≈', 'Lake Sevan'], ['#f4f6f8', '▲', 'Aragats · Ararat'], ['#d9a08f', 'Y', 'Yerevan']], s);
@@ -7059,7 +7140,8 @@ function drawMap() {
   ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6;
   ctx.fillText(mapView.tab === 'city' ? 'HAYASTAN CITY' : 'ARMENIA', 16, top + 70);
   ctx.font = `400 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
-  ctx.fillText(vw > 640 ? (mapView.tab === 'city' ? 'Drag to move · right-drag to rotate · scroll to zoom · click to set a waypoint' : 'Drag to move · right-drag to rotate · scroll to zoom · click a pin to fly there') : 'Drag · pinch · tap', 16, top + 90);
+  const city = mapView.tab === 'city';
+  ctx.fillText(touchUI ? (city ? 'Drag · pinch to zoom and turn · tap to set a waypoint' : 'Drag · pinch to zoom and turn · tap a pin to fly') : vw > 640 ? (city ? 'Drag to move · right-drag to rotate · scroll to zoom · click to set a waypoint' : 'Drag to move · right-drag to rotate · scroll to zoom · click a pin to fly there') : 'Drag · scroll · click', 16, top + 90);
   ctx.shadowBlur = 0;
 }
 
@@ -7470,6 +7552,7 @@ const LIGHT_HEX = { green: 0x5ee08a, amber: 0xffb347, red: 0xff4a4a };
 // Camera: chase view, high view, and a slow orbit on the title screen
 const camLook = new THREE.Vector3(), camWant = new THREE.Vector3();
 let camYaw = 0;
+const adaptFov = f => camera.aspect >= 1 ? f : Math.min(100, 2 * Math.atan(Math.tan(f * Math.PI / 360) / Math.sqrt(camera.aspect)) * 180 / Math.PI);
 function updateCamera(dt) {
   if (QT.sky) { flightCamera(dt, performance.now() / 1000); return; }   // the flight owns the camera
   camera.up.set(0, 1, 0);                                                // the barrel roll borrows camera.up; give it back
@@ -7490,14 +7573,14 @@ function updateCamera(dt) {
     camYaw = camSnap ? hd : camYaw + angDiff(hd, camYaw) * Math.min(1, dt * 12);
     camera.position.set(p.x + Math.cos(camYaw) * fwd, h, p.y + Math.sin(camYaw) * fwd);
     camLook.set(p.x + Math.cos(camYaw) * 200, h - (pc ? 4 : 8), p.y + Math.sin(camYaw) * 200);
-    const fov = 72 + Math.min(12, spd * 0.03) + (pc && pc.boosting ? 8 : 0);
+    const fov = adaptFov(72 + Math.min(12, spd * 0.03) + (pc && pc.boosting ? 8 : 0));
     if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
   } else if (player.interior) {
     // Cut-away view from the open front wall
     camWant.set(player.x, 250, player.y + 175);
     camLook.set(player.x, 0, player.y - 20);
     camera.position.lerp(camWant, camSnap ? 1 : k);
-    if (Math.abs(camera.fov - 55) > 0.05) { camera.fov = 55; camera.updateProjectionMatrix(); }
+    if (Math.abs(camera.fov - adaptFov(55)) > 0.05) { camera.fov = adaptFov(55); camera.updateProjectionMatrix(); }
   } else {
     const p = playerPos(), pc = player.car;
     const spd = pc ? Math.hypot(pc.vx, pc.vy) : 0;
@@ -7521,7 +7604,7 @@ function updateCamera(dt) {
     if (camSnap) camYaw = heading;
     camera.position.lerp(camWant, camSnap ? 1 : k);
     camLook.set(p.x + Math.cos(camYaw) * (high ? 20 : 40), (pc ? 12 : 14) + az, p.y + Math.sin(camYaw) * (high ? 20 : 40));
-    const fov = 62 + Math.min(14, spd * 0.035) + (pc && pc.boosting ? 9 : 0);
+    const fov = adaptFov(62 + Math.min(14, spd * 0.035) + (pc && pc.boosting ? 9 : 0));
     if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); }
   }
   if (FX.shake && cam.shake > 0) camera.position.add(new THREE.Vector3((Math.random() - 0.5) * cam.shake, (Math.random() - 0.5) * cam.shake, (Math.random() - 0.5) * cam.shake));
@@ -7568,6 +7651,7 @@ function render(dt) {
   ctx.clearRect(0, 0, vw, vh);
   if (flash > 0) { ctx.fillStyle = `rgba(200,30,40,${flash * 0.3})`; ctx.fillRect(0, 0, vw, vh); }
   if (FX.showFps) { ctx.font = `600 12px ${MONO}`; ctx.textAlign = 'left'; ctx.fillStyle = '#9a978f'; ctx.fillText(`${Math.round(fps)} fps`, 16, vh - insetBottom - 8); }
+  syncTouch();
   if (mode === 'title' || mode === 'travel') return;
   if (mode === 'map') { drawMap(); return; }
   drawHud();
@@ -7702,30 +7786,32 @@ function drawHud() {
 
   // Mission card
   const target = job.state === 'offer' ? job.pickup : job.state === 'active' ? job.drop : null;
-  const cardW = Math.min(300, vw - S - pad * 3), cardY = touch ? vh - insetBottom - 190 : vh - insetBottom - pad - 84;
+  const joyW = touch ? joyEl.offsetWidth + 18 : 0, sideways = touch && vh < 560;
+  const cardX = sideways ? joyW + 28 : pad;
+  const cardW = sideways ? Math.min(300, vw - cardX - 260) : Math.min(300, vw - S - pad * 3), cardY = touch ? (sideways ? vh - insetBottom - 102 : vh - insetBottom - joyW - 116) : vh - insetBottom - pad - 84;
   if (freeEvent && !activity && cardW > 150) {
     const E = freeEvent, label = E.kind === 'armored' ? 'ARMORED TRUCK · stop it for the cash' : 'BAIL BOND · take down the fugitive';
     ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.fillRect(pad, cardY - 30, Math.min(cardW, ctx.measureText(label).width + 70), 24);
-    ctx.fillStyle = '#ff8a7a'; ctx.fillText(`${label}  ${Math.max(0, Math.ceil(E.t))}s`, pad + 10, cardY - 13);
+    ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.fillRect(cardX, cardY - 30, Math.min(cardW, ctx.measureText(label).width + 70), 24);
+    ctx.fillStyle = '#ff8a7a'; ctx.fillText(`${label}  ${Math.max(0, Math.ceil(E.t))}s`, cardX + 10, cardY - 13);
   }
   if (mode === 'talk' || player.region) {}
-  else if (activity && cardW > 150) drawActivityCard(pad, cardY, cardW, s);
+  else if (activity && cardW > 150) drawActivityCard(cardX, cardY, cardW, s);
   else if (target && cardW > 150) {
-    ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.beginPath(); ctx.roundRect(pad, cardY, cardW, 84, 4); ctx.fill();
-    ctx.fillStyle = job.state === 'active' ? '#5fd4c4' : '#ffb347'; ctx.fillRect(pad, cardY, 3, 84);
+    ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.beginPath(); ctx.roundRect(cardX, cardY, cardW, 84, 4); ctx.fill();
+    ctx.fillStyle = job.state === 'active' ? '#5fd4c4' : '#ffb347'; ctx.fillRect(cardX, cardY, 3, 84);
     ctx.textAlign = 'left'; ctx.font = `800 ${Math.round(20 * s)}px ${DISPLAY}`; ctx.fillStyle = '#efe6d2';
-    ctx.fillText(job.type.name.toUpperCase(), pad + 14, cardY + 26);
+    ctx.fillText(job.type.name.toUpperCase(), cardX + 14, cardY + 26);
     ctx.font = `400 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#b9b3a5';
     const line = job.state === 'offer' ? job.type.pickupText : `Deliver to ${job.drop.label}`;
-    wrapText(line, pad + 14, cardY + 46, cardW - 28, 15);
+    wrapText(line, cardX + 14, cardY + 46, cardW - 28, 15);
     const meters = Math.round(Math.hypot(target.x - p.x, target.y - p.y) / 5);
     ctx.textAlign = 'right'; ctx.font = `600 ${Math.round(12 * s + 1)}px ${MONO}`; ctx.fillStyle = '#9a978f';
-    ctx.fillText(`${meters} m`, pad + cardW - 12, cardY + 24);
+    ctx.fillText(`${meters} m`, cardX + cardW - 12, cardY + 24);
     if (job.state === 'active') {
       const t = Math.max(0, job.timeLeft), low = t < 10 && Math.floor(time * 4) % 2 === 0;
       ctx.font = `800 ${Math.round(26 * s)}px ${DISPLAY}`; ctx.fillStyle = low ? '#ff6b5e' : '#efe6d2';
-      ctx.fillText(`${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`, pad + cardW - 12, cardY + 76);
+      ctx.fillText(`${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`, cardX + cardW - 12, cardY + 76);
     }
   }
   // Toasts
@@ -7743,7 +7829,7 @@ function drawHud() {
     ctx.font = `600 ${Math.round(13 * s + 1)}px ${MONO}`;
     const label = typeof promptIt.label === 'function' ? promptIt.label() : promptIt.label;
     const key = touch && !player.car ? 'USE' : 'E', tw = ctx.measureText(label).width, kw = ctx.measureText(key).width + 14, w = tw + kw + 34;
-    const x = vw / 2 - w / 2, y = vh * 0.68;
+    const x = vw / 2 - w / 2, y = touch ? Math.min(vh * 0.68, cardY - 60) : vh * 0.68;
     ctx.fillStyle = 'rgba(12,14,18,0.85)'; ctx.beginPath(); ctx.roundRect(x, y, w, 34, 4); ctx.fill();
     ctx.strokeStyle = '#ffb347'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect(x + 10, y + 7, kw, 20, 3); ctx.stroke();
     ctx.textAlign = 'left'; ctx.fillStyle = '#ffb347'; ctx.fillText(key, x + 17, y + 22);
@@ -7754,7 +7840,7 @@ function drawHud() {
     const near = cars.some(c => !c.wreck && Math.hypot(c.x - player.x, c.y - player.y) < c.L / 2 + 18);
     if (near) {
       ctx.textAlign = 'center'; ctx.font = `600 ${Math.round(12 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
-      ctx.fillText(touch ? 'Tap CAR to get in' : 'Press SPACE to get in', vw / 2, vh * 0.7);
+      ctx.fillText(touch ? 'Tap USE to get in' : 'Press SPACE to get in', vw / 2, touch ? Math.min(vh * 0.7, cardY - 40) : vh * 0.7);
     }
   }
 
