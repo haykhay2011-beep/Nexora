@@ -418,7 +418,7 @@
           <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
           <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
+          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
           <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
           <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -475,7 +475,7 @@
       <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
+      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia · church plan inside a church</dd></div><div><dt>E</dt><dd>Sit, kneel or hide on any seat in a church · move to stand</dd></div><div><dt>Fire</dt><dd>Throw water during Vardavar · Phone → Street Races, Weather → Festivals</dd></div><div><dt>Phone</dt><dd>Heritage Jobs: nine Armenian heists</dd></div>
       <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -864,6 +864,7 @@ function exitInterior() {
   if (key === 'generic') setTimeout(() => disposeGeneric(), 0);
   player.interior = null; player.x = I.street.x; player.y = I.street.y; player.a = I.street.a;
   player.vx = player.vy = 0; fade = 1; camSnap = true;
+  if (I.region) { player.region = I.region; buildRegion(REGIONS[I.region]); }
 }
 function pay(cost) {
   if (player.money < cost) { toast(`You need ${fmtMoney(cost)}`, '#ff8a7a'); return false; }
@@ -909,7 +910,7 @@ function saveGame() {
     localStorage.setItem('port-veyra-save', JSON.stringify({ money: player.money, ammo: player.ammo, weapon: player.weapon, outfit: player.outfit,
       heists: heistState, biz, anchors: [...anchorsFound], day, daily, mansions: mansionState, studio, story: story.chapter, outfitsBought: player.outfitsBought,
       hayagram: { followers: hg.followers, visited: [...hg.visited], checkins: [...hg.checkins], pm: hg.pm, ms: hg.ms },
-      more: { done: [...RG.done], rugs: RG.rugs.inv, profit: RG.rugs.profit, road: armRoad.chapter, gh, coll: [...collection], radio: radio.on }, hx: hxSave() }));
+      more: { done: [...RG.done], rugs: RG.rugs.inv, profit: RG.rugs.profit, road: armRoad.chapter, gh, coll: [...collection], radio: radio.on }, hx: hxSave(), trad: [...trad.unlocked], festival: festival.on }));
     return true;
   }
   catch (e) { return false; }
@@ -1725,6 +1726,7 @@ function meleeHit(w) {
   if (hit) cam.shake = Math.max(cam.shake, 3);
 }
 function playerShoot() {
+  if (vardavarThrow()) return;
   const w = WEAPONS[player.weapon];
   if (w.melee) { startMelee(w); return; }
   if (!(player.ammo[player.weapon] > 0)) {
@@ -3005,7 +3007,7 @@ const PHONE_APPS = [
   ['hayagram', 'Hayagram', 'linear-gradient(135deg, #d90012, #0033a0 55%, #f2a800)', '◎'],
   ['portfolio', 'Portfolio', 'linear-gradient(135deg, #e0b0ff, #7fe0a0)', '★'],
   ['gpt', 'Hayastan GPT', 'linear-gradient(135deg, #0f766e, #f2a800)', 'Հ'], ['weather', 'Weather', 'linear-gradient(#6fb3ff, #d6e4ff)', '☂'],
-  ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'], ['heritage', 'Heritage Jobs', 'linear-gradient(135deg, #f2a800, #8a1a22)', '✠'],
+  ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'], ['heritage', 'Heritage Jobs', 'linear-gradient(135deg, #f2a800, #8a1a22)', '✠'], ['races', 'Street Races', 'linear-gradient(135deg, #4fc3ff, #1f3a78)', '⚑'],
   ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
   ['taxi', 'Hayastan Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
 function phoneApp(app) {
@@ -3044,6 +3046,8 @@ function phoneApp(app) {
     for (const op of HX_OPS) phRow(`${op.name} ${'★'.repeat(op.stars)}`, hx.done[op.id] ? (hx.choice[op.id] === 'return' ? 'returned' : 'fenced') : hxDone() >= HX_UNLOCK[op.stars] ? 'open' : 'locked', !!hx.done[op.id]);
     phItem('Open the heritage board', HX ? `In progress: ${HX.op.name}` : 'Plan an operation, spend skill points', () => { closePhone(); openHeritageBoard(); });
     if (HX) phNote(hxObjective()?.text || '');
+  } else if (app === 'races') {
+    racesApp();
   } else if (app === 'map') {
     closePhone(); toggleMap();
   } else if (app === 'bank') {
@@ -6325,6 +6329,8 @@ function weatherApp() {
   }
   phBody.append(grid);
   phItem(weather.auto ? 'Auto weather is on' : 'Turn Auto weather back on', 'The sky changes every few minutes', () => { weather.auto = true; weather.nextAuto = 60; phoneApp('weather'); }, weather.auto);
+  phNote('Festivals');
+  phItem(festival.on ? 'Vardavar is on · turn it off' : 'Start Vardavar water festival', festival.on ? 'Everyone in the streets is throwing water' : 'A summer festival: press Fire to splash people in the streets', () => { toggleVardavar(); phoneApp('weather'); });
   phNote('Natural disasters');
   const inCity = !player.region;
   for (const [k, D] of Object.entries(DISASTERS)) {
@@ -6856,7 +6862,7 @@ const GPT_QUICK = [['What should I do?', () => `What should I do next? Be specif
 
 // ─── Per-frame hook for all of the above ───────────────────────────────────
 function updateMore(dt) {
-  updateRegionGame(dt); updateHeritage(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
+  updateRegionGame(dt); updateHeritage(dt); updateFestivalsEtc(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
 }
 
 for (const [id, def] of Object.entries(RG_DEF)) {
@@ -8688,6 +8694,191 @@ for (const [id, site] of Object.entries(HX_SITES)) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// FESTIVALS, RACES, THE ARENI WINE CELLARS, AND A TRADITIONAL WARDROBE
+//   · Vardavar water festival in the city streets (toggle from the Weather app)
+//   · A street-racing circuit through the Yerevan avenues, launched from the phone
+//   · The Areni wine cellars: a new cave interior off the Noravank region
+//   · A wardrobe at your apartment with traditional Armenian outfits you unlock by exploring
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Traditional wardrobe ────────────────────────────────────────────────────
+// Colour-based looks (like the other outfits) unlocked by seeing the country and growing Hayagram.
+const TRAD_OUTFITS = [
+  { key: 'taraz_red', name: 'Taraz (red & gold)', shirt: '#9c1420', pants: '#6a0f18', shoes: '#2a1810', why: 'Visit 4 destinations', test: () => hg.visited.size >= 4 },
+  { key: 'taraz_blue', name: 'Taraz (indigo)', shirt: '#243a78', pants: '#1a2a52', shoes: '#2a1810', why: 'Visit 8 destinations', test: () => hg.visited.size >= 8 },
+  { key: 'gyumri_wool', name: 'Gyumri wool coat', shirt: '#5a4a38', pants: '#3a3026', shoes: '#241a10', why: 'Check in at Gyumri', test: () => hg.checkins.has('gyumri') },
+  { key: 'sword_dance', name: 'Yarkhushta dancer', shirt: '#141216', pants: '#141216', shoes: '#0e0e10', tank: false, why: 'Visit all 13 destinations', test: () => hg.visited.size >= 13 },
+  { key: 'apricot', name: 'Apricot silk', shirt: '#f2a03a', pants: '#7a4a1a', shoes: '#3a2410', why: 'Reach 500 Hayagram followers', test: () => hg.followers >= 500 },
+  { key: 'archmage', name: 'Vardapet robe', shirt: '#2a1a30', pants: '#1a1020', shoes: '#0e0e10', why: 'Reach 1500 Hayagram followers', test: () => hg.followers >= 1500 },
+];
+const trad = { unlocked: new Set() };
+function tradEquip(o) {
+  let i = OUTFITS.findIndex(x => x.name === o.name);
+  if (i < 0) { OUTFITS.push({ name: o.name, shirt: o.shirt, pants: o.pants, shoes: o.shoes }); i = OUTFITS.length - 1; }
+  return i;
+}
+function checkTradUnlocks(quiet) {
+  for (const o of TRAD_OUTFITS) if (!trad.unlocked.has(o.key) && o.test()) {
+    trad.unlocked.add(o.key); tradEquip(o); saveGame();
+    if (!quiet) { toast(`Wardrobe unlocked: ${o.name}`, '#f2a800'); showBanner('New traditional outfit', `${o.name} · try it on at your apartment`, '#f2a800', 3.5); }
+  }
+}
+function openWardrobe() {
+  checkTradUnlocks(true);
+  const opts = [];
+  for (let i = 0; i < OUTFITS.length; i++) { const o = OUTFITS[i]; opts.push({ label: `${i === player.outfit ? '● ' : '○ '}${o.name}`, sub: i === player.outfit ? 'Wearing this' : 'Wear it', act: () => { setOutfit(i); toast(`Wearing: ${o.name}`, '#efe6d2'); openWardrobe(); return true; } }); }
+  for (const o of TRAD_OUTFITS) if (!trad.unlocked.has(o.key)) opts.push({ label: `🔒 ${o.name}`, sub: o.why, disabled: true, act: () => {} });
+  showMenu({ eyebrow: 'Your apartment · wardrobe', title: 'Get dressed',
+    body: `<p class="muted">Traditional Armenian outfits unlock as you travel and grow your Hayagram following. ${trad.unlocked.size} of ${TRAD_OUTFITS.length} unlocked.</p>`, options: opts });
+}
+addInteract('apartment', 232, 164, 22, 'Open your wardrobe', openWardrobe);
+
+// ─── Racing circuit through the Yerevan avenues ──────────────────────────────
+const CITY_RACES = [
+  { id: 'mashtots', name: 'Mashtots Mile', kind: 'street', fee: 300, start: [1, 2], prizes: [3200, 1400, 600],
+    route: [[2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [8, 1], [7, 1], [6, 1], [5, 1], [4, 1]] },
+  { id: 'northern', name: 'Northern Avenue Circuit', kind: 'street', fee: 400, start: [2, 2], prizes: [4200, 1800, 800],
+    route: [[3, 2], [4, 2], [4, 3], [4, 4], [3, 4], [2, 4], [1, 4], [1, 3], [1, 2], [2, 2], [3, 3], [2, 2]] },
+  { id: 'grandtour', name: 'Yerevan Grand Tour', kind: 'street', fee: 600, start: [1, 1], prizes: [7000, 3000, 1200],
+    route: [[4, 1], [8, 1], [8, 3], [8, 5], [4, 5], [1, 5], [1, 3], [4, 3], [4, 1], [1, 1]] },
+];
+for (const R of CITY_RACES) { const [nx, ny] = nodePos(R.start[0], R.start[1]); R.entry = { x: nx + 2.5 * T, y: ny + 1.5 * T }; RACES.push(R); }
+for (const R of CITY_RACES) interactables.push({ ...R.entry, r: 50, inCar: 'only', when: () => !activity && mode === 'play',
+  label: () => `${R.name} · ${fmtMoney(R.fee)} entry`, act: () => startRace(R) });
+function racesApp() {
+  phNote('Street races · get in a car and drive to the start');
+  for (const R of RACES.filter(r => r.kind === 'street')) {
+    const here = Math.hypot(playerPos().x - R.entry.x, playerPos().y - R.entry.y) < 60;
+    phItem(R.name, `Entry ${fmtMoney(R.fee)} · win ${fmtMoney(R.prizes ? R.prizes[0] : 0)}`, () => {
+      if (player.car && here) { closePhone(); startRace(R); }
+      else { waypoint = { x: R.entry.x, y: R.entry.y }; toast(`Waypoint set: ${R.name} start`, '#4fc3ff'); closePhone(); }
+    });
+  }
+  const air = RACES.find(r => r.kind === 'air');
+  if (air) phItem(`${air.name} (air)`, 'Fly the rings in an aircraft', () => { waypoint = { x: air.entry.x, y: air.entry.y }; toast('Waypoint set: Sky Rings', '#4fc3ff'); closePhone(); });
+}
+
+// ─── Vardavar: the summer water festival ─────────────────────────────────────
+SPEECH['vardavar'] = [['Shnorhavor Vardavar!', 'Happy Vardavar!'], ['Djur, djur!', 'Water, water!'], ['Bռnek zis, tosht em!', "Get me, I'm soaked!"],
+  ['Haha, tacnvecir!', 'Haha, you got wet!'], ['Amenqs tosht enq!', "We're all drenched!"], ['Amarn e, djur lini!', 'It\'s summer, let there be water!']];
+const festival = { on: false, wet: 0, nextSplash: 0, autoDay: -1 };
+let _tradT = 0;
+function updateFestivalsEtc(dt) { festivalUpdate(dt); _tradT -= dt; if (_tradT <= 0) { _tradT = 1.5; checkTradUnlocks(); } }
+function splash(x, y, n, vy0 = 40) { for (let k = 0; k < n; k++) parts.push({ x, y, vx: (Math.random() - 0.5) * 140, vy: (Math.random() - 0.5) * 140, life: 0.4 + Math.random() * 0.3, max: 0.7, size: 5, kind: 'splash', h: 12, vh: vy0 + Math.random() * 60 }); }
+function toggleVardavar(on) {
+  festival.on = on ?? !festival.on;
+  if (festival.on) { showBanner('Vardavar!', 'Everyone in Hayastan is throwing water. Press Fire to splash people', '#4fc3ff', 4); toast('Shnorhavor Vardavar! · Happy Vardavar!', '#4fc3ff'); }
+  else toast('Vardavar is over. Everyone dries off', '#9fd4e8');
+}
+function vardavarThrow() {
+  if (!festival.on || mode !== 'play' || player.car || player.region || player.interior) return false;
+  player.fireCD = 0.35;
+  const fx = Math.cos(player.a), fy = Math.sin(player.a);
+  splash(player.x + fx * 24, player.y + fy * 24, 8, 70);
+  let best = null, bd = 150;
+  for (const p of peds) { if (p.state === 'down') continue; const dx = p.x - player.x, dy = p.y - player.y, d = Math.hypot(dx, dy); if (d < bd && Math.abs(angDiff(Math.atan2(dy, dx), player.a)) < 0.8) { bd = d; best = p; } }
+  if (best) { splash(best.x, best.y, 12); best.wet = time; best.cheerT = time; if (Math.random() < 0.5) say('vardavar', 'Local', { x: best.x, y: best.y }); }
+  return true;
+}
+function festivalUpdate(dt) {
+  if (!festival.on) { festival.wet = Math.max(0, festival.wet - dt); return; }
+  if (festival.autoDay !== day) festival.autoDay = day;
+  festival.wet = Math.max(0, festival.wet - dt * 0.5);
+  if (mode !== 'play' || player.region || player.interior) return;
+  festival.nextSplash -= dt;
+  if (festival.nextSplash <= 0) {
+    festival.nextSplash = 0.35 + Math.random() * 0.5;
+    const near = peds.filter(p => p.state !== 'down' && Math.abs(p.x - player.x) < 900 && Math.abs(p.y - player.y) < 900);
+    if (near.length > 1) {
+      const a = pick(near); splash(a.x, a.y, 6); a.wet = time;
+      const b = near.find(p => p !== a && Math.hypot(p.x - a.x, p.y - a.y) < 120); if (b) b.wet = time;
+      if (!player.car && Math.hypot(a.x - player.x, a.y - player.y) < 60 && Math.random() < 0.5) { festival.wet = 1.4; splash(player.x, player.y, 10); cam.shake = Math.max(cam.shake, 1.5); }
+    }
+  }
+}
+function drawFestivalHud(s) {
+  if (!festival.on || player.region || player.interior) return;
+  ctx.textAlign = 'center'; ctx.font = `800 ${Math.round(15 * s)}px ${DISPLAY}`; ctx.fillStyle = '#7fd4ff';
+  ctx.fillText('💦 VARDAVAR', vw / 2, insetTop + (vw < 560 ? 250 : 120));
+  if (festival.wet > 0) {
+    ctx.save(); ctx.globalAlpha = Math.min(0.5, festival.wet * 0.4);
+    const g = ctx.createRadialGradient(vw / 2, vh / 2, vh * 0.3, vw / 2, vh / 2, vh * 0.75); g.addColorStop(0, 'rgba(120,200,255,0)'); g.addColorStop(1, 'rgba(90,160,220,0.9)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, vw, vh);
+    ctx.fillStyle = 'rgba(200,235,255,0.5)';
+    for (let k = 0; k < 10; k++) { const dx = ((k * 97 + Math.floor(time * 3) * 53) % vw), dy = ((k * 131) % vh); ctx.beginPath(); ctx.ellipse(dx, dy, 3, 6, 0, 0, 7); ctx.fill(); }
+    ctx.restore();
+  }
+}
+
+// ─── The Areni wine cellars (entered from the Noravank region) ───────────────
+INTERIORS.areni = { name: 'Areni wine cellars', ox: -3200, oy: 6400, w: 560, h: 440, spawn: [280, 400], door: [280, 424], street: { x: 0, y: 0, a: 0 }, region: 'noravank', solids: [] };
+CAST.vintner = ['Tavush the vintner', '#c9a227'];
+CAST_LOOKS.vintner = { skin: '#c9a07e', hair: '#5a4a3a', shirt: '#6a1420', pants: '#3a2418', goatee: true, eyes: '#4a3a2a' };
+SPEECH['areni:tour'] = [['Bari galust Areni! Mer gini 6100 tari e.', 'Welcome to Areni! Our wine is 6,100 years old.'],
+  ['Ays qarayrum haytnabervel e ashkharhi amenahin ginu gործarany.', "In this cave they found the world's oldest winery."]];
+{
+  const I = INTERIORS.areni, ilamw = c => ilam(c, 0.34);
+  const stone = texMat ? null : null;                          // cellars use the interior lambert helpers
+  const floorMat = ilamw('#9c8468'), wallMat = ilamw('#7a6450');
+  IRoom(I, floorMat, wallMat, ilamw('#b89a5a'));
+  // Warm lamplight pooled along the vaulted ceiling
+  for (const [gx, gy] of [[140, 110], [300, 130], [470, 200], [130, 360]]) { const gl = new THREE.Mesh(new THREE.PlaneGeometry(150, 150).rotateX(-Math.PI / 2), basic(0xffb060, { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.16, map: glowDiscTex() })); gl.position.set(I.ox + gx, 1, I.oy + gy); interiorGroup.add(gl); }
+  const barrelMat = ilamw('#5a3a22'), hoop = ilamw('#8a7a4a');
+  const barrel = (x, y, r = 12, len = 26, horiz = true) => {
+    const g = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 14), barrelMat);
+    if (horiz) g.rotation.z = Math.PI / 2; g.position.set(I.ox + x, r + 1, I.oy + y); g.castShadow = true; g.receiveShadow = true; interiorGroup.add(g);
+    for (const o of [-len / 2 + 3, len / 2 - 3]) { const h = new THREE.Mesh(new THREE.TorusGeometry(r + 0.4, 1, 6, 14), hoop); h.rotation.y = Math.PI / 2; h.position.set(I.ox + x + o, r + 1, I.oy + y); interiorGroup.add(h); }
+    I.solids.push([x - (horiz ? len / 2 : r), y - r, x + (horiz ? len / 2 : r), y + r]);
+  };
+  // Rows of oak barrels down the cellar
+  for (let row = 0; row < 3; row++) for (let k = 0; k < 5; k++) { const x = 60 + k * 40, y = 70 + row * 46; barrel(x, y); if (row < 2) barrel(x, y - 4, 11, 24); }
+  // Vintner and a tasting hall with tables and stools on the right
+  INPC(I, 470, 120, Math.PI, { ...CAST_LOOKS.vintner, face: true });
+  for (const [tx, ty] of [[430, 210], [500, 300]]) {
+    IB(I, tx - 26, ty - 18, tx + 26, ty + 18, 22, ilamw('#5a3a26'), { solid: true });
+    IB(I, tx - 28, ty - 20, tx + 28, ty + 20, 1.5, ilamw('#7a5a3a'), { y: 22 });
+    for (const [sx, sy] of [[-40, 0], [40, 0], [0, -32], [0, 32]]) { const s = new THREE.Mesh(new THREE.CylinderGeometry(6, 7, 16, 10), ilamw('#4a3222')); s.position.set(I.ox + tx + sx, 8, I.oy + ty + sy); s.castShadow = true; interiorGroup.add(s); I.solids.push([tx + sx - 7, ty + sy - 7, tx + sx + 7, ty + sy + 7]); }
+    for (let g = 0; g < 3; g++) { const gl = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 1.4, 6, 8), basic(0x7a1a2a, { transparent: true, opacity: 0.75 })); gl.position.set(I.ox + tx - 10 + g * 10, 25, I.oy + ty); interiorGroup.add(gl); }
+  }
+  // The Areni-1 cave: a dark niche with the oldest winery's clay vats and a leather shoe
+  IB(I, 40, 300, 210, 310, 44, basic(0x140f0c), { y: 0.5 });
+  IB(I, 40, 300, 50, 430, 44, wallMat, { solid: true });
+  for (const [vx, vy] of [[90, 360], [130, 380], [170, 358]]) { const v = new THREE.Mesh(new THREE.SphereGeometry(15, 12, 10), ilamw('#8a5a3a')); v.scale.y = 1.3; v.position.set(I.ox + vx, 16, I.oy + vy); v.castShadow = true; interiorGroup.add(v); I.solids.push([vx - 12, vy - 12, vx + 12, vy + 12]); }
+  const press = new THREE.Mesh(new THREE.CylinderGeometry(30, 34, 20, 20), ilamw('#7a5a3a')); press.position.set(I.ox + 300, 11, I.oy + 130); press.castShadow = true; interiorGroup.add(press); I.solids.push([270, 100, 330, 160]);
+  const juice = new THREE.Mesh(new THREE.CircleGeometry(28, 20).rotateX(-Math.PI / 2), basic(0x7a1a2a, { transparent: true, opacity: 0.85 })); juice.position.set(I.ox + 300, 20.5, I.oy + 130); interiorGroup.add(juice);
+  // Interactions
+  addInteract('areni', 280, 424, 26, 'Leave the cellars', exitInterior);
+  addInteract('areni', 470, 150, 30, 'Talk to the vintner', () => talk([
+    ['vintner', 'Bari galust Areni gyugh. Ays hoveti ginin ashkharhahchak e.', 'Welcome to Areni village. The wine of this valley is world-famous.'],
+    ['vintner', '2007-in ays qarayrum peghichnery gtel en 6100-amya ginu gործaran.', 'In 2007, in this cave, diggers found a 6,100-year-old winery.'],
+    ['vintner', 'Amenahin koshiky, hin tashty, ginu mnacordnery — amen inch aystegh.', 'The oldest leather shoe, an old vat, wine residue — all here.'],
+    ['you', 'Karogh em hamtes anel?', 'May I taste?'],
+    ['vintner', 'Angchapes! Nstir seghani mot.', 'Of course! Sit at the table.']]));
+  addInteract('areni', 430, 250, 30, 'Sit and taste the Areni red · $20', () => { if (!pay(20)) return; player.hp = Math.min(100, player.hp + 20); toast('Areni noir · deep and dry. +20 health', '#7a1a2a'); });
+  addInteract('areni', 300, 175, 34, 'Stomp the grapes in the press', () => {
+    toast('You stomp the grapes to the vintner\'s song', '#f2a800');
+    setTimeout(() => { const tip = 80 + Math.floor(Math.random() * 120); player.money += tip; toast(`The tourists tip you $${tip}`, '#7fe0a0'); saveGame(); }, 900);
+  });
+  addInteract('areni', 125, 360, 34, 'Read about the Areni-1 cave', () => showMenu({ eyebrow: 'Areni-1 cave', title: "The world's oldest winery",
+    body: '<p>In the Areni-1 cave, in the Vayots Dzor gorge below Noravank, archaeologists uncovered a wine-press, a fermentation vat and cups dated to about 4100 BC — the earliest known winemaking anywhere.</p><p>The same cave held a 5,500-year-old leather shoe, the oldest ever found.</p>', options: [] }));
+  // Freeze the built cellar geometry into a group so it is never disposed
+  for (const it of interactables) if (it.x < -2000 && Math.abs(it.y - I.oy) < 600) it.areni = true;
+}
+function enterAreni() {
+  const R = REGIONS.noravank;
+  INTERIORS.areni.street = { x: R.ox + 690, y: R.oy + 900, a: Math.PI / 2 };
+  if (player.car) exitCar(true);
+  player.region = null;
+  enterInterior('areni');
+  showBanner('Areni wine cellars', 'The oldest winery in the world · taste the wine, stomp the grapes', '#7a1a2a', 4);
+}
+// A cellar door on the floor of the Noravank region
+{
+  const R = REGIONS.noravank;
+  interactables.push({ x: R.ox + 690, y: R.oy + 940, r: 34, when: () => player.region === 'noravank' && !player.car, label: 'Enter the Areni wine cellars', act: enterAreni });
+}
+
 let luckyWheel = null;
 {
   const I = INTERIORS.casino;
@@ -9000,6 +9191,7 @@ function syncEntities() {
     else if (q.kind === 'fire') glowCloud.push(q.x, q.h, q.y, 1, 0.55, 0.15, a, 10 + q.size * a);
     else if (q.kind === 'flash') glowCloud.push(q.x, q.h, q.y, 1, 0.8, 0.45, 1, 34);
     else if (q.kind === 'nitro') glowCloud.push(q.x, q.h, q.y, 0.45 + 0.4 * a, 0.7 + 0.2 * a, 1, a, q.size);
+    else if (q.kind === 'splash') puffCloud.push(q.x, q.h, q.y, 0.5, 0.78, 1, 0.72 * a, 5 + q.size);
     else glowCloud.push(q.x, q.h, q.y, 1, 0.85, 0.5, a, 4);
   }
   if (muzzle.t > 0) glowCloud.push(muzzle.x, 15, muzzle.y, 1, 0.8, 0.45, 1, 30);
@@ -9204,6 +9396,7 @@ function render(dt) {
   drawWeatherHud();
   drawRegionGameHud(clamp(vw / 900, 0.72, 1));
   drawHeritageHud(clamp(vw / 900, 0.72, 1));
+  drawFestivalHud(clamp(vw / 900, 0.72, 1));
   if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
   else if (wheel.open) wheel.open = false;
@@ -9542,6 +9735,9 @@ function boot(data) {
       for (const t of X.coll || []) if (COLLECTABLE.includes(t)) collection.add(t);
     }
     if (saved.hx) hxLoad(saved.hx);
+    if (saved.trad) for (const k of saved.trad) { const o = TRAD_OUTFITS.find(x => x.key === k); if (o) { trad.unlocked.add(k); tradEquip(o); } }
+    checkTradUnlocks(true);
+    if (saved.festival) toggleVardavar(true);
     if (saved.hayagram) {
       const H = saved.hayagram;
       if (typeof H.followers === 'number') hg.followers = H.followers;
