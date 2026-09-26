@@ -3560,6 +3560,18 @@ function buildFront(x, zFace, w, h, dir, kind) {
   }
 }
 const beacons = [];
+// Clear a plaza around each Yerevan landmark so the squares are not crowded by city blocks
+{
+  const plazas = [[11, 31, 20, 40], [11, 42, 20, 49], [21, 42, 30, 49]];
+  const keep = k => k === 'police' || k === 'hospital' || k === 'casino' || k === 'mansion' || k === 'museum';
+  const hits = b => plazas.some(([x0, y0, x1, y1]) => b.x < x1 && b.x + b.w > x0 && b.y < y1 && b.y + b.h > y0);
+  for (let i = buildings.length - 1; i >= 0; i--) {
+    const b = buildings[i];
+    if (keep(b.kind) || !hits(b)) continue;
+    for (let j = b.y; j < b.y + b.h; j++) for (let k = b.x; k < b.x + b.w; k++) if (grid[j * GW + k] === BLDG) grid[j * GW + k] = SIDE;
+    buildings.splice(i, 1);
+  }
+}
 for (const b of buildings) {
   const w = b.w * T - 6, d = b.h * T - 6, x = b.x * T + 3 + w / 2, z = b.y * T + 3 + d / 2;
   let h, wall, roof, unit = 88;
@@ -4786,8 +4798,8 @@ function drawNetHud(s) {
 // Each destination is its own outdoor area far west of the city (x < -20000), built the first time you visit.
 const REGION_SIZE = 1600;
 const DESTS = [
-  { key: 'yerevan', name: 'Yerevan', sub: 'The capital · the Pink City', user: '@yerevan.nights', likes: 4210,
-    blurb: 'The capital city, known as the "Pink City" for its rose-colored volcanic stone architecture.',
+  { key: 'yerevan', name: 'Erebuni', sub: 'The ancient fortress · Urartu', user: '@erebuni.782bc', likes: 4210,
+    blurb: 'The Urartian citadel of Erebuni, founded in 782 BC by King Argishti I — the fortress from which Yerevan grew.',
     art: 'linear-gradient(#f7cfc4 0%, #eaa99c 48%, #c47a70 49%, #8f5450 100%)', col: '#f2a0a0', ground: '#9c9a7a', hills: '#8a7d68',
     lines: [['Bari galust Yerevan, vardaguyn qaghaq!', 'Welcome to Yerevan, the pink city!'], ['Ays qarery tuf en, hraabkhayin qar.', 'These stones are tuff, a volcanic rock.'], ['Yereky shatrvany ergum e.', 'In the evening the fountain sings.']] },
   { key: 'geghard', name: 'Geghard Monastery', sub: 'Carved into the mountain', user: '@ani.travels', likes: 2380,
@@ -5430,7 +5442,7 @@ const envFor = key => ENVS[key] || (ENVS[key] = HAS_HDRI ? makeHDR(MOODS[key]) :
 
 // Facts shown on the destination placard (real history, briefly)
 const DEST_INFO = {
-  yerevan: ['Երևան', '40.18° N, 44.51° E · 990 m', 'Founded as the Urartian fortress of Erebuni in 782 BC, Yerevan is older than Rome. Its centre was rebuilt in the 20th century from pink and orange volcanic tuff, which is why it is called the Pink City.'],
+  yerevan: ['Էրեբունի', '40.18° N, 44.51° E · 990 m', 'Founded as the Urartian fortress of Erebuni in 782 BC, Yerevan is older than Rome. Its centre was rebuilt in the 20th century from pink and orange volcanic tuff, which is why it is called the Pink City.'],
   geghard: ['Գեղարդ', '40.14° N, 44.82° E · 1,700 m · UNESCO', 'Founded in the 4th century at a sacred spring inside a cave, Geghard has chapels cut straight into the cliff. Its main church dates to 1215, and its name means "spear", after the Holy Lance once kept here.'],
   garni: ['Գառնի', '40.11° N, 44.73° E · 1,400 m', 'Probably built by King Tiridates I in the 1st century AD, Garni is the only standing Greco-Roman colonnaded temple in the former Soviet Union. It fell in the 1679 earthquake and was rebuilt from its original stones in 1969–1975.'],
   khorvirap: ['Խոր Վիրապ', '39.88° N, 44.58° E · 830 m', 'Gregory the Illuminator was held for about 13 years in a pit beneath this hill before converting King Tiridates III, which led Armenia to adopt Christianity in 301. The monastery faces Mount Ararat across the border.'],
@@ -8969,6 +8981,60 @@ CAST_LOOKS.harbor = { skin: '#c68e63', hair: '#8a8580', shirt: '#1f3a5a', pants:
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// THE OPERA & BALLET THEATRE — the interior auditorium
+// A red-and-gold hall: the stage with its curtain and grand piano, rows of velvet seats, chandeliers
+// and gilded balcony boxes. A conductor and pianist rehearse; an usher greets you at the door.
+// ═══════════════════════════════════════════════════════════════════════════════
+INTERIORS.opera = { name: 'Opera & Ballet Theatre', ox: -3200, oy: 8000, w: 560, h: 460, spawn: [280, 424], door: [280, 448], street: { x: 0, y: 0, a: 0 }, solids: [] };
+CAST.usher = ['Opera usher', '#ffd35a'];
+CAST_LOOKS.usher = { skin: '#d9a878', hair: '#2a201a', shirt: '#7a1020', pants: '#161616', bow: true, face: true };
+{
+  const I = INTERIORS.opera, il = (c, e = 0.4) => ilam(c, e);
+  IRoom(I, il('#5a1020', 0.4), il('#5a2436', 0.4), basic(0xd6a84a));
+  // The stage: a raised platform along the north wall, framed by curtains, lit by footlights
+  IB(I, 30, 20, 530, 130, 16, il('#3a241a', 0.4), { solid: true });
+  IB(I, 30, 20, 530, 34, 96, il('#7a1020', 0.42));                                   // back curtain
+  for (const [x0, x1] of [[30, 90], [470, 530]]) { IB(I, x0, 20, x1, 128, 96, il('#8a132a', 0.42)); }   // side curtains, drawn
+  IB(I, 30, 18, 530, 24, 6, basic(0xd6a84a), { y: 96, shadow: false });              // gilt proscenium top
+  for (let k = 0; k < 18; k++) IB(I, 96 + k * 18, 126, 96 + k * 18 + 8, 130, 3, basic(0xffe6a0, { emissive: 0xffcf5a, emissiveIntensity: 0.7 }), { y: 16, shadow: false });   // footlights
+  // Grand piano centre stage
+  IB(I, 250, 60, 320, 100, 14, il('#0c0c0e', 0.3), { solid: true, y: 16 }); IB(I, 250, 58, 322, 62, 1.5, il('#1a1a1e', 0.3), { y: 30 });
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(72, 1.5, 44), il('#141416', 0.3)); lid.position.set(I.ox + 285, 48, I.oy + 80); lid.rotation.z = -0.5; interiorGroup.add(lid);
+  // Chandeliers and a gilt ceiling ring
+  for (const [x, y] of [[160, 220], [400, 220], [280, 330]]) { const rod = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 20, 6), il('#caa24a', 0.4)); rod.position.set(I.ox + x, 58, I.oy + y); interiorGroup.add(rod); const ch = new THREE.Mesh(new THREE.SphereGeometry(9, 12, 8), basic(0xffe6a0, { emissive: 0xffcf5a, emissiveIntensity: 0.8 })); ch.position.set(I.ox + x, 46, I.oy + y); interiorGroup.add(ch); }
+  // Velvet seating: rows of seats with a central aisle
+  const seat = (x, y) => { const m = new THREE.Mesh(new THREE.BoxGeometry(18, 16, 18), il('#7a1428', 0.36)); m.position.set(I.ox + x, 8, I.oy + y); m.castShadow = true; interiorGroup.add(m); const b = new THREE.Mesh(new THREE.BoxGeometry(18, 16, 4), il('#8a1a30', 0.36)); b.position.set(I.ox + x, 16, I.oy + y - 8); interiorGroup.add(b); };
+  for (let r = 0; r < 7; r++) for (let c = 0; c < 16; c++) { const cxp = 70 + c * 28 + (c > 7 ? 26 : 0); if (cxp > 500) continue; seat(cxp, 190 + r * 30); }
+  // Gilded balcony boxes along the side walls
+  for (const sx of [24, 536]) { IB(I, sx - 18, 150, sx + 18, 260, 40, il('#5a2436', 0.4), { y: 40 }); IB(I, sx - 20, 148, sx + 20, 262, 4, basic(0xd6a84a), { y: 78, shadow: false }); }
+  // A long red runner up the central aisle
+  IFloor(I, 262, 130, 298, 450, il('#8a132a', 0.4), 0.7);
+  // The company at work
+  INPC(I, 285, 108, Math.PI / 2, { skin: '#e0b48a', hair: '#3a2a1e', shirt: '#161616', pants: '#161616', bow: true });     // pianist at the keys
+  INPC(I, 200, 150, -Math.PI / 2, { skin: '#c9a07e', hair: '#4a4038', shirt: '#1a1a1e', pants: '#1a1a1e' });               // conductor
+  INPC(I, 300, 400, Math.PI / 2, { ...CAST_LOOKS.usher });                                                                // usher by the doors
+  INPC(I, 120, 250, -Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#2f4a7a', pants: '#22252c' });            // patron
+  INPC(I, 460, 300, -Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#6a2a4a', pants: '#2a2c30' });            // patron
+  INPC(I, 150, 360, Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#3a6b4a', pants: '#2b2f38' });             // patron
+  // Interactions
+  addInteract('opera', 280, 448, 26, 'Leave the Opera', exitInterior);
+  addInteract('opera', 300, 400, 30, 'Talk to the usher', () => talk([
+    ['usher', 'Bari galust Operayi tun. Aysor Khachaturyani "Gayane"-n e.', 'Welcome to the Opera house. Tonight it is Khachaturian\'s "Gayane".'],
+    ['usher', 'Ays sruaharsy karutsel e Tamanyany — nuyn chartarapety, vor gtsel e Yerevany.', 'This hall was built by Tamanyan — the same architect who drew up Yerevan.'],
+    ['you', '"Sabreri pary" aysteghits e?', 'Is the "Sabre Dance" from here?'],
+    ['usher', 'Ayo! Nsti, nvagakhumby porzum e.', 'Yes! Take a seat, the orchestra is rehearsing.']]));
+  addInteract('opera', 285, 90, 34, 'Listen to the rehearsal (+20 health)', () => { player.hp = Math.min(100, player.hp + 20); toast('The Sabre Dance rings through the hall. +20 health', '#ffd35a'); });
+  addInteract('opera', 285, 240, 30, 'Read the programme', () => showMenu({ eyebrow: 'Tonight at the Opera', title: 'Opera & Ballet Theatre',
+    body: '<p>The Armenian National Academic Theatre of Opera and Ballet opened in 1933 on what is now Freedom Square. Its rounded hall was designed by <b>Alexander Tamanyan</b>, the architect of modern Yerevan.</p><p class="muted">Programme · Aram Khachaturian — <b>Gayane</b>, with the Sabre Dance. Conductor and company in rehearsal.</p>', options: [] }));
+}
+// An Opera door on Republic Square, at the walkable tile before the portico
+{
+  const target = { x: 15.5 * T, y: 47 * T };
+  const spot = WALK_TILES.map(([x, y]) => ({ x: (x + 0.5) * T, y: (y + 0.5) * T })).reduce((best, p) => { const d = Math.hypot(p.x - target.x, p.y - target.y); return d < best.d ? { x: p.x, y: p.y, d } : best; }, { d: 1e9 });
+  INTERIORS.opera.street = { x: spot.x, y: spot.y, a: -Math.PI / 2 };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // DRIVABLE BOATS — sail Hayastan Bay, and set out for Lake Sevan
 // A motorboat that floats on water and is blocked by land (the inverse of a car). Board it from the
 // quays along the bay. From open water you can sail to Lake Sevan with a short cinematic voyage.
@@ -9201,71 +9267,107 @@ function updateCockpit(dt) {
   const solidTiles = (tx0, ty0, tx1, ty1) => { for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) grid[ty * GW + tx] = BLDG; };
   const jets = [], jetMat = basic(0xdff4ff, { transparent: true, opacity: 0.6 }), flags = [];
 
-  // ═══ REPUBLIC SQUARE (Hraparak) — the central park, Kentron ═══
-  LB(13.4 * T2, 33.4 * T2, 18.2 * T2, 38 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
+  const people = [];
+  const tourist = (x, z, a, look) => { const g = buildPerson({ ...look, face: true }); g.position.set(x, 0, z); g.rotation.y = -a; g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g); people.push(g); return g; };
+
+  // ═══ REPUBLIC SQUARE (Hraparak) — the central plaza, Kentron ═══
+  LB(13 * T2, 33 * T2, 18.6 * T2, 38.4 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
   solidTiles(14, 33, 17, 33);
   const gx = 15.6 * T2, gz = 33.5 * T2;
+  // Government House with its curved colonnade
   LB(gx - 110, gz - 20, gx + 110, gz + 20, 66, pink, {}); LB(gx - 112, gz - 22, gx + 112, gz + 22, 5, trim, { y: 66 });
   for (let k = 0; k < 11; k++) LB(gx - 96 + k * 19, gz + 18, gx - 92 + k * 19, gz + 22, 40, trim, { y: 2, shadow: false });
   LB(gx - 30, gz - 24, gx + 30, gz + 16, 128, pink); LB(gx - 32, gz - 26, gx + 32, gz + 18, 6, trim, { y: 128 });
-  const clock = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 1.4, 20).rotateX(Math.PI / 2), basic(0xf4efe4)); clock.position.set(gx, 100, gz + 19); scene.add(clock);
-  LB(14.6 * T2, 34.6 * T2, 17 * T2, 37 * T2, 5, lamE('#8a8078', 0.4), {});
-  const fx = 15.8 * T2, fz = 35.8 * T2;
+  // The clock high on the tower — a lit face with turning hands
+  const clock = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 1.4, 24).rotateX(Math.PI / 2), basic(0xf4efe4)); clock.position.set(gx, 104, gz + 20); scene.add(clock);
+  const clkRim = new THREE.Mesh(new THREE.TorusGeometry(12, 1.6, 8, 24), lamE('#caa24a', 0.5)); clkRim.position.set(gx, 104, gz + 20.6); scene.add(clkRim);
+  const hourHand = new THREE.Mesh(new THREE.BoxGeometry(1.8, 7, 0.6).translate(0, 3, 0), basic(0x161616)); hourHand.position.set(gx, 104, gz + 21.2); scene.add(hourHand);
+  const minHand = new THREE.Mesh(new THREE.BoxGeometry(1.3, 10, 0.6).translate(0, 5, 0), basic(0x161616)); minHand.position.set(gx, 104, gz + 21.2); scene.add(minHand);
+  // A ceremonial staircase under the clock, rising to a landing
+  LB(gx - 34, gz + 30, gx + 34, gz + 52, 18, stone, {});                                  // landing
+  for (let k = 0; k < 3; k++) LB(gx - 40, gz + 52 + k * 7, gx + 40, gz + 52 + k * 7 + 7, 14 - k * 5, stone, {});   // steps to the plaza
+  // The singing fountains in their basin
+  LB(14.6 * T2, 34.9 * T2, 17 * T2, 37.4 * T2, 5, lamE('#8a8078', 0.4), {});
+  const fx = 15.8 * T2, fz = 36.1 * T2;
   const water = new THREE.Mesh(new THREE.PlaneGeometry(2.3 * T2, 2.3 * T2).rotateX(-Math.PI / 2), basic(0x2f6f9a, { transparent: true, opacity: 0.86 })); water.position.set(fx, 5.4, fz); scene.add(water);
   for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; const j = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 3, 46, 6), jetMat.clone()); j.position.set(fx + Math.cos(a) * 34, 26, fz + Math.sin(a) * 34); scene.add(j); jets.push(j); }
   const big = new THREE.Mesh(new THREE.CylinderGeometry(2, 5, 70, 8), jetMat.clone()); big.position.set(fx, 40, fz); scene.add(big); jets.push(big);
   for (const dx of [-90, 90]) { LCyl(gx + dx, gz + 30, 1.2, 1.2, 90, lamE('#8a8a86', 0.3)); const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), basic(0xd90012)); fl.position.set(gx + dx + 16, 82, gz + 30); scene.add(fl); flags.push(fl); }
+  // Prime Minister Nikol Pashinyan on the landing beneath the clock, with police at his side
   const pm = buildPerson({ skin: '#c9a07e', hair: '#4a4540', shirt: '#1f2a44', pants: '#1f2a44', shoes: '#111111', goatee: true, buzz: true, face: true });
-  pm.position.set(fx, 0, fz + 58); pm.rotation.y = -Math.PI / 2; pm.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(pm);
-  const people = [pm];
-  for (const dx of [-28, 28]) { const gd = buildPerson({ skin: '#b98a66', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true }); gd.position.set(fx + dx, 0, fz + 50); gd.rotation.y = -Math.PI / 2; scene.add(gd); people.push(gd); }
-  postSign(13 * T2, 32.4 * T2, 'REPUBLIC SQUARE', 'Hraparak · Հանրապետության հրապարակ', '#123a52', '#f2e2c4', 30);
+  pm.position.set(gx, 18, gz + 42); pm.rotation.y = -Math.PI / 2; pm.userData.py = 18; pm.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(pm); people.push(pm);
+  for (const dx of [-30, 30]) { const gd = buildPerson({ skin: '#b98a66', hair: '#1c1a18', shirt: '#1b345e', pants: '#12203a', shoes: '#0c0c10', cap: true, face: true }); gd.position.set(gx + dx, 18, gz + 42); gd.rotation.y = -Math.PI / 2; gd.userData.py = 18; scene.add(gd); people.push(gd); }
+  // Citizens and visitors about the square
+  tourist(fx - 96, fz + 30, 0.4, { skin: '#e0b48a', hair: '#5a4030', shirt: '#c0392b', pants: '#2b2f38' });
+  tourist(fx + 92, fz - 12, -2.2, { skin: '#a9744f', hair: '#241a12', shirt: '#2f6b3a', pants: '#3a3026', cap: true });
+  tourist(fx + 70, fz + 74, -1.4, { skin: '#f0c9a0', hair: '#8a8580', shirt: '#f2c230', pants: '#2a2c30' });
+  tourist(fx - 60, fz + 90, 1.1, { skin: '#c68e63', hair: '#1c1a18', shirt: '#3b6ea5', pants: '#22252c' });
+  tourist(fx + 30, fz + 40, -0.7, { skin: '#d9a878', hair: '#3a2a1e', shirt: '#8a5aa6', pants: '#2b2f38' });
+  postSign(12.6 * T2, 32.4 * T2, 'REPUBLIC SQUARE', 'Hraparak · Հանրապետության հրապարակ', '#123a52', '#f2e2c4', 30);
 
-  // ═══ THE OPERA & BALLET THEATRE — its own square, south-west ═══
+  // ═══ THE OPERA & BALLET THEATRE — its own square, south-west (enterable) ═══
   const ox = 15.5 * T2, oz = 45.6 * T2;
   solidTiles(14, 45, 17, 45);
-  LB(13.4 * T2, 44.6 * T2, 18 * T2, 47 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
-  LCyl(ox, oz, 42, 46, 54, stone, 0, 26); LCyl(ox, oz, 44, 44, 5, trim, 54, 26);
-  for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI - Math.PI / 2; LCyl(ox + Math.cos(a) * 42, oz + Math.sin(a) * 42, 3, 3, 50, stone, 2, 8); }
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(32, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), tuff); dome.position.set(ox, 54, oz); dome.castShadow = true; scene.add(dome);
-  LB(ox - 16, oz - 50, ox + 16, oz - 40, 36, stone, {}); LB(ox - 20, oz - 52, ox + 20, oz - 38, 4, trim, { y: 36 });
+  LB(13.2 * T2, 44.4 * T2, 18 * T2, 47.2 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
+  LCyl(ox, oz, 46, 50, 58, stone, 0, 28); LCyl(ox, oz, 48, 48, 5, trim, 58, 28);
+  for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI - Math.PI / 2; LCyl(ox + Math.cos(a) * -46, oz + Math.sin(a) * 46, 3, 3, 52, stone, 2, 8); }
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(34, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), tuff); dome.position.set(ox, 58, oz); dome.castShadow = true; scene.add(dome);
+  // Entrance portico on the plaza (south) side, with steps and a marquee
+  LB(ox - 20, oz + 40, ox + 20, oz + 52, 38, stone, {}); LB(ox - 24, oz + 38, ox + 24, oz + 54, 4, trim, { y: 38 });
+  for (const dx of [-14, 14]) LCyl(ox + dx, oz + 46, 3.4, 3.4, 38, stone, 0, 10);
+  LB(ox - 24, oz + 54, ox + 24, oz + 60, 2, stone, {}); LB(ox - 22, oz + 60, ox + 22, oz + 64, 1.4, stone, {});
   postSign(18.6 * T2, 45.6 * T2, 'OPERA THEATRE', 'Ballet & Opera · Օպերա', '#3a1a2a', '#ffd35a', 26);
 
-  // ═══ THE CASCADE (Kaskad) — its own park, south-east ═══
-  const cx = 24.4 * T2, cz = 45.5 * T2;
-  solidTiles(24, 45, 27, 46);
-  LB(23.4 * T2, 44.6 * T2, 28.4 * T2, 47 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
-  for (let k = 0; k < 6; k++) { const w = 150 - k * 8; LB(cx - 8, cz - w / 2, cx + 44 - k * 3, cz + w / 2, 14, stone, { y: k * 14 }); }
-  for (let k = 0; k < 5; k++) LB(cx + 40 - k * 3, cz - 4, cx + 46 - k * 3, cz + 4, 6, basic(0xdff4ff, { transparent: true, opacity: 0.5 }), { y: 14 + k * 14, shadow: false });
-  for (const dz of [-52, 52]) { LCyl(cx + 6, cz + dz, 6, 7, 16, stone, 84); const st = new THREE.Mesh(new THREE.BoxGeometry(7, 20, 7), lamE('#8a8276', 0.35)); st.position.set(cx + 6, 110, cz + dz); scene.add(st); }
-  postSign(23 * T2, 44.4 * T2, 'THE CASCADE', 'Kaskad · Կասկադ', '#2a2a30', '#e0b0ff', 26);
+  // ═══ THE CASCADE (Kaskad) — a grand, climbable stairway, south-east ═══
+  const cx = 25.5 * T2, cz = 45.5 * T2;
+  LB(22.4 * T2, 43 * T2, 29 * T2, 48 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
+  const cN = 10, cStepD = 16, cStepH = 11, cHalf = 118, cTopH = cN * cStepH;
+  const cBase = cz + 66, cTop = cBase - cN * cStepD;
+  for (let k = 0; k < cN; k++) { LB(cx - cHalf, cBase - (k + 1) * cStepD, cx + cHalf, cBase - k * cStepD, (k + 1) * cStepH, stone, { y: 0 }); }
+  LB(cx - cHalf, cTop - 34, cx + cHalf, cTop, cTopH, stone, {});                            // crowning terrace
+  LB(cx - cHalf - 4, cTop - 40, cx + cHalf + 4, cTop - 34, cTopH + 16, tuff, {});           // parapet monument
+  // Central water channel spilling down the steps
+  for (let k = 0; k < cN; k++) LB(cx - 12, cBase - (k + 1) * cStepD, cx + 12, cBase - k * cStepD - 2, 2, basic(0xdff4ff, { transparent: true, opacity: 0.55 }), { y: (k + 1) * cStepH - 1, shadow: false });
+  // Balustrades and lamp urns flanking the flight
+  for (const sx of [-cHalf, cHalf]) for (let k = 0; k < cN; k += 2) { const u = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 12, 8), stone); u.position.set(cx + sx, (k + 1) * cStepH + 6, cBase - k * cStepD - cStepD / 2); u.castShadow = true; scene.add(u); }
+  postSign(21.8 * T2, 43 * T2, 'THE CASCADE', 'Kaskad · Կասկադ', '#2a2a30', '#e0b0ff', 26);
 
-  window.__yerLm = { jets, flags, people, pm: { x: fx, y: fz + 58 }, map: [
+  window.__yerLm = { jets, flags, people, hands: [hourHand, minHand], pm: { x: gx, y: gz + 62 },
+    casc: { x0: cx - cHalf, x1: cx + cHalf, zTop: cTop, zBase: cBase, topH: cTopH }, map: [
     { x: fx, y: fz, col: '#3fd0ff', g: '⛲', label: 'Republic Square' },
     { x: ox, y: oz, col: '#ffd35a', g: '♪', label: 'Opera Theatre' },
-    { x: cx + 34, y: cz, col: '#e0b0ff', g: '⛰', label: 'The Cascade' } ] };
+    { x: cx, y: cTop, col: '#e0b0ff', g: '⛰', label: 'The Cascade' } ] };
 
-  interactables.push({ x: fx, y: fz + 58, r: 34, when: () => !player.region && !player.car, label: 'Talk to Prime Minister Nikol Pashinyan', act: () => talk([
+  interactables.push({ x: gx, y: gz + 62, r: 46, when: () => !player.region && !player.car, label: 'Talk to Prime Minister Nikol Pashinyan', act: () => talk([
     ['pm', 'Barev dzez! Bari galust Yerevan, mer masnavor qaghaq.', 'Hello! Welcome to Yerevan, our special city.'],
     ['pm', 'Sa Hanrapetutyan hraparakn e — qaghaqi sirty, jrachaghery yerg en asum.', 'This is Republic Square, the heart of the city, where the fountains sing.'],
+    ['you', 'Isk verevum jamatsuyts ka?', 'And there is a clock up above?'],
+    ['pm', 'Ayo — qaghaqi jamatsuytsy. Nra tak em kangnum amen or.', 'Yes — the city clock. I stand beneath it every day.'],
     ['you', 'Isk Kaskady u Operan?', 'And the Cascade and the Opera?'],
-    ['pm', 'Erkusn el motik en — nayir qarti vra. Amboghj Yerevany qonn e.', 'Both are close by — look on the map. All of Yerevan is yours.']]) });
-  interactables.push({ x: fx, y: fz + 6, r: 30, when: () => !player.region && !player.car, label: 'Watch the singing fountains', act: () => toast('The fountains of Republic Square dance and change colour to the music', '#3fd0ff') });
-  interactables.push({ x: cx + 34, y: cz, r: 36, when: () => !player.region && !player.car, label: 'Climb the Cascade viewpoint', act: () => { player.hp = Math.min(100, player.hp + 10); showBanner('The Cascade', 'From the top: all of Yerevan, with Mount Ararat beyond', '#e0b0ff', 3.5); } });
-  interactables.push({ x: ox, y: oz - 46, r: 34, when: () => !player.region && !player.car, label: 'Read about the Opera Theatre', act: () => showMenu({ eyebrow: 'Yerevan', title: 'Opera & Ballet Theatre', body: '<p>The Armenian National Academic Theatre of Opera and Ballet, opened in 1933, stands on Freedom Square. Its rounded hall was designed by the architect Alexander Tamanyan, who planned modern Yerevan.</p>', options: [] }) });
+    ['pm', 'Erkusn el motik en — Kaskadov ver bardzratsir, Operan mtir. Amboghj Yerevany qonn e.', 'Both are close — climb the Cascade, step into the Opera. All of Yerevan is yours.']]) });
+  interactables.push({ x: fx, y: fz + 6, r: 34, when: () => !player.region && !player.car, label: 'Watch the singing fountains', act: () => toast('The fountains of Republic Square dance and change colour to the music', '#3fd0ff') });
+  interactables.push({ x: cx, y: cTop - 12, r: 40, when: () => !player.region && !player.car, label: 'Rest at the Cascade viewpoint', act: () => { player.hp = Math.min(100, player.hp + 15); showBanner('The Cascade', 'From the top: all of Yerevan, with Mount Ararat beyond', '#e0b0ff', 3.5); } });
+  interactables.push({ x: ox, y: oz + 62, r: 34, when: () => !player.region && !player.car && mode === 'play', label: 'Enter the Opera Theatre', act: () => { if (player.car) { toast('Get out of the vehicle first', '#ff8a7a'); return; } enterInterior('opera'); showBanner('Opera & Ballet Theatre', 'Aram Khachaturian on the bill tonight', '#ffd35a', 3.5); } });
 }
 function updateLandmarks(dt) {
   const L = window.__yerLm; if (!L) return;
   if (mode === 'play' && !player.region && !player.interior) {
-    for (const p of L.people) if (p.visible) posePerson(p, p.position.x, p.position.z, -p.rotation.y, 0, false, false, 1);
+    for (const p of L.people) if (p.visible) { posePerson(p, p.position.x, p.position.z, -p.rotation.y, 0, false, false, 1); if (p.userData.py) p.position.y = p.userData.py; }
   }
   const on = !player.region && !player.interior && mode !== 'title';
   for (const p of L.people) p.visible = on;
   for (const j of L.jets) j.visible = on;
   for (const f of L.flags || []) f.visible = on;
+  // The player climbs the Cascade: elevation ramps up as you walk up the flight
+  if (L.casc && on && !player.car) {
+    const c = L.casc;
+    player.elev = (player.x > c.x0 && player.x < c.x1 && player.y < c.zBase && player.y > c.zTop - 34)
+      ? c.topH * clamp((c.zBase - player.y) / (c.zBase - c.zTop), 0, 1) : 0;
+  } else player.elev = 0;
   if (!on) return;
   L.jets.forEach((j, i) => { const h = 0.5 + 0.5 * Math.abs(Math.sin(time * 1.6 + i * 0.7)); j.scale.y = h; j.position.y = (i === L.jets.length - 1 ? 40 : 26) * h; j.material.color.setHSL((0.55 + 0.12 * Math.sin(time + i)) % 1, 0.6, 0.75); });
   for (const [i, f] of (L.flags || []).entries()) f.rotation.y = Math.sin(time * 1.6 + i) * 0.25;
+  if (L.hands) { const d = new Date(); L.hands[0].rotation.z = -((d.getHours() % 12) + d.getMinutes() / 60) / 12 * Math.PI * 2; L.hands[1].rotation.z = -d.getMinutes() / 60 * Math.PI * 2; }
 }
 
 let luckyWheel = null;
@@ -9505,9 +9607,10 @@ function syncEntities() {
     posePerson(playerMesh, -3, 0, 0, 0, false, false, 1, { ride: true }); playerMesh.position.y = 2.5;
   } else {
     if (playerMesh.parent !== scene) scene.add(playerMesh);
-    if (playerMesh.visible) posePerson(playerMesh, player.x, player.y, player.a, player.phase || 0, pSpeed > 1, false, 1,
+    if (playerMesh.visible) { posePerson(playerMesh, player.x, player.y, player.a, player.phase || 0, pSpeed > 1, false, 1,
       { run: pSpeed > 120, aim: armed && (time - (player.fireT || -9) < 0.8 || down('KeyF') || mouseFire || !!aimTarget),
         swing: player.swing ? player.swing.t / 0.4 : undefined, melee: player.weapon });
+      if (player.elev) playerMesh.position.y = player.elev; }
   }
   batMesh.visible = player.weapon === 'bat'; knifeMesh.visible = player.weapon === 'knife';
   gunMesh.visible = armed;
@@ -9693,7 +9796,7 @@ function updateCamera(dt) {
     // Eyes of the player: on foot at head height, in a vehicle from the driver's seat
     const p = playerPos(), pc = player.car, hd = pc ? pc.a : player.a;
     const spd = pc ? Math.hypot(pc.vx, pc.vy) : 0, az = pc ? pc.z || 0 : 0;
-    const h = (pc ? (pc.spec.air ? 18 : pc.spec.bike ? 20 : pc.spec.bus ? 27 : pc.spec.boat ? 20 : 12) : 23) + az;
+    const h = (pc ? (pc.spec.air ? 18 : pc.spec.bike ? 20 : pc.spec.bus ? 27 : pc.spec.boat ? 20 : 12) : 23) + az + (player.elev || 0);
     const fwd = pc ? (pc.spec.bike ? 4 : pc.spec.bus ? pc.L * 0.35 : 3) : 3.5;
     camYaw = camSnap ? hd : camYaw + angDiff(hd, camYaw) * Math.min(1, dt * 12);
     camera.position.set(p.x + Math.cos(camYaw) * fwd, h, p.y + Math.sin(camYaw) * fwd);
@@ -9714,7 +9817,7 @@ function updateCamera(dt) {
     const high = camMode === 'high';
     const flying = pc && pc.spec.air, az = pc ? pc.z || 0 : 0;
     let dist = high ? 170 : flying ? 150 + spd * 0.12 : pc ? (pc.spec.bus ? 150 : 96) + spd * 0.08 : 74;
-    let height = (high ? 330 : flying ? 64 : pc ? (pc.spec.bus ? 70 : 44) : 38) + az;
+    let height = (high ? 330 : flying ? 64 : pc ? (pc.spec.bus ? 70 : 44) : 38) + az + (player.elev || 0);
     // In the Armenian destinations the chase camera can be orbited (drag) and zoomed (wheel); walking eases it back behind you
     let yawC = camYaw;
     if (player.region && !high) {
@@ -9728,7 +9831,7 @@ function updateCamera(dt) {
     camWant.set(bx, height, bz);
     if (camSnap) camYaw = heading;
     camera.position.lerp(camWant, camSnap ? 1 : k);
-    camLook.set(p.x + Math.cos(camYaw) * (high ? 20 : 40), (pc ? 12 : 14) + az, p.y + Math.sin(camYaw) * (high ? 20 : 40));
+    camLook.set(p.x + Math.cos(camYaw) * (high ? 20 : 40), (pc ? 12 : 14) + az + (player.elev || 0), p.y + Math.sin(camYaw) * (high ? 20 : 40));
     const fov = adaptFov(62 + Math.min(14, spd * 0.035) + (pc && pc.boosting ? 9 : 0));
     if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); }
   }
