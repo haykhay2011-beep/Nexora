@@ -133,6 +133,9 @@
   .gpt-msg.bot { justify-self: start; background: #1b2724; border-left: 2px solid #f2a800; }
   .gpt-msg.sys { justify-self: start; color: var(--muted); font-style: italic; }
   .gpt-form { display: flex; gap: 6px; }
+  .gpt-quick { display: flex; flex-wrap: wrap; gap: 5px; }
+  .gpt-quick button { font: 600 0.64rem/1 var(--mono); color: var(--paper); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 0.35rem 0.55rem; cursor: pointer; }
+  .gpt-quick button:hover { border-color: #f2a800; color: #f2a800; }
   .gpt-form input { flex: 1; min-width: 0; font: 600 0.78rem var(--mono); color: var(--paper); background: #15171d; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem; }
   .gpt-form input:focus-visible { outline: 2px solid #f2a800; outline-offset: 1px; }
   .gpt-form button { font: 800 0.82rem/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; background: #f2a800; color: #10181c; border: 0; border-radius: 6px; padding: 0 0.8rem; cursor: pointer; }
@@ -374,6 +377,7 @@
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
           <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
           <div><dt>/</dt><dd>Phone</dd></div>
+      <div><dt>R</dt><dd>Car radio · next station</dd></div>
           <div><dt>Esc</dt><dd>Pause menu</dd></div>
           <div><dt>T / Tab</dt><dd>Online chat · scoreboard</dd></div>
         </dl>
@@ -430,6 +434,7 @@
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
       <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
       <div><dt>/</dt><dd>Phone</dd></div>
+      <div><dt>R</dt><dd>Car radio · next station</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
     </dl>
       <button class="menu-item" type="button" data-back>Back</button>
@@ -520,6 +525,9 @@ const VEHICLES = {
   sports: { name: 'Sports car', L: 44, W: 21, accel: 390, brake: 640, rev: 130, max: 480, coast: 60, grip: 10.5, turn: 3.0, hp: 90, colors: ['#d12f2f', '#f2c230', '#1d1d22', '#2d6bff', '#f28a1e'], sports: true },
   bus:    { name: 'School bus', L: 88, W: 26, accel: 140, brake: 420, rev: 90, max: 250, coast: 70, grip: 8, turn: 1.7, hp: 260, colors: ['#f2b01e'], bus: true },
   bike:   { name: 'Motorcycle', L: 26, W: 10, accel: 340, brake: 620, rev: 60, max: 450, coast: 60, grip: 12, turn: 3.4, hp: 70, colors: ['#d12f2f', '#1d1d22', '#2d6bff', '#e8e4dc'], bike: true },
+  ambulance: { name: 'Ambulance', L: 52, W: 24, accel: 230, brake: 520, rev: 110, max: 330, coast: 70, grip: 8.5, turn: 2.4, hp: 150, colors: ['#f4f4f0'], van: true, siren: true },
+  firetruck: { name: 'Fire truck', L: 74, W: 26, accel: 170, brake: 460, rev: 90, max: 280, coast: 70, grip: 8, turn: 1.9, hp: 260, colors: ['#c8282a'], van: true, siren: true },
+  patrol: { name: 'Patrol car', L: 46, W: 22, accel: 300, brake: 600, rev: 140, max: 400, coast: 70, grip: 10, turn: 3.0, hp: 150, colors: ['#e9edf1'], siren: true },
   heli:   { name: 'Helicopter', L: 50, W: 16, accel: 170, max: 280, turn: 1.9, hp: 160, colors: ['#2a3a5a', '#c83a3a', '#e8e4dc'], air: 'heli' },
   plane:  { name: 'Prop plane', L: 50, W: 60, accel: 150, max: 520, turn: 1.15, hp: 140, colors: ['#e8e4dc'], air: 'plane', takeoff: 200 },
   police: { name: 'Police cruiser', L: 46, W: 22, accel: 300, brake: 600, rev: 140, max: 400, coast: 70, grip: 10, turn: 3.0, hp: 150,
@@ -589,12 +597,13 @@ const FX = {
   hiRes: true,         // render at device pixel ratio (off renders at 1x)
   showFps: false,
   ssao: true,          // ambient occlusion in the Armenian destinations
-  bloom: true,         // HDR bloom in the Armenian destinations and the flight
+  bloom: true,
+  radio: true,         // car radio music (R cycles stations)         // HDR bloom in the Armenian destinations and the flight
 };
 const FX_LABELS = {
   dayNight: 'Day and night cycle', shadows: 'Real-time shadows', blobShadows: 'Soft contact shadows', glows: 'Light glows',
   colorGrade: 'Color grading', vignette: 'Vignette', props: 'Street props', particles: 'Exhaust and dust',
-  motionBlur: 'Motion blur', shake: 'Screen shake', smoothCamera: 'Smooth camera', hiRes: 'Full resolution', showFps: 'Show FPS', ssao: 'Ambient occlusion (Armenia)', bloom: 'Bloom (Armenia)',
+  motionBlur: 'Motion blur', shake: 'Screen shake', smoothCamera: 'Smooth camera', hiRes: 'Full resolution', showFps: 'Show FPS', ssao: 'Ambient occlusion (Armenia)', radio: 'Car radio', bloom: 'Bloom (Armenia)',
 };
 try { Object.assign(FX, JSON.parse(localStorage.getItem('port-veyra-fx') || '{}')); } catch (e) { /* storage unavailable */ }
 const saveFX = () => { try { localStorage.setItem('port-veyra-fx', JSON.stringify(FX)); } catch (e) { /* storage unavailable */ } };
@@ -845,7 +854,8 @@ function saveGame() {
   try {
     localStorage.setItem('port-veyra-save', JSON.stringify({ money: player.money, ammo: player.ammo, weapon: player.weapon, outfit: player.outfit,
       heists: heistState, biz, anchors: [...anchorsFound], day, daily, mansions: mansionState, studio, story: story.chapter, outfitsBought: player.outfitsBought,
-      hayagram: { followers: hg.followers, visited: [...hg.visited], checkins: [...hg.checkins], pm: hg.pm } }));
+      hayagram: { followers: hg.followers, visited: [...hg.visited], checkins: [...hg.checkins], pm: hg.pm, ms: hg.ms },
+      more: { done: [...RG.done], rugs: RG.rugs.inv, profit: RG.rugs.profit, road: armRoad.chapter, gh, coll: [...collection], radio: radio.on } }));
     return true;
   }
   catch (e) { return false; }
@@ -1299,7 +1309,7 @@ function aiDrive(c, dt) {
   const dx = tgt[0] - c.x, dy = tgt[1] - c.y, dist = Math.hypot(dx, dy);
   const fx = Math.cos(c.a), fy = Math.sin(c.a), ahead = dx * fx + dy * fy;
   if (ai.panic > 0) ai.panic -= dt;
-  let want = ai.panic > 0 ? 210 : ai.cruise;
+  let want = ai.panic > 0 ? 210 : ai.cruise * trafficFactor();   // slower in rain, snow, fog, floods and earthquakes
   if (ai.stage === 'toStop') {
     if (ai.next !== ai.dir && dist < 110) want = Math.min(want, 55 + dist * 0.4);
     const g = lightState(ai.dir % 2);
@@ -2404,7 +2414,7 @@ function openGarage(id, inside) {
       S.garage.push({ type: c.type, color: c.color, tune: c.tune || null });
       exitCar(true); const k = cars.indexOf(c); if (k >= 0) cars.splice(k, 1);
       if (player.lastCar === c) player.lastCar = null;
-      saveGame(); toast('Stored in the garage', '#e0b0ff');
+      collectCar(c.type); saveGame(); toast('Stored in the garage', '#e0b0ff');
     } });
   S.garage.forEach((v, i) => options.push({ label: `Take out the ${VEHICLES[v.type].name.toLowerCase()}`, sub: v.tune ? `Engine ${v.tune.engine} · armor ${v.tune.armor}` : 'Stock', disabled: !!c,
     act: () => {
@@ -2906,6 +2916,7 @@ const phNote = text => phBody.append(el('p', 'ph-note', text));
 function phRow(a, b, ok) { const r = el('div', 'ph-row'); r.append(el('span', '', a), el('span', ok ? 'ok' : '', b)); phBody.append(r); }
 const PHONE_APPS = [
   ['hayagram', 'Hayagram', 'linear-gradient(135deg, #d90012, #0033a0 55%, #f2a800)', '◎'],
+  ['portfolio', 'Portfolio', 'linear-gradient(135deg, #e0b0ff, #7fe0a0)', '★'],
   ['gpt', 'Hayastan GPT', 'linear-gradient(135deg, #0f766e, #f2a800)', 'Հ'], ['weather', 'Weather', 'linear-gradient(#6fb3ff, #d6e4ff)', '☂'],
   ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'],
   ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
@@ -2965,6 +2976,8 @@ function phoneApp(app) {
       const d = Math.hypot(at.x - player.x, at.y - player.y), fare = Math.round(25 + d / 40);
       phItem(name, `${Math.round(d / 5)} m · ${fmtMoney(fare)}`, () => takeCab(at, fare, name), !!blocked || player.money < fare || d < 150);
     }
+  } else if (app === 'portfolio') {
+    portfolioApp();
   } else if (app === 'weather') {
     weatherApp();
   } else if (app === 'gpt') {
@@ -3729,7 +3742,7 @@ function carGeo(c) {
   else if (s.pickup) { G.cabin = B(L * 0.3, 9, W - 3, 0.9, 1.1); G.cabinX = L * 0.08; G.cabinH = 9; G.bedSide = new THREE.BoxGeometry(L * 0.4, 5, 1.5); G.tailgate = new THREE.BoxGeometry(1.5, 5, W - 2); }
   else if (!s.van && !s.bus) { G.cabin = B(L * 0.5, 8, W - 3, 0.9, 1.1); G.cabinX = -L * 0.06; G.cabinH = 8; }
   if (s.van || s.bus) G.windows = new THREE.BoxGeometry(L * (s.bus ? 0.9 : 0.5), 6, W + 0.4);
-  if (s.bus) G.stripe = new THREE.BoxGeometry(L + 0.4, 1.2, W + 0.4);
+  if (s.bus || s.siren) G.stripe = new THREE.BoxGeometry(L + 0.4, 1.2, W + 0.4);
   if (s.taxi) G.sign = new THREE.BoxGeometry(8, 3.5, 6);
   return (carGeos[c.type] = G);
 }
@@ -3747,7 +3760,7 @@ function buildCarMesh(c) {
     cabin = add(G.cabin, [glassMat, glassMat, roofMat, glassMat, glassMat, glassMat], G.cabinX, base + bh + G.cabinH / 2, 0, true);
   }
   if (G.windows) add(G.windows, glassMat, s.bus ? -L * 0.02 : -L * 0.08, base + bh - 6, 0);
-  if (G.stripe) add(G.stripe, busStripeMat, 0, base + 7, 0);
+  if (G.stripe) add(G.stripe, s.siren ? (c.type === 'firetruck' ? cachedLam('#f2e8d8') : cachedLam('#c8282a')) : busStripeMat, 0, base + 7, 0);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(G.wheel, wheelMat, sx * L * (s.bus ? 0.36 : 0.31), s.bus ? 5 : 4.2, sz * (W / 2 - 1));
   for (const sz of [-1, 1]) { add(G.lamp, headMat, L / 2, base + bh * 0.6, sz * W * 0.3); add(G.lamp, tailMat, -L / 2, base + bh * 0.6, sz * W * 0.3); }
   if (G.bedSide) { for (const sz of [-1, 1]) add(G.bedSide, cachedLam(c.color), -L * 0.28, base + bh + 2.5, sz * (W / 2 - 0.75)); add(G.tailgate, cachedLam(c.color), -L / 2 + 0.75, base + bh + 2.5, 0); }
@@ -3758,7 +3771,11 @@ function buildCarMesh(c) {
   }
   const beam = new THREE.Mesh(G.beam, beamMat); g.add(beam);
   let pglow = null;
-  if (c.police) { pglow = new THREE.Mesh(G.glow, policeGlowMat); g.add(pglow); }
+  if (s.siren) {   // emergency light bar sits on the cab roof (vans have no separate cabin)
+    const bx = G.cabin ? G.cabinX : L * 0.2, by = base + bh + (G.cabin ? G.cabinH : 0) + 1.25;
+    add(G.bar, policeRed, bx, by, -(W - 6) / 4); add(G.bar, policeBlue, bx, by, (W - 6) / 4);
+  }
+  if (c.police || s.siren) { pglow = new THREE.Mesh(G.glow, policeGlowMat); g.add(pglow); }
   const blob = new THREE.Mesh(blobGeo, blobMat); blob.scale.set(L + 18, 1, W + 18); blob.position.y = 0.35; g.add(blob);
   g.userData = { body, cabin, beam, pglow, blob, wreck: false, bw: L + 18, bd: W + 18 };
   return g;
@@ -4692,14 +4709,15 @@ const DESTS = [
 const REGIONS = {};
 DESTS.forEach((D, k) => { REGIONS[D.key] = { ...D, ox: -40000, oy: k * 12000, spawn: [800, 1250], guide: [880, 1180], solids: [], group: null, npcs: [], anims: [] }; });
 function regionAt(x, y) {
-  for (const k in REGIONS) { const R = REGIONS[k]; if (x >= R.ox - 60 && x <= R.ox + REGION_SIZE + 60 && y >= R.oy - 60 && y <= R.oy + REGION_SIZE + 60) return R; }
+  for (const k in REGIONS) { const R = REGIONS[k], b = R.bounds || [0, REGION_SIZE, 0, REGION_SIZE]; if (x >= R.ox + b[0] - 60 && x <= R.ox + b[1] + 60 && y >= R.oy + b[2] - 60 && y <= R.oy + b[3] + 60) return R; }
   return null;
 }
 function regionSolid(x, y) {
   const R = regionAt(x, y);
   if (!R) return true;
   const lx = x - R.ox, ly = y - R.oy;
-  if (lx < 24 || ly < 24 || lx > REGION_SIZE - 24 || ly > REGION_SIZE - 24) return true;
+  const b = R.bounds || [0, REGION_SIZE, 0, REGION_SIZE];
+  if (lx < b[0] + 24 || ly < b[2] + 24 || lx > b[1] - 24 || ly > b[3] - 24) return true;
   return R.solids.some(r => lx >= r[0] && lx <= r[2] && ly >= r[1] && ly <= r[3]);
 }
 let regionBack = null;
@@ -5038,8 +5056,10 @@ function buildRegion(R) {
   RNPC(R, R.guide[0], R.guide[1], Math.atan2(R.spawn[1] - R.guide[1], R.spawn[0] - R.guide[0]), { ...randomLook(), shirt: '#f2a800' });
   for (let k = 0; k < 3; k++) { const x = 500 + rnd() * 600, z = 1080 + rnd() * 120; if (!regionSolid(R.ox + x, R.oy + z) && Math.hypot(x - R.spawn[0], z - R.spawn[1]) > 60) RNPC(R, x, z, rnd() * 6, randomLook()); }
   // Anything built on the spawn point would trap the player: clear it
+  addGuesthouse(R); regionRoad(R);
   R.solids = R.solids.filter(r => !(R.spawn[0] >= r[0] - 8 && R.spawn[0] <= r[2] + 8 && R.spawn[1] >= r[1] - 8 && R.spawn[1] <= r[3] + 8));
   g.visible = false;
+  regionCarFor(R);
 }
 function updateRegions() {
   for (const R of Object.values(REGIONS)) if (R.group) {
@@ -5792,7 +5812,7 @@ function renderFrame(dt) {
 // ═══════════════════════════════════════════════════════════════════════════════
 const placardEl = document.getElementById('dest'), pickerEl = document.getElementById('picker'), pickGrid = document.getElementById('pickGrid');
 function updatePlacard() {
-  const show = !!player.region && (mode === 'play' || mode === 'picker') && QT.state === 'idle';
+  const show = !!player.region && (mode === 'play' || mode === 'picker') && QT.state === 'idle' && !RG.active;
   placardEl.hidden = !show;
   if (!show) return;
   const i = destIndex(player.region), D = DESTS[i], [hy, meta, fact] = DEST_INFO[D.key];
@@ -6214,7 +6234,10 @@ function hayastanGptApp() {
   for (const [who, text] of gpt.log) addMsg(who, text);
   const form = el('form', 'gpt-form'), input = el('input'); input.id = 'gptInput'; input.maxLength = 400; input.placeholder = 'Ask Hayastan GPT…'; input.autocomplete = 'off';
   const send = el('button', '', 'Send'); send.type = 'submit';
-  form.append(input, send); wrap.append(list, form); phBody.append(wrap);
+  form.append(input, send);
+  const quick = el('div', 'gpt-quick');
+  for (const [label, prompt] of GPT_QUICK) { const b = el('button', '', label); b.type = 'button'; b.addEventListener('click', () => { if (gpt.busy) return; input.value = prompt(); form.requestSubmit(); }); quick.append(b); }
+  wrap.append(list, quick, form); phBody.append(wrap);
   if (gpt.ready && !gpt.sample) { addMsg('sys', 'Hayastan GPT is not available in this view. Open the game on claude.ai to chat.'); input.disabled = send.disabled = true; }
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -6236,6 +6259,472 @@ function hayastanGptApp() {
     } finally { gpt.busy = false; send.disabled = false; gpt.log = gpt.log.slice(-30); }
   });
   input.focus({ preventScroll: true });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 1 · THINGS TO DO IN ARMENIA — one activity per destination (plus a khorovats stand in Yerevan)
+// kinds: collect (any order, timed) · route (ordered checkpoints) · hold (stand still at each spot)
+//        errand (collect, then return) · boat (Sevan race) · ride (Tatev cable car) · market (Gyumri rugs) · grill (khorovats)
+// ═══════════════════════════════════════════════════════════════════════════════
+const RG_DEF = {
+  yerevan:     { name: "The Prime Minister's errand", kind: 'errand', n: 3, time: 90, item: 'folder', color: 0xf2a800, pay: 3000, ret: [800, 560], retText: 'Bring the folders back to the Prime Minister', text: 'Collect the government folders around the square' },
+  grill:       { name: 'Khorovats cook-off', kind: 'grill', pay: 250, text: 'Press E when a skewer is in the green' },
+  geghard:     { name: 'Light the candles', kind: 'collect', n: 5, time: 70, item: 'candle', color: 0xffc46e, pay: 1800, text: 'Light the candles around the monastery' },
+  garni:       { name: 'Photo walk', kind: 'hold', n: 3, hold: 3, time: 90, item: 'viewpoint', color: 0x6fe3ff, pay: 1500, text: 'Stand at each viewpoint to take a photo' },
+  khorvirap:   { name: 'The pit of Saint Gregory', kind: 'hold', n: 1, hold: 7, time: 60, item: 'pit', color: 0xffe0a0, pay: 1200, spots: [[820, 700]], text: 'Descend into the pit and pray' },
+  sevan:       { name: 'Race on the lake', kind: 'boat', pay: 4000, text: 'Beat Davit around the peninsula' },
+  etchmiadzin: { name: "Pilgrim's path", kind: 'route', n: 6, time: 75, item: 'khachkar', color: 0xe3d8c4, pay: 2000, text: 'Visit each cross-stone in order' },
+  noravank:    { name: 'Canyon sprint', kind: 'route', n: 5, time: 40, item: 'flag', color: 0xff7a3d, pay: 2200, text: 'Sprint through the red canyon checkpoints' },
+  dilijan:     { name: 'Mushroom foraging', kind: 'collect', n: 8, time: 90, item: 'mushroom', color: 0xd9c9a0, pay: 1800, text: 'Find mushrooms among the trees' },
+  tatev:       { name: 'Wings of Tatev', kind: 'ride', pay: 1500, text: 'Ride the cable car over the Vorotan gorge' },
+  jermuk:      { name: 'Spring water', kind: 'collect', n: 4, time: 45, item: 'bottle', color: 0x9fe0f0, pay: 1400, text: 'Fill bottles at the mineral springs' },
+  gyumri:      { name: 'Rug market', kind: 'market', text: 'Buy low, sell high' },
+  aragats:     { name: 'Summit hike', kind: 'route', n: 6, time: 110, item: 'cairn', color: 0xffffff, pay: 3500, spots: [[800, 1100], [700, 820], [900, 560], [620, 300], [760, 140], [880, 60]], text: 'Reach the summit cairns before the weather turns' },
+  ararat:      { name: 'Apricot harvest', kind: 'collect', n: 10, time: 60, item: 'apricot', color: 0xf29a1e, pay: 1600, text: 'Pick ripe apricots in the orchard', area: [200, 700, 480, 900] },
+};
+const RG = { active: null, done: new Set(), rugs: { inv: { kilim: 0, artsakh: 0, silk: 0 }, prices: null, next: 0, profit: 0 } };
+const pickupGeo = new THREE.OctahedronGeometry(7, 0), pickupRing = new THREE.RingGeometry(14, 18, 32).rotateX(-Math.PI / 2);
+function pickupMesh(color) {
+  const g = new THREE.Group();
+  const gem = new THREE.Mesh(pickupGeo, basic(color)); gem.position.y = 16; g.add(gem);
+  g.add(new THREE.Mesh(pickupRing, basic(color, { ...additive, opacity: 0.85 })));
+  g.userData.gem = gem; scene.add(g); return g;
+}
+// Random free spots inside a destination (not inside walls, water or trees, spread out, away from the landing pad)
+function freeSpots(R, n, area = [200, 1400, 200, 1350], gap = 150) {
+  const out = [];
+  for (let tries = 0; out.length < n && tries < 3000; tries++) {
+    const x = area[0] + Math.random() * (area[1] - area[0]), z = area[2] + Math.random() * (area[3] - area[2]);
+    if (regionSolid(R.ox + x, R.oy + z) || regionSolid(R.ox + x + 12, R.oy + z) || regionSolid(R.ox + x, R.oy + z + 12)) continue;
+    if (Math.hypot(x - R.spawn[0], z - R.spawn[1]) < 90 || out.some(p => Math.hypot(p[0] - x, p[1] - z) < gap * (tries > 1500 ? 0.5 : 1))) continue;
+    out.push([x, z]);
+  }
+  return out;
+}
+function startRegionGame(id, opts = {}) {
+  const def = RG_DEF[id], key = id === 'grill' ? 'yerevan' : id;
+  if (!def || RG.active || activity || player.region !== key) return false;
+  const R = REGIONS[key];
+  if (def.kind === 'market') { openRugMarket(); return true; }
+  const G = { id, key, def, R, t: 0, pts: [], idx: 0, hold: 0, story: opts.story || null };
+  if (['collect', 'route', 'hold', 'errand'].includes(def.kind)) {
+    const spots = def.spots || freeSpots(R, def.n, def.area);
+    G.pts = spots.map(([x, z]) => ({ x: R.ox + x, y: R.oy + z, m: pickupMesh(def.color), got: false }));
+  }
+  if (def.kind === 'errand') G.ret = { x: R.ox + def.ret[0], y: R.oy + def.ret[1] };
+  if (def.kind === 'boat') setupBoatRace(G);
+  if (def.kind === 'ride') { G.dur = 14; toast('Hold on. The Wings of Tatev are leaving', '#c83a3a'); }
+  if (def.kind === 'grill') G.skewers = [0, 1, 2, 3].map(k => ({ d: -k * 0.35, rate: 0.14 + Math.random() * 0.08, state: 'cooking' }));
+  RG.active = G;
+  showBanner(def.name.toUpperCase(), def.text, '#f2a800', 3);
+  return true;
+}
+function endRegionGame(win, msg) {
+  const G = RG.active; if (!G) return;
+  for (const p of G.pts) scene.remove(p.m);
+  if (G.boat) { scene.remove(G.boat.mesh); scene.remove(G.rival.mesh); for (const b of G.buoys) scene.remove(b); }
+  if (G.cabin) scene.remove(G.cabin);
+  RG.active = null; rideCam = null;
+  if (win) {
+    const pay = G.def.kind === 'grill' ? G.score * G.def.pay : G.def.pay, first = !RG.done.has(G.id);
+    player.money += pay + (first ? Math.round(pay * 0.5) : 0); hg.followers += first ? 120 : 30; RG.done.add(G.id);
+    showBanner('Well done', `${G.def.name} · +${fmtMoney(pay)}${first ? ` and a first-time bonus of ${fmtMoney(Math.round(pay * 0.5))}` : ''}`, '#7fe0a0', 3.5);
+    saveGame();
+    if (G.story) G.story();
+  } else toast(msg || `${G.def.name} failed`, '#ff8a7a');
+}
+// ─── Sevan boat race: a small boat you steer on the water, against Davit's boat ──
+function sevanWater(R, x, y) {
+  const lx = x - R.ox, lz = y - R.oy;
+  return lz > 40 && lz < 680 && lx > 40 && lx < 1560 && !(lx > 675 && lx < 925 && lz > 175);
+}
+function boatMesh(hull) {
+  const g = new THREE.Group();
+  const h = new THREE.Mesh(new THREE.BoxGeometry(40, 8, 18), rmat(hull)); h.position.y = 4; g.add(h);
+  const bow = new THREE.Mesh(new THREE.ConeGeometry(9, 14, 4).rotateZ(-Math.PI / 2), rmat(hull)); bow.position.set(27, 4, 0); bow.rotation.x = Math.PI / 4; g.add(bow);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(12, 8, 14), rmat('#e8e4dc')); cab.position.set(-6, 12, 0); g.add(cab);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  scene.add(g); return g;
+}
+function setupBoatRace(G) {
+  const R = G.R, P = [[600, 600], [430, 330], [620, 110], [800, 80], [1000, 110], [1190, 320], [1040, 600], [880, 660]];
+  G.course = P.map(([x, z]) => ({ x: R.ox + x, y: R.oy + z }));
+  G.buoys = G.course.map((c, i) => { const m = pickupMesh(i === G.course.length - 1 ? 0x7fe0a0 : 0xff5f5f); m.position.set(c.x, 0, c.y); return m; });
+  G.boat = { x: R.ox + 560, y: R.oy + 650, a: -Math.PI / 2, v: 0, mesh: boatMesh('#c83a3a') };
+  G.rival = { x: R.ox + 620, y: R.oy + 660, a: -Math.PI / 2, i: 0, mesh: boatMesh('#e8e4dc') };
+  G.idx = 0; G.countdown = 3;
+}
+function updateBoatRace(G, dt) {
+  const B = G.boat, V = G.rival, R = G.R;
+  if (G.countdown > 0) { G.countdown -= dt; if (G.countdown <= 0) toast('Go!', '#7fe0a0'); }
+  else {
+    const thr = keys.has('KeyW') || keys.has('ArrowUp') ? 1 : keys.has('KeyS') || keys.has('ArrowDown') ? -0.5 : 0, st = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+    B.v += (thr * 240 - B.v * 0.9) * dt; B.a += st * 1.9 * dt * clamp(Math.abs(B.v) / 120, 0.2, 1);
+    const nx = B.x + Math.cos(B.a) * B.v * dt, ny = B.y + Math.sin(B.a) * B.v * dt;
+    if (sevanWater(R, nx, ny)) { B.x = nx; B.y = ny; } else B.v *= -0.3;
+    // Davit follows the course at a steady clip
+    const c = G.course[Math.min(V.i, G.course.length - 1)], dx = c.x - V.x, dy = c.y - V.y, d = Math.hypot(dx, dy);
+    V.a += angDiff(Math.atan2(dy, dx), V.a) * Math.min(1, dt * 3); V.x += Math.cos(V.a) * 175 * dt; V.y += Math.sin(V.a) * 175 * dt;
+    if (d < 40) V.i++;
+    const cp = G.course[G.idx];
+    if (Math.hypot(cp.x - B.x, cp.y - B.y) < 45) { G.idx++; G.buoys[G.idx - 1].visible = false; if (G.idx >= G.course.length) { endRegionGame(V.i < G.course.length, 'Davit won the race'); return; } }
+    if (V.i >= G.course.length) { endRegionGame(false, 'Davit got there first. Try again'); return; }
+  }
+  for (const b of [B, V]) { b.mesh.position.set(b.x, 1 + Math.sin(time * 3 + b.x) * 0.8, b.y); b.mesh.rotation.y = -b.a; b.mesh.rotation.z = Math.sin(time * 2.3) * 0.04; }
+  player.x = B.x; player.y = B.y; player.a = B.a; player.vx = player.vy = 0;          // the player stands in the boat
+}
+// ─── Tatev cable car: a camera-led ride out over the gorge and back ────────────
+let rideCam = null;
+function updateCableRide(G, dt) {
+  const R = G.R, A = new THREE.Vector3(R.ox + 470, 150, R.oy + 1052), B = new THREE.Vector3(R.ox - 2400, 330, R.oy + 930);
+  if (!G.cabin) {
+    G.cabin = new THREE.Group();
+    const c = new THREE.Mesh(new THREE.BoxGeometry(40, 22, 26), rmat('#c83a3a')); c.position.y = -26; G.cabin.add(c);
+    const w = new THREE.Mesh(new THREE.BoxGeometry(41, 8, 27), basic(0x9fd4e8)); w.position.y = -22; G.cabin.add(w);
+    scene.add(G.cabin);
+  }
+  G.t += 0;   // time advances in updateRegionGame
+  const u = G.t < G.dur / 2 ? easeIO(G.t / (G.dur / 2)) * 0.7 : easeIO(1 - (G.t - G.dur / 2) / (G.dur / 2)) * 0.7;
+  G.cabin.position.lerpVectors(A, B, u); G.cabin.rotation.z = Math.sin(time * 1.3) * 0.03;
+  player.x = R.ox + 470; player.y = R.oy + 1110; player.vx = player.vy = 0;
+  rideCam = () => {
+    playerMesh.visible = false;
+    const cp = G.cabin.position;
+    camera.position.set(cp.x + 70, cp.y + 10, cp.z + 90); camera.lookAt(cp.x - 200, cp.y - 90, cp.z - 40);
+  };
+  if (G.t >= G.dur) endRegionGame(true);
+}
+// ─── Gyumri rug market: prices drift; buy low and sell high ──────────────────
+const RUGS = { kilim: ['Kilim', 400], artsakh: ['Artsakh carpet', 1500], silk: ['Silk rug', 4000] };
+function rollRugPrices() { RG.rugs.prices = Object.fromEntries(Object.entries(RUGS).map(([k, [, b]]) => [k, Math.round(b * (0.6 + Math.random() * 0.9) / 10) * 10])); RG.rugs.next = time + 45; }
+function openRugMarket() {
+  if (!RG.rugs.prices || time > RG.rugs.next) rollRugPrices();
+  const P = RG.rugs.prices, inv = RG.rugs.inv, options = [];
+  for (const [k, [name, base]] of Object.entries(RUGS)) {
+    const trend = P[k] < base * 0.85 ? 'cheap today' : P[k] > base * 1.2 ? 'dealers are paying well' : 'normal price';
+    options.push({ label: `Buy a ${name.toLowerCase()} · ${fmtMoney(P[k])}`, sub: `You have ${inv[k]} · ${trend}`, disabled: player.money < P[k], act: () => { player.money -= P[k]; inv[k]++; RG.rugs.profit -= P[k]; saveGame(); openRugMarket(); return true; } });
+    options.push({ label: `Sell a ${name.toLowerCase()} · ${fmtMoney(Math.round(P[k] * 0.95))}`, sub: 'The dealer keeps 5%', disabled: !inv[k], act: () => { const v = Math.round(P[k] * 0.95); player.money += v; inv[k]--; RG.rugs.profit += v; if (RG.rugs.profit > 0 && !RG.done.has('gyumri')) { RG.done.add('gyumri'); hg.followers += 120; toast('First profit at the rug market', '#7fe0a0'); } saveGame(); openRugMarket(); return true; } });
+  }
+  options.push({ label: 'Close', act: () => false });
+  showMenu({ eyebrow: 'Gyumri · Vardanants Square', title: 'Rug market', body: `<p class="muted">Prices change every 45 seconds. Running total: ${fmtMoney(RG.rugs.profit)}.</p>`, options });
+}
+// ─── Yerevan khorovats: four skewers cook at their own pace; take each off in the green zone ──
+function grillTake() {
+  const G = RG.active; if (!G || G.def.kind !== 'grill') return;
+  const s = G.skewers.filter(k => k.state === 'cooking').sort((a, b) => b.d - a.d)[0]; if (!s) return;
+  s.state = s.d >= 0.7 && s.d <= 0.92 ? 'perfect' : s.d < 0.7 ? 'raw' : 'burnt';
+  toast(s.state === 'perfect' ? 'Perfect skewer' : s.state === 'raw' ? 'Too early' : 'Burnt', s.state === 'perfect' ? '#7fe0a0' : '#ff8a7a');
+}
+function updateGrill(G, dt) {
+  for (const s of G.skewers) if (s.state === 'cooking') { s.d += s.rate * dt; if (s.d > 1.15) { s.state = 'burnt'; toast('A skewer burnt', '#ff8a7a'); } }
+  if (G.skewers.every(s => s.state !== 'cooking')) { G.score = G.skewers.filter(s => s.state === 'perfect').length; endRegionGame(G.score >= 2, `Only ${G.score} good skewers. The judges want at least 2`); }
+}
+function updateRegionGame(dt) {
+  const G = RG.active; if (!G || mode !== 'play') return;
+  if (player.region !== G.key) { endRegionGame(false, `${G.def.name} abandoned`); return; }
+  G.t += dt;
+  const d = G.def, p = playerPos();
+  for (const q of G.pts) if (q.m.visible) { q.m.userData.gem.rotation.y += dt * 2; q.m.userData.gem.position.y = 16 + Math.sin(time * 3 + q.x) * 3; }
+  if (d.kind === 'boat') return updateBoatRace(G, dt);
+  if (d.kind === 'ride') return updateCableRide(G, dt);
+  if (d.kind === 'grill') return updateGrill(G, dt);
+  if (d.time && G.t > d.time) { endRegionGame(false, `Out of time: ${d.name}`); return; }
+  G.pts.forEach((q, i) => { q.m.position.set(q.x, 0, q.y); q.m.visible = !q.got && (d.kind === 'collect' || d.kind === 'errand' || i === G.idx || (d.kind === 'route' && i === G.idx + 1)); if (d.kind === 'route' && i === G.idx + 1) q.m.scale.setScalar(0.6); else q.m.scale.setScalar(1); });
+  if (d.kind === 'collect' || (d.kind === 'errand' && !G.returning)) {
+    for (const q of G.pts) if (!q.got && Math.hypot(q.x - p.x, q.y - p.y) < 30) { q.got = true; toast(`${d.item[0].toUpperCase() + d.item.slice(1)} ${G.pts.filter(r => r.got).length}/${G.pts.length}`, '#f2a800'); }
+    if (G.pts.every(q => q.got)) { if (d.kind === 'errand') { G.returning = true; G.retM = pickupMesh(0x7fe0a0); G.retM.position.set(G.ret.x, 0, G.ret.y); G.pts.push({ x: G.ret.x, y: G.ret.y, m: G.retM, got: true }); } else endRegionGame(true); }
+  } else if (d.kind === 'errand' && G.returning) {
+    if (Math.hypot(G.ret.x - p.x, G.ret.y - p.y) < 45) { endRegionGame(true); say('guide:yerevan', 'Nikol Pashinyan', { x: G.ret.x, y: G.ret.y }, true); }
+  } else if (d.kind === 'route') {
+    const q = G.pts[G.idx];
+    if (q && Math.hypot(q.x - p.x, q.y - p.y) < 34) { q.got = true; G.idx++; if (G.idx >= G.pts.length) endRegionGame(true); }
+  } else if (d.kind === 'hold') {
+    const q = G.pts[G.idx];
+    if (q && Math.hypot(q.x - p.x, q.y - p.y) < 30 && Math.hypot(player.vx || 0, player.vy || 0) < 20) { G.hold += dt; if (G.hold >= d.hold) { q.got = true; G.idx++; G.hold = 0; toast(d.item === 'viewpoint' ? 'Photo taken' : 'Done', '#7fe0a0'); if (G.idx >= G.pts.length) endRegionGame(true); } }
+    else G.hold = Math.max(0, G.hold - dt * 2);
+  }
+}
+function drawRegionGameHud(s) {
+  const G = RG.active; if (!G || mode === 'talk') return;
+  const d = G.def, x = 16, y = vh - insetBottom - 16 - 96, w = Math.min(320, vw - 32);
+  let line2 = '';
+  if (d.kind === 'collect' || d.kind === 'errand') line2 = G.returning ? d.retText : `${G.pts.filter(q => q.got).length} / ${G.pts.length} ${d.item}s · ${Math.max(0, Math.ceil(d.time - G.t))}s`;
+  else if (d.kind === 'route') line2 = `Checkpoint ${G.idx + 1} of ${G.pts.length} · ${Math.max(0, Math.ceil(d.time - G.t))}s`;
+  else if (d.kind === 'hold') line2 = `${G.idx < G.pts.length ? `Hold still: ${Math.round(G.hold / d.hold * 100)}%` : ''} · ${G.idx + 1} of ${G.pts.length} · ${Math.max(0, Math.ceil(d.time - G.t))}s`;
+  else if (d.kind === 'boat') line2 = G.countdown > 0 ? `Starting in ${Math.ceil(G.countdown)}` : `Buoy ${Math.min(G.idx + 1, G.course.length)} of ${G.course.length} · Davit at ${Math.min(G.rival.i + 1, G.course.length)}`;
+  else if (d.kind === 'ride') line2 = `${Math.max(0, Math.ceil(G.dur - G.t))}s over the gorge`;
+  else if (d.kind === 'grill') line2 = 'Press E to take the ripest skewer off';
+  ctx.save(); ctx.fillStyle = 'rgba(12,14,18,0.86)'; ctx.fillRect(x, y, w, d.kind === 'grill' ? 150 : 80);
+  ctx.fillStyle = '#f2a800'; ctx.fillRect(x, y, 3, d.kind === 'grill' ? 150 : 80);
+  ctx.textAlign = 'left'; ctx.font = `800 ${Math.round(18 * s + 2)}px ${DISPLAY}`; ctx.fillStyle = '#efe6d2'; ctx.fillText(d.name.toUpperCase(), x + 14, y + 26, w - 24);
+  ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#b9b3a6'; ctx.fillText(line2, x + 14, y + 50, w - 24);
+  if (d.kind === 'grill') G.skewers.forEach((k, i) => {
+    const by = y + 66 + i * 20, bw = w - 90;
+    ctx.fillStyle = '#2a2a2a'; ctx.fillRect(x + 14, by, bw, 12);
+    ctx.fillStyle = 'rgba(127,224,160,0.35)'; ctx.fillRect(x + 14 + bw * 0.7 / 1.15, by, bw * 0.22 / 1.15, 12);
+    ctx.fillStyle = k.state === 'burnt' ? '#3a1a10' : k.state === 'perfect' ? '#7fe0a0' : `hsl(${30 - clamp(k.d, 0, 1) * 20}, 80%, ${60 - clamp(k.d, 0, 1.2) * 30}%)`;
+    ctx.fillRect(x + 14, by, bw * clamp(k.d, 0, 1.15) / 1.15, 12);
+    ctx.fillStyle = '#b9b3a6'; ctx.fillText(k.state === 'cooking' ? '' : k.state, x + 22 + bw, by + 10);
+  });
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 2 · STORY: THE ARMENIAN ARMROAD — six chapters across the destinations, told in Armenian with English captions
+// ═══════════════════════════════════════════════════════════════════════════════
+CAST.ani = ['Ani Petrosyan', '#ff6fd8']; CAST.davit = ['Davit', '#9fd4e8'];
+CAST_LOOKS.ani = { skin: '#d8ab86', hair: '#2a1a14', shirt: '#b8323a', pants: '#20242c', longHair: true, eyes: '#4a2e1a' };
+CAST_LOOKS.davit = { skin: '#b98a66', hair: '#6a6660', shirt: '#3f5a3a', pants: '#2a2a2a', goatee: true, buzz: true, eyes: '#3a2a1a' };
+const ARMROAD = [
+  { region: 'yerevan', at: [720, 1170], title: 'Welcome Home', game: 'yerevan', pay: 2000,
+    intro: [['ani', 'Barev! Du es Hayastani nor astghy?', 'Hi! You are the new star of Hayastan?'], ['ani', 'Yes Ani em. Hayagramum amen ory kez em hetevum.', "I'm Ani. I follow you on Hayagram every day."], ['ani', 'Varchapety ognutyan kari uni. Gnanq.', 'The Prime Minister needs a hand. Let\'s go.']],
+    outro: [['pm', 'Shnorhakalutyun. Hayastany kez ches morana.', 'Thank you. Armenia will not forget you.'], ['ani', 'Hajordy Garni e. Qareri simfonian!', 'Next is Garni. The Symphony of Stones!']] },
+  { region: 'garni', at: [700, 1170], title: 'Stones That Sing', game: 'garni', pay: 2500,
+    intro: [['ani', 'Aysteghits nkarnery amenagegheckn en.', 'The photos from here are the most beautiful.'], ['ani', 'Ereq teghits nkari, u Hayagramy kpaytsi.', 'Shoot from three spots and Hayagram will explode.']],
+    outro: [['ani', 'Tes! Hazaravor like!', 'Look! Thousands of likes!'], ['ani', 'Davity kspasi Sevanum. Na nauak uni.', 'Davit is waiting at Sevan. He has a boat.']] },
+  { region: 'sevan', at: [700, 1170], title: 'Race on the Lake', game: 'sevan', pay: 4000,
+    intro: [['davit', 'Aha, Aniyi ynkery. Nauak vari?', "So you're Ani's friend. Can you drive a boat?"], ['davit', 'Tertyn shurj, minchev naxkin tegh. Haghteci indz, u ko ghekn e.', 'Around the peninsula and back. Beat me and the wheel is yours.']],
+    outro: [['davit', 'Lav, lav. Du haghtecir.', 'Fine, fine. You won.'], ['davit', 'Tatevum im eghbayry vanqum e. Nran namak tar.', 'My brother is at Tatev monastery. Take him a letter.']] },
+  { region: 'tatev', at: [760, 1170], title: 'A Letter for Tatev', game: 'tatev', pay: 3000,
+    intro: [['ani', 'Tatevi Tevery! Ashkharhi amenaerkar chopanughin.', 'The Wings of Tatev! One of the longest cable cars in the world.'], ['ani', 'Nstir, namaky vercru, u nayir nerqev.', 'Get in, take the letter, and look down.']],
+    outro: [['ani', 'Davity asum e, eghbayry shat urakh er.', 'Davit says his brother was very happy.'], ['ani', 'Hima Aragats. Gagatin areve mayr e mtnum.', 'Now Aragats. The sun sets on the summit.']] },
+  { region: 'aragats', at: [700, 1170], title: 'Before the Sun Goes Down', game: 'aragats', pay: 3500,
+    intro: [['ani', 'Aragatsy chors gagat uni. Mer nshanakety verevinn e.', 'Aragats has four peaks. Our marker is on the highest.'], ['ani', 'Arag gna. Qamin uzhegh e.', 'Go fast. The wind is strong.']],
+    outro: [['ani', 'Menq Hayastani amenabardzr ketum enq!', "We're at the highest point in Armenia!"], ['ani', 'Verjin kangary Khor Virapn e. Masisy kspasi.', 'The last stop is Khor Virap. Masis is waiting.']] },
+  { region: 'khorvirap', at: [700, 1170], title: 'The View of Masis', game: 'khorvirap', pay: 8000, final: true,
+    intro: [['ani', 'Aystegh Grigor Lusavorichy 13 tari apreci.', 'Gregory the Illuminator lived here for 13 years.'], ['ani', 'Ijnir porn, u mi rope lur mna.', 'Go down into the pit, and be still for a moment.']],
+    outro: [['ani', 'Nayir Masisin. Sa mer tunn e.', 'Look at Masis. This is our home.'], ['pm', 'Du Hayastani barekamn es. Bari galust tun.', 'You are a friend of Armenia. Welcome home.']] },
+];
+const armRoad = { chapter: 0, hinted: false };
+let roadMarker = null;   // created on first use: the marker helper's textures are defined later in the script
+ARMROAD.forEach((C, i) => interactables.push({
+  x: REGIONS[C.region].ox + C.at[0], y: REGIONS[C.region].oy + C.at[1], r: 34,
+  when: () => armRoad.chapter === i && player.region === C.region && !RG.active && !activity,
+  label: `The Armenian Road · Chapter ${i + 1}: ${C.title}`,
+  act: () => talk(C.intro, () => startRegionGame(C.game, { story: () => talk(C.outro, () => {
+    player.money += C.pay; hg.followers += 250; armRoad.chapter = i + 1; saveGame();
+    if (C.final) showBanner('The Armenian Road', `Complete · +${fmtMoney(C.pay)} · You are a friend of Armenia`, '#ff6fd8', 5);
+    else { showBanner('Chapter complete', `${C.title} · +${fmtMoney(C.pay)}`, '#ff6fd8', 3.5); toast(`Ani: See you at ${REGIONS[ARMROAD[i + 1].region].name}`, '#ff6fd8'); }
+  }) })) }));
+function updateRoadMarker() {
+  const C = ARMROAD[armRoad.chapter], on = !!C && player.region === C.region && !RG.active && !activity && mode !== 'title';
+  if (!roadMarker) roadMarker = buildMarker(0xff6fd8);
+  roadMarker.visible = on;
+  if (on) { const R = REGIONS[C.region]; roadMarker.position.set(R.ox + C.at[0], 0, R.oy + C.at[1]); roadMarker.userData.box.rotation.y += 0.02; }
+  if (!armRoad.hinted && mode === 'play' && armRoad.chapter === 0) { armRoad.hinted = true; toast('Ani: Barev! Meet me in Yerevan. Open Hayagram and use Quick Travel', '#ff6fd8'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3 · CARS IN ARMENIA — a car waiting at every landing pad; open valleys get room to drive
+// ═══════════════════════════════════════════════════════════════════════════════
+const REGION_CARS = { yerevan: ['sedan', '#f2f0ea'], geghard: ['pickup', '#6a7a5a'], garni: ['sedan', '#8a2f2f'], khorvirap: ['pickup', '#d9c9a3'], sevan: ['van', '#3f6fb0'],
+  etchmiadzin: ['sedan', '#2a2a2a'], noravank: ['pickup', '#b8623f'], dilijan: ['sedan', '#2f5a2c'], tatev: ['pickup', '#5c6773'], jermuk: ['sedan', '#9fd4e8'],
+  gyumri: ['taxi', '#f2c230'], aragats: ['pickup', '#e8e4dc'], ararat: ['sports', '#d12f2f'] };
+// Open terrain: let players drive well past the landmark toward the mountains
+// (kept clear of the big mountain meshes to the north of Khor Virap, Aragats and the Ararat Valley)
+const OPEN_BOUNDS = { khorvirap: [-900, 2500, 0, 2500], etchmiadzin: [-900, 2500, -900, 2500], aragats: [-900, 1600, 30, 2500], ararat: [-900, 2500, 0, 2500], dilijan: [-600, 2200, -600, 2200] };
+for (const [k, b] of Object.entries(OPEN_BOUNDS)) REGIONS[k].bounds = b;
+function regionCarFor(R) {
+  if (R.carPlaced) return; R.carPlaced = true;
+  const [type, color] = REGION_CARS[R.key] || ['sedan', '#c8553d'];
+  const c = makeCar(type, R.ox + R.spawn[0] + 120, R.oy + R.spawn[1] + 10, -Math.PI / 2, { keep: true, color });
+  if (!carHitsWorld(c, c.x, c.y, c.a)) cars.push(c);
+}
+// A dirt armRoad loop around each destination's centre (visual), so there is somewhere obvious to drive
+const roadMat = new THREE.MeshLambertMaterial({ color: 0x5a5046 });
+function regionRoad(R) {
+  const b = R.bounds || [0, REGION_SIZE, 0, REGION_SIZE], cx = 800, cz = 800, rx = Math.min(700, (b[1] - b[0]) / 2 - 150), rz = Math.min(700, (b[3] - b[2]) / 2 - 150);
+  const g = new THREE.RingGeometry(0.93, 1, 72).rotateX(-Math.PI / 2); g.scale(rx, 1, rz);
+  const m = new THREE.Mesh(g, roadMat); m.position.set(R.ox + cx, 0.5, R.oy + cz); m.receiveShadow = true; R.group.add(m);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 4 · PROGRESSION — car collection, guesthouses at every destination, Hayagram milestones
+// ═══════════════════════════════════════════════════════════════════════════════
+const COLLECTABLE = ['sedan', 'taxi', 'pickup', 'van', 'sports', 'bus', 'bike'];
+const collection = new Set();
+function collectCar(type) {
+  if (!COLLECTABLE.includes(type) || collection.has(type)) return;
+  collection.add(type); toast(`New in your collection: ${VEHICLES[type].name} (${collection.size}/${COLLECTABLE.length})`, '#e0b0ff');
+  if (collection.size === COLLECTABLE.length) { player.money += 50000; showBanner('Collection complete', 'Every vehicle in the garage · +$50,000', '#e0b0ff', 4.5); }
+}
+const GUESTHOUSES = { yerevan: 60000, geghard: 22000, garni: 26000, khorvirap: 20000, sevan: 45000, etchmiadzin: 30000, noravank: 24000, dilijan: 38000, tatev: 32000, jermuk: 34000, gyumri: 28000, aragats: 26000, ararat: 22000 };
+const gh = Object.fromEntries(Object.keys(GUESTHOUSES).map(k => [k, { owned: false, safe: 0 }]));
+const GH_AT = [1240, 1330];
+function addGuesthouse(R) {
+  const own = gh[R.key].owned, [x, z] = GH_AT;
+  RB(R, x, z, 90, 70, 44, '#e8dcc4', { solid: true }); RPrism(R, x, z, 96, 76, 26, own ? '#d90012' : '#8a3a2a', 44, true);
+  RB(R, x, z + 36, 14, 2, 24, '#2a211c', { shadow: false });
+  R.ghSign = RB(R, x - 60, z + 40, 30, 3, 14, own ? '#7fe0a0' : '#f2a800', { y: 20 });
+}
+for (const R of Object.values(REGIONS)) {
+  const [x, z] = GH_AT, key = R.key;
+  interactables.push({ x: R.ox + x - 60, y: R.oy + z + 60, r: 30, when: () => player.region === key,
+    label: () => gh[key].owned ? `Collect guesthouse earnings · ${fmtMoney(Math.floor(gh[key].safe))}` : `Buy this guesthouse · ${fmtMoney(GUESTHOUSES[key])}`,
+    act: () => {
+      const H = gh[key];
+      if (H.owned) { const v = Math.floor(H.safe); player.money += v; H.safe = 0; toast(`Collected ${fmtMoney(v)} from the guesthouse`, '#7fe0a0'); }
+      else if (pay(GUESTHOUSES[key])) { H.owned = true; hg.followers += 200; showBanner('Guesthouse bought', `${R.name} · earns money while you are away`, '#7fe0a0', 3.5); if (R.ghSign) R.ghSign.material = rmat('#7fe0a0'); }
+      saveGame();
+    } });
+}
+const MILESTONES = [[500, 2000, 'Rising star'], [1000, 5000, 'Local favourite'], [2500, 10000, 'Travel guide'], [5000, 25000, 'Influencer'], [10000, 50000, 'Face of Armenia']];
+hg.ms = 0;
+function updateProgress(dt) {
+  for (const k in gh) if (gh[k].owned) gh[k].safe = Math.min(GUESTHOUSES[k] * 0.4, gh[k].safe + GUESTHOUSES[k] * 0.00035 * dt);
+  while (hg.ms < MILESTONES.length && hg.followers >= MILESTONES[hg.ms][0]) {
+    const [n, cash, title] = MILESTONES[hg.ms++]; player.money += cash;
+    showBanner(`Hayagram: ${title}`, `${n.toLocaleString()} followers · +${fmtMoney(cash)}`, '#ff6fd8', 4); saveGame();
+  }
+}
+function portfolioApp() {
+  phNote(`Hayagram: ${hg.followers.toLocaleString()} followers${hg.ms ? ` · ${MILESTONES[hg.ms - 1][2]}` : ''}`);
+  const next = MILESTONES[hg.ms]; if (next) phRow(`Next: ${next[2]}`, `${next[0].toLocaleString()} · +${fmtMoney(next[1])}`);
+  phNote(`Vehicle collection ${collection.size}/${COLLECTABLE.length} · store each type in a mansion garage for $50,000`);
+  for (const t of COLLECTABLE) phRow(VEHICLES[t].name, collection.has(t) ? '✓ collected' : 'missing', collection.has(t));
+  phNote('Guesthouses');
+  for (const [k, H] of Object.entries(gh)) phRow(REGIONS[k].name, H.owned ? `${fmtMoney(Math.floor(H.safe))} waiting` : fmtMoney(GUESTHOUSES[k]), H.owned);
+  phNote(`Activities done: ${RG.done.size} of ${Object.keys(RG_DEF).length} · The Armenian Road: chapter ${Math.min(armRoad.chapter + 1, ARMROAD.length)} of ${ARMROAD.length}${armRoad.chapter >= ARMROAD.length ? ' (complete)' : ''}`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 5 · CITY LIFE — weather-aware traffic, umbrellas, emergency services during disasters, car radio
+// ═══════════════════════════════════════════════════════════════════════════════
+// Drivers slow down on wet, snowy or foggy roads, and crawl during an earthquake
+function trafficFactor() {
+  if (weather.disaster?.kind === 'earthquake') return 0.2;
+  if (weather.disaster?.kind === 'flood') return 0.45;
+  const k = weather.kind; return k === 'snow' ? 0.6 : k === 'storm' ? 0.7 : k === 'rain' ? 0.82 : k === 'fog' ? 0.72 : 1;
+}
+const umbCanopy = new THREE.ConeGeometry(15, 6, 8), umbPole = new THREE.CylinderGeometry(0.4, 0.4, 16, 5), UMB_COLORS = ['#b8323a', '#1f2d4a', '#2f7a7a', '#1c1c20', '#c9a227', '#6a4a8a'];
+function updateUmbrellas() {
+  const wet = WEATHERS[weather.kind].rain > 0 && !player.region;
+  for (const [p, g] of pedMeshes) {
+    const u = g.userData;
+    if (wet && p.state !== 'down') {
+      if (!u.umb) { u.umb = new THREE.Group(); const c = new THREE.Mesh(umbCanopy, cachedLam(UMB_COLORS[g.id % UMB_COLORS.length])); c.position.y = 38; const pole = new THREE.Mesh(umbPole, cachedLam('#2a2a2a')); pole.position.set(0, 29, 0); u.umb.add(c, pole); u.umb.position.set(1, 0, 2.5); g.add(u.umb); }
+      u.umb.visible = true;
+    } else if (u.umb) u.umb.visible = false;
+  }
+}
+// Ambulances, fire trucks and patrol cars race in with sirens while a disaster is under way
+let emergencyT = 0;
+function updateEmergency(dt) {
+  const D = weather.disaster;
+  if (!D) { for (const c of cars) if (c.emergency && c.ai) { c.emergency = false; c.ai.panic = 0; } return; }
+  emergencyT -= dt;
+  if (emergencyT <= 0 && cars.filter(c => c.emergency).length < 5) {
+    emergencyT = 5;
+    const c = spawnTraffic(260, 900, pick(['ambulance', 'firetruck', 'patrol']));
+    if (c) { c.emergency = true; c.ai.panic = 1e6; c.ai.cruise = 230; }
+  }
+}
+// ─── Car radio: three stations synthesised live with Web Audio (R cycles, only while driving) ──
+const RADIO = [
+  { name: 'Radio Van · Armenian folk', bpm: 96 },
+  { name: 'Harbor FM · lo-fi', bpm: 78 },
+  { name: 'Ararat Rock', bpm: 138 },
+];
+const radio = { ctx: null, master: null, on: 0, next: 0, step: 0, noise: null, shaper: null };
+function radioInit() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+  const ctx = radio.ctx = new AC(); radio.master = ctx.createGain(); radio.master.gain.value = 0; radio.master.connect(ctx.destination);
+  const nb = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; radio.noise = nb;
+  radio.shaper = ctx.createWaveShaper(); const curve = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; curve[i] = Math.tanh(x * 4); } radio.shaper.curve = curve; radio.shaper.connect(radio.master);
+  return true;
+}
+const hz = semis => 220 * Math.pow(2, semis / 12);
+function rTone(t, f, dur, { type = 'sine', gain = 0.2, cutoff = 4000, vib = 0, dest } = {}) {
+  const c = radio.ctx, o = c.createOscillator(), g = c.createGain(), fl = c.createBiquadFilter();
+  o.type = type; o.frequency.setValueAtTime(f, t); fl.type = 'lowpass'; fl.frequency.value = cutoff;
+  if (vib) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 5.5; lg.gain.value = vib; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + dur + 0.05); }
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(fl); fl.connect(g); g.connect(dest || radio.master); o.start(t); o.stop(t + dur + 0.05);
+}
+function rKick(t, gain = 0.5) { const c = radio.ctx, o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.15); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25); o.connect(g); g.connect(radio.master); o.start(t); o.stop(t + 0.3); }
+function rNoise(t, dur, gain, hp = 6000) { const c = radio.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = radio.noise; f.type = 'highpass'; f.frequency.value = hp; g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f); f.connect(g); g.connect(radio.master); s.start(t); s.stop(t + dur + 0.02); }
+const FOLK_SCALE = [0, 1, 4, 5, 7, 8, 10, 12], FOLK_TUNE = [0, 2, 3, 4, 3, 2, 1, 0, 4, 5, 6, 7, 6, 5, 4, 2];
+const LOFI_CHORDS = [[-3, 0, 4, 7], [-7, -3, 0, 4], [0, 4, 7, 11], [-5, -1, 2, 5]], ROCK_ROOTS = [-5, -9, -7, -12];
+function radioStep(st, i, t) {
+  const bar = Math.floor(i / 16), s16 = i % 16, beat = 60 / RADIO[st].bpm / 4;
+  if (st === 0) {         // duduk-like melody over a drone, dhol pattern
+    if (s16 % 2 === 0) rTone(t, hz(FOLK_SCALE[FOLK_TUNE[(i / 2 + bar * 3) % 16 | 0]] - 12 + (bar % 4 === 3 ? 5 : 0)), beat * 2.2, { type: 'sawtooth', gain: 0.07, cutoff: 1300, vib: 4 });
+    if (s16 === 0) rTone(t, hz(-24), beat * 16, { type: 'triangle', gain: 0.05, cutoff: 600 });
+    if ([0, 6, 10].includes(s16)) rKick(t, 0.35); if ([4, 12].includes(s16)) rNoise(t, 0.08, 0.12, 2000);
+  } else if (st === 1) {  // soft chords, lazy drums, hats
+    if (s16 === 0) for (const n of LOFI_CHORDS[bar % 4]) rTone(t, hz(n), beat * 15, { type: 'triangle', gain: 0.035, cutoff: 1800 });
+    if ([0, 7, 10].includes(s16)) rKick(t, 0.3); if ([4, 12].includes(s16)) rNoise(t, 0.12, 0.1, 1500); if (s16 % 2 === 0) rNoise(t, 0.03, 0.04, 8000);
+  } else {                // distorted power chords, straight rock beat
+    const r = ROCK_ROOTS[bar % 4]; if (s16 % 2 === 0) { rTone(t, hz(r - 12), beat * 1.8, { type: 'square', gain: 0.05, cutoff: 2600, dest: radio.shaper }); rTone(t, hz(r - 5), beat * 1.8, { type: 'square', gain: 0.04, cutoff: 2600, dest: radio.shaper }); }
+    if (s16 % 8 === 0) rKick(t, 0.5); if (s16 % 8 === 4) rNoise(t, 0.15, 0.2, 1200); if (s16 % 2 === 0) rNoise(t, 0.04, 0.05, 9000);
+  }
+}
+function radioCycle() {
+  if (!player.car) { toast('Get in a vehicle to use the radio', '#9a978f'); return; }
+  if (!radio.ctx && !radioInit()) { toast('This browser cannot play the radio', '#ff8a7a'); return; }
+  radio.ctx.resume?.();
+  radio.on = (radio.on + 1) % (RADIO.length + 1);
+  toast(radio.on ? `Radio: ${RADIO[radio.on - 1].name}` : 'Radio off', '#9fd4e8');
+  radio.next = radio.ctx.currentTime + 0.05; radio.step = 0;
+}
+function updateRadio() {
+  if (!radio.ctx) return;
+  const play = FX.radio && radio.on > 0 && !!player.car && mode === 'play';
+  radio.master.gain.setTargetAtTime(play ? 0.55 : 0, radio.ctx.currentTime, 0.15);
+  if (!play) { radio.next = radio.ctx.currentTime + 0.05; return; }
+  const st = radio.on - 1, beat = 60 / RADIO[st].bpm / 4;
+  while (radio.next < radio.ctx.currentTime + 0.25) { radioStep(st, radio.step++, radio.next); radio.next += beat; }
+}
+addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.code === 'KeyR' && !e.repeat && mode === 'play') radioCycle();
+  if (e.code === 'KeyE' && !e.repeat && mode === 'play' && RG.active?.def.kind === 'grill') grillTake();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6 · HAYASTAN GPT AS A COMPANION — local tips by text, one-tap prompts, and AI-made jobs
+// Background tips are pre-written and picked by situation: the AI is only called when you tap or send.
+// ═══════════════════════════════════════════════════════════════════════════════
+let tipT = 150;
+function companionTip() {
+  const R = player.region && REGIONS[player.region];
+  if (player.hp < 40) return 'Your health is low. A diner meal or the hospital in Larkfield fixes that.';
+  if (stars() > 0) return 'Police on you? Nova in Contacts can wipe your wanted level for a fee.';
+  if (weather.disaster) return `A ${DISASTERS[weather.disaster.kind].name.toLowerCase()} is under way. Stay indoors or leave the area.`;
+  if (R && !RG.done.has(R.key) && RG_DEF[R.key]) return `There is something to do here: ${RG_DEF[R.key].name}. Talk to the local or look for the activity prompt.`;
+  if (R && !gh[R.key].owned) return `You could buy the guesthouse here for ${fmtMoney(GUESTHOUSES[R.key])}. It earns money while you are away.`;
+  if (armRoad.chapter < ARMROAD.length) return `The Armenian Road continues in ${REGIONS[ARMROAD[armRoad.chapter].region].name}. Quick Travel is in Hayagram.`;
+  if (WEATHERS[weather.kind].rain > 0) return 'Roads are wet. Brake earlier and go easy on the drifts.';
+  if (player.car && !radio.on) return 'Press R to turn on the radio. Radio Van plays Armenian folk.';
+  return pick(['Check Portfolio on your phone for collection and guesthouse progress.', 'Press G in Armenia to open Quick Travel.', 'Ask me anything, or tell me to change the weather.']);
+}
+function updateCompanion(dt) {
+  if (mode !== 'play') return;
+  tipT -= dt;
+  if (tipT <= 0) { tipT = 200 + Math.random() * 90; toast(`Hayastan GPT: ${companionTip()}`, '#5fd4c4'); }
+}
+// AI-made delivery jobs: Hayastan GPT picks the route, the title and the pay from these places
+gptTools.push({ name: 'create_job', description: 'Creates a delivery job for the player in the city from one place to another. Use when the player asks for work or a job. Returns a confirmation.',
+  inputSchema: { type: 'object', properties: { title: { type: 'string' }, pickup: { type: 'string', enum: Object.keys(PLACES_GPT) }, dropoff: { type: 'string', enum: Object.keys(PLACES_GPT) }, pay: { type: 'number' } }, required: ['title', 'pickup', 'dropoff', 'pay'] },
+  execute: i => {
+    if (player.region) throw new Error('Jobs happen in the city; fly home first');
+    const a = PLACES_GPT[String(i.pickup)], b = PLACES_GPT[String(i.dropoff)]; if (!a || !b || i.pickup === i.dropoff) throw new Error('Pick two different places');
+    const pay = clamp(Math.round(Number(i.pay) || 800), 200, 3000), title = String(i.title || 'Delivery').slice(0, 40), A = a(), B = b();
+    const ok = startActivity({ kind: 'gpt', title, steps: [{ type: 'go', x: A.x, y: A.y, r: 44, text: `Pick up at the ${i.pickup}` }, { type: 'go', x: B.x, y: B.y, r: 44, text: `Deliver to the ${i.dropoff}` }],
+      onComplete: () => { player.money += pay; showBanner('Delivered', `${title} · +${fmtMoney(pay)}`, '#5fd4c4', 3); }, onFail: () => toast('Job failed', '#ff8a7a') });
+    if (!ok) throw new Error('The player already has a job'); closePhone(); return `Job "${title}" started, pays ${pay}`;
+  } });
+const GPT_QUICK = [['What should I do?', () => `What should I do next? Be specific to where I am.`], ['Give me a job', () => 'Give me a delivery job in the city.'], ['Tour this place', () => player.region ? `Give me a short tour of ${REGIONS[player.region].name}: two facts and one thing to look at.` : 'Tell me one interesting thing about Hayastan city.']];
+
+// ─── Per-frame hook for all of the above ───────────────────────────────────
+function updateMore(dt) {
+  updateRegionGame(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
+}
+
+for (const [id, def] of Object.entries(RG_DEF)) {
+  const key = id === 'grill' ? 'yerevan' : id, R = REGIONS[key], at = id === 'grill' ? [1060, 1150] : [R.guide[0] + 80, R.guide[1]];
+  interactables.push({ x: R.ox + at[0], y: R.oy + at[1], r: 30, when: () => player.region === key && !RG.active && !activity,
+    label: () => `${id === 'grill' ? 'Khorovats stand' : 'Activity'} · ${def.name}${RG.done.has(id) ? ' (done)' : ''}`, act: () => startRegionGame(id) });
 }
 
 let luckyWheel = null;
@@ -6453,7 +6942,7 @@ function syncEntities() {
       if (u.rider) u.rider.visible = !!c.ai;
     } else g.rotation.set(0, -c.a, 0);
     if (c.wreck && !u.wreck) { u.wreck = true; u.body.material = charMat; if (u.cabin) u.cabin.material = charMat; }
-    if (u.pglow) u.pglow.visible = !!(c.ai && hunting);
+    if (u.pglow) u.pglow.visible = !!(c.ai && (hunting || c.emergency));
     u.blob.visible = FX.blobShadows;
     if (u.beam) u.beam.visible = !c.wreck;
     updateGhosts(c, g);
@@ -6709,6 +7198,7 @@ function updateCamera(dt) {
   moon.position.set(f.x + so[0], so[1], f.z + so[2]); moon.target.position.set(f.x, 0, f.z);
   moon.castShadow = FX.shadows;
   if (QT.state === 'depart' || QT.state === 'arrive') travelCameraAdjust();
+  if (rideCam && RG.active) rideCam();                 // the Tatev cable car owns the camera during the ride
 }
 
 const DISPLAY = '"Big Shoulders Display", "Arial Narrow", Impact, sans-serif';
@@ -6730,11 +7220,12 @@ function render(dt) {
   syncEntities();
   updateFaces(dt);           // blinks, saccades, micro-motion, expressions and visemes
   updateTalkType(dt);
+  updateMore(dt);            // Armenia activities, story markers, progression, umbrellas, sirens, radio, tips
   updateQuickTravel(dt);
   updateCamera(dt);
   renderFrame(dt);
   renderPortrait();          // dialogue close-up, drawn into the talk box's window
-  const sig = `${player.region}|${mode}|${QT.state}`;
+  const sig = `${player.region}|${mode}|${QT.state}|${!!RG.active}`;
   if (sig !== lastPlacardSig) { lastPlacardSig = sig; updatePlacard(); }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, vw, vh);
@@ -6746,6 +7237,7 @@ function render(dt) {
   drawCaption();
   drawGpsPanel(clamp(vw / 900, 0.72, 1));
   drawWeatherHud();
+  drawRegionGameHud(clamp(vw / 900, 0.72, 1));
   if (mode === 'map') drawMap();
   if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
@@ -7154,12 +7646,20 @@ function boot(data) {
     if (saved.anchors) for (const i of saved.anchors) anchorsFound.add(i);
     if (saved.day) day = saved.day;
     if (saved.daily && saved.daily.list) daily = saved.daily;
+    if (saved.more) {
+      const X = saved.more;
+      for (const k of X.done || []) if (RG_DEF[k]) RG.done.add(k);
+      if (X.rugs) Object.assign(RG.rugs.inv, X.rugs); if (typeof X.profit === 'number') RG.rugs.profit = X.profit;
+      if (typeof X.road === 'number') armRoad.chapter = clamp(X.road, 0, ARMROAD.length);
+      if (X.gh) for (const k in gh) if (X.gh[k]) Object.assign(gh[k], X.gh[k]);
+      for (const t of X.coll || []) if (COLLECTABLE.includes(t)) collection.add(t);
+    }
     if (saved.hayagram) {
       const H = saved.hayagram;
       if (typeof H.followers === 'number') hg.followers = H.followers;
       for (const k of H.visited || []) if (REGIONS[k]) hg.visited.add(k);
       for (const k of H.checkins || []) if (REGIONS[k]) hg.checkins.add(k);
-      hg.pm = !!H.pm;
+      hg.pm = !!H.pm; if (typeof H.ms === 'number') hg.ms = H.ms;
     }
   }
   if (data && typeof data.money === 'number') player.money = data.money;
