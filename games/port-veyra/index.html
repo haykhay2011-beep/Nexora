@@ -85,6 +85,13 @@
     background: #0d0f14; border: 1px solid #2c2f36; border-radius: 28px; padding: 14px 12px 10px; box-sizing: border-box;
     box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 0 0 5px #16181e; font-family: var(--mono); color: var(--paper); animation: phoneIn 0.22s ease-out; }
   #phone[hidden] { display: none !important; }
+  .map-tabs { position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 6;
+    display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(10,12,16,0.85); border: 1px solid #2c2f36; font-family: var(--mono); }
+  .map-tabs[hidden] { display: none !important; }
+  .map-tabs button { font: 600 0.8rem var(--mono); color: var(--paper); background: transparent; border: 0; border-radius: 999px; padding: 0.45rem 0.9rem; cursor: pointer; white-space: nowrap; }
+  .map-tabs button:hover { background: rgba(255,255,255,0.08); }
+  .map-tabs button[aria-selected="true"] { background: #f2a800; color: #10181c; }
+  .map-tabs #mapClose { color: var(--muted); }
   @keyframes phoneIn { from { transform: translateY(40px); opacity: 0; } }
   .ph-status { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); padding: 2px 10px 8px; font-variant-numeric: tabular-nums; }
   .ph-head { display: flex; align-items: center; gap: 0.4rem; padding: 0 6px 8px; border-bottom: 1px solid var(--line); }
@@ -385,7 +392,7 @@
           <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
           <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
           <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-          <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
+          <div><dt>M</dt><dd>3D map · Hayastan city / Armenia</dd></div>
           <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
           <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -442,7 +449,7 @@
       <div><dt>Shift + steer</dt><dd>Handbrake drift · scores cash</dd></div>
       <div><dt>C</dt><dd>Chase, high or first-person camera</dd></div>
       <div><dt>E</dt><dd>Enter doors · use things</dd></div>
-      <div><dt>M</dt><dd>City map · set a waypoint</dd></div>
+      <div><dt>M</dt><dd>3D map · Hayastan city / Armenia</dd></div>
       <div><dt>/</dt><dd>Phone</dd></div>
       <div><dt>R</dt><dd>Car radio · next station</dd></div>
       <div><dt>Esc</dt><dd>Pause menu</dd></div>
@@ -461,6 +468,9 @@
   </div>
 </div>
 
+<div id="mapTabs" class="map-tabs" hidden role="tablist" aria-label="Map">
+  <button type="button" role="tab" data-tab="city">Hayastan city</button><button type="button" role="tab" data-tab="armenia">Armenia</button><button type="button" id="mapClose" aria-label="Close map">Close ✕</button>
+</div>
 <div id="phone" hidden>
   <div class="ph-status"><span id="phTime">--:--</span><span>HAYASTAN TEL</span><span>86%</span></div>
   <div class="ph-head"><button id="phBack" type="button" aria-label="Back">‹</button><span id="phTitle">Home</span></div>
@@ -509,11 +519,11 @@ const T = 48;                 // tile size in px
 const GW = 98, GH = 52;       // x 0-51 Meridian island · 52-59 Hayastan Bay · 60-91 Eastshore island · 92+ open water
 const NN = 6;                 // intersections north to south
 const NNX = 10;               // intersections west to east (five on each island)
-const BRIDGE_ROWS = { 1: 'Hayastan Bay Bridge', 3: 'Harbor Bridge' };   // road rows that cross the bay
+const BRIDGE_ROWS = { 1: 'Kievyan Bridge', 3: 'Victory Bridge' };   // road rows that cross the bay
 const ROAD = 0, SIDE = 1, BLDG = 2, GRASS = 3, WATER = 4, YARD = 5;
 const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // E S W N
-const H_STREETS = ['Tallow St', 'Beacon St', 'Cinder St', 'Haldane St', 'Rook St', 'Ferrier St'];
-const V_STREETS = ['Quarry Ave', 'Marlowe Ave', 'Juniper Ave', 'Sable Ave', 'Vance Ave', 'Harbor Way', 'Bayview Ave', 'Cedar Ave', 'Airport Rd', 'Eastshore Blvd'];
+const H_STREETS = ['Tigran Mets Ave', 'Khanjyan St', 'Pushkin St', 'Isahakyan St', 'Koryun St', 'Nalbandyan St'];
+const V_STREETS = ['Mashtots Ave', 'Abovyan St', 'Martiros Saryan St', 'Aram St', 'Northern Ave', 'Baghramyan Ave', 'Tumanian St', 'Sayat Nova St', 'Terian St', 'Amiryan St'];
 
 // Content registries: add districts, vehicles and mission types here.
 const DISTRICTS = {
@@ -1768,7 +1778,7 @@ const HEISTS = [
   { id: 'savings', name: 'The Harbor Savings Job', pay: 12000, blurb: 'Drill the vault at a downtown savings bank.',
     preps: [
       { name: 'Case the bank', steps: () => [
-        { type: 'go', ...PLACES.bank, r: 44, text: 'Drive to Harbor Savings & Loan on Cinder St, Meridian' },
+        { type: 'go', ...PLACES.bank, r: 44, text: 'Drive to Harbor Savings & Loan on Pushkin St, Meridian' },
         { type: 'hold', ...PLACES.bank, r: 55, time: 5, text: 'Photograph the vault entrance. Stay close to the doors' }] },
       { name: 'Getaway car', steps: () => [
         { type: 'steal', vehicle: 'sports', at: { x: 46.5 * T, y: 36.5 * T, a: 0 }, text: 'Steal the getaway car from the docks yard' },
@@ -2491,7 +2501,7 @@ const STORY = [
     intro: [['hale', 'Evening. Detective Hale, Hayastan PD. Funny how trouble follows you around.'], ['you', 'Must be the neighborhood.'], ['hale', "Must be. I'll be seeing you."], ['nova', "Hale's people are all over you. Shake them and get off the island."]],
     steps: () => [
       { type: 'lose', heat: 2, text: 'Shake the unmarked cars on your tail' },
-      { type: 'go', x: 65 * T, y: 12.5 * T, r: 60, text: 'Cross the Hayastan Bay Bridge to Eastshore' }],
+      { type: 'go', x: 65 * T, y: 12.5 * T, r: 60, text: 'Cross the Kievyan Bridge to Eastshore' }],
     outro: [['nova', "Clean. Hale's got nothing on you. Yet."]] },
   { title: 'Air Freight', at: { x: 66 * T, y: 9.5 * T }, pay: 5000,
     intro: [['vic', 'There is a freighter anchored off Eastshore with a crate that has my name on it.'], ['vic', 'Get a helicopter, hover over the deck while my people winch it up, and bring it to Hangar 3.']],
@@ -3035,8 +3045,9 @@ function callHacker() {
 }
 function toggleMap() {
   closePhone();
-  if (mode === 'play') { mode = 'map'; keys.clear(); mouseFire = false; }
-  else if (mode === 'map') { mode = 'play'; keys.clear(); }
+  if (mode === 'play') { mode = 'map'; keys.clear(); mouseFire = false; openMap3D(); }
+  else if (mode === 'map') { mode = 'play'; keys.clear(); mapView.drag = null; camSnap = true; }
+  syncMapTabs(); glCanvas.style.cursor = '';
 }
 document.getElementById('mapBtn').addEventListener('click', () => { togglePause(); toggleMap(); });
 document.getElementById('abandonBtn').addEventListener('click', () => { failActivity('You walked away from the job'); togglePause(); });
@@ -5820,6 +5831,7 @@ function restoreCityLook() {
 let armeniaFps = { t0: 0, frames: 0, checked: false };
 function renderFrame(dt) {
   rippleTex.offset.set(time * 0.012, time * 0.008);
+  if (mode === 'map' && mapView.tab === 'armenia') { renderArmeniaMap(); return; }
   if (hdrMode()) {
     composer.render(dt);
     // First seconds in Armenia on a slow GPU: drop SSAO (the most expensive pass) and say so
@@ -6769,6 +6781,288 @@ for (const [id, def] of Object.entries(RG_DEF)) {
     label: () => `${id === 'grill' ? 'Khorovats stand' : 'Activity'} · ${def.name}${RG.done.has(id) ? ' (done)' : ''}`, act: () => startRegionGame(id) });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3D MAP (M) — two tabs
+//   Hayastan city: the real 3D city seen from above; drag to pan, right-drag to rotate/tilt, wheel to zoom,
+//                  click to set a waypoint. Streets are labelled and major places carry logo badges.
+//   Armenia:       a 3D relief map of the country with the 13 destinations pinned at their real coordinates;
+//                  click a pin to fly there with Quick Travel.
+// ═══════════════════════════════════════════════════════════════════════════════
+const mapView = { tab: 'city', cx: 0, cz: 0, dist: 2200, yaw: -Math.PI / 2, pitch: 1.0, drag: null, hover: -1 };
+const armView = { cx: 0, cz: 0, dist: 1500, yaw: -Math.PI / 2, pitch: 0.88 };
+const mapTabsEl = document.getElementById('mapTabs');
+function openMap3D() {
+  const p = player.region ? (regionBack || { x: 26 * T, y: 32.65 * T }) : player.interior ? INTERIORS[player.interior].street : playerPos();
+  mapView.tab = player.region ? 'armenia' : 'city';
+  mapView.cx = clamp(p.x, 0, GW * T); mapView.cz = clamp(p.y, 0, GH * T); mapView.dist = 2200; mapView.yaw = -Math.PI / 2; mapView.pitch = 1.0;
+  if (player.region) { const c = armXZ(...destLatLon(destIndex(player.region))); armView.cx = c[0]; armView.cz = c[1]; armView.dist = 1300; }
+  syncMapTabs();
+}
+function syncMapTabs() {
+  mapTabsEl.hidden = mode !== 'map';
+  for (const b of mapTabsEl.querySelectorAll('[data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === mapView.tab));
+}
+for (const b of mapTabsEl.querySelectorAll('[data-tab]')) b.addEventListener('click', () => { mapView.tab = b.dataset.tab; syncMapTabs(); });
+document.getElementById('mapClose').addEventListener('click', () => { if (mode === 'map') toggleMap(); });
+const activeView = () => mapView.tab === 'city' ? mapView : armView;
+// Camera for either tab: orbit around a ground point (yaw around, pitch above the horizon)
+function placeOrbitCam(cam, V) {
+  const cp = Math.cos(V.pitch), sp = Math.sin(V.pitch);
+  cam.position.set(V.cx - Math.cos(V.yaw) * cp * V.dist, sp * V.dist, V.cz - Math.sin(V.yaw) * cp * V.dist);
+  cam.lookAt(V.cx, 0, V.cz);
+}
+function mapCamera(dt) {
+  // Keyboard: WASD / arrows pan, Q / E rotate
+  const V = activeView(), k = V.dist * 0.9 * dt, fx = Math.cos(V.yaw), fz = Math.sin(V.yaw);
+  const f = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0), r = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+  V.cx += (fx * f - fz * r) * k; V.cz += (fz * f + fx * r) * k;
+  if (keys.has('KeyQ')) V.yaw -= dt * 1.2; if (keys.has('KeyE')) V.yaw += dt * 1.2;
+  if (V === mapView) { V.cx = clamp(V.cx, 0, GW * T); V.cz = clamp(V.cz, 0, GH * T); }
+  camera.fov = 50; camera.far = 16000; camera.updateProjectionMatrix();
+  placeOrbitCam(camera, mapView);
+  // Bright, clear air for the map: little fog and a lifted sky light
+  scene.fog.density = 0.00006; hemi.intensity = Math.max(hemi.intensity, 0.85); moon.intensity = Math.max(moon.intensity, 0.55);
+  rainFx.visible = snowFx.visible = false;
+  if (player.interior && mapView.tab === 'city') { interiorGroup.visible = false; if (scene.background && scene.background.isColor) scene.background.copy(sky.color); scene.fog.color.copy(sky.color); }
+  moon.position.set(mapView.cx + 600, 1400, mapView.cz + 300); moon.target.position.set(mapView.cx, 0, mapView.cz);
+}
+// ─── Map input: drag pans, right-drag (or Shift-drag) rotates and tilts, wheel zooms, click acts ──
+glCanvas.addEventListener('pointerdown', e => {
+  if (mode !== 'map') return;
+  mapView.drag = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, rot: e.button === 2 || e.shiftKey, t: performance.now() };
+  glCanvas.setPointerCapture?.(e.pointerId);
+});
+glCanvas.addEventListener('contextmenu', e => { if (mode === 'map') e.preventDefault(); });
+addEventListener('pointermove', e => {
+  const D = mapView.drag; if (mode !== 'map') { mapView.drag = null; return; }
+  if (!D) { mapView.mouse = { x: e.clientX, y: e.clientY }; return; }
+  const V = activeView(), dx = e.clientX - D.x, dy = e.clientY - D.y; D.x = e.clientX; D.y = e.clientY;
+  if (D.rot) { V.yaw += dx * 0.006; V.pitch = clamp(V.pitch - dy * 0.004, 0.45, 1.5); }
+  else {
+    const k = V.dist * 0.0013, fx = Math.cos(V.yaw), fz = Math.sin(V.yaw);
+    V.cx += (fz * dx + fx * dy) * k; V.cz += (-fx * dx + fz * dy) * k;
+  }
+  mapView.mouse = { x: e.clientX, y: e.clientY };
+});
+addEventListener('pointerup', e => {
+  const D = mapView.drag; mapView.drag = null;
+  if (mode !== 'map' || !D) return;
+  if (Math.hypot(e.clientX - D.x0, e.clientY - D.y0) > 6) return;       // it was a drag, not a click
+  if (mapView.tab === 'city') {
+    // Click → the ground point under the cursor → set or clear the waypoint
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(e.clientX / vw * 2 - 1, -(e.clientY / vh) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3()); if (!hit) return;
+    const x = clamp(hit.x, 0, GW * T), y = clamp(hit.z, 0, GH * T);
+    if (waypoint && Math.hypot(waypoint.x - x, waypoint.y - y) < 80) { waypoint = null; toast('Waypoint cleared'); }
+    else { waypoint = { x, y }; toast('Waypoint set', '#d66bff'); }
+  } else if (mapView.hover >= 0 && mapView.hoverOk) {
+    const i = mapView.hover; toggleMap(); quickTravelTo(i);
+  }
+});
+glCanvas.addEventListener('wheel', e => { if (mode !== 'map') return; e.preventDefault(); const V = activeView(); V.dist = clamp(V.dist * Math.exp(e.deltaY * 0.0012), V === mapView ? 450 : 300, V === mapView ? 4600 : 2600); }, { passive: false });
+
+// ─── Screen projection helper for the overlay ────────────────────────────────
+const _mp = new THREE.Vector3();
+function toScreen(cam, x, y, h = 0) { _mp.set(x, h, y).project(cam); return [(_mp.x + 1) / 2 * vw, (1 - _mp.y) / 2 * vh, _mp.z < 1 && Math.abs(_mp.x) < 1.15 && Math.abs(_mp.y) < 1.15]; }
+// A round logo badge: coloured disc, white ring, glyph, and a name pill underneath
+function badge(sx, sy, col, glyph, label, big = true) {
+  const r = big ? 13 : 9;
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.arc(sx + 1.5, sy + 2, r, 0, 7); ctx.fill();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#10181c'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `800 ${big ? 14 : 10}px ${DISPLAY}`; ctx.fillText(glyph, sx, sy + 1);
+  if (label) {
+    ctx.font = `600 ${big ? 11 : 10}px ${MONO}`; const w = ctx.measureText(label).width + 12;
+    ctx.fillStyle = 'rgba(10,12,16,0.82)'; ctx.beginPath(); ctx.roundRect(sx - w / 2, sy + r + 4, w, 17, 8); ctx.fill();
+    ctx.fillStyle = '#efe6d2'; ctx.fillText(label, sx, sy + r + 13);
+  }
+  ctx.textBaseline = 'alphabetic';
+}
+// Text along a street between two ground points, rotated to follow it on screen
+function streetLabel(name, x0, y0, x1, y1) {
+  const [a, b, v1] = toScreen(camera, x0, y0), [c, d, v2] = toScreen(camera, x1, y1); if (!v1 && !v2) return;
+  let ang = Math.atan2(d - b, c - a); if (ang > Math.PI / 2) ang -= Math.PI; if (ang < -Math.PI / 2) ang += Math.PI;
+  const mx = (a + c) / 2, my = (b + d) / 2; if (mx < 0 || mx > vw || my < 0 || my > vh) return;
+  ctx.save(); ctx.translate(mx, my); ctx.rotate(ang);
+  ctx.font = `700 ${clamp(26000 / mapView.dist, 9, 13) | 0}px ${MONO}`; const w = ctx.measureText(name).width + 12;
+  ctx.fillStyle = 'rgba(255,248,236,0.9)'; ctx.beginPath(); ctx.roundRect(-w / 2, -9, w, 18, 9); ctx.fill();
+  ctx.fillStyle = '#10181c'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(name, 0, 1); ctx.textBaseline = 'alphabetic';
+  ctx.restore();
+}
+// Every major place in the city, with its logo
+function cityPlaces() {
+  const L = [
+    [PLACES.casinoDoor.x, PLACES.casinoDoor.y, '#ff6fd8', '♠', 'Gilded Anchor Casino'],
+    [26 * T, 32.65 * T, '#f2e2c4', '⌂', 'Your apartment'],
+    [PLACES.customs.x, PLACES.customs.y, '#f28a1e', '⚙', 'Hayastan Customs'],
+    [68 * T, 12.6 * T, '#9fd4e8', '✈', 'Municipal Airfield'],
+    [PLACES.freighter.x, PLACES.freighter.y, '#ffd35a', '⚓', 'Freighter'],
+  ];
+  const SEEN = new Set();
+  for (const e of enterables) {
+    const pick = { police: ['#8fb4ff', '★'], hospital: ['#ff8a8a', '✚'], bank: ['#ffd35a', '$'], gallery: ['#ffd35a', '♜'], control: ['#9fd4e8', '✈'] }[e.type];
+    if (pick && !SEEN.has(e.type)) { SEEN.add(e.type); L.push([e.door.x, e.door.y, pick[0], pick[1], e.name]); }
+  }
+  for (const B of Object.values(BUSINESSES)) L.push([B.x, B.y, '#7fe0a0', '♦', B.name]);
+  for (const [id, M] of Object.entries(MANSIONS)) L.push([M.door.x, M.door.y, mansionState[id].owned ? '#e0b0ff' : '#8a6a9a', '♛', M.name]);
+  for (const R of RACES) { const p = R.entry || (R.start && { x: nodePos(...R.start)[0], y: nodePos(...R.start)[1] }); if (p) L.push([p.x, p.y, '#4fc3ff', '⚑', R.name || 'Race']); }
+  return L;
+}
+const SHOP_BADGES = { ammu: ['#ff8a7a', '⌖'], clothes: ['#e0b0ff', '♥'], diner: ['#ffb347', '♨'], bar: ['#c9a227', '♪'], gym: ['#7fe0a0', '♣'], shop: ['#efe6d2', '•'] };
+function drawCityMap() {
+  const s = clamp(vw / 900, 0.72, 1), near = mapView.dist < 1500;
+  // District names float above their neighbourhoods
+  ctx.textAlign = 'center';
+  for (const [name, x, y] of [['MERIDIAN', 20 * T, 16 * T], ['LARKFIELD', 20 * T, 44 * T], ['SALTMARSH DOCKS', 46 * T, 20 * T], ['AIRFIELD', 75 * T, 9 * T], ['EASTSHORE', 75 * T, 28 * T], ['CEDAR HEIGHTS', 80 * T, 44 * T]]) {
+    const [a, b, v] = toScreen(camera, x, y, 260); if (!v) continue;
+    ctx.font = `800 ${clamp(52000 / mapView.dist, 14, 34) | 0}px ${DISPLAY}`; ctx.fillStyle = 'rgba(255,248,236,0.55)'; ctx.fillText(name, a, b);
+  }
+  // Street names along the roads (only real segments)
+  for (let i = 0; i < NNX; i++) {
+    const segs = []; for (let j = 0; j < NN - 1; j++) if (validDir([i, j], 1)) segs.push(j);
+    if (!segs.length) continue; const j = segs[Math.floor(segs.length / 2)], [ax, ay] = nodePos(i, j), [bx, by] = nodePos(i, j + 1);
+    streetLabel(V_STREETS[i], ax, ay + T * 2, bx, by - T * 2);
+  }
+  for (let j = 0; j < NN; j++) {
+    const segs = []; for (let i = 0; i < NNX - 1; i++) if (validDir([i, j], 0) && !(BRIDGE_ROWS[j] && i === 4)) segs.push(i);
+    if (!segs.length) continue; const i = segs[Math.floor(segs.length / 3)], [ax, ay] = nodePos(i, j), [bx, by] = nodePos(i + 1, j);
+    streetLabel(H_STREETS[j], ax + T * 2, ay, bx - T * 2, by);
+  }
+  for (const [row, name] of Object.entries(BRIDGE_ROWS)) { const y = (10 * row + 1) * T; const [a, b, v] = toScreen(camera, 55.5 * T, y, 30); if (v) badge(a, b, '#c9d6e2', '⌒', name); }
+  // Shops as small badges (names when zoomed in), then the major places
+  if (near) for (const e of enterables) { const B = SHOP_BADGES[e.type]; if (!B) continue; const [a, b, v] = toScreen(camera, e.door.x, e.door.y, 20); if (v) badge(a, b, B[0], B[1], mapView.dist < 900 ? e.name : '', false); }
+  for (const [x, y, col, g, label] of cityPlaces()) { const [a, b, v] = toScreen(camera, x, y, 40); if (v) badge(a, b, col, g, label); }
+  // Objectives, route, waypoint, player
+  const tag = (pt, col, g, label) => { if (!pt) return; const [a, b, v] = toScreen(camera, pt.x, pt.y, 60); if (v) badge(a, b, col, g, label); };
+  tag(storyTarget(), '#ff7a3d', 'S', 'Story');
+  if (job.state === 'offer') tag(job.pickup, '#ffb347', 'J', 'Job'); if (job.state === 'active') tag(job.drop, '#5fd4c4', 'D', 'Drop-off');
+  const aT = activityTarget(); if (aT && !player.interior) tag(aT, '#ffd35a', '!', activity.title);
+  drawGpsRoute((x, y) => toScreen(camera, x, y, 4), 5, 'rgba(214,107,255,0.9)');
+  if (waypoint) { const [a, b, v] = toScreen(camera, waypoint.x, waypoint.y, 0); if (v) { ctx.fillStyle = '#d66bff'; ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(a - 9, b - 18); ctx.arc(a, b - 20, 9, Math.PI * 0.85, Math.PI * 0.15); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(a, b - 20, 3.5, 0, 7); ctx.fill(); } }
+  for (const c of cars) if (c.police && c.ai) { const [a, b, v] = toScreen(camera, c.x, c.y, 10); if (v) { ctx.fillStyle = Math.floor(time * 6) % 2 ? '#ff3b4e' : '#3b82ff'; ctx.beginPath(); ctx.arc(a, b, 5, 0, 7); ctx.fill(); } }
+  const pl = player.region ? (regionBack || playerPos()) : player.interior ? INTERIORS[player.interior].street : playerPos();
+  const ang = player.region ? (regionBack?.a || 0) : player.car ? player.car.a : player.interior ? INTERIORS[player.interior].street.a : player.a;
+  const [pa, pb, pv] = toScreen(camera, pl.x, pl.y, 8), [qa, qb] = toScreen(camera, pl.x + Math.cos(ang) * 60, pl.y + Math.sin(ang) * 60, 8);
+  if (pv) { ctx.save(); ctx.translate(pa, pb); ctx.rotate(Math.atan2(qb - pb, qa - pa)); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#10181c'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-9, -9); ctx.lineTo(-4, 0); ctx.lineTo(-9, 9); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.restore(); }
+  // Legend
+  const items = [['#ff6fd8', '♠', 'Casino'], ['#f2e2c4', '⌂', 'Home'], ['#8fb4ff', '★', 'Police'], ['#ff8a8a', '✚', 'Hospital'], ['#ffd35a', '$', 'Bank'], ['#7fe0a0', '♦', 'Business'], ['#8a6a9a', '♛', 'Mansion'], ['#4fc3ff', '⚑', 'Race'], ['#ff7a3d', 'S', 'Story'], ['#d66bff', '●', 'Waypoint']];
+  mapLegend(items, s);
+}
+function mapLegend(items, s) {
+  ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.textAlign = 'left';
+  let w = 16; for (const [, , l] of items) w += ctx.measureText(l).width + 34;
+  const rows = Math.ceil(w / (vw - 32)), bx = 16, by = vh - insetBottom - 16 - rows * 24 - 8;
+  ctx.fillStyle = 'rgba(10,12,16,0.82)'; ctx.beginPath(); ctx.roundRect(bx, by, Math.min(w, vw - 32), rows * 24 + 8, 8); ctx.fill();
+  let lx = bx + 12, ly = by + 20;
+  for (const [col, g, l] of items) {
+    const iw = ctx.measureText(l).width + 34; if (lx + iw > vw - 24) { lx = bx + 12; ly += 24; }
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(lx + 7, ly - 4, 8, 0, 7); ctx.fill();
+    ctx.fillStyle = '#10181c'; ctx.textAlign = 'center'; ctx.font = `800 10px ${DISPLAY}`; ctx.fillText(g, lx + 7, ly - 0.5);
+    ctx.textAlign = 'left'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2'; ctx.fillText(l, lx + 19, ly); lx += iw;
+  }
+}
+
+// ─── Armenia relief map: its own small scene ─────────────────────────────────
+const ARM_LAT0 = 40.1, ARM_LON0 = 45.0;
+const armXZ = (lat, lon) => [(lon - ARM_LON0) * 322, -(lat - ARM_LAT0) * 420];
+function destLatLon(i) { const m = DEST_INFO[DESTS[i].key][1].match(/([\d.]+)° N, ([\d.]+)° E/); return [parseFloat(m[1]), parseFloat(m[2])]; }
+// Approximate national border (lat, lon), clockwise from the north-west corner
+const ARM_BORDER = [[41.19, 43.47], [41.24, 43.83], [41.19, 44.28], [41.23, 44.83], [41.29, 45.02], [41.13, 45.19], [41.05, 45.42], [40.98, 45.6], [40.79, 45.6], [40.6, 45.95], [40.28, 45.95], [40.02, 45.75],
+  [39.78, 45.95], [39.62, 46.33], [39.38, 46.55], [39.15, 46.55], [38.87, 46.52], [38.86, 46.2], [39.12, 46.08], [39.43, 45.85], [39.58, 45.64], [39.72, 45.42], [39.78, 45.1], [39.66, 44.86], [39.83, 44.55],
+  [40.02, 44.15], [40.1, 43.72], [40.45, 43.58], [40.78, 43.62], [41.02, 43.46]];
+const arm = { scene: null, cam: new THREE.PerspectiveCamera(45, 1, 5, 20000), pins: [] };
+function buildArmeniaMap() {
+  if (arm.scene) return;
+  const S = arm.scene = new THREE.Scene(); S.background = new THREE.Color('#0d1820'); S.fog = new THREE.Fog(0x0d1820, 2500, 6000);
+  S.add(new THREE.HemisphereLight(0xdfe8ff, 0x3a3020, 0.75));
+  const sunL = new THREE.DirectionalLight(0xfff0d8, 0.8); sunL.position.set(-600, 900, -400); S.add(sunL);
+  const lamb = c => new THREE.MeshLambertMaterial({ color: c });
+  // Neighbouring land, a little lower and darker
+  const land = new THREE.Mesh(new THREE.PlaneGeometry(5000, 4000).rotateX(-Math.PI / 2), lamb('#2e3530')); land.position.y = -4; S.add(land);
+  // Armenia: the border shape extruded into a slab
+  const sh = new THREE.Shape(ARM_BORDER.map(([la, lo]) => { const [x, z] = armXZ(la, lo); return new THREE.Vector2(x, -z); }));
+  const slab = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 16, bevelEnabled: true, bevelSize: 3, bevelThickness: 3, bevelSegments: 2 }).rotateX(-Math.PI / 2), lamb('#6f8a4a'));
+  S.add(slab);
+  const edge = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(ARM_BORDER.map(([la, lo]) => { const [x, z] = armXZ(la, lo); return new THREE.Vector3(x, 19.5, z); })), new THREE.LineBasicMaterial({ color: 0xf2a800 }));
+  S.add(edge);
+  // Lake Sevan: an ellipse running north-west to south-east
+  const [lx, lz] = armXZ(40.36, 45.22), lake = new THREE.Mesh(new THREE.CircleGeometry(1, 48).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#2f6f9a', emissive: '#0b2a40' }));
+  lake.scale.set(150, 1, 72); lake.rotation.y = 0.62; lake.position.set(lx, 19.2, lz); S.add(lake);
+  // Mountains: Aragats and the Geghama range inside, Ararat (Masis and Sis) across the border
+  const peak = (la, lo, r, h, snow) => { const [x, z] = armXZ(la, lo), g = new THREE.Group(); g.position.set(x, la > 39.8 || lo > 44.6 ? 16 : -4, z);
+    const c = new THREE.Mesh(new THREE.ConeGeometry(r, h, 18), lamb('#7a6a58')); c.position.y = h / 2; g.add(c);
+    if (snow) { const s = new THREE.Mesh(new THREE.ConeGeometry(r * snow, h * snow, 18), lamb('#f4f6f8')); s.position.y = h - h * snow / 2 + 0.5; g.add(s); } S.add(g); };
+  peak(40.53, 44.2, 60, 80, 0.3); peak(40.25, 44.78, 45, 36); peak(39.7, 44.3, 90, 140, 0.35); peak(39.65, 44.52, 45, 60, 0.25);
+  peak(39.35, 46.2, 45, 45); peak(39.9, 45.7, 40, 34); peak(40.85, 44.9, 40, 30); peak(40.95, 44.4, 35, 26);
+  // Yerevan: a small cluster of pink blocks
+  { const [x, z] = armXZ(40.18, 44.51); for (let k = 0; k < 14; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(6, 4 + Math.random() * 12, 6), lamb(k % 2 ? '#d9a08f' : '#c98b7e')); b.position.set(x + (Math.random() - 0.5) * 34, 16 + b.geometry.parameters.height / 2, z + (Math.random() - 0.5) * 30); S.add(b); } }
+  // Destination pins
+  DESTS.forEach((D, i) => {
+    const [la, lo] = destLatLon(i), [x, z] = armXZ(la, lo), g = new THREE.Group(), base = D.key === 'ararat' ? -4 : 16;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 34, 8), lamb('#efe6d2')); pole.position.y = 17; g.add(pole);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(7, 16, 12), new THREE.MeshLambertMaterial({ color: D.col, emissive: new THREE.Color(D.col).multiplyScalar(0.25) })); head.position.y = 36; g.add(head);
+    g.position.set(x, base, z); S.add(g); arm.pins.push({ i, g, head, x, z, y: base + 36 });
+  });
+}
+const DEST_GLYPH = { yerevan: 'Y', geghard: '✝', garni: '⌂', khorvirap: '✝', sevan: '≈', etchmiadzin: '✝', noravank: '✝', dilijan: '♣', tatev: '✝', jermuk: '≈', gyumri: 'G', aragats: '▲', ararat: '▲' };
+function renderArmeniaMap() {
+  buildArmeniaMap();
+  arm.cam.aspect = vw / vh; arm.cam.updateProjectionMatrix();
+  placeOrbitCam(arm.cam, armView);
+  const t = performance.now() / 1000;
+  arm.pins.forEach(P => { P.head.position.y = 36 + Math.sin(t * 2 + P.i) * 2; P.g.scale.setScalar(P.i === mapView.hover ? 1.35 : 1); });
+  renderer.render(arm.scene, arm.cam);
+}
+function drawArmeniaMap() {
+  const s = clamp(vw / 900, 0.72, 1), m = mapView.mouse;
+  ctx.textAlign = 'center';
+  for (const [name, la, lo] of [['GEORGIA', 41.55, 44.4], ['AZERBAIJAN', 40.55, 46.7], ['NAKHCHIVAN (AZ)', 39.35, 45.25], ['TURKEY', 40.1, 43.1], ['IRAN', 38.6, 46.0], ['LAKE SEVAN', 40.36, 45.22]]) {
+    const [x, z] = armXZ(la, lo), [a, b, v] = toScreen(arm.cam, x, z, 30); if (!v) continue;
+    ctx.font = `800 ${name === 'LAKE SEVAN' ? 13 : 18}px ${DISPLAY}`; ctx.fillStyle = name === 'LAKE SEVAN' ? '#bfe6ff' : 'rgba(239,230,210,0.45)'; ctx.fillText(name, a, b);
+  }
+  // Pins: logo badges with names; the nearest one under the cursor is highlighted and clickable
+  let best = -1, bd = 34;
+  const here = player.region ? destIndex(player.region) : -2;
+  const scr = [];
+  arm.pins.forEach(P => {
+    const [a, b, v] = toScreen(arm.cam, P.x, P.z, P.y + 12); if (!v) return;
+    if (m) { const d = Math.hypot(m.x - a, m.y - b); if (d < bd) { bd = d; best = P.i; } }
+    scr.push([a, b, P.i]);
+  });
+  // Nearer pins first; a name pill that would overlap one already drawn is left off (hover shows it)
+  scr.sort((p, q) => (q[2] === best) - (p[2] === best) || q[1] - p[1]);
+  const pills = [], draw = [];
+  for (const [a, b, i] of scr) {
+    const D = DESTS[i], label = i === here ? `${D.name} · you are here` : D.name;
+    ctx.font = `600 11px ${MONO}`; const w = ctx.measureText(label).width + 12, rc = [a - w / 2, b + 17, w, 17];
+    const clash = i !== best && pills.some(q => rc[0] < q[0] + q[2] + 4 && q[0] < rc[0] + rc[2] + 4 && rc[1] < q[1] + q[3] + 2 && q[1] < rc[1] + rc[3] + 2);
+    if (!clash) pills.push(rc);
+    draw.push([a, b, D.col, DEST_GLYPH[D.key] || '•', clash ? '' : label]);
+  }
+  for (const d of draw.reverse()) badge(...d, true);                    // far ones first, the hovered pin on top
+  mapView.hover = best; mapView.hoverOk = best >= 0 && best !== here;
+  if (best >= 0) {
+    const D = DESTS[best], txt = best === here ? 'You are here' : `Click to fly to ${D.name}`;
+    ctx.font = `600 ${Math.round(12 * s + 1)}px ${MONO}`; const w = ctx.measureText(txt).width + 20;
+    ctx.fillStyle = 'rgba(242,168,0,0.95)'; ctx.beginPath(); ctx.roundRect(m.x + 14, m.y + 10, w, 24, 12); ctx.fill();
+    ctx.fillStyle = '#10181c'; ctx.textAlign = 'left'; ctx.fillText(txt, m.x + 24, m.y + 26);
+  }
+  glCanvas.style.cursor = best >= 0 && best !== here ? 'pointer' : '';
+  mapLegend([['#f2a800', '—', 'Border (approx.)'], ['#2f6f9a', '≈', 'Lake Sevan'], ['#f4f6f8', '▲', 'Aragats · Ararat'], ['#d9a08f', 'Y', 'Yerevan']], s);
+}
+// Full-screen map overlay for both tabs
+function drawMap() {
+  const s = clamp(vw / 900, 0.72, 1), top = insetTop + 16;
+  if (mapView.tab === 'city') drawCityMap(); else drawArmeniaMap();
+  ctx.textAlign = 'left'; ctx.font = `800 ${Math.round(28 * s)}px ${DISPLAY}`; ctx.fillStyle = '#fff4dc';
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6;
+  ctx.fillText(mapView.tab === 'city' ? 'HAYASTAN CITY' : 'ARMENIA', 16, top + 70);
+  ctx.font = `400 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
+  ctx.fillText(vw > 640 ? (mapView.tab === 'city' ? 'Drag to move · right-drag to rotate · scroll to zoom · click to set a waypoint' : 'Drag to move · right-drag to rotate · scroll to zoom · click a pin to fly there') : 'Drag · pinch · tap', 16, top + 90);
+  ctx.shadowBlur = 0;
+}
+
 let luckyWheel = null;
 {
   const I = INTERIORS.casino;
@@ -7179,6 +7473,7 @@ let camYaw = 0;
 function updateCamera(dt) {
   if (QT.sky) { flightCamera(dt, performance.now() / 1000); return; }   // the flight owns the camera
   camera.up.set(0, 1, 0);                                                // the barrel roll borrows camera.up; give it back
+  if (mode === 'map') { mapCamera(dt); return; }                         // the 3D map owns it while open
   const k = FX.smoothCamera ? Math.min(1, dt * 5) : 1;
   if (mode === 'title') {
     const a = time * 0.05, cx = 26 * T, cz = 25 * T;
@@ -7274,13 +7569,13 @@ function render(dt) {
   if (flash > 0) { ctx.fillStyle = `rgba(200,30,40,${flash * 0.3})`; ctx.fillRect(0, 0, vw, vh); }
   if (FX.showFps) { ctx.font = `600 12px ${MONO}`; ctx.textAlign = 'left'; ctx.fillStyle = '#9a978f'; ctx.fillText(`${Math.round(fps)} fps`, 16, vh - insetBottom - 8); }
   if (mode === 'title' || mode === 'travel') return;
+  if (mode === 'map') { drawMap(); return; }
   drawHud();
   drawNetHud(clamp(vw / 900, 0.72, 1));
   drawCaption();
   drawGpsPanel(clamp(vw / 900, 0.72, 1));
   drawWeatherHud();
   drawRegionGameHud(clamp(vw / 900, 0.72, 1));
-  if (mode === 'map') drawMap();
   if (phone.open) { if (mode === 'title' || mode === 'down') closePhone(); else document.getElementById('phTime').textContent = clockText(); }
   if (wheel.open && mode === 'play') drawWheel();
   else if (wheel.open) wheel.open = false;
@@ -7552,86 +7847,6 @@ bigMap.width = GW * MAPS; bigMap.height = GH * MAPS;
   const special = { casino: '#7a2f72', apartment: '#8a4a36', police: '#2b4a78', hospital: '#b8bcc0' };
   for (const b of buildings) if (special[b.kind]) { g.fillStyle = special[b.kind]; g.fillRect(b.x * MAPS + 1, b.y * MAPS + 1, b.w * MAPS - 2, b.h * MAPS - 2); }
 }
-let mapRect = null;
-function drawMap() {
-  ctx.fillStyle = 'rgba(6,8,12,0.93)'; ctx.fillRect(0, 0, vw, vh);
-  const top = insetTop + 16, headH = 40, footH = 44;
-  const sc = Math.min((vw - 32) / (GW * T), (vh - top - headH - footH - insetBottom - 8) / (GH * T));
-  const mw = GW * T * sc, mh = GH * T * sc, mx = (vw - mw) / 2, my = top + headH;
-  mapRect = { mx, my, sc, mw, mh };
-  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.font = `800 26px ${DISPLAY}`; ctx.fillStyle = '#efe6d2'; ctx.fillText('HAYASTAN', mx, top + 24);
-  ctx.textAlign = 'right'; ctx.font = `400 12px ${MONO}`; ctx.fillStyle = '#9a978f';
-  ctx.fillText(vw > 560 ? 'Click to set a waypoint · M or Esc to close' : 'Tap to set a waypoint', mx + mw, top + 22);
-  ctx.imageSmoothingEnabled = false; ctx.drawImage(bigMap, mx, my, mw, mh); ctx.imageSmoothingEnabled = true;
-  const W = (x, y) => [mx + x * sc, my + y * sc];
-  // District labels and street names
-  ctx.textAlign = 'center';
-  ctx.font = `800 ${Math.round(clamp(mw / 26, 14, 30))}px ${DISPLAY}`; ctx.fillStyle = 'rgba(239,230,210,0.5)';
-  for (const [name, x, y] of [['MERIDIAN', 20 * T, 16 * T], ['LARKFIELD', 20 * T, 44 * T], ['SALTMARSH DOCKS', 46 * T, 20 * T], ['HAYASTAN BAY', 55.5 * T, 21 * T], ['AIRFIELD', 75 * T, 9 * T], ['EASTSHORE', 75 * T, 26 * T], ['CEDAR HEIGHTS', 75 * T, 44 * T]]) {
-    const [a, b] = W(x, y); ctx.save(); ctx.translate(a, b); if (name === 'HAYASTAN BAY') ctx.rotate(Math.PI / 2); ctx.fillText(name, 0, 0); ctx.restore();
-  }
-  if (mw > 420) {
-    ctx.font = `400 ${Math.round(clamp(mw / 75, 9, 12))}px ${MONO}`; ctx.fillStyle = 'rgba(239,230,210,0.7)';
-    for (let j = 0; j < NN; j++) { const [a, b] = W(5.5 * T, (10 * j + 1) * T); ctx.fillText(H_STREETS[j], a, b + 3); }
-    for (let i = 0; i < NN; i++) { const [a, b] = W((10 * i + 1) * T, 5.5 * T); ctx.save(); ctx.translate(a + 3, b); ctx.rotate(-Math.PI / 2); ctx.fillText(V_STREETS[i], 0, 0); ctx.restore(); }
-  }
-  // Icons
-  const icon = (x, y, col, glyph) => {
-    const [a, b] = W(x, y); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(a, b, 10, 0, 7); ctx.fill();
-    ctx.fillStyle = '#0a0c10'; ctx.font = `800 13px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.fillText(glyph, a, b + 5);
-  };
-  icon(36 * T, 16 * T, '#ff6fd8', '$');
-  icon(26 * T, 35.5 * T, '#f2e2c4', 'H');
-  icon(6 * T, 46 * T, '#e6e8ea', '+');
-  icon(26 * T, 6 * T, '#8fb4ff', 'P');
-  icon(75 * T, 15.5 * T, '#9fd4e8', 'A');
-  for (const B of Object.values(BUSINESSES)) icon(B.x, B.y, '#7fe0a0', '$');
-  icon(PLACES.customs.x, PLACES.customs.y, '#f28a1e', 'W');
-  { const st = storyTarget(); if (st) icon(st.x, st.y, '#ff7a3d', 'S'); }
-  for (const R of RACES) icon(R.entry.x, R.entry.y, '#4fc3ff', 'R');
-  for (const [id, M] of Object.entries(MANSIONS)) icon(M.door.x, M.door.y, mansionState[id].owned ? '#e0b0ff' : '#8a6a9a', 'E');
-  icon(PLACES.bank.x, PLACES.bank.y, '#ffd35a', 'B'); icon(PLACES.museum.x, PLACES.museum.y, '#ffd35a', 'M'); icon(PLACES.freighter.x, PLACES.freighter.y, '#ffd35a', 'F');
-  const aT = activityTarget();
-  if (aT && !player.interior) { const [a, b] = W(aT.x, aT.y); ctx.strokeStyle = activity.race ? '#4fc3ff' : '#ffd35a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(a, b, 13, 0, 7); ctx.stroke(); }
-  for (const c of cars) if (c.spec.air && !c.wreck) { const [a, b] = W(c.x, c.y); ctx.fillStyle = '#9fd4e8'; ctx.beginPath(); ctx.moveTo(a + 7, b); ctx.lineTo(a - 5, b - 6); ctx.lineTo(a - 5, b + 6); ctx.closePath(); ctx.fill(); }
-  for (const k of pickups) if (k.respawn <= 0) { const [a, b] = W(k.x, k.y); ctx.fillStyle = WEAPONS[k.weapon].color; ctx.fillRect(a - 4, b - 4, 8, 8); }
-  if (job.state === 'offer') icon(job.pickup.x, job.pickup.y, '#ffb347', 'J');
-  if (job.state === 'active') icon(job.drop.x, job.drop.y, '#5fd4c4', 'D');
-  for (const c of cars) if (c.police && c.ai) { const [a, b] = W(c.x, c.y); ctx.fillStyle = Math.floor(time * 6) % 2 ? '#ff3b4e' : '#3b82ff'; ctx.beginPath(); ctx.arc(a, b, 4, 0, 7); ctx.fill(); }
-  drawGpsRoute(W, 4, 'rgba(214,107,255,0.85)');
-  if (waypoint) {
-    const [a, b] = W(waypoint.x, waypoint.y);
-    ctx.fillStyle = '#d66bff'; ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(a - 8, b - 16); ctx.arc(a, b - 18, 8, Math.PI * 0.85, Math.PI * 0.15); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#0a0c10'; ctx.beginPath(); ctx.arc(a, b - 18, 3, 0, 7); ctx.fill();
-  }
-  // Player: shown at the building door while indoors
-  const pl = player.region ? (regionBack || playerPos()) : player.interior ? INTERIORS[player.interior].street : playerPos();
-  const [pa, pb] = W(pl.x, pl.y), ang = player.region ? (regionBack?.a || 0) : player.car ? player.car.a : player.interior ? INTERIORS[player.interior].street.a : player.a;
-  ctx.save(); ctx.translate(pa, pb); ctx.rotate(ang);
-  ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#0a0c10'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-7, -7); ctx.lineTo(-3, 0); ctx.lineTo(-7, 7); ctx.closePath(); ctx.stroke(); ctx.fill();
-  ctx.restore();
-  // Legend
-  const items = [['#ff6fd8', 'Casino'], ['#f2e2c4', 'Apartment'], ['#e6e8ea', 'Hospital'], ['#8fb4ff', 'Police HQ'], ['#9fd4e8', 'Aircraft'], ['#ffd35a', 'Heist targets'], ['#7fe0a0', 'Businesses'], ['#4fc3ff', 'Races'], ['#f28a1e', 'Customs'], ['#e0b0ff', 'Mansions'], ['#ff7a3d', 'Story'], ['#ffb347', 'Job'], ['#d66bff', 'Waypoint'], ['#c9c3b5', 'Weapons']];
-  ctx.font = `400 12px ${MONO}`; ctx.textAlign = 'left';
-  let lx = mx, ly = my + mh + 26;
-  for (const [col, label] of items) {
-    const w = ctx.measureText(label).width + 28;
-    if (lx + w > mx + mw) { lx = mx; ly += 18; }
-    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(lx + 5, ly - 4, 5, 0, 7); ctx.fill();
-    ctx.fillStyle = '#b9b3a5'; ctx.fillText(label, lx + 14, ly); lx += w;
-  }
-}
-gameCanvas.addEventListener('pointerdown', e => {
-  if (mode !== 'map' || !mapRect) return;
-  const { mx, my, sc, mw, mh } = mapRect;
-  if (e.clientX < mx || e.clientY < my || e.clientX > mx + mw || e.clientY > my + mh) return;
-  const x = (e.clientX - mx) / sc, y = (e.clientY - my) / sc;
-  if (waypoint && Math.hypot(waypoint.x - x, waypoint.y - y) < 80) { waypoint = null; toast('Waypoint cleared'); }
-  else { waypoint = { x, y }; toast('Waypoint set', '#d66bff'); }
-});
-
 // Graphics settings panel, built from the FX object
 function applyFX() { propsGroup.visible = FX.props; aoPlane.visible = FX.blobShadows; resize(); }
 {
