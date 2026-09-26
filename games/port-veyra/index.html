@@ -8948,7 +8948,8 @@ CAST_LOOKS.harbor = { skin: '#c68e63', hair: '#8a8580', shirt: '#1f3a5a', pants:
     ['harbor', 'Dzknorsnery lusadem en durs galis, gorcavornery beռnery en berum.', 'The fishermen head out at dawn, the workers bring in the cargo.'],
     ['you', 'Inch e berum bernanավy?', 'What does the freighter carry?'],
     ['harbor', 'Amen inch — hatik, meqenaner, gini. Qaghaqy sranov e aprum.', 'Everything — grain, cars, wine. The city lives on it.'],
-    ['harbor', 'Uzum es navark? Gnա navahangsti ezrin, mекy misht kangnած e.', 'Want a boat? Go to the pier edge, there is always one moored.']]));
+    ['harbor', 'Uzum es navark? Navaknery kap en tsovezrin, qaghaqi navamatuytsi mot.', 'Want a boat? The motorboats are moored at the bay quays, out on the waterfront.'],
+    ['harbor', 'Nstir ghekin, qshir tsovakov, u karogh es minchev Sevana lich el hasnel.', 'Take the helm, sail the bay, and you can even reach Lake Sevan.']]));
   addInteract('harbor', 500, 300, 28, 'Read the harbor logbook', () => showMenu({ eyebrow: 'Harbor master\'s station', title: 'The logbook',
     body: '<p>Weathered pages of arrivals and departures. The radio crackles with harbor chatter; a tide chart and a river map are pinned to the wall.</p><p class="muted">Freighter <b>Sevan Star</b> — grain and vehicles, berth 3. Fishing boats out since 05:40. Fuel delivery expected midday.</p>', options: [] }));
   addInteract('harbor', 450, 350, 26, 'Take a coffee at the break table (+15 health)', () => { player.hp = Math.min(100, player.hp + 15); toast('Hot coffee by the water. +15 health', '#c9a227'); });
