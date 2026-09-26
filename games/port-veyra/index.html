@@ -9068,6 +9068,125 @@ cars.push(makeCar('yacht', 92.7 * T, 23 * T, -Math.PI / 2, { keep: true }));
   postSign(90.4 * T, 21.4 * T, 'PORT ZEYTUN', 'Marina · deep-water berths', '#123a52', '#9fd4e8', 34);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// FIRST-PERSON COCKPITS — a modelled interior for each vehicle in first person (C)
+// Car: dashboard, instrument cluster and a steering wheel that turns with your input, roof and pillars,
+// a rear-view mirror. Boat/yacht: a helm console with a spoked ship's wheel, throttle levers and a
+// compass. Helicopter: a canopy frame, round gauges, a cyclic stick and a collective lever.
+// The cockpits are children of the camera so they sit fixed in the driver's view.
+// ═══════════════════════════════════════════════════════════════════════════════
+scene.add(camera);                                   // so the camera's cockpit children render
+const CK = { car: null, boat: null, heli: null, cur: null };
+const ckDark = lam('#16181d', { emissive: 0x282b32 }), ckDash = lam('#22252c', { emissive: 0x33373f }),
+  ckTrim = lam('#3a3e46', { emissive: 0x44484f }), ckWood = lam('#5a4632', { emissive: 0x342620 }),
+  ckMetal = lam('#c8ccd0', { emissive: 0x5a5e64 }), ckLeather = lam('#2a2320', { emissive: 0x2a2420 });
+const ckGaugeMat = () => new THREE.MeshBasicMaterial({ color: 0x0a0c10 });
+const ckGlow = c => new THREE.MeshBasicMaterial({ color: c });
+function ckBox(g, w, h, d, x, y, z, mat, rx = 0, ry = 0, rz = 0) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); g.add(m); return m; }
+function ckGauge(g, x, y, z, r = 0.7, col = 0x3fd0ff) {
+  ckBox(g, r * 2.2, r * 2.2, 0.1, x, y, z + 0.02, ckGaugeMat());
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.08, 6, 20), ckGlow(col)); ring.position.set(x, y, z + 0.06); g.add(ring);
+  const needle = new THREE.Mesh(new THREE.BoxGeometry(0.06, r * 0.8, 0.05), ckGlow(0xffd35a)); needle.position.set(x, y, z + 0.08); g.add(needle);
+  return needle;
+}
+// Camera-local frame: +X right, +Y up, -Z forward (the way the driver faces)
+function buildCarCockpit() {
+  const g = new THREE.Group(); g.userData = { needles: [] };
+  // Dashboard: a raked top surface set back, and a vertical fascia below, so the wheel sits in front
+  ckBox(g, 20, 3, 3, 0, -1.4, -7.6, ckDash, -0.5);              // top surface (set back)
+  ckBox(g, 20, 4.6, 0.8, 0, -3.7, -6.3, ckDark, -0.12);        // vertical fascia (lower)
+  ckBox(g, 20, 0.8, 3, 0, 0.1, -7.7, ckTrim, -0.5);            // dash top lip
+  // Instrument binnacle with two gauges, hooded over the wheel
+  const bin = new THREE.Group(); bin.position.set(0, -0.9, -6.0); bin.rotation.x = -0.5; g.add(bin);
+  ckBox(bin, 9, 2.8, 0.6, 0, 0, 0, ckDark);
+  g.userData.needles.push(ckGauge(bin, -2.2, 0, 0.35, 0.95, 0x3fd0ff), ckGauge(bin, 2.2, 0, 0.35, 0.95, 0xff8a4a));
+  ckBox(bin, 3.2, 1.4, 0.5, 0, -0.1, 0.3, ckGaugeMat());        // centre screen
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 1.1), ckGlow(0x123a2a)); scr.position.set(0, -0.1, 0.62); bin.add(scr);
+  // Steering column and a wheel that turns, in front of the dash
+  ckBox(g, 1.2, 1.2, 3, 0, -3.0, -6.4, ckDark, 0.6);
+  const wheel = new THREE.Group(); wheel.position.set(0, -2.4, -5.6); wheel.rotation.x = -0.82; g.add(wheel);
+  const spin = new THREE.Group(); wheel.add(spin); g.userData.wheel = spin;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(2.5, 0.3, 8, 26), ckLeather); spin.add(rim);
+  ckBox(spin, 0.6, 0.6, 0.6, 0, 0, 0, ckMetal);                  // hub
+  for (const a of [Math.PI / 2, -Math.PI / 6, Math.PI + Math.PI / 6]) ckBox(spin, 2.3, 0.3, 0.3, Math.cos(a) * 1.25, Math.sin(a) * 1.25, 0, ckMetal, 0, 0, a);
+  const badge = new THREE.Mesh(new THREE.CircleGeometry(0.45, 16), ckGlow(0xf2a800)); badge.position.set(0, 0, 0.35); spin.add(badge);
+  // Roof header, sun visors and A-pillars framing the windscreen
+  ckBox(g, 22, 1.6, 4, 0, 4.2, -5.2, ckDark, 0.2);
+  ckBox(g, 9, 1.2, 0.4, -5.5, 3.2, -6.2, ckTrim, 0.1); ckBox(g, 9, 1.2, 0.4, 5.5, 3.2, -6.2, ckTrim, 0.1);
+  ckBox(g, 1.4, 9, 1.4, -10, -0.2, -6, ckDark, 0, 0, 0.5); ckBox(g, 1.4, 9, 1.4, 10, -0.2, -6, ckDark, 0, 0, -0.5);
+  // Rear-view mirror
+  ckBox(g, 4.4, 1.4, 0.6, 0, 3.4, -5.6, ckDark);
+  const mir = new THREE.Mesh(new THREE.PlaneGeometry(4, 1), ckGlow(0x1a2732)); mir.position.set(0, 3.4, -5.3); g.add(mir);
+  return g;
+}
+function buildBoatCockpit() {
+  const g = new THREE.Group(); g.userData = { needles: [] };
+  // Open helm console in polished wood
+  ckBox(g, 12, 4, 3.4, 0, -5.2, -7, ckWood, -0.3);
+  ckBox(g, 12.6, 0.7, 3.8, 0, -3.3, -7.2, ckTrim, -0.3);
+  // Instruments: a compass and a throttle
+  const pod = new THREE.Group(); pod.position.set(-2.4, -3.9, -6.7); pod.rotation.x = -0.55; g.add(pod);
+  g.userData.needles.push(ckGauge(pod, 0, 0, 0.3, 0.9, 0x3fd0ff));
+  const comp = new THREE.Group(); comp.position.set(2.6, -3.7, -6.6); comp.rotation.x = -1.4; g.add(comp);
+  ckBox(comp, 1.8, 1.8, 0.4, 0, 0, 0, ckGaugeMat()); const rose = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.06, 6, 20), ckGlow(0xf2e2c4)); rose.position.z = 0.25; comp.add(rose);
+  g.userData.compass = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.2, 0.05), ckGlow(0xd01e1e)); g.userData.compass.position.z = 0.3; comp.add(g.userData.compass);
+  // Twin throttle levers on the right of the console
+  for (const dx of [4.6, 5.4]) { const lv = new THREE.Group(); lv.position.set(dx, -4.8, -6.6); lv.rotation.x = -0.5; g.add(lv); ckBox(lv, 0.3, 2.4, 0.3, 0, 1.2, 0, ckMetal); const k = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), ckGlow(0x1a1a1c)); k.position.set(0, 2.4, 0); lv.add(k); }
+  // A spoked ship's wheel that turns
+  const wheel = new THREE.Group(); wheel.position.set(0, -4.6, -8.4); wheel.rotation.x = -0.75; g.add(wheel);
+  const spin = new THREE.Group(); wheel.add(spin); g.userData.wheel = spin;
+  spin.add(new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.22, 8, 28), ckWood));
+  spin.add(new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.14, 6, 24), ckMetal));
+  ckBox(spin, 0.7, 0.7, 0.7, 0, 0, 0, ckMetal);
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; ckBox(spin, 3.7, 0.2, 0.2, 0, 0, 0, ckWood, 0, 0, a); const h = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.1, 8), ckWood); h.position.set(Math.cos(a) * 2.9, Math.sin(a) * 2.9, 0); h.rotation.z = a + Math.PI / 2; spin.add(h); }
+  // Windscreen frame and grab rail
+  ckBox(g, 13, 0.5, 0.5, 0, 1.6, -7.2, ckMetal, -0.2);
+  ckBox(g, 0.5, 5, 0.5, -6.2, -0.8, -7, ckMetal, 0, 0, 0.25); ckBox(g, 0.5, 5, 0.5, 6.2, -0.8, -7, ckMetal, 0, 0, -0.25);
+  return g;
+}
+function buildHeliCockpit() {
+  const g = new THREE.Group(); g.userData = { needles: [] };
+  // Instrument panel with a bank of round gauges
+  const pan = new THREE.Group(); pan.position.set(0, -3.0, -6.4); pan.rotation.x = -0.4; g.add(pan);
+  ckBox(pan, 13, 4.4, 0.7, 0, 0, 0, ckDark);
+  for (const [dx, dy, c] of [[-4, 0.8, 0x3fd0ff], [-1.5, 0.8, 0xff8a4a], [1.5, 0.8, 0x6be06b], [4, 0.8, 0xf2e2c4], [-2.7, -1, 0x3fd0ff], [2.7, -1, 0xffd35a]])
+    g.userData.needles.push(ckGauge(pan, dx, dy, 0.4, 0.62, c));
+  ckBox(pan, 4, 1.4, 0.5, 0, -1.1, 0.3, ckGaugeMat());
+  // Curved canopy frame: lower sill, A-pillars, roof bar, centre post
+  ckBox(g, 1.3, 12, 1.3, -9.5, 0, -6, ckDark, 0, 0, 0.7); ckBox(g, 1.3, 12, 1.3, 9.5, 0, -6, ckDark, 0, 0, -0.7);
+  ckBox(g, 20, 1.4, 4, 0, 5.4, -5.4, ckDark, 0.25);
+  // Overhead switch console
+  ckBox(g, 10, 1.6, 3, 0, 4.6, -5.6, ckDash, 0.3);
+  for (let k = 0; k < 5; k++) { const l = new THREE.Mesh(new THREE.CircleGeometry(0.18, 10), ckGlow([0x6be06b, 0xff5a4a, 0xffd35a][k % 3])); l.position.set(-2 + k, 4.3, -5.0); l.rotation.x = -1.2; g.add(l); }
+  // Cyclic stick between the knees and a collective on the left
+  const cyc = new THREE.Group(); cyc.position.set(0, -7.2, -4.6); g.add(cyc); ckBox(cyc, 0.5, 4, 0.5, 0, 2, 0, ckDark, 0.15); const grip = new THREE.Mesh(new THREE.SphereGeometry(0.7, 10, 8), ckGlow(0x1a1a1c)); grip.position.set(0.5, 4, 0.3); cyc.add(grip); g.userData.cyclic = cyc;
+  const col = new THREE.Group(); col.position.set(-4.5, -6.8, -4.2); col.rotation.z = 0.5; g.add(col); ckBox(col, 0.5, 4.5, 0.5, 0, 2.2, 0, ckDark); const cg = new THREE.Mesh(new THREE.SphereGeometry(0.6, 10, 8), ckGlow(0x1a1a1c)); cg.position.set(0, 4.5, 0); col.add(cg);
+  return g;
+}
+function ckShow(which) {
+  for (const k of ['car', 'boat', 'heli']) { if (!CK[k] && k === which) { CK[k] = (k === 'car' ? buildCarCockpit : k === 'boat' ? buildBoatCockpit : buildHeliCockpit)(); camera.add(CK[k]); } if (CK[k]) CK[k].visible = (k === which); }
+  CK.cur = which;
+}
+function updateCockpit(dt) {
+  const pc = player.car, first = camMode === 'first' && mode !== 'title';
+  if (!first || !pc || pc.spec.bike || pc.wreck) { if (CK.cur) ckShow(null); return; }
+  const which = pc.spec.air === 'heli' ? 'heli' : pc.spec.air === 'plane' ? 'heli' : pc.spec.boat ? 'boat' : 'car';
+  if (CK.cur !== which) ckShow(which);
+  const g = CK[which]; if (!g) return;
+  // Scale the car cockpit up for big vehicles
+  const s = which === 'car' ? (pc.spec.bus ? 1.35 : pc.spec.L > 60 ? 1.2 : 1) : which === 'boat' ? (pc.spec.yacht ? 1.25 : 0.9) : 1;
+  g.scale.setScalar(s);
+  const steer = pc.steerIn || 0, spd = Math.hypot(pc.vx, pc.vy);
+  if (g.userData.wheel) g.userData.wheel.rotation.z += (( -steer * (which === 'boat' ? 3.4 : 2.3)) - g.userData.wheel.rotation.z) * Math.min(1, dt * 10);
+  if (g.userData.cyclic) g.userData.cyclic.rotation.set((pc.pitchV || 0) * 1.2, 0, -steer * 0.5);
+  if (g.userData.compass) g.userData.compass.rotation.z = -pc.a;
+  for (const n of g.userData.needles || []) n.rotation.z = -clamp(spd / (pc.spec.max || 300), 0, 1.1) * 2.4 + 1.2;
+  // A little engine shimmy and body roll felt through the cockpit
+  const shake = Math.min(0.06, spd * 0.00012) + (pc.boosting ? 0.03 : 0);
+  g.position.set((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, 0);
+  g.rotation.z = -steer * Math.min(1, spd / 220) * 0.03 + (which === 'boat' ? Math.sin(time * 1.4) * 0.02 : 0);
+}
+
 let luckyWheel = null;
 {
   const I = INTERIORS.casino;
@@ -9568,6 +9687,7 @@ function render(dt) {
   updateMore(dt);            // Armenia activities, story markers, progression, umbrellas, sirens, radio, tips
   updateQuickTravel(dt);
   updateCamera(dt);
+  updateCockpit(dt);
   renderFrame(dt);
   renderPortrait();          // dialogue close-up, drawn into the talk box's window
   const sig = `${player.region}|${mode}|${QT.state}|${!!RG.active}`;
