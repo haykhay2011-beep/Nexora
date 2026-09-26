@@ -1,4 +1,4 @@
-<title>Hayastan</title>
+<title>Yerevan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Bungee&family=Russo+One&family=Noto+Serif+Armenian:wght@500&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -378,7 +378,7 @@
   </svg>
   <div class="flag-shade" aria-hidden="true"></div>
   <div class="title-wrap">
-    <h1 class="logo"><span class="logo-top">HAYA</span><span class="logo-bot">STAN</span><span class="logo-sub" lang="hy">Հայաստան</span></h1>
+    <h1 class="logo"><span class="logo-top">YERE</span><span class="logo-bot">VAN</span><span class="logo-sub" lang="hy">Երևան</span></h1>
     <div class="frame">
       <i class="rivet tl"></i><i class="rivet tr"></i><i class="rivet bl"></i><i class="rivet br"></i>
       <nav class="title-menu" id="titleMain" aria-label="Main menu">
@@ -495,7 +495,7 @@
 </div>
 
 <div id="mapTabs" class="map-tabs" hidden role="tablist" aria-label="Map">
-  <button type="button" role="tab" data-tab="city">Hayastan city</button><button type="button" role="tab" data-tab="armenia">Armenia</button><button type="button" role="tab" data-tab="church" hidden>Church plan</button><button type="button" id="mapClose" aria-label="Close map">Close ✕</button>
+  <button type="button" role="tab" data-tab="city">Yerevan</button><button type="button" role="tab" data-tab="armenia">Armenia</button><button type="button" role="tab" data-tab="church" hidden>Church plan</button><button type="button" id="mapClose" aria-label="Close map">Close ✕</button>
 </div>
 <div id="phone" hidden>
   <div class="ph-status"><span id="phTime">--:--</span><span>HAYASTAN TEL</span><span>86%</span></div>
@@ -4880,11 +4880,11 @@ function travelHomeInstant() {
   const b = regionBack || { x: 26 * T, y: 32.65 * T, a: 0 };
   player.region = null; player.x = b.x; player.y = b.y; player.a = b.a || 0; player.vx = player.vy = 0;
   fade = 1; camSnap = true; closePhone(); caption = null;
-  toast('Back in Hayastan city', '#f2a800');
+  toast('Back in Yerevan', '#f2a800');
 }
 for (const R of Object.values(REGIONS)) {
   SPEECH['guide:' + R.key] = R.lines;
-  interactables.push({ x: R.ox + R.spawn[0] - 70, y: R.oy + R.spawn[1] + 40, r: 30, label: 'Fly back to Hayastan city', act: travelHome });
+  interactables.push({ x: R.ox + R.spawn[0] - 70, y: R.oy + R.spawn[1] + 40, r: 30, label: 'Fly back to Yerevan', act: travelHome });
   interactables.push({ x: R.ox + R.guide[0], y: R.oy + R.guide[1], r: 30, label: 'Talk to the local', act: () => say('guide:' + R.key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true) });
   interactables.push({ x: R.ox + R.spawn[0], y: R.oy + R.spawn[1] - 30, r: 26, when: () => player.region === R.key && !hg.checkins.has(R.key),
     label: `Post a check-in on Hayagram`, act: () => { hg.checkins.add(R.key); hg.followers += 60 + Math.floor(Math.random() * 90); toast(`Checked in at ${R.name} · ${hg.followers} followers`, '#ff6fd8'); saveGame(); } });
@@ -5207,7 +5207,7 @@ function hayagramApp() {
   head.append(el('b', '', '@you'), el('span', '', `${hg.followers.toLocaleString()} followers · ${hg.visited.size} of ${DESTS.length} places`));
   phBody.append(head);
   phItem('Quick Travel', 'Pick a destination and fly there', openPicker, !!travelBlocked());
-  if (player.region) phItem('Back to Hayastan city', 'Fly home to where you left off', travelHome);
+  if (player.region) phItem('Back to Yerevan', 'Fly home to where you left off', travelHome);
   const why = travelBlocked();
   if (why && !player.region) phNote(why);
   for (const D of DESTS) {
@@ -5596,7 +5596,7 @@ const QT = { state: 'idle', t0: 0, to: 0, from: null, sky: false, camStart: new 
 const veilEl = document.getElementById('qtVeil'), enrouteEl = document.getElementById('qtEnroute');
 const SKY_VEIL = '#dfe7ef', CLOUD_VEIL = '#f1f3f5';
 const setVeil = (a, color) => { veilEl.style.opacity = a.toFixed(3); if (color) veilEl.style.background = color; };
-const destName = i => i < 0 ? 'Hayastan city' : DESTS[i].name;
+const destName = i => i < 0 ? 'Yerevan' : DESTS[i].name;
 const destIndex = key => DESTS.findIndex(D => D.key === key);
 
 // Called from the picker, the placard's Prev/Next, Hayagram and the "fly back" pads: one path for every trip.
@@ -5674,7 +5674,7 @@ function landAt(i) {
   if (i < 0) {
     const b = regionBack || { x: 26 * T, y: 32.65 * T, a: 0 };
     player.region = null; player.x = b.x; player.y = b.y; player.a = b.a || 0;
-    toast('Back in Hayastan city', '#f2a800');
+    toast('Back in Yerevan', '#f2a800');
     return;
   }
   const D = DESTS[i], R = REGIONS[D.key];
@@ -5990,7 +5990,7 @@ function openPicker() {
     b.addEventListener('click', () => quickTravelTo(i));
     li.append(b); pickGrid.append(li);
   };
-  if (player.region) card(-1, 'Hayastan city', 'Fly home to where you left off', 'Քաղաք', 'linear-gradient(#0b1019 0%, #3a2a44 45%, #ffb347 46%, #6b4046 100%)');
+  if (player.region) card(-1, 'Yerevan', 'Fly home to where you left off', 'Քաղաք', 'linear-gradient(#0b1019 0%, #3a2a44 45%, #ffb347 46%, #6b4046 100%)');
   DESTS.forEach((D, i) => card(i, D.name, D.sub, DEST_INFO[D.key][0], D.art));
   pickerEl.hidden = false; mode = 'picker'; keys.clear(); mouseFire = false; placardEl.hidden = true; destPill.hidden = true;
   (pickGrid.querySelector('button:not(:disabled)') || document.getElementById('pickClose')).focus({ preventScroll: true });
@@ -6176,7 +6176,7 @@ for (let k = 0; k < 18; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(6 
 
 function startDisaster(kind) {
   const D = DISASTERS[kind]; if (!D) return 'Unknown disaster';
-  if (player.region || QT.state !== 'idle') return 'Disasters only happen in Hayastan city';
+  if (player.region || QT.state !== 'idle') return 'Disasters only happen in Yerevan';
   stopDisaster(true);
   const p = playerPos();
   weather.disaster = { kind, t: 0, dur: D.dur, level: 0, x: p.x - 900, y: p.y - 300, dir: Math.random() * Math.PI * 2, burning: [] };
@@ -6344,7 +6344,7 @@ function weatherApp() {
     b.classList.add('wx-danger');
   }
   if (weather.disaster) phItem(`Stop the ${DISASTERS[weather.disaster.kind].name.toLowerCase()}`, 'End it now', () => { stopDisaster(); phoneApp('weather'); });
-  if (!inCity) phNote('Disasters only happen in Hayastan city.');
+  if (!inCity) phNote('Disasters only happen in Yerevan.');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -6372,7 +6372,7 @@ const gptTools = [
 function gptBrief() {
   return `You are Hayastan GPT, the assistant app on the player's phone in the open-world game "Hayastan". Reply in 1-4 short sentences, friendly, plain text, no markdown. `
     + `You can speak English or Armenian (write Armenian in Latin letters unless asked otherwise). `
-    + `The game: a harbor city called Hayastan (districts Meridian, Larkfield, Port Zeytun, Eastshore, Cedar Heights, an airfield and the Gilded Anchor casino) plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
+    + `The game: the city of Yerevan (districts Meridian, Larkfield, Port Zeytun, Eastshore, Cedar Heights, an airfield and the Gilded Anchor casino) plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
     + `Controls: WASD move, Space enter/exit vehicles, F shoot, E interact, M map, / phone, C camera, B nitro, G Quick Travel in Armenia. `
     + (gpt.tools ? 'Use the tools when the player asks you to change the weather, start a disaster, travel, set a waypoint, or asks about their status; say briefly what you did. Never start a disaster unless the player asks for it. ' : '')
     + `Current state: ${JSON.stringify(gptTools[0].execute())}.`;
@@ -6864,11 +6864,11 @@ gptTools.push({ name: 'create_job', description: 'Creates a delivery job for the
       onComplete: () => { player.money += pay; showBanner('Delivered', `${title} · +${fmtMoney(pay)}`, '#5fd4c4', 3); }, onFail: () => toast('Job failed', '#ff8a7a') });
     if (!ok) throw new Error('The player already has a job'); closePhone(); return `Job "${title}" started, pays ${pay}`;
   } });
-const GPT_QUICK = [['What should I do?', () => `What should I do next? Be specific to where I am.`], ['Give me a job', () => 'Give me a delivery job in the city.'], ['Tour this place', () => player.region ? `Give me a short tour of ${REGIONS[player.region].name}: two facts and one thing to look at.` : 'Tell me one interesting thing about Hayastan city.']];
+const GPT_QUICK = [['What should I do?', () => `What should I do next? Be specific to where I am.`], ['Give me a job', () => 'Give me a delivery job in the city.'], ['Tour this place', () => player.region ? `Give me a short tour of ${REGIONS[player.region].name}: two facts and one thing to look at.` : 'Tell me one interesting thing about Yerevan.']];
 
 // ─── Per-frame hook for all of the above ───────────────────────────────────
 function updateMore(dt) {
-  updateRegionGame(dt); updateHeritage(dt); updateFestivalsEtc(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
+  updateRegionGame(dt); updateHeritage(dt); updateFestivalsEtc(dt); updateLandmarks(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
 }
 
 for (const [id, def] of Object.entries(RG_DEF)) {
@@ -7175,7 +7175,7 @@ function drawMap() {
   if (mapView.tab === 'church') drawChurchPlan(); else if (mapView.tab === 'city') drawCityMap(); else drawArmeniaMap();
   ctx.textAlign = 'left'; ctx.font = `800 ${Math.round(28 * s)}px ${DISPLAY}`; ctx.fillStyle = '#fff4dc';
   ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6;
-  ctx.fillText(mapView.tab === 'church' ? CH.def.name.toUpperCase() : mapView.tab === 'city' ? 'HAYASTAN CITY' : 'ARMENIA', 16, top + 70);
+  ctx.fillText(mapView.tab === 'church' ? CH.def.name.toUpperCase() : mapView.tab === 'city' ? 'YEREVAN' : 'ARMENIA', 16, top + 70);
   ctx.font = `400 ${Math.round(11 * s + 1)}px ${MONO}`; ctx.fillStyle = '#efe6d2';
   const city = mapView.tab === 'city';
   if (mapView.tab === 'church') { ctx.fillText(`${touchUI ? 'Tap' : 'Click'} to drop route markers (up to 6), again to remove · sit to gather intel`, 16, top + 90); ctx.shadowBlur = 0; return; }
@@ -9187,6 +9187,92 @@ function updateCockpit(dt) {
   g.rotation.z = -steer * Math.min(1, spd / 220) * 0.03 + (which === 'boat' ? Math.sin(time * 1.4) * 0.02 : 0);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// YEREVAN LANDMARKS — Republic Square (Hraparak), the Cascade (Kaskad) and the Opera
+// A civic quarter in the Larkfield park: the singing fountains and Government House of Republic
+// Square, the Cascade stairway, and the Opera theatre. Prime Minister Pashinyan greets visitors here.
+// ═══════════════════════════════════════════════════════════════════════════════
+{
+  const T2 = T, lamE = (c, e = 0.32) => lam(c, { emissive: new THREE.Color(c).multiplyScalar(e) });
+  const pink = lamE('#d9a08f'), pink2 = lamE('#c98b7e'), trim = lamE('#b87466'), stone = lamE('#cfc4b0'), tuff = lamE('#b8623f');
+  const LB = (x0, y0, x1, y1, h, mat, o = {}) => { const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, h, y1 - y0), mat); m.position.set((x0 + x1) / 2, (o.y || 0) + h / 2, (y0 + y1) / 2); m.castShadow = o.shadow !== false; m.receiveShadow = true; scene.add(m); return m; };
+  const LCyl = (x, z, rt, rb, h, mat, y = 0, seg = 16) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat); m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; scene.add(m); return m; };
+  const solidTiles = (tx0, ty0, tx1, ty1) => { for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) grid[ty * GW + tx] = BLDG; };
+  // Plaza paving over the park interior
+  LB(13.4 * T2, 33.4 * T2, 18.2 * T2, 38 * T2, 0.5, lamE('#b3a79a', 0.4), { y: 0.2, shadow: false });
+
+  // ── Republic Square: Government House with its clock tower, on the north edge ──
+  solidTiles(14, 33, 17, 33);
+  const gx = 15.6 * T2, gz = 33.5 * T2;
+  LB(gx - 110, gz - 20, gx + 110, gz + 20, 66, pink, { }); LB(gx - 112, gz - 22, gx + 112, gz + 22, 5, trim, { y: 66 });
+  for (let k = 0; k < 11; k++) LB(gx - 96 + k * 19, gz + 18, gx - 92 + k * 19, gz + 22, 40, trim, { y: 2, shadow: false });
+  LB(gx - 30, gz - 24, gx + 30, gz + 16, 128, pink); LB(gx - 32, gz - 26, gx + 32, gz + 18, 6, trim, { y: 128 });
+  const clock = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 1.4, 20).rotateX(Math.PI / 2), basic(0xf4efe4)); clock.position.set(gx, 100, gz + 19); scene.add(clock);
+  // ── The singing fountains in the pond ──
+  const basin = LB(14.6 * T2, 34.6 * T2, 17 * T2, 37 * T2, 5, lamE('#8a8078', 0.4), { });
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(2.3 * T2, 2.3 * T2).rotateX(-Math.PI / 2), basic(0x2f6f9a, { transparent: true, opacity: 0.86 })); water.position.set(15.8 * T2, 5.4, 35.8 * T2); scene.add(water);
+  const fx = 15.8 * T2, fz = 35.8 * T2, jets = [], jetMat = basic(0xdff4ff, { transparent: true, opacity: 0.6 });
+  for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, r = 34; const j = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 3, 46, 6), jetMat); j.position.set(fx + Math.cos(a) * r, 26, fz + Math.sin(a) * r); scene.add(j); jets.push(j); }
+  const big = new THREE.Mesh(new THREE.CylinderGeometry(2, 5, 70, 8), jetMat); big.position.set(fx, 40, fz); scene.add(big); jets.push(big);
+  window.__yerLm = { jets };
+
+  // ── The Cascade: a monumental stairway on the west edge ──
+  solidTiles(13, 34, 13, 37);
+  const cx = 13.6 * T2, cz = 35.8 * T2;
+  for (let k = 0; k < 6; k++) { const w = 150 - k * 8; LB(cx - 8, cz - w / 2, cx + 40 - k * 2, cz + w / 2, 14, stone, { y: k * 14 }); }
+  for (let k = 0; k < 5; k++) LB(cx + 40 - k * 2, cz - 4, cx + 44 - k * 2, cz + 4, 6, basic(0xdff4ff, { transparent: true, opacity: 0.5 }), { y: 14 + k * 14, shadow: false });
+  for (const dz of [-52, 52]) { LCyl(cx + 6, cz + dz, 6, 7, 16, stone, 84); const st = new THREE.Mesh(new THREE.BoxGeometry(7, 20, 7), lamE('#8a8276', 0.35)); st.position.set(cx + 6, 110, cz + dz); scene.add(st); }
+
+  // ── The Opera and Ballet Theatre: a rounded classical hall on the south edge ──
+  solidTiles(14, 38, 17, 38);
+  const ox = 15.6 * T2, oz = 38.4 * T2;
+  LCyl(ox, oz, 62, 66, 60, stone, 0, 28); LCyl(ox, oz, 64, 64, 5, trim, 60, 28);
+  for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI - Math.PI / 2; LCyl(ox + Math.cos(a) * 62, oz + Math.sin(a) * 62, 4, 4, 56, stone, 2, 10); }
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(48, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), tuff); dome.position.set(ox, 60, oz); dome.castShadow = true; scene.add(dome);
+  LB(ox - 20, oz - 70, ox + 20, oz - 58, 40, stone, { }); LB(ox - 24, oz - 72, ox + 24, oz - 56, 4, trim, { y: 40 });
+
+  // ── Prime Minister Nikol Pashinyan greets visitors by the fountains ──
+  const pm = buildPerson({ skin: '#c9a07e', hair: '#4a4540', shirt: '#1f2a44', pants: '#1f2a44', shoes: '#111111', goatee: true, buzz: true, face: true });
+  pm.position.set(fx, 0, fz + 58); pm.rotation.y = -Math.PI / 2; pm.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(pm);
+  const guards = [];
+  for (const dx of [-28, 28]) { const gd = buildPerson({ skin: '#b98a66', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true }); gd.position.set(fx + dx, 0, fz + 50); gd.rotation.y = -Math.PI / 2; scene.add(gd); guards.push(gd); }
+  window.__yerLm.people = [pm, ...guards];
+  window.__yerLm.pm = { x: fx, y: fz + 58 };
+
+  // Flags on Republic Square
+  for (const dx of [-90, 90]) { const pole = LCyl(gx + dx, gz + 30, 1.2, 1.2, 90, lamE('#8a8a86', 0.3)); const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), basic(0xd90012)); fl.position.set(gx + dx + 16, 82, gz + 30); scene.add(fl); window.__yerLm.flags = window.__yerLm.flags || []; window.__yerLm.flags.push(fl); }
+
+  // Signs
+  postSign(13 * T2, 32.4 * T2, 'REPUBLIC SQUARE', 'Hraparak · Հանրապետության հրապարակ', '#123a52', '#f2e2c4', 30);
+  postSign(12.4 * T2, 35.8 * T2, 'THE CASCADE', 'Kaskad · Կասկադ', '#2a2a30', '#e0b0ff', 26);
+  postSign(18.6 * T2, 38.4 * T2, 'OPERA THEATRE', 'Ballet & Opera · Օպերա', '#3a1a2a', '#ffd35a', 26);
+
+  // Interactions
+  const near = (x, y, r) => Math.hypot(playerPos().x - x, playerPos().y - y) < r;
+  interactables.push({ x: fx, y: fz + 58, r: 34, when: () => !player.region && !player.car, label: 'Talk to Prime Minister Nikol Pashinyan', act: () => talk([
+    ['pm', 'Barev dzez! Bari galust Yerevan, mer masnavor qaghaq.', 'Hello! Welcome to Yerevan, our special city.'],
+    ['pm', 'Sa Hanrapetutyan hraparakn e — qaghaqi sirty, jrachaghery yerg en asum.', 'This is Republic Square, the heart of the city, where the fountains sing.'],
+    ['you', 'Isk Kaskady?', 'And the Cascade?'],
+    ['pm', 'Ayntegh — ver bardzratsir astichannerov, u amboghj Yerevany ktesnes.', 'There — climb the stairs, and you will see all of Yerevan.'],
+    ['pm', 'Yerekoyan gna Opera. Aram Khachaturyani erazhshtutyuny lsir.', "In the evening, go to the Opera. Hear Aram Khachaturian's music."]]) });
+  interactables.push({ x: fx, y: fz + 6, r: 30, when: () => !player.region && !player.car, label: 'Watch the singing fountains', act: () => toast('The fountains of Republic Square dance and change colour to the music', '#3fd0ff') });
+  interactables.push({ x: cx + 30, y: cz, r: 34, when: () => !player.region && !player.car, label: 'Climb the Cascade viewpoint', act: () => { player.hp = Math.min(100, player.hp + 10); showBanner('The Cascade', 'From the top: all of Yerevan, with Mount Ararat beyond', '#e0b0ff', 3.5); } });
+  interactables.push({ x: ox, y: oz - 66, r: 34, when: () => !player.region && !player.car, label: 'Read about the Opera Theatre', act: () => showMenu({ eyebrow: 'Yerevan', title: 'Opera & Ballet Theatre', body: '<p>The Armenian National Academic Theatre of Opera and Ballet, opened in 1933, stands on Freedom Square. Its rounded hall was designed by the architect Alexander Tamanyan, who planned modern Yerevan.</p>', options: [] }) });
+}
+function updateLandmarks(dt) {
+  const L = window.__yerLm; if (!L) return;
+  if (mode === 'play' && !player.region && !player.interior) {
+    for (const p of L.people) if (p.visible) posePerson(p, p.position.x, p.position.z, -p.rotation.y, 0, false, false, 1);
+  }
+  const on = !player.region && !player.interior && mode !== 'title';
+  for (const p of L.people) p.visible = on;
+  for (const j of L.jets) j.visible = on;
+  for (const f of L.flags || []) f.visible = on;
+  if (!on) return;
+  L.jets.forEach((j, i) => { const h = 0.5 + 0.5 * Math.abs(Math.sin(time * 1.6 + i * 0.7)); j.scale.y = h; j.position.y = (i === L.jets.length - 1 ? 40 : 26) * h; j.material.color.setHSL((0.55 + 0.12 * Math.sin(time + i)) % 1, 0.6, 0.75); });
+  for (const [i, f] of (L.flags || []).entries()) f.rotation.y = Math.sin(time * 1.6 + i) * 0.25;
+}
+
 let luckyWheel = null;
 {
   const I = INTERIORS.casino;
@@ -9612,11 +9698,11 @@ function updateCamera(dt) {
     // Eyes of the player: on foot at head height, in a vehicle from the driver's seat
     const p = playerPos(), pc = player.car, hd = pc ? pc.a : player.a;
     const spd = pc ? Math.hypot(pc.vx, pc.vy) : 0, az = pc ? pc.z || 0 : 0;
-    const h = (pc ? (pc.spec.air ? 18 : pc.spec.bike ? 25 : pc.spec.bus ? 34 : 17) : 23) + az;
+    const h = (pc ? (pc.spec.air ? 18 : pc.spec.bike ? 20 : pc.spec.bus ? 27 : pc.spec.boat ? 20 : 12) : 23) + az;
     const fwd = pc ? (pc.spec.bike ? 4 : pc.spec.bus ? pc.L * 0.35 : 3) : 3.5;
     camYaw = camSnap ? hd : camYaw + angDiff(hd, camYaw) * Math.min(1, dt * 12);
     camera.position.set(p.x + Math.cos(camYaw) * fwd, h, p.y + Math.sin(camYaw) * fwd);
-    camLook.set(p.x + Math.cos(camYaw) * 200, h - (pc ? 4 : 8), p.y + Math.sin(camYaw) * 200);
+    camLook.set(p.x + Math.cos(camYaw) * 200, h - (pc ? 2 : 8), p.y + Math.sin(camYaw) * 200);
     const fov = adaptFov(72 + Math.min(12, spd * 0.03) + (pc && pc.boosting ? 8 : 0));
     if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
   } else if (player.interior) {
