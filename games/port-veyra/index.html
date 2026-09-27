@@ -693,7 +693,7 @@ function districtAtPx(x, y) {
 const YER_DISTRICTS = {
   kentron:    { name: 'Kentron', hy: 'Կենտրոն', sub: 'The heart of the city' },
   arabkir:    { name: 'Arabkir', hy: 'Արաբկիր', sub: 'Northern heights and gardens' },
-  kanaker:    { name: 'Kanaker-Zeytun', hy: 'Քանաքեռ-Զեյթուն', sub: 'The old village on the plateau' },
+  kanaker:    { name: 'Zeytun', hy: 'Զեյթուն', sub: 'The old quarter on the plateau' },
   ajapnyak:   { name: 'Ajapnyak', hy: 'Աջափնյակ', sub: 'The right bank of the Hrazdan' },
   davtashen:  { name: 'Davtashen', hy: 'Դավթաշեն', sub: 'Terraced blocks above the gorge' },
   malatia:    { name: 'Malatia-Sebastia', hy: 'Մալաթիա-Սեբաստիա', sub: 'The great western sprawl' },
@@ -7089,7 +7089,7 @@ function drawCityMap() {
   const s = clamp(vw / 900, 0.72, 1), near = mapView.dist < 1500;
   // District names float above their neighbourhoods
   ctx.textAlign = 'center';
-  for (const [name, x, y] of [['DAVTASHEN', 7 * T, 5 * T], ['ARABKIR', 25 * T, 7 * T], ['KANAKER-ZEYTUN', 45 * T, 6 * T],
+  for (const [name, x, y] of [['DAVTASHEN', 7 * T, 5 * T], ['ARABKIR', 25 * T, 7 * T], ['ZEYTUN', 45 * T, 6 * T],
     ['AJAPNYAK', 5 * T, 19 * T], ['MALATIA-SEBASTIA', 8 * T, 28 * T], ['KENTRON', 25 * T, 37 * T], ['NORK-MARASH', 46 * T, 33 * T],
     ['SHENGAVIT', 7 * T, 50 * T], ['EREBUNI', 33 * T, 50 * T], ['AVAN', 72 * T, 7 * T], ['NOR NORK', 78 * T, 27 * T], ['NUBARASHEN', 85 * T, 49 * T]]) {
     const [a, b, v] = toScreen(camera, x, y, 260); if (!v) continue;
