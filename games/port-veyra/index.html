@@ -408,8 +408,8 @@
         <dl class="keys">
           <div><dt>W / S</dt><dd>Forward · brake and reverse</dd></div>
           <div><dt>A / D</dt><dd>Turn or steer</dd></div>
-          <div><dt>Space</dt><dd>Get in or out of a car</dd></div>
-          <div><dt>Shift</dt><dd>Run · handbrake · climb</dd></div>
+          <div><dt>Space</dt><dd>Jump · get in or out of a car</dd></div>
+          <div><dt>Shift</dt><dd>Sprint on foot · handbrake · climb</dd></div>
           <div><dt>Z</dt><dd>Descend in aircraft</dd></div>
           <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
           <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
@@ -465,8 +465,8 @@
       <dl class="keys">
       <div><dt>W / S</dt><dd>Forward · brake and reverse</dd></div>
       <div><dt>A / D</dt><dd>Turn or steer</dd></div>
-      <div><dt>Space</dt><dd>Get in or out of a car</dd></div>
-      <div><dt>Shift</dt><dd>Run · handbrake · climb</dd></div>
+      <div><dt>Space</dt><dd>Jump · get in or out of a car</dd></div>
+      <div><dt>Shift</dt><dd>Sprint on foot · handbrake · climb</dd></div>
       <div><dt>Z</dt><dd>Descend in aircraft</dd></div>
       <div><dt>F / Click</dt><dd>Shoot or swing (guns lock on)</dd></div>
       <div><dt>Q / 1–6</dt><dd>Switch weapon</dd></div>
@@ -3297,17 +3297,25 @@ function updatePlayer(dt) {
     if (time - lastInteract > 0.4) { lastInteract = time; promptIt.act(); }
   }
   interactPressed = false;
-  if (usePressed) { usePressed = false; if (player.car) exitCar(false); else tryEnter(); }
+  if (usePressed) {
+    usePressed = false;
+    if (player.car) exitCar(false);
+    else { tryEnter(); if (!player.car && (player.jy || 0) <= 0.01 && !CH.seat) player.jv = 340; }   // no car in reach → jump
+  }
   const up = down('KeyW', 'ArrowUp'), dn = down('KeyS', 'ArrowDown'), lf = down('KeyA', 'ArrowLeft'), rt = down('KeyD', 'ArrowRight');
   const shift = down('ShiftLeft', 'ShiftRight');
   if (CH.seat) { player.vx = player.vy = 0; if (up || dn || lf || rt) hxStand(); return null; }
   if (player.car) return { thr: up ? 1 : dn ? -1 : 0, steer: (rt ? 1 : 0) - (lf ? 1 : 0), hb: shift, up: shift, dn: down('KeyZ'), boost: down('KeyX') || down('KeyB') };
+  // Vertical: a jump arc with gravity, applied on foot
+  player.jy = player.jy || 0; player.jv = player.jv || 0;
+  if (player.jy > 0 || player.jv !== 0) { player.jv -= 1000 * dt; player.jy += player.jv * dt; if (player.jy <= 0) { player.jy = 0; player.jv = 0; } }
   player.a += ((rt ? 1 : 0) - (lf ? 1 : 0)) * 3.4 * dt;
-  const m = (up ? 1 : 0) - (dn ? 0.6 : 0), sp = (shift && m > 0 ? 165 : 92) * (time < (player.fitT || 0) ? 1.25 : 1) * hxSpeedMul();
+  const sprint = shift, airborne = player.jy > 0.01;
+  const m = (up ? 1 : 0) - (dn ? 0.6 : 0), sp = (sprint && m > 0 ? 192 : 92) * (time < (player.fitT || 0) ? 1.25 : 1) * hxSpeedMul();
   player.vx = Math.cos(player.a) * m * sp; player.vy = Math.sin(player.a) * m * sp;
   const nx = player.x + player.vx * dt; if (!circleSolid(nx, player.y, 7)) player.x = nx;
   const ny = player.y + player.vy * dt; if (!circleSolid(player.x, ny, 7)) player.y = ny;
-  if (m) player.phase = (player.phase || 0) + dt * (sp > 120 ? 14 : 9.5) * Math.sign(m);
+  if (m && !airborne) player.phase = (player.phase || 0) + dt * (sp > 120 ? 14 : 9.5) * Math.sign(m);
   for (const p of peds) {
     if (p.state === 'down') continue;
     const dx = p.x - player.x, dy = p.y - player.y, d = Math.hypot(dx, dy);
@@ -6456,7 +6464,7 @@ function gptBrief() {
   return `You are Hayastan GPT, the assistant app on the player's phone in the open-world game "Hayastan". Reply in 1-4 short sentences, friendly, plain text, no markdown. `
     + `You can speak English or Armenian (write Armenian in Latin letters unless asked otherwise). `
     + `The game: the city of Yerevan, laid out in its twelve real districts (${Object.values(YER_DISTRICTS).filter(d => d.name !== 'Hrazdan Gorge').map(d => d.name).join(', ')}), with an airfield and the Gilded Anchor casino, plus 13 Armenian destinations reached by Quick Travel: ${DESTS.map(D => D.name).join(', ')}. `
-    + `Controls: WASD move, Space enter/exit vehicles, F shoot, E interact, M map, / phone, C camera, B nitro, G Quick Travel in Armenia. `
+    + `Controls: WASD move, Shift sprint on foot, Space jump (or enter/exit vehicles), F shoot, E interact, M map, / phone, C camera, B nitro, G Quick Travel in Armenia. `
     + (gpt.tools ? 'Use the tools when the player asks you to change the weather, start a disaster, travel, set a waypoint, or asks about their status; say briefly what you did. Never start a disaster unless the player asks for it. ' : '')
     + `Current state: ${JSON.stringify(gptTools[0].execute())}.`;
 }
@@ -9860,7 +9868,7 @@ function syncEntities() {
     if (playerMesh.visible) { posePerson(playerMesh, player.x, player.y, player.a, player.phase || 0, pSpeed > 1, false, 1,
       { run: pSpeed > 120, aim: armed && (time - (player.fireT || -9) < 0.8 || down('KeyF') || mouseFire || !!aimTarget),
         swing: player.swing ? player.swing.t / 0.4 : undefined, melee: player.weapon });
-      if (player.elev) playerMesh.position.y = player.elev; }
+      const lift = (player.elev || 0) + (player.jy || 0); if (lift) playerMesh.position.y = lift; }
   }
   batMesh.visible = player.weapon === 'bat'; knifeMesh.visible = player.weapon === 'knife';
   gunMesh.visible = armed;
@@ -10046,7 +10054,7 @@ function updateCamera(dt) {
     // Eyes of the player: on foot at head height, in a vehicle from the driver's seat
     const p = playerPos(), pc = player.car, hd = pc ? pc.a : player.a;
     const spd = pc ? Math.hypot(pc.vx, pc.vy) : 0, az = pc ? pc.z || 0 : 0;
-    const h = (pc ? (pc.spec.air ? 18 : pc.spec.bike ? 20 : pc.spec.bus ? 27 : pc.spec.boat ? 20 : 12) : 23) + az + (player.elev || 0);
+    const h = (pc ? (pc.spec.air ? 18 : pc.spec.bike ? 20 : pc.spec.bus ? 27 : pc.spec.boat ? 20 : 12) : 23) + az + (player.elev || 0) + (pc ? 0 : (player.jy || 0));
     const fwd = pc ? (pc.spec.bike ? 4 : pc.spec.bus ? pc.L * 0.35 : 3) : 3.5;
     camYaw = camSnap ? hd : camYaw + angDiff(hd, camYaw) * Math.min(1, dt * 12);
     camera.position.set(p.x + Math.cos(camYaw) * fwd, h, p.y + Math.sin(camYaw) * fwd);
@@ -10067,7 +10075,7 @@ function updateCamera(dt) {
     const high = camMode === 'high';
     const flying = pc && pc.spec.air, az = pc ? pc.z || 0 : 0;
     let dist = high ? 170 : flying ? 150 + spd * 0.12 : pc ? (pc.spec.bus ? 150 : 96) + spd * 0.08 : 74;
-    let height = (high ? 330 : flying ? 64 : pc ? (pc.spec.bus ? 70 : 44) : 38) + az + (player.elev || 0);
+    let height = (high ? 330 : flying ? 64 : pc ? (pc.spec.bus ? 70 : 44) : 38) + az + (player.elev || 0) + (pc ? 0 : (player.jy || 0) * 0.6);
     // In the Armenian destinations the chase camera can be orbited (drag) and zoomed (wheel); walking eases it back behind you
     let yawC = camYaw;
     if (player.region && !high) {
@@ -10081,7 +10089,7 @@ function updateCamera(dt) {
     camWant.set(bx, height, bz);
     if (camSnap) camYaw = heading;
     camera.position.lerp(camWant, camSnap ? 1 : k);
-    camLook.set(p.x + Math.cos(camYaw) * (high ? 20 : 40), (pc ? 12 : 14) + az + (player.elev || 0), p.y + Math.sin(camYaw) * (high ? 20 : 40));
+    camLook.set(p.x + Math.cos(camYaw) * (high ? 20 : 40), (pc ? 12 : 14) + az + (player.elev || 0) + (pc ? 0 : (player.jy || 0) * 0.6), p.y + Math.sin(camYaw) * (high ? 20 : 40));
     const fov = adaptFov(62 + Math.min(14, spd * 0.035) + (pc && pc.boosting ? 9 : 0));
     if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); }
   }
