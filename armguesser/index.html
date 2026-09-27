@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>armguesser — Armenian Geoguesser</title>
+  <meta name="description" content="Guess where in Armenia you are from satellite imagery. Five rounds, 25,000 points.">
+  <meta name="theme-color" content="#D90429">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='10' fill='%23D90429'/%3E%3Crect y='10' width='30' height='10' fill='%230033A0'/%3E%3Crect y='20' width='30' height='10' fill='%23F2A800'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    try {
+      var t = localStorage.getItem('armg.theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="app-header">
+    <button class="logo" id="logo-btn" type="button" aria-label="armguesser — back to home">
+      <span class="logo-flag" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="logo-text"><span class="c-red">arm</span><span class="c-blue">gues</span><span class="c-gold">ser</span></span>
+    </button>
+    <span class="badge" id="mode-badge" hidden></span>
+    <div class="header-actions">
+      <span class="streak" id="streak-chip" title="Daily challenge streak" hidden></span>
+      <button class="icon-btn" id="sound-btn" type="button" aria-pressed="true" aria-label="Sound on">🔊</button>
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle dark mode">🌓</button>
+      <button class="icon-btn" id="help-btn" type="button" aria-label="How to play">?</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============================== HOME ============================== -->
+    <section class="screen" id="screen-home" aria-labelledby="home-title">
+      <div class="home-hero">
+        <h1 id="home-title">Where in Armenia are you?</h1>
+        <p class="lede">Study a satellite view, drop a pin on the map, and score up to 5,000 points per round. Five rounds, from the streets of Yerevan to the gorges of Syunik.</p>
+      </div>
+
+      <div class="daily-card" id="daily-card">
+        <div>
+          <h2>Daily Challenge</h2>
+          <p id="daily-status">The same five places for everyone today.</p>
+        </div>
+        <button class="btn btn-gold" id="daily-btn" type="button">Play today’s</button>
+      </div>
+
+      <h2 class="section-title">Choose a difficulty</h2>
+      <div class="mode-grid" role="list">
+        <button class="mode-card" data-mode="easy" role="listitem" type="button">
+          <span class="mode-stars" aria-hidden="true">★☆☆☆</span>
+          <span class="mode-name">Easy</span>
+          <span class="mode-desc">Famous landmarks and major cities. Wide view, zoom freely.</span>
+        </button>
+        <button class="mode-card" data-mode="medium" role="listitem" type="button">
+          <span class="mode-stars" aria-hidden="true">★★☆☆</span>
+          <span class="mode-name">Medium</span>
+          <span class="mode-desc">Cities, towns and notable sites across every region.</span>
+        </button>
+        <button class="mode-card" data-mode="hard" role="listitem" type="button">
+          <span class="mode-stars" aria-hidden="true">★★★☆</span>
+          <span class="mode-name">Hard</span>
+          <span class="mode-desc">Smaller towns, lesser-known monasteries, tighter view.</span>
+        </button>
+        <button class="mode-card" data-mode="expert" role="listitem" type="button">
+          <span class="mode-stars" aria-hidden="true">★★★★</span>
+          <span class="mode-name">Expert</span>
+          <span class="mode-desc">Remote villages, zoomed right in. Good luck.</span>
+        </button>
+        <button class="mode-card" data-mode="mixed" role="listitem" type="button">
+          <span class="mode-stars" aria-hidden="true">🎲</span>
+          <span class="mode-name">Mixed</span>
+          <span class="mode-desc">Anything goes — every location in the database.</span>
+        </button>
+      </div>
+
+      <div class="options-row">
+        <label class="toggle">
+          <input type="checkbox" id="timer-toggle">
+          <span>Timed rounds (90 s)</span>
+        </label>
+      </div>
+
+      <div class="home-links">
+        <button class="btn btn-ghost" id="leaderboard-btn" type="button">🏅 Leaderboard</button>
+        <button class="btn btn-ghost" id="achievements-btn" type="button">🎖️ Achievements</button>
+      </div>
+      <p class="home-foot" id="home-foot"></p>
+    </section>
+
+    <!-- ============================== GAME ============================== -->
+    <section class="screen" id="screen-game" hidden aria-label="Game">
+      <div class="game-grid">
+        <div class="pane pane-view">
+          <div class="pane-label">
+            <span>📡 Where is this?</span>
+            <button class="chip-btn" id="recenter-btn" type="button">Recenter</button>
+          </div>
+          <div id="view-map" class="map" role="img" aria-label="Satellite view of the mystery location. Drag to look around."></div>
+          <div class="view-hint" id="view-hint" hidden></div>
+        </div>
+        <div class="pane pane-guess">
+          <div class="pane-label">
+            <span>📍 Your guess</span>
+            <button class="chip-btn" id="pin-center-btn" type="button" title="Keyboard: G">Pin map centre</button>
+          </div>
+          <div id="guess-map" class="map" tabindex="0" aria-label="Map of Armenia. Click to place your guess, or use arrow keys to pan and press G to pin the centre."></div>
+          <div class="crosshair" aria-hidden="true"></div>
+          <button class="btn btn-red guess-btn" id="guess-btn" type="button" disabled>Place a pin on the map</button>
+        </div>
+      </div>
+
+      <div class="status-bar" role="status" aria-live="polite">
+        <div class="stat"><span class="stat-label">Round</span><span class="stat-value" id="round-indicator">1 / 5</span></div>
+        <div class="stat"><span class="stat-label">Last round</span><span class="stat-value" id="round-score">—</span></div>
+        <div class="stat"><span class="stat-label">Total</span><span class="stat-value" id="total-score">0</span></div>
+        <div class="stat" id="timer-stat" hidden><span class="stat-label">Time</span><span class="stat-value" id="timer">90</span></div>
+        <div class="round-dots" id="round-dots" aria-hidden="true"></div>
+      </div>
+
+      <!-- Round result sheet -->
+      <div class="result-sheet" id="result-sheet" role="dialog" aria-modal="false" aria-labelledby="result-name" hidden>
+        <div class="result-points">
+          <span class="points-big" id="result-points">0</span>
+          <span class="points-sub">points</span>
+        </div>
+        <div class="progress" aria-hidden="true"><div class="progress-fill" id="result-bar"></div></div>
+        <h2 id="result-name">—</h2>
+        <p class="result-hy" id="result-hy"></p>
+        <p class="result-distance" id="result-distance"></p>
+        <p class="result-fact" id="result-fact"></p>
+        <details class="result-details">
+          <summary>Location details</summary>
+          <dl id="result-dl"></dl>
+        </details>
+        <button class="btn btn-blue" id="next-btn" type="button">Next round →</button>
+      </div>
+    </section>
+
+    <!-- ============================= RESULTS ============================ -->
+    <section class="screen" id="screen-results" hidden aria-labelledby="final-title">
+      <div class="final-card">
+        <p class="final-kicker" id="final-kicker">Game over</p>
+        <h1 id="final-title"><span id="final-score">0</span><small> / 25,000</small></h1>
+        <p class="final-rank" id="final-rank"></p>
+        <p class="final-emoji" id="final-emoji" aria-hidden="true"></p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-label">Accuracy</span><span class="stat-value" id="st-accuracy">—</span></div>
+        <div class="stat-card"><span class="stat-label">Avg distance</span><span class="stat-value" id="st-avg">—</span></div>
+        <div class="stat-card"><span class="stat-label">Best round</span><span class="stat-value" id="st-best">—</span></div>
+        <div class="stat-card"><span class="stat-label">Worst round</span><span class="stat-value" id="st-worst">—</span></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="rounds-table">
+          <caption class="sr-only">Round breakdown</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">Location</th><th scope="col">Region</th><th scope="col" class="num">Distance</th><th scope="col" class="num">Points</th></tr></thead>
+          <tbody id="rounds-body"></tbody>
+        </table>
+      </div>
+
+      <div class="new-badges" id="new-badges" hidden>
+        <h2>New achievements</h2>
+        <ul id="new-badges-list"></ul>
+      </div>
+
+      <form class="save-score" id="save-form">
+        <label for="player-name">Save to leaderboard</label>
+        <div class="save-row">
+          <input id="player-name" name="name" maxlength="16" autocomplete="nickname" placeholder="Your name" required>
+          <button class="btn btn-blue" type="submit">Save</button>
+        </div>
+      </form>
+
+      <div class="final-actions">
+        <button class="btn btn-gold" id="share-btn" type="button">📤 Share score</button>
+        <button class="btn btn-red" id="again-btn" type="button">Play again</button>
+        <button class="btn btn-ghost" id="home-btn" type="button">Home</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================== DIALOGS ============================== -->
+  <dialog id="help-dialog" aria-labelledby="help-title">
+    <h2 id="help-title">How to play</h2>
+    <ol class="steps">
+      <li><strong>Look around.</strong> The left panel shows a satellite view of a mystery place in Armenia. Drag and zoom to hunt for clues: rivers, lakes, road shapes, farmland, mountains.</li>
+      <li><strong>Drop a pin.</strong> Click the map of Armenia on the right where you think it is. Keyboard: focus the map, pan with arrow keys, press <kbd>G</kbd> to pin the centre.</li>
+      <li><strong>Guess.</strong> Press the button (or <kbd>Space</kbd>). You score <code>5000 × (1 − km / 400)</code> — a perfect guess is 5,000.</li>
+      <li><strong>Five rounds.</strong> Press <kbd>N</kbd> for the next round. Max score is 25,000.</li>
+    </ol>
+    <p class="muted">Tip: Lake Sevan, the Ararat plain and the deep Syunik gorges are easy to spot from above.</p>
+    <form method="dialog"><button class="btn btn-red" type="submit">Let’s go</button></form>
+  </dialog>
+
+  <dialog id="leaderboard-dialog" aria-labelledby="lb-title">
+    <h2 id="lb-title">Leaderboard</h2>
+    <div class="tabs" role="tablist" id="lb-tabs"></div>
+    <ol class="leaderboard" id="lb-list"></ol>
+    <p class="muted">Scores are saved in this browser only.</p>
+    <form method="dialog"><button class="btn btn-ghost" type="submit">Close</button></form>
+  </dialog>
+
+  <dialog id="achievements-dialog" aria-labelledby="ach-title">
+    <h2 id="ach-title">Achievements</h2>
+    <ul class="badges" id="ach-list"></ul>
+    <form method="dialog"><button class="btn btn-ghost" type="submit">Close</button></form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="js/locations.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
