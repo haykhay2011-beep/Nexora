@@ -3607,7 +3607,7 @@ function buildFront(x, zFace, w, h, dir, kind) {
 const beacons = [];
 // Clear a plaza around each Yerevan landmark so the squares are not crowded by city blocks
 {
-  const plazas = [[11, 31, 20, 40], [11, 42, 20, 49], [21, 42, 30, 49]];
+  const plazas = [[11, 31, 20, 40], [11, 42, 20, 49], [21, 42, 30, 49], [29, 1, 42, 11]];
   const keep = k => k === 'police' || k === 'hospital' || k === 'casino' || k === 'mansion' || k === 'museum';
   const hits = b => plazas.some(([x0, y0, x1, y1]) => b.x < x1 && b.x + b.w > x0 && b.y < y1 && b.y + b.h > y0);
   for (let i = buildings.length - 1; i >= 0; i--) {
@@ -9396,6 +9396,75 @@ function updateCockpit(dt) {
   interactables.push({ x: cx, y: cTop - 12, r: 40, when: () => !player.region && !player.car, label: 'Rest at the Cascade viewpoint', act: () => { player.hp = Math.min(100, player.hp + 15); showBanner('The Cascade', 'From the top: all of Yerevan, with Mount Ararat beyond', '#e0b0ff', 3.5); } });
   interactables.push({ x: ox, y: oz + 62, r: 34, when: () => !player.region && !player.car && mode === 'play', label: 'Enter the Opera Theatre', act: () => { if (player.car) { toast('Get out of the vehicle first', '#ff8a7a'); return; } enterInterior('opera'); showBanner('Opera & Ballet Theatre', 'Aram Khachaturian on the bill tonight', '#ffd35a', 3.5); } });
 }
+// ═══════════════════════════════════════════════════════════════════════════════
+// VICTORY PARK (Haghtanak Park) — the memorial park above the city, with Mother Armenia
+// A green terrace on Azatutyan Avenue in the north, opened in 1950 for the victory in the war.
+// The colossal Mother Armenia statue — a woman with a sword and a shield at her feet — watches
+// over Yerevan. Walking paths, benches, an eternal flame and quiet lawns; visitors and a guide.
+// ═══════════════════════════════════════════════════════════════════════════════
+{
+  const T2 = T, lamE = (c, e = 0.32) => lam(c, { emissive: new THREE.Color(c).multiplyScalar(e) });
+  const grass = lamE('#3f6b3a', 0.3), path = lamE('#b3a79a', 0.4), granite = lamE('#4c4a46', 0.3), stone = lamE('#c2bcae', 0.35), bronze = lamE('#5f6b58', 0.3), dark = lamE('#3a3f3a', 0.3);
+  const LB = (x0, y0, x1, y1, h, mat, o = {}) => { const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, h, y1 - y0), mat); m.position.set((x0 + x1) / 2, (o.y || 0) + h / 2, (y0 + y1) / 2); m.castShadow = o.shadow !== false; m.receiveShadow = true; scene.add(m); return m; };
+  const Cyl = (x, z, rt, rb, h, mat, y = 0, seg = 12) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat); m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; scene.add(m); return m; };
+  const solidTiles = (tx0, ty0, tx1, ty1) => { for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) grid[ty * GW + tx] = BLDG; };
+  const L = window.__yerLm;
+
+  // Lawns and a wide gravel promenade
+  LB(30 * T2, 2 * T2, 41 * T2, 10 * T2, 0.4, grass, { y: 0.2, shadow: false });
+  LB(33.4 * T2, 2.4 * T2, 37.6 * T2, 9.4 * T2, 0.5, path, { y: 0.35, shadow: false });
+
+  // ── Mother Armenia (Mayr Hayastan) on her pedestal, facing south over the city ──
+  const px = 35.5 * T2, pz = 3.6 * T2, pedH = 64;
+  solidTiles(34, 3, 37, 4);
+  LB(px - 46, pz - 26, px + 46, pz + 26, pedH, granite, {});                        // pedestal (the basalt museum)
+  LB(px - 50, pz - 30, px + 50, pz + 30, 6, stone, { y: pedH });                     // cap
+  for (let k = 0; k < 8; k++) LB(px - 44 + k * 12, pz + 24, px - 40 + k * 12, pz + 27, pedH * 0.5, stone, { y: 2, shadow: false });   // pilasters on the front
+  const relief = new THREE.Mesh(new THREE.PlaneGeometry(70, 20), lamE('#8a8478', 0.3)); relief.position.set(px, 34, pz + 26.4); scene.add(relief);   // bronze frieze
+  // The colossal figure
+  const S = new THREE.Group(); S.position.set(px, pedH + 6, pz);
+  const g1 = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); m.castShadow = true; S.add(m); return m; };
+  g1(new THREE.CylinderGeometry(7, 16, 40, 14), bronze, 0, 20, 0);                   // robed body
+  g1(new THREE.CylinderGeometry(9, 8, 10, 12), bronze, 0, 42, 0);                    // shoulders and cloak
+  g1(new THREE.SphereGeometry(5, 12, 10), bronze, 0, 50, 1);                         // head
+  g1(new THREE.CylinderGeometry(3.4, 3.4, 22, 8), bronze, -8, 32, 8, Math.PI / 2, 0, 0.2);   // left arm forward
+  g1(new THREE.CylinderGeometry(3.4, 3.4, 22, 8), bronze, 8, 30, 8, Math.PI / 2, 0, -0.2);    // right arm forward
+  g1(new THREE.BoxGeometry(52, 3, 5), lamE('#7a7f74', 0.3), 0, 30, 14);              // the sword, held horizontally across
+  g1(new THREE.BoxGeometry(4, 10, 5), lamE('#7a7f74', 0.3), 26, 30, 14);             // sword pommel
+  g1(new THREE.CylinderGeometry(11, 11, 3, 16), bronze, 14, -2, 12, Math.PI / 2, 0, 0.15);    // shield at her feet
+  scene.add(S);
+  postSign(32 * T2, 2.2 * T2, 'VICTORY PARK', 'Mother Armenia · Մայր Հայաստան', '#20321f', '#e6d8b0', 30);
+
+  // ── Eternal flame and memorial slab in front of the pedestal ──
+  const fx2 = px, fz2 = pz + 60;
+  LB(fx2 - 20, fz2 - 20, fx2 + 20, fz2 + 20, 3, granite, {});
+  Cyl(fx2, fz2, 8, 10, 8, dark, 3);
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(6, 22, 8), basic(0xff9a3c, { transparent: true, opacity: 0.85 })); flame.position.set(fx2, 18, fz2); scene.add(flame);
+  const glow = new THREE.PointLight(0xff8a3a, 0.8, 160); glow.position.set(fx2, 20, fz2); scene.add(glow);
+
+  // ── Rows of trees and benches along the promenade ──
+  const tree = (x, z) => { Cyl(x, z, 3, 4, 18, lamE('#6a4a30', 0.25), 0, 8); const c = new THREE.Mesh(new THREE.SphereGeometry(14, 10, 8), lamE('#2f5a2c', 0.28)); c.position.set(x, 26, z); c.scale.y = 0.85; c.castShadow = true; scene.add(c); };
+  const bench = (x, z, a) => { const b = new THREE.Group(); b.position.set(x, 0, z); b.rotation.y = a; const seat = new THREE.Mesh(new THREE.BoxGeometry(20, 3, 7), lamE('#7a5a3a', 0.3)); seat.position.y = 6; b.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(20, 8, 2), lamE('#7a5a3a', 0.3)); back.position.set(0, 11, -3); b.add(back); b.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(b); };
+  for (const x of [31.2, 33, 38, 39.8]) for (const z of [3, 6, 8.6]) tree(x * T2, z * T2);
+  for (const [x, z, a] of [[33.4, 6.6, 0], [37.6, 6.6, Math.PI], [34.6, 8.8, 0], [36.4, 8.8, 0], [31.6, 4, Math.PI / 2], [39.4, 4, -Math.PI / 2]]) bench(x * T2, z * T2, a);
+
+  // ── Park people: a guard, a tour guide and visitors ──
+  const add = (x, z, a, look) => { const p = buildPerson({ ...look, face: true }); p.position.set(x * T2, 0, z * T2); p.rotation.y = -a; p.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(p); L.people.push(p); return p; };
+  add(35.5, 6.6, Math.PI / 2, { skin: '#b98a66', hair: '#1c1a18', shirt: '#2c3a2a', pants: '#22271f', cap: true });          // guard by the flame
+  add(34.4, 7.6, -Math.PI / 2, { skin: '#e0b48a', hair: '#4a3a2a', shirt: '#8a2f2f', pants: '#2b2f38' });                    // tour guide
+  add(36.6, 7.8, -Math.PI / 2, { skin: '#d9a878', hair: '#3a2a1e', shirt: '#3b6ea5', pants: '#22252c' });                    // visitor
+  add(37.2, 5, -1.2, { skin: '#c68e63', hair: '#241a12', shirt: '#f2c230', pants: '#2a2c30' });                              // visitor
+  add(32.6, 8.4, 0.6, { skin: '#f0c9a0', hair: '#8a8580', shirt: '#6a2a4a', pants: '#2b2f38' });                             // visitor
+
+  L.flame = flame;
+  L.map.push({ x: px, y: pz, col: '#9be08a', g: '★', label: 'Victory Park' });
+
+  // ── Interactions ──
+  interactables.push({ x: px, y: pz + 40, r: 44, when: () => !player.region && !player.car, label: 'Behold Mother Armenia', act: () => showBanner('Mother Armenia', 'Mayr Hayastan · sword across her hands, shield at her feet, watching over Yerevan', '#e6d8b0', 4) });
+  interactables.push({ x: fx2, y: fz2 + 6, r: 30, when: () => !player.region && !player.car, label: 'Read the war memorial plaque', act: () => showMenu({ eyebrow: 'Victory Park · 1950', title: 'The Eternal Flame', body: '<p>Victory Park (Haghtanak Park) was laid out in 1950 on the northern heights of Yerevan to honour the victory in the Second World War and the sons of Armenia who fell in it.</p><p>The colossal <b>Mother Armenia</b> — <i>Mayr Hayastan</i> — took the pedestal in 1967. She holds a sword across her hands with a shield at her feet: the nation, watchful and at peace.</p>', options: [] }) });
+  interactables.push({ x: 34.6 * T2, y: 8.8 * T2, r: 28, when: () => !player.region && !player.car, label: 'Rest on a bench and take in the view (+20 health)', act: () => { player.hp = Math.min(100, player.hp + 20); toast('You sit a while. Birdsong, rustling leaves, all Yerevan below. +20 health', '#9be08a'); } });
+  interactables.push({ x: 39.4 * T2, y: 4 * T2, r: 26, when: () => !player.region && !player.car, label: 'Photo point: the city from the heights', act: () => showBanner('Victory Park overlook', 'Yerevan spreads out below, with Ararat on the far horizon', '#9be08a', 3.5) });
+}
 function updateLandmarks(dt) {
   const L = window.__yerLm; if (!L) return;
   if (mode === 'play' && !player.region && !player.interior) {
@@ -9415,6 +9484,7 @@ function updateLandmarks(dt) {
   L.jets.forEach((j, i) => { const h = 0.5 + 0.5 * Math.abs(Math.sin(time * 1.6 + i * 0.7)); j.scale.y = h; j.position.y = (i === L.jets.length - 1 ? 40 : 26) * h; j.material.color.setHSL((0.55 + 0.12 * Math.sin(time + i)) % 1, 0.6, 0.75); });
   for (const [i, f] of (L.flags || []).entries()) f.rotation.y = Math.sin(time * 1.6 + i) * 0.25;
   if (L.hands) { const d = new Date(); L.hands[0].rotation.z = -((d.getHours() % 12) + d.getMinutes() / 60) / 12 * Math.PI * 2; L.hands[1].rotation.z = -d.getMinutes() / 60 * Math.PI * 2; }
+  if (L.flame) { L.flame.scale.set(1, 0.8 + 0.35 * Math.abs(Math.sin(time * 7)), 1); L.flame.material.opacity = 0.7 + 0.2 * Math.abs(Math.sin(time * 9)); }
 }
 
 let luckyWheel = null;
