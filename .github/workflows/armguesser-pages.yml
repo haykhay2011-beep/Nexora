@@ -1,0 +1,48 @@
+# Publishes the armguesser game (armguesser/) to the gh-pages branch, which GitHub Pages serves.
+# One-time setup: Settings → Pages → Build and deployment → Source: "Deploy from a branch",
+# Branch: gh-pages, folder: / (root).
+name: Deploy armguesser
+
+on:
+  push:
+    branches: [claude/epic-carson-wx65sm]
+    paths:
+      - 'armguesser/**'
+      - '.github/workflows/armguesser-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: armguesser-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run tests
+        run: node --test armguesser/tests/*.test.js
+
+      - name: Publish to gh-pages
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          site="$RUNNER_TEMP/site"
+          cp -r armguesser "$site"
+          rm -rf "$site/tests"
+          touch "$site/.nojekyll"
+          cd "$site"
+          git init -q -b gh-pages
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "Deploy armguesser from ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages

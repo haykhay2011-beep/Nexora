@@ -15,7 +15,15 @@ cd armguesser
 python3 -m http.server 8000   # then open http://localhost:8000
 ```
 
-To deploy, upload the folder to any static host (GitHub Pages, Netlify, Cloudflare Pages).
+## Play online
+
+The live game is at **https://haykhay2011-beep.github.io/Nexora/**.
+
+`.github/workflows/armguesser-pages.yml` runs the tests and publishes this folder to the
+`gh-pages` branch on every push that touches `armguesser/`. GitHub Pages serves that branch
+(Settings → Pages → Source: *Deploy from a branch* → `gh-pages` / root).
+
+The folder is plain static files, so any other static host (Netlify, Cloudflare Pages) works too.
 
 ## Gameplay
 
