@@ -495,7 +495,7 @@
 </div>
 
 <div id="mapTabs" class="map-tabs" hidden role="tablist" aria-label="Map">
-  <button type="button" role="tab" data-tab="city">Yerevan</button><button type="button" role="tab" data-tab="armenia">Armenia</button><button type="button" role="tab" data-tab="church" hidden>Church plan</button><button type="button" id="mapClose" aria-label="Close map">Close ✕</button>
+  <button type="button" role="tab" data-tab="city">Yerevan</button><button type="button" role="tab" data-tab="districts">Districts</button><button type="button" role="tab" data-tab="armenia">Armenia</button><button type="button" role="tab" data-tab="church" hidden>Church plan</button><button type="button" id="mapClose" aria-label="Close map">Close ✕</button>
 </div>
 <div id="phone" hidden>
   <div class="ph-status"><span id="phTime">--:--</span><span>HAYASTAN TEL</span><span>86%</span></div>
@@ -7018,6 +7018,7 @@ addEventListener('pointerup', e => {
   if (mode !== 'map' || !D) return;
   if (Math.hypot(e.clientX - D.x0, e.clientY - D.y0) > 6) return;       // it was a drag, not a click
   if (mapView.tab === 'church') { hxPlanClick(e.clientX, e.clientY); return; }
+  if (mapView.tab === 'districts') return;   // the poster district map is a reference view, not interactive
   if (mapView.tab === 'city') {
     // Click → the ground point under the cursor → set or clear the waypoint
     const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(e.clientX / vw * 2 - 1, -(e.clientY / vh) * 2 + 1);
@@ -7230,8 +7231,75 @@ function drawArmeniaMap() {
   mapLegend([['#f2a800', '—', 'Border (approx.)'], ['#2f6f9a', '≈', 'Lake Sevan'], ['#f4f6f8', '▲', 'Aragats · Ararat'], ['#d9a08f', 'Y', 'Yerevan']], s);
 }
 // Full-screen map overlay for both tabs
+// ─── The Yerevan district poster: a black-on-white hatched map of the twelve districts ───
+const DP_NODES = [
+  [[250, 95], [365, 70], [480, 72], [600, 66], [712, 96], [788, 150]],
+  [[175, 185], [340, 168], [478, 158], [612, 160], [730, 178], [832, 232]],
+  [[140, 300], [322, 298], [476, 298], [620, 298], [760, 300], [864, 344]],
+  [[152, 428], [332, 430], [482, 438], [632, 440], [772, 440], [852, 470]],
+  [[232, 556], [362, 580], [500, 590], [640, 580], [762, 560], [820, 556]],
+  [[330, 656], [432, 690], [542, 700], [642, 688], [720, 648], [782, 616]],
+];
+const DP_CELLS = [
+  ['davtashen', 'davtashen', 'arabkir',    'kanaker',  'avan'],
+  ['ajapnyak',  'arabkir',   'arabkir',    'kanaker',  'avan'],
+  ['ajapnyak',  'malatia',   'kentron',    'norkmarash', 'nornork'],
+  ['malatia',   'malatia',   'kentron',    'nornork',  'nornork'],
+  ['shengavit', 'shengavit', 'erebuni',    'erebuni',  'nubarashen'],
+];
+function drawDistrictPoster() {
+  const artW = 1010, artH = 780, top = insetTop + 16;
+  ctx.save();
+  ctx.fillStyle = '#f4f1ea'; ctx.fillRect(0, 0, vw, vh);                 // poster paper
+  const scale = Math.min((vw - 40) / artW, (vh - 150) / artH);
+  const ox = (vw - artW * scale) / 2, oy = (vh - artH * scale) / 2 - 10 + top * 0.2;
+  const P = (x, y) => [ox + x * scale, oy + y * scale];
+  const cellQuad = (c, r) => [P(...DP_NODES[r][c]), P(...DP_NODES[r][c + 1]), P(...DP_NODES[r + 1][c + 1]), P(...DP_NODES[r + 1][c])];
+  const here = (!player.region && !player.interior) ? yerDistrictAtPx(player.x, player.y) : null;
+  // Hatch fill per cell (highlight the district you are standing in)
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+    const q = cellQuad(c, r), lit = DP_CELLS[r][c] === here;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(q[0][0], q[0][1]); for (let i = 1; i < 4; i++) ctx.lineTo(q[i][0], q[i][1]); ctx.closePath(); ctx.clip();
+    if (lit) { ctx.fillStyle = 'rgba(40,44,52,0.16)'; ctx.fill(); }
+    let mnx = 1e9, mny = 1e9, mxx = -1e9, mxy = -1e9; for (const p of q) { mnx = Math.min(mnx, p[0]); mny = Math.min(mny, p[1]); mxx = Math.max(mxx, p[0]); mxy = Math.max(mxy, p[1]); }
+    ctx.strokeStyle = 'rgba(24,24,26,0.5)'; ctx.lineWidth = Math.max(0.7, scale * 1.1);
+    const gap = Math.max(5, scale * 9);
+    for (let k = mnx - mxy; k <= mxx - mny; k += gap) { ctx.beginPath(); ctx.moveTo(k + mny, mny); ctx.lineTo(k + mxy, mxy); ctx.stroke(); }
+    ctx.restore();
+  }
+  // Bold outlines: every edge between two different districts, and the outer border
+  const distAt = (c, r) => (r < 0 || c < 0 || r > 4 || c > 4) ? null : DP_CELLS[r][c];
+  ctx.strokeStyle = '#17171a'; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const edge = (a, b, bold) => { ctx.lineWidth = bold ? Math.max(2.4, scale * 3.4) : Math.max(1, scale * 1.4); ctx.beginPath(); ctx.moveTo(...P(...a)); ctx.lineTo(...P(...b)); ctx.stroke(); };
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+    const d = DP_CELLS[r][c], n = DP_NODES;
+    if (distAt(c, r - 1) !== d) edge(n[r][c], n[r][c + 1], distAt(c, r - 1) === null || true);        // top
+    if (distAt(c, r + 1) !== d) edge(n[r + 1][c], n[r + 1][c + 1], true);                             // bottom
+    if (distAt(c - 1, r) !== d) edge(n[r][c], n[r + 1][c], true);                                     // left
+    if (distAt(c + 1, r) !== d) edge(n[r][c + 1], n[r + 1][c + 1], true);                             // right
+  }
+  // The lake of Yerevan, off the south-west with its neck
+  ctx.fillStyle = '#f4f1ea'; ctx.strokeStyle = '#17171a'; ctx.lineWidth = Math.max(2, scale * 3);
+  const [lx, ly] = P(72, 452), lr = 52 * scale;
+  ctx.beginPath(); ctx.moveTo(...P(150, 420)); ctx.lineTo(...P(150, 484)); ctx.lineTo(lx, ly + 10); ctx.lineTo(lx, ly - 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(lx, ly, lr, 0, 7); ctx.fill(); ctx.stroke();
+  for (let k = -lr; k <= lr; k += Math.max(5, scale * 9)) { ctx.save(); ctx.beginPath(); ctx.arc(lx, ly, lr, 0, 7); ctx.clip(); ctx.strokeStyle = 'rgba(60,110,150,0.5)'; ctx.lineWidth = Math.max(0.7, scale); ctx.beginPath(); ctx.moveTo(lx + k, ly - lr); ctx.lineTo(lx + k, ly + lr); ctx.stroke(); ctx.restore(); }
+  // District names at the centroid of each district's cells
+  const cen = {};
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) { const q = cellQuad(c, r), cx = (q[0][0] + q[2][0]) / 2, cy = (q[0][1] + q[2][1]) / 2, d = DP_CELLS[r][c]; (cen[d] = cen[d] || []).push([cx, cy]); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#17171a';
+  for (const d in cen) { const pts = cen[d], mx = pts.reduce((s, p) => s + p[0], 0) / pts.length, my = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+    ctx.font = `800 ${Math.max(9, scale * 15) | 0}px ${DISPLAY}`;
+    const nm = YER_DISTRICTS[d].name.toUpperCase(); ctx.fillText(nm, mx, my); }
+  // Title
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#17171a';
+  ctx.font = `800 ${Math.round(clamp(vw / 14, 34, 74))}px ${DISPLAY}`; ctx.fillText('YEREVAN', vw / 2, oy + artH * scale + Math.min(64, vh * 0.09));
+  ctx.font = `500 ${Math.round(clamp(vw / 70, 11, 18))}px ${SERIF_HY}`; ctx.fillStyle = 'rgba(23,23,26,0.7)'; ctx.fillText('Երևան · the twelve districts', vw / 2, oy + artH * scale + Math.min(90, vh * 0.09) + 22);
+  ctx.restore();
+}
 function drawMap() {
   const s = clamp(vw / 900, 0.72, 1), top = insetTop + 16;
+  if (mapView.tab === 'districts') { drawDistrictPoster(); return; }
   if (mapView.tab === 'church') drawChurchPlan(); else if (mapView.tab === 'city') drawCityMap(); else drawArmeniaMap();
   ctx.textAlign = 'left'; ctx.font = `800 ${Math.round(28 * s)}px ${DISPLAY}`; ctx.fillStyle = '#fff4dc';
   ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6;
