@@ -17,7 +17,8 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 ## Play online
 
-The live game is at **https://haykhay2011-beep.github.io/Nexora/**.
+The live game is at **https://haykhay2011-beep.github.io/Nexora/**, with its About page at
+**https://haykhay2011-beep.github.io/Nexora/about.html**.
 
 `.github/workflows/armguesser-pages.yml` runs the tests and publishes this folder to the
 `gh-pages` branch on every push that touches `armguesser/`. GitHub Pages serves that branch
@@ -67,10 +68,12 @@ location database.
 ```
 armguesser/
 ├── index.html          screens, dialogs, markup
+├── about.html          About page: rules, scoring, difficulty, places per region, credits, privacy
 ├── css/styles.css      theme tokens (light/dark), layout, responsive rules
 ├── js/locations.js     100 locations across all 11 regions
 ├── js/core.js          pure logic: distance, scoring, selection, daily seed, stats, achievements
 ├── js/app.js           UI, Leaflet maps, game flow, storage, sound
+├── js/about.js         fills the About page's tables from locations.js and core.js
 └── tests/core.test.js  unit tests for core.js and the location data
 ```
 

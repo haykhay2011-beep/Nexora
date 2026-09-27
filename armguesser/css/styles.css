@@ -356,10 +356,48 @@ dialog form { margin-top: 1rem; display: flex; justify-content: flex-end; }
   font-weight: 600; box-shadow: var(--shadow); max-width: calc(100vw - 32px);
 }
 
+/* ------------------------------------------------------------ About page */
+.btn-small { min-height: 40px; padding: .4rem 1rem; }
+a.btn { text-decoration: none; }
+a.logo { text-decoration: none; }
+.about { max-width: 820px; margin: 0 auto; padding: 32px 16px 64px; display: flex; flex-direction: column; gap: 40px; }
+.about a { color: var(--accent-text); }
+.about a.btn { color: #fff; text-decoration: none; }
+.about-hero { display: flex; flex-direction: column; gap: 14px; }
+.about-kicker { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--red); }
+.about-hero h1 { font-size: clamp(1.9rem, 5vw, 2.8rem); letter-spacing: -.02em; text-wrap: balance; margin: 0; }
+.about-hero .lede { margin: 0; max-width: 62ch; }
+.about-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 8px 0 0; }
+.about-facts div { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column-reverse; }
+.about-facts dt { color: var(--muted); font-size: .85rem; }
+.about-facts dd { margin: 0; font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.about-toc { display: flex; flex-wrap: wrap; gap: 8px; }
+.about-toc a { font-size: .88rem; font-weight: 600; padding: .3rem .8rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); text-decoration: none; color: var(--text); }
+.about-toc a:hover { border-color: var(--red); }
+.about-section { display: flex; flex-direction: column; gap: 14px; scroll-margin-top: calc(var(--header-h) + 16px); }
+.about-section h2 { font-size: 1.5rem; margin: 0; }
+.about-section h3 { font-size: 1.1rem; margin: 8px 0 0; }
+.about-section p { margin: 0; max-width: 68ch; }
+.about-section .table-wrap { margin: 0; }
+.about-steps { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: 10px; max-width: 68ch; }
+.formula { font-size: 1.05rem; }
+.formula code { font-size: 1em; padding: .3em .6em; }
+.total-row td { font-weight: 700; background: var(--surface-2); }
+.about-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.about-chips li { padding: .3rem .8rem; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-weight: 600; font-size: .9rem; }
+.about-chips span { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: .2rem; }
+.about-credits { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; margin: 0; }
+.about-credits dt { font-weight: 700; }
+.about-credits dd { margin: 0; }
+.about-cta { display: flex; justify-content: center; }
+
 /* ------------------------------------------------------------- Responsive */
 @media (max-width: 820px) {
   .game-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 8px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .about-facts { grid-template-columns: repeat(2, 1fr); }
+  .about-credits { grid-template-columns: 1fr; gap: 2px; }
+  .about-credits dd { margin-bottom: 10px; }
   /* Mobile: sheet covers the satellite pane (top half); the guess map stays visible below. */
   .result-sheet { top: 8px; left: 8px; right: 8px; bottom: auto; width: auto; max-height: calc(50% - 24px); padding: 14px 14px 0; }
   .result-sheet .btn { position: sticky; bottom: 0; margin-bottom: 14px; box-shadow: 0 -8px 12px var(--surface); }

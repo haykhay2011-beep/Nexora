@@ -237,10 +237,11 @@
   /* ------------------------------------------------------------- screens */
   function show(name) {
     state.screen = name;
-    ['home', 'game', 'results'].forEach(function (s) { $('screen-' + s).hidden = s !== name; });
+    ['home', 'game', 'results', 'about'].forEach(function (s) { $('screen-' + s).hidden = s !== name; });
     var pill = $('mode-pill');
     pill.hidden = name === 'home';
-    pill.textContent = state.daily ? 'Daily · ' + state.daily : Core.MODES[state.mode].label;
+    pill.textContent = name === 'about' ? 'About'
+      : state.daily ? 'Daily · ' + state.daily : Core.MODES[state.mode].label;
   }
 
   function renderHome() {
@@ -620,6 +621,69 @@
     } catch (err) { fallback(); }
   }
 
+  /* --------------------------------------------------------------- about */
+  // Every number on the About screen comes from the game data, so it can't drift from the rules.
+  function renderAbout() {
+    stopTimer();
+    show('about');
+    $('screen-about').scrollTop = 0;
+    var REGIONS = ['Yerevan', 'Aragatsotn', 'Ararat', 'Armavir', 'Gegharkunik', 'Kotayk',
+      'Lori', 'Shirak', 'Syunik', 'Tavush', 'Vayots Dzor'];
+    var stars = function (n) { return '★★★★'.slice(0, n); };
+
+    $('a-facts').innerHTML = [
+      [LOCATIONS.length, 'places'], [REGIONS.length, 'regions'],
+      [Core.ROUNDS, 'rounds per game'], [fmt(Core.ROUNDS * Core.MAX_POINTS), 'points max']
+    ].map(function (f) { return '<div><dt>' + f[1] + '</dt><dd>' + f[0] + '</dd></div>'; }).join('');
+
+    $('a-scores').innerHTML = [0, 1, 10, 25, 50, 100, 200, 300, 400].map(function (km) {
+      var p = Core.scoreForDistance(km);
+      var label = km === 0 ? 'Right on it' : km === 400 ? '400 km or more' : Core.formatDistance(km);
+      return '<tr><td>' + label + '</td><td class="num">' + fmt(p) + '</td><td class="num">' +
+        fmt(Math.round(p * HINT_FACTOR)) + '</td><td>' + Core.emojiFor(p) + '</td></tr>';
+    }).join('');
+
+    $('a-ranks').innerHTML = Core.RANKS.map(function (r) {
+      return '<tr><td>' + esc(r.title) + '</td><td class="num">' + (r.min ? fmt(r.min) + '+' : 'Any score') + '</td></tr>';
+    }).join('');
+
+    var MAP_TEXT = { easy: 'Region borders and names', medium: 'Region borders', hard: 'Blank', expert: 'Blank', mixed: 'Region borders', daily: 'Region borders' };
+    $('a-modes').innerHTML = ['easy', 'medium', 'hard', 'expert', 'mixed', 'daily'].map(function (m) {
+      var cfg = Core.MODES[m];
+      var pool = LOCATIONS.filter(function (l) { return cfg.pool.indexOf(l.difficulty) !== -1; }).length;
+      var from = cfg.pool.length === 4 ? 'All ratings' : cfg.pool.map(stars).join(' and ');
+      return '<tr><td>' + cfg.label + '</td><td>' + from + '</td><td class="num">' + pool + '</td><td>' + MAP_TEXT[m] + '</td></tr>';
+    }).join('');
+
+    $('a-places-intro').textContent = 'There are ' + LOCATIONS.length + ' places across Yerevan and all ten provinces (marzer). ' +
+      'Here is how they are spread out. Their names stay off this page so the game stays a guessing game.';
+    var totals = [0, 0, 0, 0];
+    $('a-regions').innerHTML = REGIONS.map(function (r) {
+      var inRegion = LOCATIONS.filter(function (l) { return l.region === r; });
+      return '<tr><td>' + r + '</td>' + [1, 2, 3, 4].map(function (d) {
+        var n = inRegion.filter(function (l) { return l.difficulty === d; }).length;
+        totals[d - 1] += n;
+        return '<td class="num">' + (n || '–') + '</td>';
+      }).join('') + '<td class="num"><b>' + inRegion.length + '</b></td></tr>';
+    }).join('') + '<tr class="total-row"><td>Total</td>' +
+      totals.map(function (n) { return '<td class="num">' + n + '</td>'; }).join('') + '<td class="num">' + LOCATIONS.length + '</td></tr>';
+
+    var cats = {};
+    LOCATIONS.forEach(function (l) { cats[l.category] = (cats[l.category] || 0) + 1; });
+    $('a-cats').innerHTML = Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; }).map(function (c) {
+      return '<li>' + esc(cap(c)) + '<span>' + cats[c] + '</span></li>';
+    }).join('');
+
+    var unlocked = store.get('achievements', {});
+    $('a-ach').innerHTML = Core.ACHIEVEMENTS.map(function (a) {
+      var got = unlocked[a.id];
+      return '<li class="' + (got ? '' : 'locked') + '"><span class="ic" aria-hidden="true">' + a.icon + '</span><div><strong>' +
+        esc(a.title) + (got ? ' · unlocked' : '') + '</strong>' + (got ? '' : '<span class="sr-only"> (locked)</span>') +
+        '<small>' + esc(a.desc) + '</small></div></li>';
+    }).join('');
+    $('about-title').focus({ preventScroll: true });
+  }
+
   /* ------------------------------------------------------------- dialogs */
   function openBoard(mode) {
     mode = mode || (state.screen === 'home' ? 'medium' : state.mode);
@@ -682,6 +746,9 @@
       if (b) openBoard(b.dataset.mode);
     });
     $('ach-btn').addEventListener('click', openAchievements);
+    $('about-btn').addEventListener('click', renderAbout);
+    $('about-play').addEventListener('click', renderHome);
+    $('help-about').addEventListener('click', function () { $('help-dialog').close(); goHome(); if (state.screen === 'home') renderAbout(); });
     $('timer-toggle').addEventListener('change', function (e) { store.set('timed', e.target.checked); });
     $('sound-btn').addEventListener('click', function () {
       Sound.muted = !Sound.muted;
@@ -714,7 +781,7 @@
 
   // Keep an in-progress game when a new version of the page is delivered to an open view.
   function snapshot() {
-    if (state.screen === 'home') return {};
+    if (state.screen === 'home' || state.screen === 'about') return {};
     return {
       screen: state.screen, mode: state.mode, daily: state.daily,
       ids: state.locations.map(function (l) { return l.id; }),

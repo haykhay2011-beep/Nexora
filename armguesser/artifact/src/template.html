@@ -56,6 +56,7 @@
           <label class="toggle"><input type="checkbox" id="timer-toggle"> Timed rounds (90 s)</label>
           <button class="btn btn-line" id="board-btn" type="button">Leaderboard</button>
           <button class="btn btn-line" id="ach-btn" type="button">Achievements</button>
+          <button class="btn btn-line" id="about-btn" type="button">About</button>
         </div>
         <p class="foot" id="home-foot"></p>
       </div>
@@ -156,6 +157,100 @@
         </div>
       </div>
     </section>
+    <!-- =============================================================== ABOUT -->
+    <section class="screen scroll" id="screen-about" hidden aria-labelledby="about-title">
+      <div class="wrap about">
+        <div class="about-hero">
+          <p class="eyebrow">About the game</p>
+          <h1 id="about-title" tabindex="-1">armguesser is a geography game about Armenia.</h1>
+          <p class="lede">Each round names a place in Armenia: a monastery, a town, a lake, a village up in the hills. You pin it on a map of the country. The closer you land, the more you score. Five rounds, 25,000 points to play for.</p>
+          <dl class="about-facts" id="a-facts"></dl>
+        </div>
+
+        <section class="about-sec" aria-labelledby="a-how">
+          <h2 id="a-how">How to play</h2>
+          <ol class="about-list">
+            <li><strong>Read the place.</strong> You get its English name, its Armenian spelling and transliteration, and what kind of place it is.</li>
+            <li><strong>Drop a pin.</strong> Click the map where you think it is, and move the pin as often as you like. Stuck? <em>Show the region</em> highlights the right region, but that round scores 25% less.</li>
+            <li><strong>Guess.</strong> Your pin turns blue, the answer appears in green, and a dashed line shows the distance between them, along with a fact about the place.</li>
+            <li><strong>Repeat.</strong> After five rounds you see your total, a rank, a map of all five rounds and a score card you can copy.</li>
+          </ol>
+          <p class="muted">Keyboard: focus the map and pan with the arrow keys. <kbd>G</kbd> pins the centre, <kbd>H</kbd> shows the region, <kbd>Space</kbd> guesses, <kbd>N</kbd> goes to the next round.</p>
+        </section>
+
+        <section class="about-sec" aria-labelledby="a-scoring">
+          <h2 id="a-scoring">Scoring</h2>
+          <p>Each round is worth up to 5,000 points. Your score falls in a straight line with distance and reaches zero at 400 km, roughly the length of Armenia from the Georgian border to the Iranian one.</p>
+          <p class="formula"><code>points = 5000 × (1 − distance in km ÷ 400)</code></p>
+          <div class="card table-wrap">
+            <table>
+              <caption class="sr-only">Points for sample distances</caption>
+              <thead><tr><th scope="col">Distance from the answer</th><th scope="col" class="num">Points</th><th scope="col" class="num">With region hint</th><th scope="col">Card</th></tr></thead>
+              <tbody id="a-scores"></tbody>
+            </table>
+          </div>
+          <h3>Ranks</h3>
+          <div class="card table-wrap">
+            <table>
+              <thead><tr><th scope="col">Rank</th><th scope="col" class="num">Total needed</th></tr></thead>
+              <tbody id="a-ranks"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="about-sec" aria-labelledby="a-modes-h">
+          <h2 id="a-modes-h">Difficulty</h2>
+          <p>Every place has a rating from one to four stars. Your mode decides which ratings come up and how much the map gives away. Within a mode, places from your recent games are held back so you see fresh ones first.</p>
+          <div class="card table-wrap">
+            <table>
+              <thead><tr><th scope="col">Mode</th><th scope="col">Places drawn from</th><th scope="col" class="num">Pool</th><th scope="col">Map</th></tr></thead>
+              <tbody id="a-modes"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="about-sec" aria-labelledby="a-daily">
+          <h2 id="a-daily">Daily challenge</h2>
+          <p>The daily challenge uses the date to pick five places from the whole database, so everyone who plays on the same day gets the same five. Your first daily game each day counts toward your streak. Play on consecutive days to grow it; miss a day and it restarts at one. Replays that day are for practice and don’t change your score.</p>
+        </section>
+
+        <section class="about-sec" aria-labelledby="a-places">
+          <h2 id="a-places">The places</h2>
+          <p id="a-places-intro"></p>
+          <div class="card table-wrap">
+            <table>
+              <caption class="sr-only">Places per region by difficulty</caption>
+              <thead><tr><th scope="col">Region</th><th scope="col" class="num">★</th><th scope="col" class="num">★★</th><th scope="col" class="num">★★★</th><th scope="col" class="num">★★★★</th><th scope="col" class="num">Total</th></tr></thead>
+              <tbody id="a-regions"></tbody>
+            </table>
+          </div>
+          <ul class="about-chips" id="a-cats"></ul>
+          <p class="muted">Coordinates were compiled by hand and may be off by a few hundred metres for some places.</p>
+        </section>
+
+        <section class="about-sec" aria-labelledby="a-ach-h">
+          <h2 id="a-ach-h">Achievements</h2>
+          <ul class="ach" id="a-ach"></ul>
+        </section>
+
+        <section class="about-sec" aria-labelledby="a-credits">
+          <h2 id="a-credits">Credits</h2>
+          <dl class="about-credits">
+            <dt>Borders, regions and lakes</dt><dd>Natural Earth (public domain), via the world-atlas, @geo-insight/data and sane-topojson packages</dd>
+            <dt>Map library</dt><dd>Leaflet</dd>
+            <dt>Typefaces</dt><dd>Bricolage Grotesque, Noto Sans and Noto Serif Armenian, from Google Fonts</dd>
+          </dl>
+          <p class="muted">The full edition of armguesser, with satellite imagery, runs as a website from the same code. This edition draws its own map because claude.ai pages can’t load imagery from other sites.</p>
+        </section>
+
+        <section class="about-sec" aria-labelledby="a-data">
+          <h2 id="a-data">Your data</h2>
+          <p>There are no accounts and nothing is sent anywhere. Your leaderboard, achievements, streak and settings stay in your own browser, and clearing its site data resets them. Other players never see them.</p>
+        </section>
+
+        <div class="about-cta"><button class="btn btn-red" id="about-play" type="button">Play armguesser</button></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -170,7 +265,10 @@
     <li>Press <kbd>N</kbd> for the next round. Five rounds, 25,000 points max.</li>
   </ol>
   <p class="muted">Easy shows region names, Medium shows region borders, and Hard and Expert give you a blank map.</p>
-  <div class="dialog-actions"><button class="btn btn-red" type="button" data-close>Got it</button></div>
+  <div class="dialog-actions">
+    <button class="btn btn-line" type="button" id="help-about">Full rules</button>
+    <button class="btn btn-red" type="button" data-close>Got it</button>
+  </div>
 </dialog>
 
 <dialog id="leave-dialog" aria-labelledby="leave-title">
