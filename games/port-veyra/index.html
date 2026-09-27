@@ -904,7 +904,7 @@ const interactables = [
 ];
 function addInteract(key, lx, ly, r, label, act) { const I = INTERIORS[key]; interactables.push({ x: I.ox + lx, y: I.oy + ly, r, label, act }); }
 addInteract('casino', 260, 356, 26, 'Leave the casino', exitInterior);
-addInteract('apartment', 160, 222, 24, 'Leave the apartment', exitInterior);
+addInteract('apartment', 160, 214, 46, 'Leave the apartment (walk out)', exitInterior);
 CASINO_SLOTS.forEach((x, i) => { if (!CASINO_GAMBLERS.includes(i)) addInteract('casino', x, 58, 20, 'Play the slots · $10', () => playSlots(i)); });
 addInteract('casino', 150, 250, 30, 'Roulette · $50 on red', playRoulette);
 addInteract('casino', 320, 246, 30, 'Blackjack · $100 or $500 hands', () => openBlackjack());
@@ -9794,7 +9794,37 @@ const tvMat = basic(0x3a5a9a), apartmentWindowMat = basic(0x0b1019);
   const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(10, 0), ilam('#2c6b3a', 0.35)); leaf.position.set(I.ox + 22, 20, I.oy + 208); interiorGroup.add(leaf);
   const lamp = new THREE.Mesh(new THREE.CylinderGeometry(5, 7, 8, 10), basic(0xffe2b0)); lamp.position.set(I.ox + 130, 40, I.oy + 172); interiorGroup.add(lamp);
   IB(I, 128, 168, 132, 176, 36, ilam('#2a2a2a'), { solid: true });
+  // ── Private garage bay with your car ──
+  IFloor(I, 206, 188, 306, 234, ilam('#585a60', 0.4), 0.72);                       // concrete pad
+  for (let k = 0; k < 6; k++) IB(I, 210 + k * 16, 189, 210 + k * 16 + 10, 191, 0.6, k % 2 ? ilam('#d9c24a', 0.3) : ilam('#2a2a2a'), { y: 0.75, shadow: false });   // hazard line
+  IB(I, 206, 186, 306, 190, 44, ilam('#4a4d54', 0.35));                            // roller-door wall
+  for (let k = 0; k < 9; k++) IB(I, 210, 186, 302, 190, 2, ilam('#6a6e76', 0.35), { y: 4 + k * 4, shadow: false });   // roller slats
+  const carCol = '#d12f2f';
+  const gcar = new THREE.Group(); gcar.position.set(I.ox + 256, 0, I.oy + 210); gcar.rotation.y = -Math.PI / 2;
+  const gb = (geo, col, x, y, z) => { const m = new THREE.Mesh(geo, typeof col === 'string' ? ilam(col, 0.3) : col); m.position.set(x, y, z); m.castShadow = true; gcar.add(m); };
+  gb(new THREE.BoxGeometry(56, 12, 26), carCol, 0, 9, 0);
+  gb(new THREE.BoxGeometry(30, 11, 22), carCol, -2, 19, 0);
+  gb(new THREE.BoxGeometry(23, 7, 18), basic(0x121820), -2, 20.5, 0);
+  gb(new THREE.BoxGeometry(58, 4, 27), ilam('#8a1f1f', 0.3), 0, 3, 0);
+  for (const [dx, dz] of [[17, 13.5], [17, -13.5], [-17, 13.5], [-17, -13.5]]) gb(new THREE.CylinderGeometry(6, 6, 5, 12).rotateX(Math.PI / 2), basic(0x111114), dx, 6, dz);
+  interiorGroup.add(gcar); I.solids.push([232, 194, 280, 226]);
+  postInteriorSign(I, 256, 232, 'GARAGE');
 }
+function postInteriorSign(I, x, y, text) {
+  const tex = canvasTex(128, 32, g => { g.fillStyle = '#1a1a1e'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#f2c230'; g.font = '800 20px Impact, sans-serif'; g.textAlign = 'center'; g.fillText(text, 64, 24); }, false);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(40, 10), basic(0xffffff, { map: tex })); m.position.set(I.ox + x, 46, I.oy + y); m.rotation.x = 0.0; interiorGroup.add(m);
+}
+// Your personal car, kept parked by Larkfield Flats; the garage drives you out into it
+const homeCar = makeCar('sports', 24 * T, 31.5 * T, 0, { keep: true, color: '#d12f2f' });
+cars.push(homeCar);
+addInteract('apartment', 256, 210, 42, 'Get in your car and drive out', () => {
+  exitInterior();
+  const s = INTERIORS.apartment.street;
+  homeCar.wreck = false; homeCar.hp = homeCar.spec.hp; homeCar.vx = homeCar.vy = homeCar.z = 0;
+  homeCar.x = s.x; homeCar.y = s.y - 12; homeCar.a = s.a;
+  player.car = homeCar; homeCar.lastRear = null; player.x = homeCar.x; player.y = homeCar.y;
+  toast('You pull your car out of the garage', '#7fe0a0');
+});
 // Weapon pickups
 const pickupMeshes = pickups.map(k => {
   const g = new THREE.Group();
