@@ -102,3 +102,30 @@ determinism, recent-location avoidance, stats, share text and achievements.
 Everything is stored in `localStorage` under `armg.*` keys: theme, mute, timer preference,
 tutorial flag, leaderboard, achievements, stats, daily streak, and recently seen locations.
 If storage is unavailable, the game still works; it just won't remember anything.
+
+## Artifact edition (claude.ai)
+
+`artifact/` builds a self-contained version of the game for a claude.ai artifact:
+https://claude.ai/artifact/B6A2VNLjzBzwrhwQeHcwqF
+
+claude.ai artifacts can't load images from other sites, so this edition has no satellite
+view. Each round names a place (English, Armenian script, type of place) and you pin it on
+a vector map of Armenia drawn from bundled Natural Earth data. Easy shows region names,
+Medium shows region borders, and Hard and Expert use a blank map. A "Show the region" hint
+highlights the answer's region for a 25% penalty. After each round you see your pin, the
+answer and the distance between them. The results screen maps all five rounds.
+Scoring, the location database, the daily challenge, achievements and the local
+leaderboard are shared with the main game (`js/locations.js`, `js/core.js`).
+
+```
+artifact/
+├── src/template.html   page markup (no <html>/<head>/<body>: the artifact host adds them)
+├── src/styles.css      tokens for light/dark, layout, map styling
+├── src/app.js          game flow for the vector-map edition
+├── src/geo.json        borders, 11 regions, lakes (see tools/build-geo.js for sources)
+├── vendor/             Leaflet 1.9.4 CSS (inlined; the JS loads from jsDelivr)
+├── tools/build-geo.js  regenerates src/geo.json
+└── build.js            inlines everything into dist/armguesser.html
+```
+
+Rebuild with `node armguesser/artifact/build.js`, then republish `dist/armguesser.html`.

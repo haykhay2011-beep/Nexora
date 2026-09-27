@@ -1,0 +1,219 @@
+<title>armguesser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+Armenian:wght@500;700&display=swap">
+<style>
+/*LEAFLET_CSS*/
+</style>
+<style>
+/*STYLES*/
+</style>
+
+<div id="app">
+  <header class="topbar">
+    <button class="wordmark" id="logo-btn" type="button" aria-label="armguesser home"><span class="a">arm</span><span class="b">gues</span><span class="c">ser</span></button>
+    <span class="mode-pill" id="mode-pill" hidden></span>
+    <div class="topbar-actions">
+      <span class="streak" id="streak" hidden></span>
+      <button class="icon-btn" id="sound-btn" type="button" aria-pressed="true" aria-label="Sound on">♪</button>
+      <button class="icon-btn" id="help-btn" type="button" aria-label="How to play">?</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================================================================ HOME -->
+    <section class="screen scroll" id="screen-home" aria-labelledby="home-title">
+      <div class="wrap">
+        <div class="hero">
+          <div>
+            <h1 id="home-title">How well do you know <em>Armenia</em>?</h1>
+            <p class="lede">Each round names a place, from Tatev’s cliffs to a Molokan village in Lori. Pin it on a blank map of the country. The closer you land, the more points you score.</p>
+          </div>
+          <svg class="hero-map" id="hero-map" role="img" aria-label="Map of Armenia with an example guess 12 km from the answer"></svg>
+        </div>
+
+        <ol class="steps">
+          <li><strong>Read the place</strong><span>English name, Armenian script and what kind of place it is.</span></li>
+          <li><strong>Drop a pin</strong><span>Click the map. Stuck? Reveal the region for a 25% penalty.</span></li>
+          <li><strong>Score it</strong><span><code>5000 × (1 − km ÷ 400)</code> per round, five rounds, 25,000 max.</span></li>
+        </ol>
+
+        <div class="daily">
+          <div>
+            <h2>Daily Challenge</h2>
+            <p id="daily-status">The same five places for everyone today.</p>
+          </div>
+          <button class="btn btn-apricot" id="daily-btn" type="button">Play today’s five</button>
+        </div>
+
+        <div class="section-head">
+          <h2>Choose a difficulty</h2>
+          <span class="foot" id="db-count"></span>
+        </div>
+        <div class="modes" id="modes"></div>
+
+        <div class="home-row">
+          <label class="toggle"><input type="checkbox" id="timer-toggle"> Timed rounds (90 s)</label>
+          <button class="btn btn-line" id="board-btn" type="button">Leaderboard</button>
+          <button class="btn btn-line" id="ach-btn" type="button">Achievements</button>
+        </div>
+        <p class="foot" id="home-foot"></p>
+      </div>
+    </section>
+
+    <!-- ================================================================ GAME -->
+    <section class="screen game" id="screen-game" hidden aria-label="Game">
+      <div class="game-grid">
+        <aside class="card round-card" id="round-card" aria-live="polite">
+          <div id="find-view">
+            <p class="eyebrow" id="round-eyebrow">Round 1 of 5 · Find</p>
+            <h2 class="target-name" id="target-name"></h2>
+            <p class="target-hy" id="target-hy" lang="hy"></p>
+            <p class="target-tr" id="target-tr"></p>
+            <div class="chips">
+              <span class="chip" id="target-cat"></span>
+              <span class="chip chip-apricot" id="hint-chip" hidden></span>
+            </div>
+            <button class="btn btn-line" id="hint-btn" type="button">Show the region · −25%</button>
+            <p class="aid" id="aid-note"></p>
+          </div>
+          <div id="result-view" hidden>
+            <div class="points"><b id="res-points">0</b><span>points</span></div>
+            <div class="bar" aria-hidden="true"><i id="res-bar"></i></div>
+            <h2 class="res-name" id="res-name"></h2>
+            <p class="res-dist" id="res-dist"></p>
+            <p class="fact" id="res-fact"></p>
+            <details>
+              <summary>Location details</summary>
+              <dl id="res-dl"></dl>
+            </details>
+            <button class="btn btn-blue btn-block next" id="next-btn" type="button">Next round →</button>
+          </div>
+        </aside>
+
+        <div class="card map-pane" id="map-pane">
+          <div class="map" id="guess-map" tabindex="0" aria-label="Map of Armenia. Click to drop your pin, or pan with the arrow keys and press G to pin the centre."></div>
+          <div class="crosshair" aria-hidden="true"></div>
+          <div class="map-tools"><button class="chip-btn" id="pin-center-btn" type="button">Pin centre (G)</button></div>
+          <button class="btn btn-red guess-btn" id="guess-btn" type="button" disabled>Drop a pin on the map</button>
+        </div>
+      </div>
+
+      <div class="statusbar" role="status">
+        <div class="stat"><small>Round</small><b id="st-round">1 / 5</b></div>
+        <div class="stat"><small>Last</small><b id="st-last">—</b></div>
+        <div class="stat"><small>Total</small><b id="st-total">0</b></div>
+        <div class="stat" id="st-timer-wrap" hidden><small>Time</small><b id="st-timer">90</b></div>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================= RESULTS -->
+    <section class="screen scroll" id="screen-results" hidden aria-labelledby="final-score">
+      <div class="wrap">
+        <div class="score-head">
+          <div class="score-card">
+            <p class="eyebrow" id="final-kicker">Game over</p>
+            <p class="big" id="final-score" tabindex="-1">0<small> / 25,000</small></p>
+            <p class="rank" id="final-rank"></p>
+            <p class="squares" id="final-squares" aria-hidden="true"></p>
+          </div>
+          <div class="trip"><div class="map" id="trip-map" aria-label="Map of all five rounds: green numbers are the answers, blue dots your guesses"></div></div>
+        </div>
+
+        <div class="stats">
+          <div class="card"><span class="eyebrow">Accuracy</span><b class="stat-v" id="s-acc"></b></div>
+          <div class="card"><span class="eyebrow">Avg distance</span><b class="stat-v" id="s-avg"></b></div>
+          <div class="card"><span class="eyebrow">Best round</span><b class="stat-v" id="s-best"></b></div>
+          <div class="card"><span class="eyebrow">Worst round</span><b class="stat-v" id="s-worst"></b></div>
+        </div>
+
+        <div class="card table-wrap">
+          <table>
+            <caption class="sr-only">Round by round</caption>
+            <thead><tr><th scope="col">#</th><th scope="col">Place</th><th scope="col">Region</th><th scope="col" class="num">Distance</th><th scope="col" class="num">Points</th></tr></thead>
+            <tbody id="rounds-body"></tbody>
+          </table>
+        </div>
+
+        <div class="card badges-new" id="badges-new" hidden>
+          <h2>New achievements</h2>
+          <ul id="badges-new-list"></ul>
+        </div>
+
+        <form class="save" id="save-form">
+          <label for="player-name">Add your score to this browser’s leaderboard</label>
+          <div class="save-row">
+            <input id="player-name" name="player-name" maxlength="16" autocomplete="nickname" placeholder="Your name" required>
+            <button class="btn btn-blue" id="save-btn" type="submit">Save</button>
+          </div>
+        </form>
+
+        <div class="actions">
+          <button class="btn btn-apricot" id="share-btn" type="button">Copy score card</button>
+          <button class="btn btn-red" id="again-btn" type="button">Play again</button>
+          <button class="btn btn-line" id="home-btn" type="button">Change difficulty</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============================================================== DIALOGS -->
+<dialog id="help-dialog" aria-labelledby="help-title">
+  <h2 id="help-title">How to play</h2>
+  <ol>
+    <li>Each round names a place in Armenia, with its Armenian spelling and what kind of place it is.</li>
+    <li>Click the map where you think it is. Keyboard: focus the map, pan with the arrow keys, press <kbd>G</kbd> to pin the centre.</li>
+    <li>Press <b>Guess</b> or <kbd>Space</kbd>. You score <code>5000 × (1 − km ÷ 400)</code>, so a perfect pin is 5,000.</li>
+    <li>Stuck? <b>Show the region</b> (or <kbd>H</kbd>) highlights it on the map, but that round scores 25% less.</li>
+    <li>Press <kbd>N</kbd> for the next round. Five rounds, 25,000 points max.</li>
+  </ol>
+  <p class="muted">Easy shows region names, Medium shows region borders, and Hard and Expert give you a blank map.</p>
+  <div class="dialog-actions"><button class="btn btn-red" type="button" data-close>Got it</button></div>
+</dialog>
+
+<dialog id="leave-dialog" aria-labelledby="leave-title">
+  <h2 id="leave-title">Leave this game?</h2>
+  <p>Your rounds so far won’t be saved.</p>
+  <div class="dialog-actions">
+    <button class="btn btn-line" type="button" data-close>Keep playing</button>
+    <button class="btn btn-red" type="button" id="leave-confirm">Leave game</button>
+  </div>
+</dialog>
+
+<dialog id="board-dialog" aria-labelledby="board-title">
+  <h2 id="board-title">Leaderboard</h2>
+  <div class="tabs" role="tablist" id="board-tabs"></div>
+  <ol class="board" id="board-list"></ol>
+  <p class="muted" style="margin-top:10px">Scores are kept in this browser only.</p>
+  <div class="dialog-actions"><button class="btn btn-line" type="button" data-close>Close</button></div>
+</dialog>
+
+<dialog id="ach-dialog" aria-labelledby="ach-title">
+  <h2 id="ach-title">Achievements</h2>
+  <ul class="ach" id="ach-list"></ul>
+  <div class="dialog-actions"><button class="btn btn-line" type="button" data-close>Close</button></div>
+</dialog>
+
+<dialog id="share-dialog" aria-labelledby="share-title">
+  <h2 id="share-title">Your score card</h2>
+  <label class="sr-only" for="share-text">Score card text</label>
+  <textarea class="share-text" id="share-text" readonly></textarea>
+  <p class="muted">Select the text and copy it to share.</p>
+  <div class="dialog-actions"><button class="btn btn-line" type="button" data-close>Close</button></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>window.ARM_GEO = /*GEO*/;</script>
+<script>
+/*LOCATIONS*/
+</script>
+<script>
+/*CORE*/
+</script>
+<script>
+/*APP*/
+</script>
