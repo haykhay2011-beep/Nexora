@@ -3298,7 +3298,7 @@ function maintainPopulation() {
     if (d > vr + 700 || (pd.state === 'down' && pd.downT > 12)) peds.splice(k, 1);
   }
   const civ = cars.filter(c => c.ai && !c.police).length;
-  if (civ < 16) spawnTraffic(vr, vr + 700);
+  if (civ < 34) { spawnTraffic(vr, vr + 700); if (civ < 26) spawnTraffic(vr, vr + 700); }   // busier streets, filled a little faster
   if (peds.length < 46) spawnPed(vr, vr + 600);
 }
 
@@ -10615,7 +10615,7 @@ function boot(data) {
   cars.push(makeCar('plane', 63.6 * T, 15.5 * T, 0, { keep: true }));
   cars.push(makeCar('heli', 15.5 * T, 38.5 * T, -Math.PI / 2, { keep: true, color: '#c83a3a' }));
   for (const id in mansionState) if (mansionState[id].owned) spawnEstateHeli(id);
-  for (let k = 0; k < 16; k++) spawnTraffic(160, 1800);
+  for (let k = 0; k < 32; k++) spawnTraffic(160, 1800);
   for (let k = 0; k < 46; k++) spawnPed(60, 1500);
   let last = performance.now();
   const frame = now => {
