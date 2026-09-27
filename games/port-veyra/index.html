@@ -4846,7 +4846,7 @@ const DESTS = [
   { key: 'yerevan', name: 'Erebuni', sub: 'The ancient fortress · Urartu', user: '@erebuni.782bc', likes: 4210,
     blurb: 'The Urartian citadel of Erebuni, founded in 782 BC by King Argishti I — the fortress from which Yerevan grew.',
     art: 'linear-gradient(#f7cfc4 0%, #eaa99c 48%, #c47a70 49%, #8f5450 100%)', col: '#f2a0a0', ground: '#9c9a7a', hills: '#8a7d68',
-    lines: [['Bari galust Yerevan, vardaguyn qaghaq!', 'Welcome to Yerevan, the pink city!'], ['Ays qarery tuf en, hraabkhayin qar.', 'These stones are tuff, a volcanic rock.'], ['Yereky shatrvany ergum e.', 'In the evening the fountain sings.']] },
+    lines: [['Bari galust Erebuni, Yerevani bnorrany!', 'Welcome to Erebuni, the cradle of Yerevan!'], ['Ays berdy Argishti arqan e kaŕutsel 782 t.', 'King Argishti built this fortress in 782 BC.'], ['Khaldi astcuc tachary hos e, blri arevmutkʿum.', 'The temple of the god Khaldi is here, on the west of the hill.']] },
   { key: 'geghard', name: 'Geghard Monastery', sub: 'Carved into the mountain', user: '@ani.travels', likes: 2380,
     blurb: 'UNESCO-listed monastery partially carved into a mountainside.',
     art: 'linear-gradient(#b9c6c9 0%, #8f9690 50%, #6c6a62 51%, #4b4944 100%)', col: '#c9c1b2', ground: '#7d8060', hills: '#6f6a58',
@@ -4947,17 +4947,19 @@ for (const R of Object.values(REGIONS)) {
     label: `Post a check-in on Hayagram`, act: () => { hg.checkins.add(R.key); hg.followers += 60 + Math.floor(Math.random() * 90); toast(`Checked in at ${R.name} · ${hg.followers} followers`, '#ff6fd8'); saveGame(); } });
 }
 
-// The Prime Minister greets visitors on Republic Square
+// The Prime Minister greets visitors on Republic Square (in the city)
 CAST.pm = ['Nikol Pashinyan', '#f2a23a'];
+// The archaeologist who runs the Erebuni dig
+CAST.digger = ['Dr. Sarian · archaeologist', '#d8cdb6'];
 {
   const Y = REGIONS.yerevan;
-  interactables.push({ x: Y.ox + 800, y: Y.oy + 560, r: 34, label: 'Talk to Prime Minister Nikol Pashinyan', act: () => talk([
-    ['pm', 'Barev dzez! Bari galust Yerevan.', 'Hello! Welcome to Yerevan.'],
-    ['pm', 'Sa Hanrapetutyan hraparakn e, mer qaghaqi sirty.', 'This is Republic Square, the heart of our city.'],
-    ['you', 'Shat urakh em, varchapet.', 'Very glad to meet you, Prime Minister.'],
-    ['pm', 'Tes amboghj Hayastany: Garni, Sevan, Tatev, Gyumri...', 'See all of Armenia: Garni, Sevan, Tatev, Gyumri...'],
-    ['pm', 'Yev khndrum em, orenqy harkir.', 'And please, respect the law.'],
-  ], () => { if (!hg.pm) { hg.pm = true; hg.followers += 500; toast(`Selfie with the Prime Minister · ${hg.followers} followers`, '#ff6fd8'); saveGame(); } }) });
+  interactables.push({ x: Y.ox + 660, y: Y.oy + 860, r: 36, when: () => player.region === 'yerevan' && !player.car, label: 'Talk to the site archaeologist', act: () => talk([
+    ['digger', 'Barev! Sa Erebunin e — Arin Berd blri vra, 782 t. m.t.a.', 'Hello! This is Erebuni — on Arin Berd hill, 782 BC.'],
+    ['digger', 'Argishti Aŕajiny kaŕuyts ays berdy. Aystegh e skzbnavorvel Yerevany.', 'Argishti the First built this fortress. Yerevan began here.'],
+    ['you', 'Inch ek pełum?', 'What are you excavating?'],
+    ['digger', 'Sepagir sаler, Khaldi tachary, mecaqanak ambarner, jrantsqer.', 'Cuneiform slabs, the temple of Khaldi, great granaries, canal systems.'],
+    ['digger', 'Verc ir bahy — pełir khramnery, gtir, inch tʿaqnvats e 2750 tari.', 'Take a spade — dig the trenches, find what has lain hidden 2,750 years.'],
+    ['digger', 'Zarmanaliky: pʿakhust chka. Qaghaqy erbek chi kʿandvel — mʿiaynak aprel.', "The wonder: no siege. The city was never destroyed — it only lived on."]]) });
 }
 
 // ─── Region building helpers (local coordinates: x east, z south, 0..1600) ────
@@ -5057,32 +5059,56 @@ function gorge(R, at, west) {
 
 const REGION_BUILD = {
   yerevan(R, rnd) {
-    const pink = '#d9a08f', pink2 = '#c98b7e', trim = '#b87466';
-    RDisc(R, 800, 720, 330, 230, '#b3a097'); RDisc(R, 800, 720, 200, 130, '#a38d86', 0.8); RDisc(R, 800, 720, 70, 46, '#c7b3a8', 1);
-    // Government House with its clock tower
-    RB(R, 800, 380, 560, 90, 80, pink, { solid: true }); RB(R, 800, 380, 574, 100, 6, trim, { y: 80 });
-    for (let k = 0; k < 13; k++) RB(R, 560 + k * 40, 426, 22, 2, 36, '#5a3a34', { shadow: false });
-    RB(R, 800, 380, 64, 64, 160, pink); RB(R, 800, 380, 74, 74, 8, trim, { y: 160 }); RPrism(R, 800, 380, 70, 70, 26, trim, 168, true);
-    RCyl(R, 800, 413, 13, 13, 1.5, '#f4efe4', 20, 122).rotation.x = Math.PI / 2;
-    // The curved museum and hotel on either side
-    RB(R, 1190, 720, 150, 400, 72, pink2, { solid: true }); RB(R, 410, 720, 150, 400, 72, pink2, { solid: true });
-    for (let k = 0; k < 9; k++) { RB(R, 1114, 560 + k * 40, 2, 22, 30, '#5a3a34', { shadow: false }); RB(R, 486, 560 + k * 40, 2, 22, 30, '#5a3a34', { shadow: false }); }
-    RB(R, 1190, 720, 160, 410, 5, trim, { y: 72 }); RB(R, 410, 720, 160, 410, 5, trim, { y: 72 });
-    // Singing fountains
-    RB(R, 800, 1000, 380, 90, 6, '#9a8a80', { solid: true }); RWater(R, 800, 1000, 360, 70, { y: 6.5 });
-    const jetMat = basic(0xdff4ff, { transparent: true, opacity: 0.65 }), jets = [];
-    for (let k = 0; k < 9; k++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 3, 40, 6), jetMat); j.position.set(R.ox + 640 + k * 40, 26, R.oy + 1000); R.group.add(j); jets.push(j); }
-    R.anims.push(t => jets.forEach((j, i) => { const h = 0.5 + 0.5 * Math.abs(Math.sin(t * 1.6 + i * 0.7)); j.scale.y = h; j.position.y = 6 + 20 * h; }));
-    // Pink city blocks around the square
-    for (let k = 0; k < 7; k++) RB(R, 180 + k * 210, 150, 170, 120, 90 + rnd() * 70, rnd() < 0.5 ? pink : pink2, { solid: true });
-    for (const x of [150, 1450]) for (let k = 0; k < 4; k++) RB(R, x, 420 + k * 260, 150, 200, 70 + rnd() * 60, rnd() < 0.5 ? pink : pink2, { solid: true });
-    for (let k = 0; k < 12; k++) { RTree(R, 560 + k * 44, 1090, 0.9, 'round'); }
+    // EREBUNI FORTRESS — the Urartian citadel of King Argishti I (782 BC) on Arin Berd hill
+    const stone = '#8f877b', adobe = '#c39a66', adobe2 = '#b3884f', basalt = '#5f5a52', floor = '#b0a082', dirt = '#9a8a70', scrub = '#6a7538';
+    // The hill and the packed-earth citadel platform
+    RCone(R, 800, 640, 660, 54, '#897b66', 26, -34, { shadow: false });
+    RDisc(R, 800, 640, 480, 400, dirt); RDisc(R, 800, 660, 350, 300, floor, 0.7);
+    // ── Fortress walls: stone footing, mudbrick above, crenellations ──
+    const wall = (x, z, w, d, h) => {
+      RB(R, x, z, w, d, 18, stone, { solid: true });
+      RB(R, x, z, w - 3, d - 3, h - 18, adobe, { y: 18 });
+      const along = w > d, span = along ? w : d, n = Math.max(1, Math.floor(span / 34));
+      for (let k = 0; k < n; k++) { const t = -span / 2 + 17 + k * 34; RB(R, along ? x + t : x, along ? z : z + t, along ? 15 : d, along ? d : 15, 9, adobe2, { y: h, shadow: false }); }
+    };
+    const tower = (x, z) => { RB(R, x, z, 58, 58, 78, stone, { solid: true }); RB(R, x, z, 52, 52, 10, adobe, { y: 78 }); for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; RB(R, x + Math.cos(a) * 21, z + Math.sin(a) * 21, 13, 13, 9, adobe2, { y: 88, shadow: false }); } };
+    wall(560, 1000, 320, 26, 56); wall(1040, 1000, 320, 26, 56);      // south wall, split by the gate
+    for (const gx of [742, 858]) RB(R, gx, 1000, 18, 30, 58, stone, { solid: true });   // gate posts
+    RB(R, 800, 1000, 134, 20, 14, adobe2, { y: 46 });                                    // gate lintel (walk under)
+    wall(800, 300, 900, 26, 60); wall(360, 650, 26, 700, 56); wall(1240, 650, 26, 700, 56);
+    for (const [x, z] of [[360, 300], [1240, 300], [360, 1000], [1240, 1000]]) tower(x, z);
+    // ── Temple of the god Khaldi, in the south-west, with its columned portico and altar ──
+    RB(R, 540, 560, 150, 130, 46, adobe, { solid: true }); RB(R, 540, 560, 158, 138, 6, basalt, { y: 46 });
+    for (let i = 0; i < 5; i++) RCyl(R, 480 + i * 30, 640, 6, 7, 48, basalt, 12, 0, { solid: true });
+    RB(R, 540, 640, 132, 10, 6, basalt, { y: 48, shadow: false });
+    RB(R, 540, 605, 34, 22, 15, basalt, { solid: true });            // the fire altar of Khaldi
+    RB(R, 540, 605, 22, 12, 4, '#c05a2a', { y: 15, shadow: false });
+    // ── The Susi temple ruin, north-east: a square tower on a plinth ──
+    RB(R, 1060, 470, 96, 96, 6, stone, {}); RB(R, 1060, 470, 60, 60, 64, adobe, { solid: true }); RB(R, 1060, 470, 66, 66, 6, basalt, { y: 64 });
+    // ── The pillared hall of the palace, along the north ──
+    RB(R, 800, 430, 300, 120, 8, floor, {});
+    for (let i = 0; i < 7; i++) for (const z of [390, 470]) RCyl(R, 680 + i * 40, z, 7, 8, 40 + (rnd() < 0.3 ? -18 : 0), basalt, 10, 0, { solid: true });
+    // ── Round granaries along the east ──
+    for (const z of [610, 720, 830]) { RCyl(R, 1120, z, 26, 30, 40, adobe, 16, 0, { solid: true }); RCone(R, 1120, z, 30, 16, adobe2, 16, 40); }
+    // ── Irrigation canals crossing the courtyard ──
+    RB(R, 800, 760, 360, 10, 2, stone, {}); RWater(R, 800, 760, 340, 6, { y: 2.4 });
+    RB(R, 900, 700, 10, 240, 2, stone, {}); RWater(R, 900, 700, 6, 220, { y: 2.4 });
+    // ── Excavation trenches with wooden frames and finds ──
+    const pit = (x, z) => { RB(R, x, z, 90, 64, 3, '#6a5a44', {}); for (const [dx, dz] of [[-42, -30], [42, -30], [-42, 30], [42, 30]]) RCyl(R, x + dx, z + dz, 2, 2, 18, '#7a5a38', 6, 0); RLine(R, [x - 42, 16, z - 30], [x + 42, 16, z - 30], 0.8, '#5a4630'); RLine(R, [x - 42, 16, z + 30], [x + 42, 16, z + 30], 0.8, '#5a4630');
+      for (let k = 0; k < 5; k++) RB(R, x - 30 + k * 15, z - 8 + (k % 2) * 16, 8, 8, 4 + (k % 3) * 4, k % 2 ? '#b8a074' : '#8a6a4a', { shadow: false }); };
+    pit(650, 860); pit(1010, 850); pit(800, 1120);
+    // Cuneiform steles (basalt slabs with a lighter carved face)
+    const stele = (x, z) => { RB(R, x, z, 22, 8, 46, basalt, { solid: true }); RB(R, x, z + 4.5, 18, 1.5, 40, '#a49a86', { y: 3, shadow: false }); };
+    stele(720, 1120); stele(590, 560); stele(1060, 560);
+    // Overgrowth reclaiming the ruins
+    for (let k = 0; k < 18; k++) { const a = rnd() * 6.28, d = 430 + rnd() * 90; RTree(R, 800 + Math.cos(a) * d, 640 + Math.sin(a) * d * 0.8, 0.6 + rnd() * 0.4, 'round', scrub); }
+    for (let k = 0; k < 6; k++) RTree(R, 500 + rnd() * 600, 900 + rnd() * 120, 0.5 + rnd() * 0.3, 'round', scrub);
     ararat(R, 800, -2600, 1.1);
-    // The Prime Minister and his security detail
-    RNPC(R, 800, 520, Math.PI / 2, { skin: '#c9a07e', hair: '#4a4540', shirt: '#1f2a44', pants: '#1f2a44', shoes: '#111111', goatee: true, buzz: true });
-    RNPC(R, 766, 506, Math.PI / 2, { skin: '#b98a66', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true });
-    RNPC(R, 834, 506, Math.PI / 2, { skin: '#c49673', hair: '#1c1a18', shirt: '#15171d', pants: '#15171d', shoes: '#111111', buzz: true });
-    RB(R, 800, 470, 50, 8, 1, '#8a1020', { y: 0.2, shadow: false });
+    // ── The people of the dig: archaeologists, a guide, Urartian soldiers and a temple priest ──
+    RNPC(R, 660, 860, 0.4, { skin: '#d8b48a', hair: '#8a8580', shirt: '#d8cdb6', pants: '#7a6a52', cap: true });     // archaeologist at the trench
+    RNPC(R, 1010, 872, 2.6, { skin: '#c68e63', hair: '#3a2a1e', shirt: '#c0a06a', pants: '#5a4a38' });               // archaeologist
+    RNPC(R, 540, 600, -Math.PI / 2, { skin: '#c9a07e', hair: '#2a2420', shirt: '#7a1d2a', pants: '#3a1a20', longHair: true });   // priest of Khaldi at the altar
+    for (const gx of [742, 858]) RNPC(R, gx, 1040, -Math.PI / 2, { skin: '#b98a66', hair: '#1c1a18', shirt: '#7a6a3a', pants: '#4a3f28', cap: true });   // Urartian spearmen at the gate
   },
   geghard(R, rnd) {
     RB(R, 800, 170, 1500, 280, 330, '#7b746a', { solid: true });
@@ -8827,6 +8853,45 @@ for (const [id, site] of Object.entries(HX_SITES)) {
     for (const x of [1180, 1250]) RB(R, x, 1336, 18, 18, 46, t2, { solid: true });
     RB(R, 1215, 1260, 120, 80, 1, '#8a6a58', { shadow: false });
   };
+}
+
+// ─── Erebuni Fortress: the excavation, its finds, the cuneiform steles and the citadel view ───
+const EREBUNI_FINDS = [
+  ['A cuneiform clay tablet', 'a ration list in Urartian script'],
+  ['A bronze figurine of Khaldi', 'the supreme god, cast small in bronze'],
+  ['An Urartian bronze helmet', 'crested, and dented by no blow'],
+  ['A great wine karas', 'a storage jar once sunk to its neck'],
+  ['A silver rhyton', 'a drinking horn ending in a bull'],
+  ['A carnelian bead necklace', 'traded up from far to the south'],
+  ['A bundle of bronze arrowheads', 'never loosed in anger here'],
+  ['A clay bulla with a royal seal', "an administrator's stamp in dried mud"],
+];
+const erebuni = { found: [] };
+function erebuniDig() {
+  const next = EREBUNI_FINDS[erebuni.found.length];
+  if (!next) { toast('The trench is fully recorded — every find is in the logbook', '#d8cdb6'); return; }
+  erebuni.found.push(next); hg.followers += 40; saveGame();
+  showBanner('Artifact uncovered', `${next[0]} · ${next[1]}`, '#d8cdb6', 4);
+  toast(`Logged ${erebuni.found.length} of ${EREBUNI_FINDS.length} finds · +40 followers`, '#d8cdb6');
+}
+function erebuniLog() {
+  const body = erebuni.found.length
+    ? '<ul style="margin:0;padding-left:1.1em;line-height:1.5">' + erebuni.found.map(f => `<li><b>${f[0]}</b> — ${f[1]}</li>`).join('') + '</ul>'
+    : '<p class="muted">No finds yet. Take a spade to the trenches with the archaeologists.</p>';
+  showMenu({ eyebrow: 'Erebuni excavation', title: `Site logbook · ${erebuni.found.length}/${EREBUNI_FINDS.length}`, body, options: [] });
+}
+{
+  const Y = REGIONS.yerevan, at = (lx, ly) => ({ x: Y.ox + lx, y: Y.oy + ly });
+  const inErebuni = () => player.region === 'yerevan' && !player.car;
+  for (const [lx, ly] of [[650, 860], [1010, 850], [800, 1120]])
+    interactables.push({ ...at(lx, ly), r: 34, when: inErebuni, label: 'Dig the excavation trench', act: erebuniDig });
+  interactables.push({ ...at(800, 1170), r: 30, when: inErebuni, label: 'Review the site logbook of finds', act: erebuniLog });
+  for (const [lx, ly] of [[720, 1120], [590, 560], [1060, 560]])
+    interactables.push({ ...at(lx, ly), r: 30, when: inErebuni, label: 'Read the cuneiform stele', act: () => showMenu({ eyebrow: 'Cuneiform · Urartian', title: "Argishti's foundation stone",
+      body: '<p>"By the greatness of the god Khaldi, Argishti, son of Menua, built this mighty fortress and set its name <b>Erebuni</b> — for the power of Biainili and to hold the lands of the enemy in awe."</p><p class="muted">The inscription, carved in 782 BC, that gave Yerevan its name.</p>', options: [] }) });
+  interactables.push({ ...at(540, 620), r: 32, when: inErebuni, label: 'Approach the altar of Khaldi', act: () => showMenu({ eyebrow: 'Temple of Khaldi', title: 'The god of the Urartians',
+    body: '<p>Khaldi was the supreme god of Urartu — a god of war and of the state. His temple, the <i>susi</i>, stood in the citadel, and kings poured offerings on this altar before campaign and harvest.</p>', options: [] }) });
+  interactables.push({ ...at(800, 340), r: 44, when: inErebuni, label: 'Look out from the citadel wall', act: () => { player.hp = Math.min(100, player.hp + 15); showBanner('From the citadel of Erebuni', 'The Ararat plain below, Mount Ararat on the skyline, and modern Yerevan spread beyond', '#d8cdb6', 4.2); } });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
