@@ -7060,7 +7060,7 @@ const GPT_QUICK = [['What should I do?', () => `What should I do next? Be specif
 
 // ─── Per-frame hook for all of the above ───────────────────────────────────
 function updateMore(dt) {
-  updateRegionGame(dt); updateHeritage(dt); updateFestivalsEtc(dt); updateLandmarks(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt);
+  updateRegionGame(dt); updateHeritage(dt); updateFestivalsEtc(dt); updateLandmarks(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt); updateTV(dt);
 }
 
 for (const [id, def] of Object.entries(RG_DEF)) {
@@ -9761,7 +9761,84 @@ let luckyWheel = null;
   }, false);
   const board = new THREE.Mesh(new THREE.PlaneGeometry(56, 32), basic(0xffffff, { map: corkTex })); board.position.set(I.ox + 195, 34, I.oy + 10.7); interiorGroup.add(board);
 }
-const tvMat = basic(0x3a5a9a), apartmentWindowMat = basic(0x0b1019);
+const apartmentWindowMat = basic(0x0b1019);
+// The apartment TV plays cycling shows on a live canvas texture
+const tvCanvas = document.createElement('canvas'); tvCanvas.width = 168; tvCanvas.height = 104;
+const tvCtx = tvCanvas.getContext('2d');
+const tvTex = new THREE.CanvasTexture(tvCanvas); tvTex.anisotropy = 4;
+const tvMat = basic(0xffffff, { map: tvTex });
+const TV = { on: true, ch: 0, t: 0 };
+const TV_CHANNELS = [
+  { name: 'Hayastan 1 · News', draw(g, w, h, t) {
+      g.fillStyle = '#0d2547'; g.fillRect(0, 0, w, h); g.fillStyle = '#12305a'; g.fillRect(0, h * 0.55, w, h * 0.45);
+      g.fillStyle = '#0a1a30'; g.fillRect(0, h * 0.6, w, h * 0.16);
+      const cx = w * 0.5, by = h * 0.6;
+      g.fillStyle = '#e0b48a'; g.beginPath(); g.arc(cx, by - 15, 9, 0, 7); g.fill();
+      g.fillStyle = '#1f2a44'; g.fillRect(cx - 14, by - 7, 28, 22); g.fillStyle = '#e8e4dc'; g.fillRect(cx - 3, by - 5, 6, 12);
+      g.fillStyle = '#f2c230'; g.font = 'bold 12px sans-serif'; g.textAlign = 'left'; g.fillText('H1', 6, 15);
+      if (Math.floor(t * 2) % 2) { g.fillStyle = '#ff3b3b'; g.beginPath(); g.arc(w - 34, 10, 4, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = 'bold 9px sans-serif'; g.fillText('LIVE', w - 27, 13); }
+      g.fillStyle = '#c0282e'; g.fillRect(0, h * 0.78, w, h * 0.1); g.fillStyle = '#0a0a0a'; g.fillRect(0, h * 0.88, w, h * 0.12);
+      g.fillStyle = '#fff'; g.font = 'bold 9px sans-serif'; g.fillText('BREAKING · YEREVAN', 5, h * 0.78 + 9);
+      const msg = '   Erebuni dig uncovers an Urartian bronze   ·   Republic Square fountains reopen for summer   ·   Vardavar festival floods the streets   ·   the Cascade is lit for the city’s birthday   ·   ';
+      g.font = '9px sans-serif'; const tw = g.measureText(msg).width, off = (t * 42) % tw;
+      g.fillStyle = '#f2e2c4'; g.fillText(msg, w - off, h * 0.88 + 10); g.fillText(msg, w - off + tw, h * 0.88 + 10);
+    } },
+  { name: 'Football', draw(g, w, h, t) {
+      for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#1f6b2f' : '#238034'; g.fillRect(i * w / 8, 0, w / 8, h); }
+      g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1; g.beginPath(); g.arc(w / 2, h / 2, 16, 0, 7); g.stroke(); g.strokeRect(3, h / 2 - 24, w - 6, 48);
+      const bx = w / 2 + Math.sin(t * 1.6) * w * 0.32, by = h / 2 + Math.cos(t * 2.2) * h * 0.2;
+      g.fillStyle = '#d12f2f'; g.fillRect(bx - 15, by - 7, 5, 12); g.fillStyle = '#2d6bff'; g.fillRect(bx + 11, by - 5, 5, 12);
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(bx, by, 3.2, 0, 7); g.fill();
+      g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillRect(4, 4, 78, 15); g.fillStyle = '#fff'; g.font = 'bold 10px sans-serif'; g.textAlign = 'left'; g.fillText('AYG 1 - 0 URA', 8, 15);
+    } },
+  { name: 'Wild Armenia', draw(g, w, h, t) {
+      const gg = g.createLinearGradient(0, 0, 0, h); gg.addColorStop(0, '#8fc0e8'); gg.addColorStop(1, '#e6d8b0'); g.fillStyle = gg; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#fff2c0'; g.beginPath(); g.arc(w * 0.82, h * 0.24, 10, 0, 7); g.fill();
+      g.fillStyle = '#7a8a9a'; g.beginPath(); g.moveTo(0, h * 0.75); g.lineTo(w * 0.42, h * 0.28); g.lineTo(w * 0.78, h * 0.75); g.closePath(); g.fill();
+      g.fillStyle = '#eef2f4'; g.beginPath(); g.moveTo(w * 0.32, h * 0.42); g.lineTo(w * 0.42, h * 0.28); g.lineTo(w * 0.52, h * 0.42); g.closePath(); g.fill();
+      g.fillStyle = '#5a8a4a'; g.fillRect(0, h * 0.72, w, h * 0.28);
+      for (let i = 0; i < 3; i++) { const cx = ((t * 12 + i * 74) % (w + 40)) - 20; g.fillStyle = 'rgba(255,255,255,0.85)'; g.beginPath(); g.arc(cx, h * 0.18 + i * 9, 8, 0, 7); g.arc(cx + 11, h * 0.18 + i * 9, 10, 0, 7); g.fill(); }
+      g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(4, h - 17, 84, 13); g.fillStyle = '#fff'; g.font = '8px sans-serif'; g.textAlign = 'left'; g.fillText('WILD ARMENIA', 7, h - 7);
+    } },
+  { name: 'Hay Music TV', draw(g, w, h, t) {
+      g.fillStyle = '#12081a'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 16; i++) { const bh = (0.28 + 0.72 * Math.abs(Math.sin(t * 4.2 + i * 0.6))) * h * 0.82; g.fillStyle = `hsl(${(i * 22 + t * 90) % 360},80%,56%)`; g.fillRect(i * w / 16 + 1, h - bh, w / 16 - 2, bh); }
+      g.fillStyle = '#fff'; g.font = 'bold 11px sans-serif'; g.textAlign = 'center'; g.fillText('HAY MUSIC TV', w / 2, 13);
+    } },
+  { name: 'Weather', draw(g, w, h, t) {
+      g.fillStyle = '#0d2547'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#1f6b3a'; g.beginPath(); g.moveTo(w * 0.2, h * 0.3); g.lineTo(w * 0.8, h * 0.24); g.lineTo(w * 0.75, h * 0.82); g.lineTo(w * 0.25, h * 0.76); g.closePath(); g.fill();
+      g.font = '9px sans-serif'; g.textAlign = 'center';
+      for (const [fx, fy, s] of [[0.36, 0.46, '☀ 28°'], [0.6, 0.56, '⛅ 24°'], [0.5, 0.7, '☀ 31°']]) { g.fillStyle = Math.floor(t) % 2 ? '#fff' : '#ffe8b0'; g.fillText(s, w * fx, h * fy); }
+      g.fillStyle = '#f2c230'; g.font = 'bold 10px sans-serif'; g.textAlign = 'left'; g.fillText('YEGHANAK', 5, 13);
+    } },
+  { name: 'Cartoons', draw(g, w, h, t) {
+      g.fillStyle = '#ffd35a'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 5; i++) { g.fillStyle = '#ff8ac0'; g.beginPath(); g.arc((t * 22 + i * 42) % w, h * 0.28 + Math.sin(t * 3 + i) * 9, 5, 0, 7); g.fill(); }
+      const bx = w / 2 + Math.sin(t * 3) * 22, by = h * 0.62 - Math.abs(Math.sin(t * 5)) * 16;
+      g.fillStyle = '#5a2ea6'; g.beginPath(); g.arc(bx, by, 13, 0, 7); g.fill();
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(bx - 4, by - 3, 3.2, 0, 7); g.arc(bx + 4, by - 3, 3.2, 0, 7); g.fill();
+      g.fillStyle = '#000'; g.beginPath(); g.arc(bx - 4, by - 3, 1.5, 0, 7); g.arc(bx + 4, by - 3, 1.5, 0, 7); g.fill();
+      g.strokeStyle = '#000'; g.lineWidth = 1.4; g.beginPath(); g.arc(bx, by + 3, 4, 0, Math.PI); g.stroke();
+    } },
+];
+function updateTV(dt) {
+  if (player.interior !== 'apartment' || mode === 'title') return;   // only render while someone is home
+  TV.t += dt;
+  const g = tvCtx, w = tvCanvas.width, h = tvCanvas.height;
+  if (!TV.on) {
+    g.fillStyle = '#0a0a0c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = Math.floor(TV.t * 2) % 2 ? '#3a1414' : '#241010'; g.beginPath(); g.arc(w - 12, h - 10, 3, 0, 7); g.fill();
+  } else TV_CHANNELS[TV.ch].draw(g, w, h, TV.t);
+  tvTex.needsUpdate = true;
+}
+addInteract('apartment', 70, 150, 42, 'Change the TV channel', () => {
+  if (!TV.on) { TV.on = true; TV.ch = 0; }
+  else if (TV.ch < TV_CHANNELS.length - 1) TV.ch++;
+  else TV.on = false;
+  updateTV(0);
+  toast(TV.on ? 'TV · ' + TV_CHANNELS[TV.ch].name : 'TV off', '#8fb4ff');
+});
 {
   const I = INTERIORS.apartment;
   IRoom(I, lam('#ffffff', { map: woodTex, emissive: 0xffffff, emissiveMap: woodTex, emissiveIntensity: 0.5 }), ilam('#d8cbb0', 0.45), ilam('#f2efe8', 0.4));
