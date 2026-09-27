@@ -675,6 +675,23 @@ const isRoadRow = y => y <= 51 && y % 10 < 2;
 const heightGrid = new Float32Array(GW * GH);   // building heights, filled when the 3D city is built
 const groundAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); return tx < 0 || ty < 0 || tx >= GW || ty >= GH ? 0 : heightGrid[ty * GW + tx]; };
 
+// Small-object collision: circular colliders (trees, lamps, benches, statues, fountains, props),
+// bucketed per tile so on-foot movement can check just a handful. City space only.
+const obGrid = new Array(GW * GH);
+function addObstacle(x, y, r) {
+  const o = { x, y, r2: r * r };
+  const x0 = Math.max(0, Math.floor((x - r) / T)), x1 = Math.min(GW - 1, Math.floor((x + r) / T));
+  const y0 = Math.max(0, Math.floor((y - r) / T)), y1 = Math.min(GH - 1, Math.floor((y + r) / T));
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) { const i = ty * GW + tx; (obGrid[i] || (obGrid[i] = [])).push(o); }
+}
+function obstacleAt(x, y) {
+  const tx = Math.floor(x / T), ty = Math.floor(y / T);
+  if (tx < 0 || ty < 0 || tx >= GW || ty >= GH) return false;
+  const b = obGrid[ty * GW + tx]; if (!b) return false;
+  for (const o of b) { const dx = x - o.x, dy = y - o.y; if (dx * dx + dy * dy < o.r2) return true; }
+  return false;
+}
+
 function districtOfBlock(bx, by) {
   if (bx === 5) return 'bay';
   if (bx >= 6) return by <= 1 ? 'airfield' : by === 2 ? 'eastshore' : 'heights';
@@ -1592,7 +1609,8 @@ function updatePed(p, dt) {
   p.phase += dt * Math.min(sp * 0.22, 16);
 }
 function circleSolid(x, y, r) {
-  for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; if (solidPx(x + Math.cos(a) * r, y + Math.sin(a) * r)) return true; }
+  if (obstacleAt(x, y)) return true;
+  for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r; if (solidPx(px, py) || obstacleAt(px, py)) return true; }
   return false;
 }
 function carLocal(c, x, y) {
@@ -3869,6 +3887,14 @@ scene.add(propsGroup);
   instanced(plate, lam('#2f6b4a', { emissive: 0x0b2418 }), signs, ([x, y]) => { dummy.position.set(x + 9, 40, y); }, false, propsGroup);
   const plate2 = new THREE.BoxGeometry(1.2, 5, 18);
   instanced(plate2, lam('#2f6b4a', { emissive: 0x0b2418 }), signs, ([x, y]) => { dummy.position.set(x, 34, y + 9); }, false, propsGroup);
+  // Give the props, trees and lamp posts real volume the player collides with
+  for (const [x, y] of bins) addObstacle(x, y, 6);
+  for (const [x, y] of hydrants) addObstacle(x, y, 5);
+  for (const [x, y] of crates) addObstacle(x, y, 10);
+  for (const [x, y] of benches) addObstacle(x, y, 12);
+  for (const [x, y] of signs) addObstacle(x, y, 4);
+  for (const [x, y] of trees) addObstacle(x, y, 6);
+  for (const [x, y] of lamps) addObstacle(x, y, 4);
 }
 
 // Skid marks: a ring buffer of flat quads
@@ -9584,8 +9610,8 @@ function updateCockpit(dt) {
   const glow = new THREE.PointLight(0xff8a3a, 0.8, 160); glow.position.set(fx2, 20, fz2); scene.add(glow);
 
   // ── Rows of trees and benches along the promenade ──
-  const tree = (x, z) => { Cyl(x, z, 3, 4, 18, lamE('#6a4a30', 0.25), 0, 8); const c = new THREE.Mesh(new THREE.SphereGeometry(14, 10, 8), lamE('#2f5a2c', 0.28)); c.position.set(x, 26, z); c.scale.y = 0.85; c.castShadow = true; scene.add(c); };
-  const bench = (x, z, a) => { const b = new THREE.Group(); b.position.set(x, 0, z); b.rotation.y = a; const seat = new THREE.Mesh(new THREE.BoxGeometry(20, 3, 7), lamE('#7a5a3a', 0.3)); seat.position.y = 6; b.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(20, 8, 2), lamE('#7a5a3a', 0.3)); back.position.set(0, 11, -3); b.add(back); b.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(b); };
+  const tree = (x, z) => { Cyl(x, z, 3, 4, 18, lamE('#6a4a30', 0.25), 0, 8); const c = new THREE.Mesh(new THREE.SphereGeometry(14, 10, 8), lamE('#2f5a2c', 0.28)); c.position.set(x, 26, z); c.scale.y = 0.85; c.castShadow = true; scene.add(c); addObstacle(x, z, 6); };
+  const bench = (x, z, a) => { const b = new THREE.Group(); b.position.set(x, 0, z); b.rotation.y = a; const seat = new THREE.Mesh(new THREE.BoxGeometry(20, 3, 7), lamE('#7a5a3a', 0.3)); seat.position.y = 6; b.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(20, 8, 2), lamE('#7a5a3a', 0.3)); back.position.set(0, 11, -3); b.add(back); b.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(b); addObstacle(x, z, 11); };
   for (const x of [31.2, 33, 38, 39.8]) for (const z of [3, 6, 8.6]) tree(x * T2, z * T2);
   for (const [x, z, a] of [[33.4, 6.6, 0], [37.6, 6.6, Math.PI], [34.6, 8.8, 0], [36.4, 8.8, 0], [31.6, 4, Math.PI / 2], [39.4, 4, -Math.PI / 2]]) bench(x * T2, z * T2, a);
 
