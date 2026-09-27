@@ -3074,7 +3074,7 @@ const PHONE_APPS = [
   ['gpt', 'Hayastan GPT', 'linear-gradient(135deg, #0f766e, #f2a800)', 'Հ'], ['weather', 'Weather', 'linear-gradient(#6fb3ff, #d6e4ff)', '☂'],
   ['contacts', 'Contacts', '#7fe0a0', 'C'], ['messages', 'Messages', '#4fc3ff', 'M'], ['heists', 'Heists', '#ffd35a', 'H'], ['heritage', 'Heritage Jobs', 'linear-gradient(135deg, #f2a800, #8a1a22)', '✠'], ['races', 'Street Races', 'linear-gradient(135deg, #4fc3ff, #1f3a78)', '⚑'],
   ['map', 'Map', '#9fd4e8', '⌖'], ['bank', 'Bank', '#e0b0ff', '$'], ['daily', 'Daily', '#ffb347', 'D'],
-  ['taxi', 'Hayastan Cabs', '#f2c230', 'T'], ['settings', 'Settings', '#9a978f', '⚙']];
+  ['taxi', 'Hayastan Cabs', '#f2c230', 'T'], ['doomsday', 'Doomsday', 'linear-gradient(135deg, #ff3b2f, #7a0f0f 60%, #1a0606)', '☢'], ['settings', 'Settings', '#9a978f', '⚙']];
 function phoneApp(app) {
   phone.app = app;
   phBody.innerHTML = '';
@@ -3142,6 +3142,8 @@ function phoneApp(app) {
     portfolioApp();
   } else if (app === 'weather') {
     weatherApp();
+  } else if (app === 'doomsday') {
+    doomsdayApp();
   } else if (app === 'gpt') {
     hayastanGptApp();
   } else if (app === 'hayagram') {
@@ -3631,6 +3633,7 @@ function buildFront(x, zFace, w, h, dir, kind) {
   }
 }
 const beacons = [];
+const cityBuildings = [];   // main building meshes, kept so a blast can level them
 // Clear a plaza around each Yerevan landmark so the squares are not crowded by city blocks
 {
   const plazas = [[11, 31, 20, 40], [11, 42, 20, 49], [21, 42, 30, 49], [29, 1, 42, 11]];
@@ -3679,6 +3682,7 @@ for (const b of buildings) {
   const m = new THREE.Mesh(geo, [wall, wall, roof, roof, wall, wall]);
   m.position.set(x, h / 2, z); m.castShadow = true; m.receiveShadow = true;
   scene.add(m);
+  cityBuildings.push({ mesh: m, x, z, h, r: Math.hypot(w, d) / 2, leveled: false });
   for (let j = b.y; j < b.y + b.h; j++) for (let i = b.x; i < b.x + b.w; i++) heightGrid[j * GW + i] = h + (b.kind === 'house' ? 22 : b.kind === 'ctower' ? 26 : 0);
   if (b.kind === 'ctower') {
     const cab = new THREE.Mesh(new THREE.BoxGeometry(w + 14, 18, d + 14), lam('#2a6f7a', { emissive: 0x3fb8c8, emissiveIntensity: 0.6 }));
@@ -6264,6 +6268,7 @@ const DISASTERS = {
   tornado: { name: 'Tornado', dur: 45, blurb: 'An EF3 funnel crosses the city, throwing cars and people.' },
   flood: { name: 'Flood', dur: 50, blurb: 'Water rises through the streets. Cars stall and slow to a crawl.' },
   wildfire: { name: 'Wildfire', dur: 60, blurb: 'Fire spreads through the parks. Smoke fills the sky. Keep clear.' },
+  nuke: { name: 'Nuclear strike', dur: 30, blurb: 'A warhead detonates over downtown. A blinding flash, a shockwave that levels whole blocks, and a mushroom cloud over the city.' },
 };
 const disasterFx = new THREE.Group(); scene.add(disasterFx);
 // Tornado funnel: stacked open cones with a streaky, scrolling translucent texture, plus debris orbiting it
@@ -6291,6 +6296,19 @@ fireFx.frustumCulled = smokeFx.frustumCulled = false; fireFx.visible = smokeFx.v
 const quakeChunks = [];
 for (let k = 0; k < 18; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(6 + Math.random() * 8, 4 + Math.random() * 6, 6 + Math.random() * 8), cachedLam(['#8a7a6a', '#6a6460', '#a89888'][k % 3])); m.visible = false; m.castShadow = true; m.userData = { vy: 0 }; disasterFx.add(m); quakeChunks.push(m); }
 
+// Nuclear strike: a blinding fireball, an expanding shockwave ring, a rising mushroom cloud, and a city that gets levelled
+const nukeFx = new THREE.Group(); nukeFx.visible = false; disasterFx.add(nukeFx);
+const shockRing = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 56).rotateX(-Math.PI / 2), basic(0xfff0c0, { transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+shockRing.position.y = 6; nukeFx.add(shockRing);
+const fireball = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 14), basic(0xffd85a, { transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+fireball.position.y = 70; nukeFx.add(fireball);
+const nukeLight = new THREE.PointLight(0xffce8a, 0, 5000); nukeLight.position.set(0, 200, 0); nukeFx.add(nukeLight);
+const mush = new THREE.Group(); nukeFx.add(mush);
+const smokeMat = new THREE.MeshLambertMaterial({ color: 0x8a7c6e, emissive: 0x3a1808, emissiveIntensity: 0.5, transparent: true, opacity: 0.94 });
+const nukeStem = new THREE.Mesh(new THREE.CylinderGeometry(70, 110, 1000, 20, 1, true), smokeMat); nukeStem.position.y = 500; mush.add(nukeStem);
+const nukeCap = new THREE.Mesh(new THREE.SphereGeometry(300, 22, 16), smokeMat); nukeCap.position.y = 1080; nukeCap.scale.set(1, 0.62, 1); mush.add(nukeCap);
+const nukeCollar = new THREE.Mesh(new THREE.TorusGeometry(250, 100, 12, 26).rotateX(Math.PI / 2), smokeMat); nukeCollar.position.y = 980; mush.add(nukeCollar);
+
 function startDisaster(kind) {
   const D = DISASTERS[kind]; if (!D) return 'Unknown disaster';
   if (player.region || QT.state !== 'idle') return 'Disasters only happen in Yerevan';
@@ -6305,6 +6323,17 @@ function startDisaster(kind) {
     const seed = fireTiles.slice().sort((a, b) => Math.hypot(a[0] * T - p.x, a[1] * T - p.y) - Math.hypot(b[0] * T - p.x, b[1] * T - p.y))[Math.min(20, fireTiles.length - 1)];
     W.burning = seed ? [seed] : [];
   }
+  if (kind === 'nuke') {
+    W.x = 18 * T; W.y = 15 * T;           // ground zero over downtown
+    W.wave = 0; W.hit = false;
+    nukeFx.visible = true; nukeFx.position.set(W.x, 0, W.y);
+    for (const B of cityBuildings) { B.leveled = false; B.mesh.userData.fall = 0; }
+    weather.kind = 'storm';               // the sky darkens under the fallout
+    weather.flash = 2.8; flash = 0.6; cam.shake = 16;    // a blinding white flash, then a red jolt
+    showBanner('NUCLEAR DETONATION', 'A warhead has struck downtown Yerevan', '#ff5f5f', 4);
+    toast('☢ Nuclear strike', '#ff5f5f');
+    return `${D.name} started`;
+  }
   showBanner(`${D.name.toUpperCase()} WARNING`, D.blurb, '#ff5f5f', 4);
   toast(`Emergency alert: ${D.name}`, '#ff5f5f');
   for (const q of peds) if (q.state !== 'down') q.fleeT = 6;
@@ -6313,7 +6342,11 @@ function startDisaster(kind) {
 function stopDisaster(silent) {
   const W = weather.disaster; if (!W) return;
   weather.disaster = null; funnel.visible = flood.visible = fireFx.visible = smokeFx.visible = false; for (const c of quakeChunks) c.visible = false;
-  if (!silent) toast(`${DISASTERS[W.kind].name} is over`, '#7fe0a0');
+  if (W.kind === 'nuke') {
+    nukeFx.visible = false;
+    for (const B of cityBuildings) if (B.leveled) { B.mesh.scale.y = 1; B.mesh.position.y = B.h / 2; B.mesh.userData.fall = 0; B.leveled = false; }   // the city is rebuilt
+  }
+  if (!silent) toast(W.kind === 'nuke' ? 'Yerevan has been rebuilt' : `${DISASTERS[W.kind].name} is over`, '#7fe0a0');
 }
 function updateDisaster(dt) {
   const W = weather.disaster; if (!W) return;
@@ -6378,6 +6411,32 @@ function updateDisaster(dt) {
     }
     fp.needsUpdate = sp.needsUpdate = true;
     if (!player.car) for (const t of W.burning) if (Math.hypot((t[0] + 0.5) * T - player.x, (t[1] + 0.5) * T - player.y) < T * 0.7) { player.hp -= 20 * dt; flash = Math.max(flash, 0.4); break; }
+  } else if (W.kind === 'nuke') {
+    // The shockwave expands from ground zero, levelling everything it passes
+    const R = W.wave = Math.min(5200, W.wave + dt * 1100);
+    shockRing.scale.set(R, 1, R); shockRing.material.opacity = 0.55 * (1 - R / 5200);
+    // Fireball: a hot flash that swells then fades
+    const fb = Math.max(0, 1 - W.t * 0.6); fireball.scale.setScalar(140 + 620 * Math.min(1, W.t * 2.2)); fireball.material.opacity = 0.9 * fb + 0.12;
+    nukeLight.intensity = 9 * fb; if (W.t < 0.3) weather.flash = Math.max(weather.flash, 2.4);
+    cam.shake = Math.max(cam.shake, 13 * (1 - Math.min(1, W.t / 2.2)) + 3.5 * ramp);
+    // The mushroom cloud rises and boils
+    const rise = Math.min(1, W.t / 6); mush.position.y = -260 + rise * 260; mush.scale.setScalar(0.4 + rise); nukeCap.rotation.y += dt * 0.25; smokeMat.emissiveIntensity = 0.5 * fb + 0.15;
+    // Level buildings as the wave front reaches them, then keep collapsing them
+    for (const B of cityBuildings) {
+      if (!B.leveled && Math.hypot(B.x - W.x, B.z - W.y) < R) { B.leveled = true; sparks(B.x, B.z, 8); }
+      if (B.leveled && B.mesh.userData.fall < 1) { const f = B.mesh.userData.fall = Math.min(1, B.mesh.userData.fall + dt * 2.2); B.mesh.scale.y = 1 - f * 0.9; B.mesh.position.y = B.h / 2 * (1 - f * 0.9); }
+    }
+    // Fling cars and people out along the wave front
+    for (const c of cars) if (!c.spec.air) { const d = Math.hypot(c.x - W.x, c.y - W.y); if (d < R && d > R - 200) { const a = Math.atan2(c.y - W.y, c.x - W.x); c.vx += Math.cos(a) * 520; c.vy += Math.sin(a) * 520; c.vz = (c.vz || 0) + 180; } }
+    for (const q of peds) if (q.state !== 'down') { const d = Math.hypot(q.x - W.x, q.y - W.y); if (d < R) { q.state = 'down'; q.downT = 0; const a = Math.atan2(q.y - W.y, q.x - W.x); q.vx = Math.cos(a) * 300; q.vy = Math.sin(a) * 300; } }
+    // The blast catches the player once
+    const pd = Math.hypot(player.x - W.x, player.y - W.y);
+    if (!W.hit && pd < R) {
+      W.hit = true; flash = Math.max(flash, 1); cam.shake = Math.max(cam.shake, 11);
+      if (!player.car) { const a = Math.atan2(player.y - W.y, player.x - W.x); for (let s = 0; s < 12; s++) { const nx = player.x + Math.cos(a) * 10, ny = player.y + Math.sin(a) * 10; if (!circleSolid(nx, ny, 7)) { player.x = nx; player.y = ny; } } }
+      player.hp -= player.car ? 35 : 55; toast('The shockwave throws you back', '#ff5f5f');
+    }
+    scene.fog.color.lerp(tmpA.set('#6a3a26'), 0.45); scene.fog.density = Math.min(0.0014, scene.fog.density + dt * 0.0004);
   }
   if (W.t >= W.dur) stopDisaster();
 }
@@ -6457,11 +6516,27 @@ function weatherApp() {
   phNote('Natural disasters');
   const inCity = !player.region;
   for (const [k, D] of Object.entries(DISASTERS)) {
+    if (k === 'nuke') continue;   // the nuke lives in its own Doomsday app
     const b = phItem(D.name, D.blurb, () => { const r = startDisaster(k); if (r !== `${D.name} started`) toast(r, '#ff8a7a'); closePhone(); }, !inCity || !!weather.disaster);
     b.classList.add('wx-danger');
   }
-  if (weather.disaster) phItem(`Stop the ${DISASTERS[weather.disaster.kind].name.toLowerCase()}`, 'End it now', () => { stopDisaster(); phoneApp('weather'); });
+  if (weather.disaster && weather.disaster.kind !== 'nuke') phItem(`Stop the ${DISASTERS[weather.disaster.kind].name.toLowerCase()}`, 'End it now', () => { stopDisaster(); phoneApp('weather'); });
   if (!inCity) phNote('Disasters only happen in Yerevan.');
+}
+// ─── Doomsday: launch a nuclear strike on the city (a game destruction toy; the city rebuilds after) ───
+function doomsdayApp() {
+  const nuking = weather.disaster?.kind === 'nuke';
+  phNote('⚠ STRATEGIC COMMAND · Yerevan');
+  phNote('Authorize a nuclear strike on the city. It levels the skyline, then the city is rebuilt when the strike ends.');
+  if (nuking) {
+    phItem('☢  Detonation in progress…', 'The city is being levelled', () => {}, true);
+    phItem('Stand down · rebuild the city', 'End it now', () => { stopDisaster(); phoneApp('doomsday'); });
+    return;
+  }
+  const blocked = player.region ? 'Targeting only works from inside the city' : player.interior ? 'Step outside to get a launch signal' : weather.disaster ? 'Another disaster is already under way' : '';
+  if (blocked) phNote(blocked);
+  const b = phItem('☢  LAUNCH THE NUKE', 'Detonate a warhead over downtown Yerevan', () => { const r = startDisaster('nuke'); if (r !== 'Nuclear strike started') toast(r, '#ff8a7a'); else closePhone(); }, !!blocked);
+  b.classList.add('wx-danger'); b.style.background = 'linear-gradient(135deg,#ff3b2f,#7a0f0f)'; b.style.color = '#fff'; b.style.borderColor = '#ff6a5a';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
