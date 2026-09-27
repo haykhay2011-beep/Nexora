@@ -18,10 +18,13 @@
   html, body { margin: 0; height: 100%; background: var(--night); color: var(--paper); overflow: hidden; }
   body { font-family: var(--mono); }
   #game, #hud { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #game { filter: saturate(1.16) contrast(1.055); }
+  #game.plain { filter: none; }
   #hud { pointer-events: none; }
-  #grade, #vignette { position: fixed; inset: 0; pointer-events: none; }
+  #grade, #vignette, #grain { position: fixed; inset: 0; pointer-events: none; }
   #grade { mix-blend-mode: soft-light; }
-  #vignette { background: radial-gradient(ellipse at 50% 50%, rgba(5,6,10,0) 52%, rgba(5,6,10,0.62) 100%); }
+  #vignette { background: radial-gradient(ellipse at 50% 46%, rgba(5,6,10,0) 44%, rgba(5,6,10,0.34) 74%, rgba(4,5,9,0.72) 100%); }
+  #grain { opacity: 0.06; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 180px 180px; }
   #inset { position: fixed; visibility: hidden; pointer-events: none;
     padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 
@@ -334,6 +337,7 @@
 <canvas id="game" aria-label="Hayastan game view"></canvas>
 <div id="grade" aria-hidden="true"></div>
 <div id="vignette" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
 <canvas id="hud" aria-hidden="true"></canvas>
 <div id="inset"></div>
 <div id="qtVeil" aria-hidden="true"></div>
@@ -3426,6 +3430,7 @@ const glCanvas = document.getElementById('game'), hudCanvas = document.getElemen
 let vw = 0, vh = 0, dpr = 1, insetTop = 0, insetBottom = 0, camMode = 'chase';
 const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true, powerPreference: 'high-performance' });
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+let CITY_EXPOSURE = 0.96;   // filmic exposure for the city render
 const FOG = 0x0b1019;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(FOG);
@@ -6048,6 +6053,7 @@ function renderFrame(dt) {
   rippleTex.offset.set(time * 0.012, time * 0.008);
   if (mode === 'map' && mapView.tab === 'armenia') { renderArmeniaMap(); return; }
   if (hdrMode()) {
+    renderer.toneMapping = THREE.NoToneMapping; renderer.outputEncoding = THREE.LinearEncoding;   // the composer owns tone mapping here
     composer.render(dt);
     // First seconds in Armenia on a slow GPU: drop SSAO (the most expensive pass) and say so
     const now = performance.now();
@@ -6059,7 +6065,13 @@ function renderFrame(dt) {
         if (FX.ssao && armeniaFps.frames / 3 < 40) { FX.ssao = false; saveFX(); toast('Ambient occlusion turned off to keep the frame rate up', '#9fd4e8'); }
       }
     }
-  } else renderer.render(scene, camera);
+  } else {
+    // The city gets filmic ACES tone mapping and sRGB output for richer, less flat colour
+    renderer.toneMapping = FX.colorGrade ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
+    renderer.toneMappingExposure = CITY_EXPOSURE;
+    renderer.outputEncoding = FX.colorGrade ? THREE.sRGBEncoding : THREE.LinearEncoding;
+    renderer.render(scene, camera);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -10209,7 +10221,7 @@ const SKY_KEYS = [
   { h: 24,   sky: '#0b1019', hemi: '#5a6c96', gnd: '#1c1814', hi: 0.5,  sun: '#a8b8e0', si: 0.38, grade: [70, 95, 180, 0.4],  night: 1 },
 ];
 const sky = { night: 1 };
-const gradeEl = document.getElementById('grade'), vignetteEl = document.getElementById('vignette');
+const gradeEl = document.getElementById('grade'), vignetteEl = document.getElementById('vignette'), grainEl = document.getElementById('grain');
 const tmpA = new THREE.Color(), tmpB = new THREE.Color();
 function applyTimeOfDay() {
   if (hdrMode()) { applyArmeniaLook(); applyWeatherLook(); return; }
@@ -10233,6 +10245,8 @@ function applyTimeOfDay() {
   gradeEl.hidden = !FX.colorGrade;
   if (FX.colorGrade) gradeEl.style.background = `rgba(${g[0] | 0},${g[1] | 0},${g[2] | 0},${g[3].toFixed(3)})`;
   vignetteEl.hidden = !FX.vignette;
+  grainEl.hidden = !FX.colorGrade;
+  glCanvas.classList.toggle('plain', !FX.colorGrade);
   sky.color = (sky.color || new THREE.Color()).copy(scene.background);
   if (player.interior) { scene.background.set(0x07080b); scene.fog.color.set(0x07080b); }
   // Sun or moon swings around the sky with the hour
