@@ -1512,7 +1512,9 @@ function policeDrive(c, dt) {
   if (moveCar(c, dt, prevA)) c.speed = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a);
 }
 
+let carsInvincible = true;   // cars never take damage or wreck
 function damageCar(c, dmg) {
+  if (carsInvincible) { c.hp = c.spec.hp; return; }
   if (c.wreck) return;
   c.hp -= dmg;
   if (c.hp <= 0) {
@@ -1830,6 +1832,12 @@ function updateWeapons(dt) {
       k.respawn = 45;
       toast(WEAPONS[k.weapon].melee ? `Picked up a ${WEAPONS[k.weapon].name.toLowerCase()}` : `Picked up ${WEAPONS[k.weapon].name} · ${k.ammo} rounds`, '#ffb347');
     }
+  }
+  // In a tank, Fire loads the cannon instead of small arms
+  if (player.car && player.car.spec.tank) {
+    player.tankCD = Math.max(0, (player.tankCD || 0) - dt);
+    if (mode === 'play' && (down('KeyF') || mouseFire || fireQueued) && player.tankCD <= 0) { tankFire(); player.tankCD = 1.0; }
+    fireQueued = false; return;
   }
   const w2 = WEAPONS[player.weapon];
   const held = mode === 'play' && (down('KeyF') || mouseFire);
@@ -3952,6 +3960,7 @@ function carGeo(c) {
 }
 const taxiSignMat = basic(0xfff2c0), busStripeMat = lam('#1d1d22'), chromeMat = lam('#c8ccd0'), seatMat = lam('#1a1a1c');
 function buildCarMesh(c) {
+  if (c.spec.tank) return buildTank(c);
   if (c.spec.bike) return buildBike(c);
   if (c.spec.air) return c.spec.air === 'heli' ? buildHeli(c) : buildPlane(c);
   if (c.spec.boat) return c.spec.yacht ? buildYacht(c) : buildBoat(c);
@@ -4008,6 +4017,64 @@ function buildBike(c) {
   }
   g.userData = { body, cabin: null, beam, blob, lean, rider, wreck: false, bw: 34, bd: 16 };
   return g;
+}
+// ─── Battle tank: an indestructible tracked vehicle with a cannon (deployed from the Doomsday app) ───
+VEHICLES.tank = { name: 'Battle tank', L: 84, W: 48, accel: 150, brake: 320, rev: 80, max: 210, coast: 46, grip: 9, turn: 1.45, hp: 100000,
+  colors: ['#4a5138', '#3d4230', '#55584a', '#5a4a2e'], tank: true };
+function buildTank(c) {
+  const g = new THREE.Group(); g.rotation.order = 'YXZ';
+  const L = c.L, W = c.W, hull = cachedLam(c.color), dark = cachedLam('#20241a'), steel = cachedLam('#33372c');
+  const add = (geo, mat, x, y, z, parent = g) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; };
+  // Tracks and road wheels down each side
+  for (const sz of [-1, 1]) {
+    add(new THREE.BoxGeometry(L * 0.98, 14, W * 0.22), dark, 0, 7, sz * (W / 2 - W * 0.1));
+    for (let k = 0; k < 6; k++) add(new THREE.CylinderGeometry(6, 6, W * 0.2, 10).rotateX(Math.PI / 2), cachedLam('#14150e'), -L * 0.42 + k * (L * 0.84 / 5), 6, sz * (W / 2 - W * 0.1));
+  }
+  // Hull
+  const body = add(new THREE.BoxGeometry(L * 0.82, 14, W * 0.72), hull, 0, 16, 0);
+  add(new THREE.BoxGeometry(L * 0.5, 10, W * 0.66), hull, L * 0.16, 27, 0);            // upper glacis
+  add(new THREE.BoxGeometry(L * 0.3, 4, W * 0.6), steel, -L * 0.2, 25, 0);             // engine deck
+  // Turret and gun
+  const turret = new THREE.Group(); turret.position.set(-L * 0.02, 30, 0); g.add(turret);
+  add(new THREE.CylinderGeometry(W * 0.32, W * 0.36, 12, 12), hull, 0, 6, 0, turret);
+  add(new THREE.BoxGeometry(6, 4, 6), steel, W * 0.14, 11, W * 0.18, turret);          // cupola
+  add(new THREE.CylinderGeometry(2.6, 3, L * 0.54, 10).rotateZ(Math.PI / 2), dark, L * 0.32, 5, 0, turret);   // barrel
+  add(new THREE.BoxGeometry(7, 8, 8), steel, L * 0.04, 5, 0, turret);                  // mantlet
+  const beam = new THREE.Mesh(carGeo(c).beam, beamMat); g.add(beam);
+  const blob = new THREE.Mesh(blobGeo, blobMat); blob.scale.set(L + 24, 1, W + 22); blob.position.y = 0.4; g.add(blob);
+  g.userData = { body, cabin: null, beam, blob, turret, wreck: false, bw: L + 24, bd: W + 22 };
+  return g;
+}
+function tankExplode(x, y) {
+  cam.shake = Math.max(cam.shake, 6);
+  for (let k = 0; k < 26; k++) parts.push({ x, y, vx: (Math.random() - 0.5) * 320, vy: (Math.random() - 0.5) * 320, life: 0.5 + Math.random() * 0.6, max: 1.1, size: 6 + Math.random() * 12, kind: 'fire' });
+  sparks(x, y, 14);
+  for (const q of peds) if (q.state !== 'down' && Math.hypot(q.x - x, q.y - y) < 90) { q.state = 'down'; q.downT = 0; const a = Math.atan2(q.y - y, q.x - x); q.vx = Math.cos(a) * 320; q.vy = Math.sin(a) * 320; }
+  for (const c of cars) if (c !== player.car && !c.spec.air) { const dd = Math.hypot(c.x - x, c.y - y); if (dd < 130) { const a = Math.atan2(c.y - y, c.x - x); c.vx += Math.cos(a) * 520; c.vy += Math.sin(a) * 520; c.vz = (c.vz || 0) + 130; } }
+}
+function tankFire() {
+  const c = player.car; if (!c) return;
+  const a = c.a, mx = c.x + Math.cos(a) * (c.L * 0.6), my = c.y + Math.sin(a) * (c.L * 0.6);
+  Object.assign(muzzle, { x: mx, y: my, t: 0.1 }); cam.shake = Math.max(cam.shake, 7);
+  c.vx -= Math.cos(a) * 70; c.vy -= Math.sin(a) * 70;   // recoil
+  let hx = mx, hy = my;
+  for (let d = 20; d < 950; d += 12) { const px = c.x + Math.cos(a) * d, py = c.y + Math.sin(a) * d; if (solidPx(px, py)) break; hx = px; hy = py; }
+  for (let k = 0; k < 9; k++) parts.push({ x: mx + Math.cos(a) * k * 12, y: my + Math.sin(a) * k * 12, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, life: 0.12, max: 0.12, size: 3, kind: 'spark' });
+  tankExplode(hx, hy);
+  crime(45, 'Tank fired a shell');
+}
+function spawnTanks(n) {
+  if (player.region || player.interior) return 0;
+  let made = 0;
+  for (let i = 0; i < n * 6 && made < n; i++) {
+    const a = Math.random() * Math.PI * 2, d = 110 + Math.random() * 240;
+    const x = player.x + Math.cos(a) * d, y = player.y + Math.sin(a) * d, tx = Math.floor(x / T), ty = Math.floor(y / T);
+    if (tx < 1 || ty < 1 || tx >= GW - 1 || ty >= GH - 1) continue;
+    const t = grid[ty * GW + tx]; if (t === BLDG || t === WATER) continue;
+    cars.push(makeCar('tank', (tx + 0.5) * T, (ty + 0.5) * T, Math.random() * Math.PI * 2, { keep: true }));
+    made++;
+  }
+  return made;
 }
 function buildHeli(c) {
   const g = new THREE.Group(), tilt = new THREE.Group();
@@ -6549,6 +6616,10 @@ function doomsdayApp() {
   if (blocked) phNote(blocked);
   const b = phItem('☢  LAUNCH THE NUKE', 'Detonate a warhead over downtown Yerevan', () => { const r = startDisaster('nuke'); if (r !== 'Nuclear strike started') toast(r, '#ff8a7a'); else closePhone(); }, !!blocked);
   b.classList.add('wx-danger'); b.style.background = 'linear-gradient(135deg,#ff3b2f,#7a0f0f)'; b.style.color = '#fff'; b.style.borderColor = '#ff6a5a';
+  phNote('Armour');
+  const tankBlocked = player.region ? 'Tanks deploy in the city' : player.interior ? 'Step outside first' : '';
+  const tb = phItem('⊟  DEPLOY BATTLE TANKS', 'Drop three tanks on the street near you — get in and fire with F', () => { const n = spawnTanks(3); if (n) { toast(`${n} battle tank${n > 1 ? 's' : ''} deployed nearby`, '#9be08a'); closePhone(); } else toast('No open street to deploy on', '#ff8a7a'); }, !!tankBlocked);
+  tb.classList.add('wx-danger'); tb.style.background = 'linear-gradient(135deg,#5a6b34,#2a3018)'; tb.style.color = '#fff'; tb.style.borderColor = '#8aa04a';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
