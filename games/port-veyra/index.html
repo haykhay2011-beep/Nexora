@@ -3961,6 +3961,7 @@ function carGeo(c) {
 const taxiSignMat = basic(0xfff2c0), busStripeMat = lam('#1d1d22'), chromeMat = lam('#c8ccd0'), seatMat = lam('#1a1a1c');
 function buildCarMesh(c) {
   if (c.spec.tank) return buildTank(c);
+  if (c.spec.airliner) return buildAirliner(c);
   if (c.spec.bike) return buildBike(c);
   if (c.spec.air) return c.spec.air === 'heli' ? buildHeli(c) : buildPlane(c);
   if (c.spec.boat) return c.spec.yacht ? buildYacht(c) : buildBoat(c);
@@ -4062,6 +4063,32 @@ function tankFire() {
   for (let k = 0; k < 9; k++) parts.push({ x: mx + Math.cos(a) * k * 12, y: my + Math.sin(a) * k * 12, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, life: 0.12, max: 0.12, size: 3, kind: 'spark' });
   tankExplode(hx, hy);
   crime(45, 'Tank fired a shell');
+}
+// ─── Airliner: a flyable jet at Zvartnots (uses the same flight model as the prop plane) ───
+VEHICLES.airliner = { name: 'Armenia Airways jet', L: 150, W: 140, accel: 120, max: 600, turn: 0.8, hp: 400, colors: ['#eef1f4'], air: 'plane', takeoff: 240, airliner: true };
+function airlinerModel(parent, white, stripe, steel) {
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; };
+  const body = add(new THREE.CylinderGeometry(11, 11, 150, 16).rotateZ(Math.PI / 2), white, 0, 22, 0);
+  add(new THREE.ConeGeometry(11, 26, 16).rotateZ(-Math.PI / 2), white, 88, 22, 0);                                  // nose
+  add(new THREE.ConeGeometry(11, 20, 16).rotateZ(Math.PI / 2), white, -85, 24, 0);                                  // tail cone
+  const belt = add(new THREE.CylinderGeometry(11.2, 11.2, 150, 16).rotateZ(Math.PI / 2), stripe, 0, 24, 0); belt.scale.y = 0.28;
+  add(new THREE.BoxGeometry(10, 4, 16.5), glassMat, 78, 27, 0);                                                    // cockpit glass
+  for (const s of [-1, 1]) {
+    const wing = add(new THREE.BoxGeometry(38, 3, 70), white, -6, 20, s * 44); wing.rotation.x = s * 0.06;
+    add(new THREE.CylinderGeometry(6, 6, 18, 12).rotateZ(Math.PI / 2), steel, 2, 13, s * 40);                      // engine
+    add(new THREE.BoxGeometry(22, 2.5, 22), white, -66, 26, s * 20);                                                // tailplane
+  }
+  add(new THREE.BoxGeometry(28, 34, 3), white, -64, 40, 0);                                                         // fin
+  add(new THREE.BoxGeometry(14, 10, 3.4), stripe, -66, 46, 0);                                                      // fin livery
+  for (const [x, z] of [[62, 0], [-8, 10], [-8, -10]]) add(new THREE.CylinderGeometry(3, 3, 3, 10).rotateX(Math.PI / 2), wheelMat, x, 3, z);   // gear
+  return body;
+}
+function buildAirliner(c) {
+  const g = new THREE.Group(), tilt = new THREE.Group(); g.rotation.order = 'YXZ'; g.add(tilt);
+  const body = airlinerModel(tilt, cachedLam('#eef1f4'), cachedLam('#d94f3a'), cachedLam('#8a9096'));
+  const blob = new THREE.Mesh(blobGeo, blobMat); blob.scale.set(160, 1, 150); blob.position.y = 0.35; g.add(blob);
+  g.userData = { body, cabin: null, beam: null, blob, tilt, prop: null, wreck: false, bw: 160, bd: 150 };
+  return g;
 }
 function spawnTanks(n) {
   if (player.region || player.interior) return 0;
@@ -7143,7 +7170,7 @@ const GPT_QUICK = [['What should I do?', () => `What should I do next? Be specif
 
 // ─── Per-frame hook for all of the above ───────────────────────────────────
 function updateMore(dt) {
-  updateRegionGame(dt); updateHeritage(dt); updateFestivalsEtc(dt); updateLandmarks(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt); updateTV(dt);
+  updateRegionGame(dt); updateHeritage(dt); updateFestivalsEtc(dt); updateLandmarks(dt); updateRoadMarker(); updateProgress(dt); updateUmbrellas(); updateEmergency(dt); updateRadio(); updateCompanion(dt); updateTV(dt); updateAirport(dt);
 }
 
 for (const [id, def] of Object.entries(RG_DEF)) {
@@ -9407,6 +9434,73 @@ CAST_LOOKS.usher = { skin: '#d9a878', hair: '#2a201a', shirt: '#7a1020', pants: 
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ZVARTNOTS TERMINAL — the departures hall: check-in, the departures board, security, a café and Gate 1
+// ═══════════════════════════════════════════════════════════════════════════════
+INTERIORS.zvartnots = { name: 'Zvartnots · Departures', ox: -3200, oy: 8800, w: 600, h: 460, spawn: [300, 424], door: [300, 448],
+  street: { x: 74 * T, y: 14.9 * T, a: Math.PI / 2 }, solids: [] };
+CAST.agent = ['Check-in agent', '#9fd4e8'];
+{
+  const I = INTERIORS.zvartnots, il = (c, e = 0.42) => ilam(c, e);
+  IRoom(I, il('#c9ccd0', 0.45), il('#e8eaec', 0.45), il('#1f5aa8', 0.4));
+  // Apron windows along the north wall, with the sky and a jet on the stand beyond
+  IB(I, 20, 10, 580, 14, 52, basic(0x8fbfe0, { transparent: true, opacity: 0.85 }), { y: 6, shadow: false });
+  for (let k = 0; k <= 10; k++) IB(I, 20 + k * 56 - 2, 9, 20 + k * 56 + 2, 15, 58, il('#8a9096', 0.35));
+  // The departures board, centred on the window wall
+  const boardTex = canvasTex(320, 120, g => {
+    g.fillStyle = '#0b0f16'; g.fillRect(0, 0, 320, 120);
+    g.fillStyle = '#f2c230'; g.font = 'bold 13px Arial'; g.fillText('DEPARTURES · ԱՐՏԱԹՌԻՉՔ', 10, 18);
+    const rows = [['10:15', 'GYUMRI', 'A1', 'ON TIME'], ['10:40', 'PARIS CDG', 'A3', 'BOARDING'], ['11:05', 'MOSCOW', 'B2', 'DELAYED'], ['11:30', 'DUBAI', 'B4', 'ON TIME'], ['12:00', 'LAKE SEVAN', 'H1', 'ON TIME'], ['12:20', 'TBILISI', 'A2', 'GATE OPEN']];
+    g.font = '12px Arial';
+    rows.forEach((r, i) => { const y = 38 + i * 14; g.fillStyle = '#e8e4dc'; g.fillText(r[0], 10, y); g.fillText(r[1], 60, y); g.fillText(r[2], 180, y); g.fillStyle = r[3] === 'DELAYED' ? '#ff6a5a' : r[3] === 'BOARDING' ? '#7fe0a0' : '#9fd4e8'; g.fillText(r[3], 222, y); });
+  }, false);
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(170, 64), basic(0xffffff, { map: boardTex })); board.position.set(I.ox + 300, 38, I.oy + 17); interiorGroup.add(board);
+  IB(I, 212, 14, 388, 18, 70, il('#1a1d22', 0.3), { y: 4 });
+  // Check-in counters on the west side, with the baggage belt behind
+  IB(I, 30, 110, 230, 138, 20, il('#1f5aa8', 0.38), { solid: true }); IB(I, 28, 108, 232, 140, 2, il('#dfe3e6', 0.45), { y: 20 });
+  IB(I, 30, 84, 230, 92, 8, il('#2a2c30', 0.3));                                        // baggage belt
+  for (const x of [60, 130, 200]) { IB(I, x - 10, 118, x + 10, 130, 6, il('#111418', 0.3), { y: 21 }); const sc = new THREE.Mesh(new THREE.PlaneGeometry(16, 9), basic(0x3fa0ff)); sc.position.set(I.ox + x, 32, I.oy + 124.5); interiorGroup.add(sc); }
+  for (const [x, y] of [[70, 170], [100, 176], [150, 168], [190, 180]]) IB(I, x - 7, y - 5, x + 7, y + 5, 12, il(pick(['#2f4a7a', '#7a1d2a', '#2a2c30', '#6a5a2a']), 0.35));   // suitcases in the queue
+  // Security: a walk-through frame and a scanner belt on the east side
+  IB(I, 420, 180, 430, 220, 44, il('#8a9096', 0.35), { solid: true }); IB(I, 470, 180, 480, 220, 44, il('#8a9096', 0.35), { solid: true }); IB(I, 420, 178, 480, 182, 4, il('#8a9096', 0.35), { y: 44 });
+  IB(I, 500, 180, 580, 206, 16, il('#2a2c30', 0.32), { solid: true });
+  // Gate 1 on the east wall, out to the apron
+  IB(I, 560, 80, 590, 150, 56, il('#1f5aa8', 0.4));
+  const gateSign = new THREE.Mesh(new THREE.PlaneGeometry(40, 12), basic(0xf2c230)); gateSign.position.set(I.ox + 575, 62, I.oy + 151); interiorGroup.add(gateSign);
+  // Waiting lounge: rows of seats
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 7; c++) { const x = 290 + c * 38, y = 270 + r * 40; IB(I, x - 14, y - 7, x + 14, y + 7, 8, il('#3a3d44', 0.35), { solid: true }); IB(I, x - 14, y + 5, x + 14, y + 8, 18, il('#1f5aa8', 0.38)); }
+  // Café kiosk in the south-west corner
+  IB(I, 30, 300, 150, 330, 22, il('#5a3a26', 0.4), { solid: true }); IB(I, 28, 298, 152, 332, 2, il('#dfe3e6', 0.45), { y: 22 });
+  IB(I, 30, 280, 150, 286, 46, il('#3a2a1e', 0.35));
+  const cafeSign = new THREE.Mesh(new THREE.PlaneGeometry(60, 12), basic(0x7fe0a0)); cafeSign.position.set(I.ox + 90, 50, I.oy + 287); interiorGroup.add(cafeSign);
+  // People
+  for (const x of [60, 130, 200]) INPC(I, x, 100, Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#1f5aa8', pants: '#1a1d22', face: true });   // check-in agents
+  INPC(I, 450, 236, -Math.PI / 2, { skin: '#b98a66', hair: '#1c1a18', shirt: '#2a2c30', pants: '#1a1a1e', cap: true });    // security officer
+  INPC(I, 90, 270, Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#f2efe8', pants: '#2a2c30' });               // barista
+  INPC(I, 540, 130, Math.PI, { skin: '#d9a878', hair: '#3a2a1e', shirt: '#f2efe8', pants: '#1a2438', cap: true });          // pilot at the gate
+  for (const [x, y, a] of [[80, 196, -Math.PI / 2], [140, 200, -Math.PI / 2], [328, 300, -Math.PI / 2], [404, 340, -Math.PI / 2], [250, 230, 0.6]])
+    INPC(I, x, y, a, { skin: pick(SKINS), hair: pick(HAIR), shirt: pick(SHIRTS), pants: pick(PANTS) });                    // travellers
+  // Interactions
+  addInteract('zvartnots', 300, 448, 28, 'Leave the terminal', exitInterior);
+  addInteract('zvartnots', 130, 150, 40, 'Talk to the check-in agent', () => talk([
+    ['agent', 'Bari galust Zvartnots! Voreq e dzer chvertomsy?', 'Welcome to Zvartnots! Where is your ticket?'],
+    ['you', 'Uzum em tesnel amboghj Hayastany.', 'I want to see all of Armenia.'],
+    ['agent', 'Mer inknatiriry tsank e: Gyumri, Sevan, Tatev... Kam gnatsek Darpas 1 — dzer jety patrast e.', 'Our planes fly everywhere: Gyumri, Sevan, Tatev... Or head to Gate 1 — your jet is ready.'],
+    ['agent', 'Bari chanaparh!', 'Have a good trip!']]));
+  addInteract('zvartnots', 300, 80, 40, 'Read the departures board', () => showMenu({ eyebrow: 'Zvartnots · EVN', title: 'Departures',
+    body: '<p><b>Zvartnots International Airport</b> opened in 1961, named after the 7th-century Zvartnots cathedral. Its round terminal ringed by a raised control tower is a landmark of Soviet-modern design.</p><p class="muted">Today: Gyumri · Paris · Moscow (delayed) · Dubai · Lake Sevan · Tbilisi.</p>', options: [] }));
+  addInteract('zvartnots', 200, 440, 36, 'Book a flight across Armenia', () => { exitInterior(); openPicker(); });
+  addInteract('zvartnots', 90, 346, 36, 'Buy a coffee at the café · $8 (+15 health)', () => { if (!pay(8)) return; player.hp = Math.min(100, player.hp + 15); toast('Armenian coffee, strong and sweet. +15 health', '#7fe0a0'); });
+  addInteract('zvartnots', 540, 150, 40, 'Board your jet at Gate 1', () => {
+    exitInterior();
+    const j = window.__zvt && window.__zvt.jet; if (!j) return;
+    if (!cars.includes(j)) cars.push(j);
+    Object.assign(j, { wreck: false, hp: j.spec.hp, vx: 0, vy: 0, vz: 0, z: 0, x: 88 * T, y: 15.5 * T, a: Math.PI, ai: null });
+    player.car = j; j.lastRear = null; player.x = j.x; player.y = j.y;
+    showBanner('Cleared for takeoff', 'W throttle up · Shift pull up past takeoff speed · Z dive', '#9fd4e8', 4);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // DRIVABLE BOATS — sail Hayastan Bay, and set out for Lake Sevan
 // A motorboat that floats on water and is blocked by land (the inverse of a car). Board it from the
 // quays along the bay. From open water you can sail to Lake Sevan with a short cinematic voyage.
@@ -9815,20 +9909,26 @@ function updateCockpit(dt) {
   const tw = new THREE.Mesh(new THREE.CylinderGeometry(9, 13, 96, 14), conc); tw.position.set(twx, 48, twz); tw.castShadow = true; scene.add(tw);
   const cab = new THREE.Mesh(new THREE.CylinderGeometry(18, 15, 16, 14), glassM); cab.position.set(twx, 102, twz); scene.add(cab);
   const cabRoof = new THREE.Mesh(new THREE.CylinderGeometry(21, 21, 4, 14), roofM); cabRoof.position.set(twx, 112, twz); cabRoof.castShadow = true; scene.add(cabRoof);
-  // A parked airliner on the apron east of the terminal
-  {
-    const white = lamE('#eef1f4', 0.28), strM = lamE('#d94f3a', 0.3), plane = new THREE.Group();
-    const fus = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 150, 16).rotateZ(Math.PI / 2), white); fus.position.y = 22; plane.add(fus);
-    const nose = new THREE.Mesh(new THREE.ConeGeometry(11, 26, 16).rotateZ(-Math.PI / 2), white); nose.position.set(88, 22, 0); plane.add(nose);
-    const belt = new THREE.Mesh(new THREE.CylinderGeometry(11.2, 11.2, 150, 16).rotateZ(Math.PI / 2), strM); belt.scale.y = 0.28; belt.position.y = 24; plane.add(belt);
-    for (const s of [-1, 1]) { const wing = new THREE.Mesh(new THREE.BoxGeometry(38, 3, 70), white); wing.position.set(-6, 20, s * 44); wing.rotation.x = s * 0.06; plane.add(wing); const eng = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 18, 12).rotateZ(Math.PI / 2), steel); eng.position.set(2, 13, s * 40); plane.add(eng); }
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(28, 34, 3), white); tail.position.set(-64, 40, 0); plane.add(tail);
-    const hstab = new THREE.Mesh(new THREE.BoxGeometry(24, 2.5, 44), white); hstab.position.set(-66, 26, 0); plane.add(hstab);
-    plane.position.set(tx + 30, 0, tz + 190); plane.rotation.y = -0.5; plane.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(plane);
-  }
+  // A flyable jet waiting at the east end of the runway, nose pointing down the strip
+  const jet = makeCar('airliner', 88 * T2, 15.5 * T2, Math.PI, { keep: true });
+  cars.push(jet);
+  // Another airliner circling the city on approach, for life in the sky
+  const skyPlane = new THREE.Group(); airlinerModel(skyPlane, lamE('#eef1f4', 0.3), lamE('#1f5aa8', 0.3), steel);
+  skyPlane.traverse(o => { if (o.isMesh) o.castShadow = false; }); scene.add(skyPlane);
+  window.__zvt = { jet, skyPlane, cx: 62 * T2, cz: 22 * T2, R: 1500, alt: 360, a: 0 };
   postSign(70 * T2, 14.4 * T2, 'ZVARTNOTS', 'International Airport · Զվարթնոց', '#123a52', '#e6f0f6', 32);
-  interactables.push({ x: tx, y: tz + 116, r: 44, when: () => !player.region && !player.car, label: 'Read about Zvartnots Airport', act: () => showMenu({ eyebrow: 'Zvartnots', title: 'Zvartnots International Airport',
-    body: '<p><b>Zvartnots</b> (Զվարթնոց) is Yerevan’s international gateway, opened in 1961 and named after the 7th-century Zvartnots cathedral nearby. Its round terminal ringed by a raised control tower is a landmark of Soviet-modern architecture.</p><p class="muted">Code: EVN · flights across Armenia leave from here.</p>', options: [] }) });
+  interactables.push({ x: tx, y: 14.3 * T2, r: 46, when: () => !player.region && !player.car && mode === 'play', label: 'Enter Zvartnots terminal', act: () => { enterInterior('zvartnots'); showBanner('Zvartnots Airport', 'Departures · Արտաթռիչք', '#9fd4e8', 3.5); } });
+}
+// The circling airliner: a wide banked loop over the city, hidden indoors and away from Yerevan
+function updateAirport(dt) {
+  const Z = window.__zvt; if (!Z) return;
+  const on = !player.region && !player.interior && mode !== 'title';
+  Z.skyPlane.visible = on; if (!on) return;
+  Z.a += dt * 0.07;
+  const a = Z.a, x = Z.cx + Math.cos(a) * Z.R, z = Z.cz + Math.sin(a) * Z.R * 0.6, y = Z.alt + Math.sin(a * 2) * 40;
+  Z.skyPlane.position.set(x, y, z);
+  const hx = -Math.sin(a) * Z.R, hz = Math.cos(a) * Z.R * 0.6;   // heading = derivative of the path
+  Z.skyPlane.rotation.order = 'YXZ'; Z.skyPlane.rotation.set(-0.35, -Math.atan2(hz, hx), 0);   // bank into the turn
 }
 function updateLandmarks(dt) {
   const L = window.__yerLm; if (!L) return;
