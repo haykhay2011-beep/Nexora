@@ -1,7 +1,7 @@
 <title>YEREVAN: The Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Bungee&family=Russo+One&family=Noto+Serif+Armenian:wght@500&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Armenian:wght@500&display=swap">
 <style>
   :root {
     color-scheme: dark;
@@ -11,8 +11,8 @@
     --amber: #ffb347;
     --line: #2c2f36;
     --panel: rgba(12, 14, 18, 0.86);
-    --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    --display: Arial, Helvetica, sans-serif;
+    --mono: Arial, Helvetica, sans-serif;
   }
   [hidden] { display: none !important; }
   html, body { margin: 0; height: 100%; background: var(--night); color: var(--paper); overflow: hidden; }
@@ -213,7 +213,7 @@
       repeating-linear-gradient(100deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.2) 9%, rgba(255,255,255,0.08) 18%);
     background-size: 100% 100%, 200% 100%; animation: ripple 7s linear infinite; }
   .ld-wrap { position: relative; width: 100%; max-width: 30rem; display: grid; gap: 1rem; justify-items: center; text-align: center; }
-  .ld-logo { margin: 0 0 0.6rem; display: grid; line-height: 0.86; font: 400 clamp(2.8rem, 13vw, 4.4rem)/0.86 "Bungee", "Russo One", Impact, sans-serif;
+  .ld-logo { margin: 0 0 0.6rem; display: grid; line-height: 0.86; font: 400 clamp(2.8rem, 13vw, 4.4rem)/0.86 Arial, Helvetica, sans-serif;
     color: #f4e6c8; -webkit-text-stroke: 3px #10181c; paint-order: stroke fill; text-shadow: 0 5px 0 #0a1014; }
   .ld-logo .ld-o { color: #f2a23a; }
   .ld-bar { width: 100%; height: 14px; box-sizing: border-box; border-radius: 7px; padding: 2px; background: #0b1114; border: 2px solid #5d7c86;
@@ -221,7 +221,7 @@
   .ld-fill { height: 100%; width: 0%; border-radius: 4px; transition: width .18s ease-out;
     background: linear-gradient(90deg, #d90012 0 33.3%, #2a5ad6 33.3% 66.6%, #f2a800 66.6%); background-size: 30rem 100%;
     box-shadow: 0 0 12px rgba(242,168,0,0.5); }
-  .ld-status { margin: 0; font: 400 0.95rem/1.2 "Russo One", var(--display); letter-spacing: 0.05em; color: #fff4dc; display: flex; gap: 0.6rem; }
+  .ld-status { margin: 0; font: 400 0.95rem/1.2 var(--display); letter-spacing: 0.05em; color: #fff4dc; display: flex; gap: 0.6rem; }
   .ld-status #ldPct { color: #f2a23a; min-width: 3ch; }
   .ld-tip { margin: 0; min-height: 2.6em; font-size: 0.78rem; line-height: 1.5; color: #d7cdb8; max-width: 44ch; }
   @media (prefers-reduced-motion: reduce) { .ld-shade { animation: none; } .ld-fill { transition: none; } }
@@ -236,7 +236,7 @@
   @keyframes ripple { from { background-position: 0 0, 0 0; } to { background-position: 0 0, -200% 0; } }
   .title-wrap { position: relative; width: 100%; max-width: 26rem; max-height: calc(100% - 24px); overflow-y: auto; display: grid; gap: 1.4rem; justify-items: center; padding-block: 12px; }
   .logo { margin: 0; display: grid; justify-items: center; line-height: 0.82; text-transform: uppercase; text-shadow: none; }
-  .logo-top, .logo-bot { font: 400 clamp(3.2rem, 17vw, 5.4rem)/0.86 "Bungee", "Russo One", Impact, sans-serif; letter-spacing: 0.02em;
+  .logo-top, .logo-bot { font: 700 clamp(3.2rem, 17vw, 5.4rem)/0.86 Arial, Helvetica, sans-serif; letter-spacing: 0.02em;
     color: #f4e6c8; -webkit-text-stroke: 3px #10181c; paint-order: stroke fill;
     text-shadow: 0 5px 0 #0a1014, 0 0 30px rgba(0,0,0,0.45); }
   .logo-bot { background: linear-gradient(#ffcf7a 20%, #f2922c 90%); -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -249,7 +249,7 @@
   .rivet { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c9e3ea, #45606a); }
   .rivet.tl { top: 6px; left: 6px; } .rivet.tr { top: 6px; right: 6px; } .rivet.bl { bottom: 6px; left: 6px; } .rivet.br { bottom: 6px; right: 6px; }
   .title-menu { display: grid; gap: 0.45rem; }
-  .gr-btn { width: 100%; font: 400 1.02rem/1 "Russo One", var(--display); letter-spacing: 0.04em; color: #eef6f7; cursor: pointer;
+  .gr-btn { width: 100%; font: 400 1.02rem/1 var(--display); letter-spacing: 0.04em; color: #eef6f7; cursor: pointer;
     padding: 0.62rem 1rem; border-radius: 7px; border: 1px solid #06090b;
     background: linear-gradient(#2a3a41 0%, #16242a 48%, #0e181c 52%, #142126 100%);
     box-shadow: inset 0 1px 0 rgba(200,235,242,0.28), inset 0 -1px 0 rgba(0,0,0,0.5), 0 0 0 1px #3a5059; transition: box-shadow .12s, color .12s, transform .08s; }
@@ -259,7 +259,7 @@
   #startBtn { color: #ffd896; }
   .gr-btn.back { margin-top: 0.2rem; }
   .tpanel { color: var(--paper); }
-  .tpanel .panel-head { font-family: "Russo One", var(--display); font-weight: 400; color: #bff4fa; }
+  .tpanel .panel-head { font-family: var(--display); font-weight: 400; color: #bff4fa; }
   .tpanel .keys { grid-template-columns: 1fr; border-top-color: #2a3e45; max-height: 46vh; overflow-y: auto; }
   .story-hint { text-align: center; color: #fff4dc; text-shadow: 0 1px 3px #000; }
   .tpanel .toggles { grid-template-columns: 1fr 1fr; gap: 0 0.8rem; }
@@ -3589,13 +3589,13 @@ function signTex(w, h, draw) {
 const casinoSignTex = signTex(512, 160, (g, w, h) => {
   g.fillStyle = '#1a0a1a'; g.fillRect(0, 0, w, h);
   g.strokeStyle = '#ffcf5a'; g.lineWidth = 6; g.strokeRect(8, 8, w - 16, h - 16);
-  g.textAlign = 'center'; g.fillStyle = '#ffd36a'; g.font = '800 64px "Big Shoulders Display", Impact, sans-serif';
+  g.textAlign = 'center'; g.fillStyle = '#ffd36a'; g.font = '800 64px Arial, Helvetica, sans-serif';
   g.shadowColor = '#ffb347'; g.shadowBlur = 18; g.fillText('THE GILDED ANCHOR', w / 2, 82);
-  g.fillStyle = '#ff6fd8'; g.shadowColor = '#ff6fd8'; g.font = '800 40px "Big Shoulders Display", Impact, sans-serif'; g.fillText('C A S I N O', w / 2, 132);
+  g.fillStyle = '#ff6fd8'; g.shadowColor = '#ff6fd8'; g.font = '800 40px Arial, Helvetica, sans-serif'; g.fillText('C A S I N O', w / 2, 132);
 });
 const flatsSignTex = signTex(384, 96, (g, w, h) => {
   g.fillStyle = '#2a1c16'; g.fillRect(0, 0, w, h);
-  g.textAlign = 'center'; g.fillStyle = '#f2e2c4'; g.font = '800 52px "Big Shoulders Display", Impact, sans-serif'; g.fillText('LARKFIELD FLATS', w / 2, 66);
+  g.textAlign = 'center'; g.fillStyle = '#f2e2c4'; g.font = '800 52px Arial, Helvetica, sans-serif'; g.fillText('LARKFIELD FLATS', w / 2, 66);
 });
 const doorGlowMats = [];
 function buildMansionFront(x, z, w, d, h) {
@@ -3610,7 +3610,7 @@ function buildMansionFront(x, z, w, d, h) {
 }
 const museumSignTex = signTex(512, 64, (g, w, h) => {
   g.fillStyle = '#e8e2d4'; g.fillRect(0, 0, w, h);
-  g.fillStyle = '#3a3226'; g.textAlign = 'center'; g.font = '800 40px "Big Shoulders Display", Impact, sans-serif'; g.fillText('HAYASTAN MUSEUM OF ART', w / 2, 46, w - 24);
+  g.fillStyle = '#3a3226'; g.textAlign = 'center'; g.font = '800 40px Arial, Helvetica, sans-serif'; g.fillText('HAYASTAN MUSEUM OF ART', w / 2, 46, w - 24);
 });
 function buildMuseumFront(x, zFace, w) {
   const stone = lam('#e2dccd'), zc = zFace - 14;
@@ -3779,9 +3779,9 @@ function gantry(x, zA, zB, text, facingEast, shield) {
     g.fillStyle = '#1f6b3a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#f2efe8'; g.lineWidth = 4; g.strokeRect(6, 6, w - 12, h - 12);
     g.fillStyle = '#2c4f9a'; g.beginPath(); g.moveTo(22, 30); g.lineTo(84, 30); g.lineTo(84, 70); g.quadraticCurveTo(53, 104, 22, 70); g.closePath(); g.fill();
     g.fillStyle = '#c0282e'; g.fillRect(22, 30, 62, 12);
-    g.fillStyle = '#f2efe8'; g.textAlign = 'center'; g.font = '800 30px "Big Shoulders Display", Impact, sans-serif'; g.fillText(shield, 53, 76);
-    g.textAlign = 'left'; g.font = '800 34px "Big Shoulders Display", Impact, sans-serif'; g.fillText(text[0], 104, 56);
-    g.font = '600 24px "Big Shoulders Display", Impact, sans-serif'; g.fillText(text[1], 104, 94);
+    g.fillStyle = '#f2efe8'; g.textAlign = 'center'; g.font = '800 30px Arial, Helvetica, sans-serif'; g.fillText(shield, 53, 76);
+    g.textAlign = 'left'; g.font = '800 34px Arial, Helvetica, sans-serif'; g.fillText(text[0], 104, 56);
+    g.font = '600 24px Arial, Helvetica, sans-serif'; g.fillText(text[1], 104, 94);
   });
   const post = lam('#9aa0a6');
   for (const z of [zA, zB]) { const m = new THREE.Mesh(new THREE.BoxGeometry(3, 58, 3), post); m.position.set(x, 29, z); scene.add(m); }
@@ -3809,8 +3809,8 @@ const forSaleSigns = {};
 function postSign(x, z, l1, l2, bg, fg, h = 34, parent = scene) {
   const tex = signTex(256, 96, (g, w, hh) => {
     g.fillStyle = bg; g.fillRect(0, 0, w, hh); g.strokeStyle = fg; g.lineWidth = 4; g.strokeRect(5, 5, w - 10, hh - 10);
-    g.fillStyle = fg; g.textAlign = 'center'; g.font = '800 34px "Big Shoulders Display", Impact, sans-serif'; g.fillText(l1, w / 2, 44, w - 20);
-    g.font = '600 22px "Big Shoulders Display", Impact, sans-serif'; g.fillText(l2, w / 2, 76);
+    g.fillStyle = fg; g.textAlign = 'center'; g.font = '800 34px Arial, Helvetica, sans-serif'; g.fillText(l1, w / 2, 44, w - 20);
+    g.font = '600 22px Arial, Helvetica, sans-serif'; g.fillText(l2, w / 2, 76);
   });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, h, 6), lam('#3a3d44')); pole.position.set(x, h / 2, z); parent.add(pole);
   const mat = basic(0xffffff, { map: tex });
@@ -4648,7 +4648,7 @@ for (const [id, M] of Object.entries(MANSIONS)) { const g = new THREE.Group(); s
     door.position.set(fx, small ? 10 : 12, fz); door.rotation.y = Math.PI / 2 - a; scene.add(door);
     const col = COMMERCIAL[e.type];
     if (col) {
-      const tex = signTex(256, 64, (g, w, h) => { g.fillStyle = col[0]; g.fillRect(0, 0, w, h); g.fillStyle = col[1]; g.textAlign = 'center'; g.font = '800 34px "Big Shoulders Display", Impact, sans-serif'; g.fillText(e.name.toUpperCase(), w / 2, 44, w - 16); });
+      const tex = signTex(256, 64, (g, w, h) => { g.fillStyle = col[0]; g.fillRect(0, 0, w, h); g.fillStyle = col[1]; g.textAlign = 'center'; g.font = '800 34px Arial, Helvetica, sans-serif'; g.fillText(e.name.toUpperCase(), w / 2, 44, w - 16); });
       const sign = new THREE.Mesh(new THREE.PlaneGeometry(52, 13), basic(0xffffff, { map: tex }));
       sign.position.set(fx + ox * 0.6, 32, fz + oz * 0.6); sign.rotation.y = Math.PI / 2 - a; scene.add(sign);
     }
@@ -9757,7 +9757,7 @@ let luckyWheel = null;
   IB(I, 248, 10, 272, 18, 16, ilam('#2a1a12'));
   const horseTex = canvasTex(256, 144, g => {
     g.fillStyle = '#123a1e'; g.fillRect(0, 0, 256, 144);
-    g.fillStyle = '#f2efe8'; g.font = '800 22px Impact, sans-serif'; g.fillText('INSIDE TRACK', 12, 28);
+    g.fillStyle = '#f2efe8'; g.font = '800 22px Arial, Helvetica, sans-serif'; g.fillText('INSIDE TRACK', 12, 28);
     for (let k = 0; k < 6; k++) { g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(12, 40 + k * 16, 232, 12); g.fillStyle = ['#c0282e', '#2d6bff', '#d9a441', '#f2efe8', '#8a5aa6', '#1f6b3a'][k]; g.fillRect(12 + 20 * k + 40, 41 + k * 16, 16, 10); }
   }, false);
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(64, 36), basic(0xffffff, { map: horseTex })); scr.position.set(I.ox + 10.8, 36, I.oy + 150); scr.rotation.y = Math.PI / 2; interiorGroup.add(scr);
@@ -9900,7 +9900,7 @@ addInteract('apartment', 70, 150, 42, 'Change the TV channel', () => {
   postInteriorSign(I, 256, 232, 'GARAGE');
 }
 function postInteriorSign(I, x, y, text) {
-  const tex = canvasTex(128, 32, g => { g.fillStyle = '#1a1a1e'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#f2c230'; g.font = '800 20px Impact, sans-serif'; g.textAlign = 'center'; g.fillText(text, 64, 24); }, false);
+  const tex = canvasTex(128, 32, g => { g.fillStyle = '#1a1a1e'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#f2c230'; g.font = '800 20px Arial, Helvetica, sans-serif'; g.textAlign = 'center'; g.fillText(text, 64, 24); }, false);
   const m = new THREE.Mesh(new THREE.PlaneGeometry(40, 10), basic(0xffffff, { map: tex })); m.position.set(I.ox + x, 46, I.oy + y); m.rotation.x = 0.0; interiorGroup.add(m);
 }
 // Your personal car, kept parked by Larkfield Flats; the garage drives you out into it
@@ -10329,8 +10329,8 @@ function updateCamera(dt) {
   if (rideCam && RG.active) rideCam();                 // the Tatev cable car owns the camera during the ride
 }
 
-const DISPLAY = '"Big Shoulders Display", "Arial Narrow", Impact, sans-serif';
-const MONO = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
+const DISPLAY = 'Arial, Helvetica, sans-serif';
+const MONO = 'Arial, Helvetica, sans-serif';
 const SERIF_HY = '"Noto Serif Armenian", serif';
 
 function drawStar(x, y, r, fill, stroke) {
