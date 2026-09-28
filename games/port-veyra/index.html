@@ -570,7 +570,7 @@ const DISTRICTS = {
   park:        { name: 'Larkfield Commons' },
   docks:       { name: 'Port Zeytun' },
   bay:         { name: 'Hayastan Bay' },
-  airfield:    { name: 'Hayastan Municipal Airfield' },
+  airfield:    { name: 'Zvartnots International Airport' },
   eastshore:   { name: 'Eastshore' },
   heights:     { name: 'Cedar Heights' },
 };
@@ -3143,7 +3143,7 @@ function phoneApp(app) {
     if (player.car && player.car.spec.boat && !player.region) { const onWater = grid[Math.floor(player.car.y / T) * GW + Math.floor(player.car.x / T)] === WATER; phItem('Sail to Lake Sevan', onWater ? 'Cast off across the bay' : 'Sail out onto open water first', () => { closePhone(); startBoatVoyage(); }, !onWater || stars() > 0); }
     const blocked = player.region ? 'Cabs only run in the city. Use Hayagram to fly back' : stars() > 0 ? 'Cabs will not pick up someone the police are chasing' : player.car ? 'Get out of your vehicle first' : player.interior ? 'Step outside first' : activity ? 'Not during a job' : '';
     if (blocked) phNote(blocked);
-    const dests = [['Your apartment', { x: 26 * T, y: 32.65 * T }], ['The Gilded Anchor', PLACES.casinoDoor], ['Hayastan Customs', PLACES.customs], ['Hayastan Municipal Airfield', { x: 68 * T, y: 12.6 * T }]];
+    const dests = [['Your apartment', { x: 26 * T, y: 32.65 * T }], ['The Gilded Anchor', PLACES.casinoDoor], ['Hayastan Customs', PLACES.customs], ['Zvartnots International Airport', { x: 74 * T, y: 15.6 * T }]];
     for (const [id, M] of Object.entries(MANSIONS)) if (mansionState[id].owned) dests.push([M.name, M.door]);
     if (waypoint) dests.unshift(['Your waypoint', waypoint]);
     for (const [name, at] of dests) {
@@ -7289,7 +7289,7 @@ function cityPlaces() {
     [PLACES.casinoDoor.x, PLACES.casinoDoor.y, '#ff6fd8', '♠', 'Gilded Anchor Casino'],
     [26 * T, 32.65 * T, '#f2e2c4', '⌂', 'Your apartment'],
     [PLACES.customs.x, PLACES.customs.y, '#f28a1e', '⚙', 'Hayastan Customs'],
-    [68 * T, 12.6 * T, '#9fd4e8', '✈', 'Municipal Airfield'],
+    [74 * T, 15.6 * T, '#9fd4e8', '✈', 'Zvartnots Airport'],
     [PLACES.freighter.x, PLACES.freighter.y, '#ffd35a', '⚓', 'Freighter'],
   ];
   const SEEN = new Set();
@@ -9789,6 +9789,46 @@ function updateCockpit(dt) {
   interactables.push({ x: fx2, y: fz2 + 6, r: 30, when: () => !player.region && !player.car, label: 'Read the war memorial plaque', act: () => showMenu({ eyebrow: 'Victory Park · 1950', title: 'The Eternal Flame', body: '<p>Victory Park (Haghtanak Park) was laid out in 1950 on the northern heights of Yerevan to honour the victory in the Second World War and the sons of Armenia who fell in it.</p><p>The colossal <b>Mother Armenia</b> — <i>Mayr Hayastan</i> — took the pedestal in 1967. She holds a sword across her hands with a shield at her feet: the nation, watchful and at peace.</p>', options: [] }) });
   interactables.push({ x: 34.6 * T2, y: 8.8 * T2, r: 28, when: () => !player.region && !player.car, label: 'Rest on a bench and take in the view (+20 health)', act: () => { player.hp = Math.min(100, player.hp + 20); toast('You sit a while. Birdsong, rustling leaves, all Yerevan below. +20 health', '#9be08a'); } });
   interactables.push({ x: 39.4 * T2, y: 4 * T2, r: 26, when: () => !player.region && !player.car, label: 'Photo point: the city from the heights', act: () => showBanner('Victory Park overlook', 'Yerevan spreads out below, with Ararat on the far horizon', '#9be08a', 3.5) });
+}
+// ═══════════════════════════════════════════════════════════════════════════════
+// ZVARTNOTS INTERNATIONAL AIRPORT — the round terminal and control tower on the apron by the runway
+// ═══════════════════════════════════════════════════════════════════════════════
+{
+  const T2 = T, lamE = (c, e = 0.3) => lam(c, { emissive: new THREE.Color(c).multiplyScalar(e) });
+  const conc = lamE('#c8c4bc', 0.26), glassM = basic(0x22323f), steel = lamE('#8a9096', 0.3), roofM = lamE('#5a6470', 0.3);
+  const solidTiles = (tx0, ty0, tx1, ty1) => { for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) grid[ty * GW + tx] = BLDG; };
+  const tx = 74 * T2, tz = 11.5 * T2;
+  solidTiles(72, 9, 76, 13);
+  // Apron pad
+  const pad = new THREE.Mesh(new THREE.CircleGeometry(160, 40).rotateX(-Math.PI / 2), lamE('#3a3d42', 0.22)); pad.position.set(tx, 0.5, tz); pad.receiveShadow = true; scene.add(pad);
+  // The round terminal: concrete base, glass ring, crowning roof with radiating petals (the Zvartnots look)
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(98, 104, 10, 36), conc); base.position.set(tx, 5, tz); base.castShadow = base.receiveShadow = true; scene.add(base);
+  const gring = new THREE.Mesh(new THREE.CylinderGeometry(92, 92, 34, 36, 1, true), glassM); gring.position.set(tx, 27, tz); scene.add(gring);
+  for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; const mul = new THREE.Mesh(new THREE.BoxGeometry(2.5, 34, 3), conc); mul.position.set(tx + Math.cos(a) * 92, 27, tz + Math.sin(a) * 92); mul.rotation.y = -a; scene.add(mul); }   // mullions
+  const rooftop = new THREE.Mesh(new THREE.CylinderGeometry(108, 100, 8, 36), roofM); rooftop.position.set(tx, 48, tz); rooftop.castShadow = true; scene.add(rooftop);
+  for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2; const fin = new THREE.Mesh(new THREE.BoxGeometry(30, 3, 11), roofM); fin.position.set(tx + Math.cos(a) * 110, 52, tz + Math.sin(a) * 110); fin.rotation.y = -a; fin.castShadow = true; scene.add(fin); }
+  // Entrance canopy on the south (landside) face
+  const canopy = new THREE.Mesh(new THREE.BoxGeometry(130, 3, 32), steel); canopy.position.set(tx, 20, tz + 100); canopy.castShadow = true; scene.add(canopy);
+  for (const dx of [-56, 0, 56]) { const col = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 20, 10), steel); col.position.set(tx + dx, 10, tz + 112); col.castShadow = true; scene.add(col); }
+  // Control tower
+  const twx = tx - 138, twz = tz - 34; solidTiles(72, 7, 72, 8);
+  const tw = new THREE.Mesh(new THREE.CylinderGeometry(9, 13, 96, 14), conc); tw.position.set(twx, 48, twz); tw.castShadow = true; scene.add(tw);
+  const cab = new THREE.Mesh(new THREE.CylinderGeometry(18, 15, 16, 14), glassM); cab.position.set(twx, 102, twz); scene.add(cab);
+  const cabRoof = new THREE.Mesh(new THREE.CylinderGeometry(21, 21, 4, 14), roofM); cabRoof.position.set(twx, 112, twz); cabRoof.castShadow = true; scene.add(cabRoof);
+  // A parked airliner on the apron east of the terminal
+  {
+    const white = lamE('#eef1f4', 0.28), strM = lamE('#d94f3a', 0.3), plane = new THREE.Group();
+    const fus = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 150, 16).rotateZ(Math.PI / 2), white); fus.position.y = 22; plane.add(fus);
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(11, 26, 16).rotateZ(-Math.PI / 2), white); nose.position.set(88, 22, 0); plane.add(nose);
+    const belt = new THREE.Mesh(new THREE.CylinderGeometry(11.2, 11.2, 150, 16).rotateZ(Math.PI / 2), strM); belt.scale.y = 0.28; belt.position.y = 24; plane.add(belt);
+    for (const s of [-1, 1]) { const wing = new THREE.Mesh(new THREE.BoxGeometry(38, 3, 70), white); wing.position.set(-6, 20, s * 44); wing.rotation.x = s * 0.06; plane.add(wing); const eng = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 18, 12).rotateZ(Math.PI / 2), steel); eng.position.set(2, 13, s * 40); plane.add(eng); }
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(28, 34, 3), white); tail.position.set(-64, 40, 0); plane.add(tail);
+    const hstab = new THREE.Mesh(new THREE.BoxGeometry(24, 2.5, 44), white); hstab.position.set(-66, 26, 0); plane.add(hstab);
+    plane.position.set(tx + 30, 0, tz + 190); plane.rotation.y = -0.5; plane.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(plane);
+  }
+  postSign(70 * T2, 14.4 * T2, 'ZVARTNOTS', 'International Airport · Զվարթնոց', '#123a52', '#e6f0f6', 32);
+  interactables.push({ x: tx, y: tz + 116, r: 44, when: () => !player.region && !player.car, label: 'Read about Zvartnots Airport', act: () => showMenu({ eyebrow: 'Zvartnots', title: 'Zvartnots International Airport',
+    body: '<p><b>Zvartnots</b> (Զվարթնոց) is Yerevan’s international gateway, opened in 1961 and named after the 7th-century Zvartnots cathedral nearby. Its round terminal ringed by a raised control tower is a landmark of Soviet-modern architecture.</p><p class="muted">Code: EVN · flights across Armenia leave from here.</p>', options: [] }) });
 }
 function updateLandmarks(dt) {
   const L = window.__yerLm; if (!L) return;
