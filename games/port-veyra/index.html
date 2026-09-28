@@ -5068,7 +5068,7 @@ function travelToInstant(key) {
   if (!hg.visited.has(key)) { hg.visited.add(key); hg.followers += 25; saveGame(); }
   setTimeout(() => { if (player.region === key) say('guide:' + key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true); }, 1600);
 }
-function travelHome() { if (player.region) quickTravelTo(-1); }
+function travelHome() { if (!player.region) return; if (REGIONS[player.region] && REGIONS[player.region].intl) flyToCity(null); else quickTravelTo(-1); }
 function travelHomeInstant() {
   if (!player.region) return;
   const b = regionBack || { x: 26 * T, y: 32.65 * T, a: 0 };
@@ -5391,6 +5391,7 @@ const REGION_BUILD = {
 };
 function buildRegion(R) {
   if (R.group) return;
+  if (R.intl) { buildIntlCity(R); return; }
   const g = R.group = new THREE.Group(); scene.add(g);
   let seed = R.oy + 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed & 0xffff) / 0x10000; };
   if (!R.gorge && !R.gorgeWest) { const gr = new THREE.Mesh(new THREE.CircleGeometry(7000, 48).rotateX(-Math.PI / 2), rmat(R.ground, 'ground')); gr.position.set(R.ox + 800, 0, R.oy + 800); gr.receiveShadow = true; g.add(gr); }
@@ -6182,7 +6183,7 @@ function setDestCollapsed(on) {
   (on ? destPill : document.getElementById('destClose')).focus({ preventScroll: true });
 }
 function updatePlacard() {
-  const show = !!player.region && (mode === 'play' || mode === 'picker') && QT.state === 'idle' && !RG.active;
+  const show = !!player.region && destIndex(player.region) >= 0 && (mode === 'play' || mode === 'picker') && QT.state === 'idle' && !RG.active;
   placardEl.hidden = !show || destCollapsed;
   destPill.hidden = !show || !destCollapsed;
   if (!show) return;
@@ -6252,7 +6253,7 @@ document.getElementById('destHome').addEventListener('click', () => quickTravelT
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && mode === 'picker') { e.preventDefault(); closePicker(); }
   if (e.target && e.target.tagName === 'INPUT') return;
-  if (mode === 'play' && player.region && !e.repeat) {
+  if (mode === 'play' && player.region && destIndex(player.region) >= 0 && !e.repeat) {
     if (e.code === 'BracketLeft') quickTravelTo(destIndex(player.region) - 1);
     else if (e.code === 'BracketRight') quickTravelTo(destIndex(player.region) + 1);
     else if (e.code === 'KeyG') openPicker();
@@ -7144,7 +7145,7 @@ function companionTip() {
   if (stars() > 0) return 'Police on you? Nova in Contacts can wipe your wanted level for a fee.';
   if (weather.disaster) return `A ${DISASTERS[weather.disaster.kind].name.toLowerCase()} is under way. Stay indoors or leave the area.`;
   if (R && !RG.done.has(R.key) && RG_DEF[R.key]) return `There is something to do here: ${RG_DEF[R.key].name}. Talk to the local or look for the activity prompt.`;
-  if (R && !gh[R.key].owned) return `You could buy the guesthouse here for ${fmtMoney(GUESTHOUSES[R.key])}. It earns money while you are away.`;
+  if (R && gh[R.key] && !gh[R.key].owned) return `You could buy the guesthouse here for ${fmtMoney(GUESTHOUSES[R.key])}. It earns money while you are away.`;
   if (armRoad.chapter < ARMROAD.length) return `The Armenian Road continues in ${REGIONS[ARMROAD[armRoad.chapter].region].name}. Quick Travel is in Hayagram.`;
   if (WEATHERS[weather.kind].rain > 0) return 'Roads are wet. Brake earlier and go easy on the drifts.';
   if (player.car && !radio.on) return 'Press R to turn on the radio. Radio Van plays Armenian folk.';
@@ -7194,7 +7195,7 @@ function openMap3D() {
   const p = player.region ? (regionBack || { x: 26 * T, y: 32.65 * T }) : player.interior ? INTERIORS[player.interior].street : playerPos();
   mapView.tab = player.region ? 'armenia' : 'city';
   mapView.cx = clamp(p.x, 0, GW * T); mapView.cz = clamp(p.y, 0, GH * T); mapView.dist = vw < vh ? 2800 : 2200; armView.dist = vw < vh ? 2050 : 1500; mapView.yaw = -Math.PI / 2; mapView.pitch = 1.0;
-  if (player.region) { const c = armXZ(...destLatLon(destIndex(player.region))); armView.cx = c[0]; armView.cz = c[1]; armView.dist = vw < vh ? 1700 : 1300; }
+  if (player.region && destIndex(player.region) >= 0) { const c = armXZ(...destLatLon(destIndex(player.region))); armView.cx = c[0]; armView.cz = c[1]; armView.dist = vw < vh ? 1700 : 1300; }
   syncMapTabs();
 }
 function syncMapTabs() {
@@ -9919,16 +9920,290 @@ function updateCockpit(dt) {
   postSign(70 * T2, 14.4 * T2, 'ZVARTNOTS', 'International Airport · Զվարթնոց', '#123a52', '#e6f0f6', 32);
   interactables.push({ x: tx, y: 14.3 * T2, r: 46, when: () => !player.region && !player.car && mode === 'play', label: 'Enter Zvartnots terminal', act: () => { enterInterior('zvartnots'); showBanner('Zvartnots Airport', 'Departures · Արտաթռիչք', '#9fd4e8', 3.5); } });
 }
-// The circling airliner: a wide banked loop over the city, hidden indoors and away from Yerevan
+// The circling airliners and the touch-and-go jet: a fleet in the sky over Yerevan, hidden indoors and abroad
 function updateAirport(dt) {
+  updateIntlFlight(dt);
   const Z = window.__zvt; if (!Z) return;
   const on = !player.region && !player.interior && mode !== 'title';
-  Z.skyPlane.visible = on; if (!on) return;
-  Z.a += dt * 0.07;
-  const a = Z.a, x = Z.cx + Math.cos(a) * Z.R, z = Z.cz + Math.sin(a) * Z.R * 0.6, y = Z.alt + Math.sin(a * 2) * 40;
-  Z.skyPlane.position.set(x, y, z);
-  const hx = -Math.sin(a) * Z.R, hz = Math.cos(a) * Z.R * 0.6;   // heading = derivative of the path
-  Z.skyPlane.rotation.order = 'YXZ'; Z.skyPlane.rotation.set(-0.35, -Math.atan2(hz, hx), 0);   // bank into the turn
+  for (const F of Z.fleet) {
+    F.g.visible = on; if (!on) continue;
+    F.p += dt * F.speed;
+    const a = F.pos(F.p), b = F.pos(F.p + F.eps), c = F.pos(F.p + 2 * F.eps);
+    const h1 = Math.atan2(b.z - a.z, b.x - a.x), h2 = Math.atan2(c.z - b.z, c.x - b.x);
+    const run = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+    const bank = clamp(-angDiff(h2, h1) * 9, -0.55, 0.55), pitch = clamp(Math.atan2(b.y - a.y, run) * 1.2, -0.25, 0.3);
+    F.g.position.set(a.x, a.y, a.z);
+    F.g.rotation.order = 'YXZ'; F.g.rotation.set(bank, -h1, pitch);
+  }
+}
+// ═══════════════════════════════════════════════════════════════════════════════
+// INTERNATIONAL FLIGHTS FROM ZVARTNOTS — Tbilisi, Paris, Dubai and Moscow, each with a restaurant
+// Cities are regions like the Armenian destinations (same engine, lighting and collision) but sit outside
+// Quick Travel: you fly there from the terminal and back from each city's airport stand.
+// ═══════════════════════════════════════════════════════════════════════════════
+const CITIES = {
+  tbilisi: { name: 'Tbilisi', code: 'TBS', hours: '1 h', sub: 'Georgia · the old town under Narikala', col: '#e0a15a', ground: '#7a705f', hills: '#6f6a52',
+    lines: [['Gamarjoba! Welcome to Tbilisi.', 'Hello! Welcome to Tbilisi.'], ['Try the khinkali — hold it by the knot, sip the broth first.', 'Hold the khinkali by the knot and sip the broth first.'], ['The sulfur baths are just down the hill.', 'The sulfur baths are just down the hill.']] },
+  paris:   { name: 'Paris', code: 'CDG', hours: '5 h', sub: 'France · boulevards and the Eiffel Tower', col: '#8fb4ff', ground: '#6a6660', hills: '#6e7478',
+    lines: [['Bonjour ! Bienvenue à Paris.', 'Hello! Welcome to Paris.'], ['Le bistro fait la meilleure crème brûlée du quartier.', 'The bistro makes the best crème brûlée in the neighbourhood.'], ['La tour Eiffel s’illumine ce soir.', 'The Eiffel Tower lights up tonight.']] },
+  dubai:   { name: 'Dubai', code: 'DXB', hours: '3 h', sub: 'UAE · Burj Khalifa and the desert light', col: '#f2c230', ground: '#b09a70', hills: '#caa874',
+    lines: [['Marhaba! Welcome to Dubai.', 'Hello! Welcome to Dubai.'], ['The fountain show starts every half hour.', 'The fountain show starts every half hour.'], ['Al Fanar serves the old Emirati dishes.', 'Al Fanar serves the old Emirati dishes.']] },
+  moscow:  { name: 'Moscow', code: 'SVO', hours: '3 h', sub: 'Russia · Red Square and St Basil’s', col: '#ff8a7a', ground: '#55565a', hills: '#5f6468',
+    lines: [['Dobro pozhalovat! Welcome to Moscow.', 'Welcome to Moscow.'], ['Borscht and pelmeni at the café — you will not go hungry.', 'Borscht and pelmeni at the café — you will not go hungry.'], ['Wrap up, the wind off the square is cold.', 'Wrap up, the wind off the square is cold.']] },
+};
+Object.assign(MOODS, {
+  tbilisi: { sunElev: 30, sunAzim: -120, sunColor: '#fff0dc', sunPower: 800, glow: 0.8, zenith: '#4a7fc4', horizon: '#d9dfe4', ground: '#5a5048', skyGain: 1.3, gradient: 0.5, fog: 0.00022, sun: 2.2, hemi: 0.26, exposure: 0.95 },
+  paris:   { sunElev: 22, sunAzim: -150, sunColor: '#ffe6c8', sunPower: 700, glow: 1.1, zenith: '#6a8fc4', horizon: '#e6dccd', ground: '#5a5650', skyGain: 1.25, clouds: 0.35, cloud: [0.95, 0.94, 0.95], fog: 0.00026, sun: 2.0, hemi: 0.28, exposure: 0.98 },
+  dubai:   { sunElev: 48, sunAzim: -170, sunColor: '#fff0d8', sunPower: 1100, glow: 0.8, zenith: '#3a7fd0', horizon: '#eadcc0', ground: '#a8946a', skyGain: 1.3, gradient: 0.5, fog: 0.00012, sun: 2.2, hemi: 0.2, exposure: 0.66 },
+  moscow:  { sunElev: 18, sunAzim: -60, sunColor: '#f0f2ff', sunPower: 300, glow: 0.5, zenith: '#7a93b8', horizon: '#d6dce2', ground: '#4a4c50', skyGain: 1.2, clouds: 0.6, cloud: [0.88, 0.89, 0.9], fog: 0.00036, sun: 1.5, hemi: 0.32, exposure: 1.05 },
+});
+Object.keys(CITIES).forEach((key, i) => {
+  REGIONS[key] = { key, ...CITIES[key], intl: true, ox: -40000, oy: (20 + i) * 12000, spawn: [800, 1250], guide: [880, 1180], solids: [], group: null, npcs: [], anims: [] };
+  SPEECH['guide:' + key] = CITIES[key].lines;
+});
+// Shared pieces of every city: restaurant building, street kiosk, and the airport stand you fly home from
+const REST_AT = [420, 880], KIOSK_AT = [1150, 960], STAND_AT = [1300, 1360];
+function palm(R, x, z, s = 1) {
+  RCyl(R, x, z, 2.2 * s, 3.2 * s, 52 * s, '#7a5a3a', 6);
+  for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; const m = RB(R, x + Math.cos(a) * 12 * s, z + Math.sin(a) * 12 * s, 26 * s, 6 * s, 1.5 * s, '#3f7a3a', { y: 50 * s, rot: -a, shadow: false }); m.rotation.z = -0.25; }
+  R.solids.push([x - 5, z - 5, x + 5, z + 5]);
+}
+function cityCommon(R, spec) {
+  const [rx, rz] = REST_AT;
+  // The restaurant: a lit shopfront, awning, door and sign facing the plaza
+  RB(R, rx, rz, 200, 130, 72, spec.wall, { solid: true });
+  RB(R, rx, rz, 208, 138, 6, spec.trim, { y: 72 });
+  RB(R, rx, rz + 70, 206, 16, 4, spec.accent, { y: 38 });                                    // awning
+  RB(R, rx, rz + 66, 38, 3, 44, '#2a1a12', { shadow: false });                               // door
+  for (const dx of [-66, 66]) RB(R, rx + dx, rz + 66, 56, 2, 26, '#ffd98a', { y: 8, shadow: false });   // warm windows
+  postSign(R.ox + rx + 120, R.oy + rz + 84, spec.name, spec.tag, spec.signBg, spec.signFg, 30, R.group);
+  for (const dx of [-80, -40, 40, 80]) { RCyl(R, rx + dx, rz + 110, 10, 10, 1.5, '#e8e4dc', 12, 16); RCyl(R, rx + dx, rz + 110, 1.2, 1.2, 16, '#3a3a3a', 6); RCone(R, rx + dx, rz + 110, 16, 8, spec.accent, 10, 34); }   // terrace tables and parasols
+  // Street kiosk
+  const [kx, kz] = KIOSK_AT;
+  RB(R, kx, kz, 64, 40, 30, spec.kiosk, { solid: true }); RPrism(R, kx, kz, 70, 46, 12, spec.accent, 30, true);
+  // Airport stand: apron, a parked jet, and the gate you fly home from
+  const [sx, sz] = STAND_AT;
+  RDisc(R, sx, sz, 150, 120, '#3a3d42', 0.55);
+  const jet = new THREE.Group(); airlinerModel(jet, rmat('#eef1f4'), rmat(spec.livery), rmat('#8a9096'));
+  jet.position.set(R.ox + sx + 40, 0, R.oy + sz + 20); jet.rotation.y = Math.PI; R.group.add(jet);
+  R.solids.push([sx - 50, sz + 5, sx + 130, sz + 35]);
+  RB(R, sx - 120, sz - 40, 14, 14, 40, '#2a2c30'); RB(R, sx - 120, sz - 40, 36, 4, 16, spec.col || '#9fd4e8', { y: 40 });
+  postSign(R.ox + sx - 150, R.oy + sz - 70, 'AIRPORT · ' + CITIES[R.key].code, 'Flights to Yerevan (EVN)', '#123a52', '#e6f0f6', 30, R.group);
+  // Guide and passers-by
+  RNPC(R, R.guide[0], R.guide[1], Math.atan2(R.spawn[1] - R.guide[1], R.spawn[0] - R.guide[0]), { ...randomLook(), shirt: spec.accent });
+}
+const CITY_BUILD = {
+  tbilisi(R, rnd) {
+    RDisc(R, 800, 900, 640, 520, '#9a8e7c'); RDisc(R, 800, 900, 420, 300, '#a89c88', 0.7);
+    // The hill of Narikala with the fortress and Kartlis Deda on top
+    RCone(R, 800, 180, 640, 300, '#6b6a4a', 20, -40, { shadow: false }); R.solids.push([160, 0, 1440, 430]);
+    RB(R, 800, 170, 260, 22, 40, '#a8987e', { y: 200 }); for (const x of [660, 940]) RCyl(R, x, 170, 22, 26, 70, '#a8987e', 10, 190);
+    RCyl(R, 1080, 250, 5, 7, 70, '#c8ccd0', 10, 150); RB(R, 1080, 250, 30, 4, 4, '#c8ccd0', { y: 205 });
+    // The Mtkvari river with the glass Bridge of Peace
+    RWater(R, 800, 540, 1600, 70); R.solids.push([0, 505, 730, 575], [870, 505, 1600, 575]);
+    RB(R, 800, 540, 130, 90, 4, '#9aa6ae', { y: 2 });
+    for (let k = 0; k < 7; k++) { const m = RB(R, 740 + k * 20, 540, 22, 96, 2, '#9fd4e8', { y: 20 + Math.sin(k / 6 * Math.PI) * 16, shadow: false }); m.material = m.material.clone(); m.material.transparent = true; m.material.opacity = 0.6; }
+    // Old-town houses with carved wooden balconies
+    const cols = ['#c98a5a', '#8ab0c0', '#d9c89a', '#a45a4a', '#b8a0c8'];
+    for (let k = 0; k < 6; k++) { const x = 180 + k * 110, z = 660; RB(R, x, z, 96, 70, 70 + rnd() * 30, cols[k % 5], { solid: true }); RB(R, x, z + 38, 80, 8, 6, '#6a4a2a', { y: 34 }); RB(R, x, z + 42, 80, 2, 14, '#6a4a2a', { y: 40 }); }
+    for (let k = 0; k < 4; k++) { const x = 1000 + k * 130; RB(R, x, 700, 110, 80, 60 + rnd() * 40, cols[(k + 2) % 5], { solid: true }); }
+    // Abanotubani sulfur-bath domes
+    for (const [x, z] of [[1100, 820], [1180, 800], [1140, 880]]) { RCyl(R, x, z, 30, 32, 8, '#b86e48'); const d = new THREE.Mesh(new THREE.SphereGeometry(28, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), rmat('#b86e48')); d.position.set(R.ox + x, 8, R.oy + z); d.castShadow = true; R.group.add(d); R.solids.push([x - 32, z - 32, x + 32, z + 32]); }
+    for (let k = 0; k < 8; k++) RTree(R, 150 + rnd() * 1300, 1450 + rnd() * 100, 0.9, 'round', '#4f7a3a');
+    cityCommon(R, { name: 'KHINKALI HOUSE', tag: 'Georgian kitchen · since 1974', wall: '#c9a27a', trim: '#6a4a2a', accent: '#a8322a', kiosk: '#d9c89a', signBg: '#3a1a12', signFg: '#f2d9a0', livery: '#a8322a', col: '#e0a15a' });
+    for (let k = 0; k < 5; k++) RNPC(R, 600 + rnd() * 500, 980 + rnd() * 200, rnd() * 6, randomLook());
+  },
+  paris(R, rnd) {
+    RDisc(R, 800, 880, 660, 560, '#b8b0a2'); RB(R, 800, 1000, 1500, 80, 0.6, '#4a4a4e', { shadow: false, y: 0.3 });
+    // The Eiffel Tower: four iron legs, two platforms and the spire
+    const ex = 800, ez = 380, iron = '#6a5a48';
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      RLine(R, [ex + sx * 96, 0, ez + sz * 96], [ex + sx * 34, 250, ez + sz * 34], 6, iron);
+      RLine(R, [ex + sx * 96, 0, ez + sz * 96], [ex + sx * 60, 110, ez + sz * 60], 4, iron);
+      R.solids.push([ex + sx * 96 - 14, ez + sz * 96 - 14, ex + sx * 96 + 14, ez + sz * 96 + 14]);
+    }
+    RB(R, ex, ez, 150, 150, 8, iron, { y: 108 }); RB(R, ex, ez, 78, 78, 7, iron, { y: 250 });
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) RLine(R, [ex + sx * 32, 256, ez + sz * 32], [ex, 520, ez], 3.5, iron);
+    RCyl(R, ex, ez, 2, 6, 60, iron, 8, 520); RB(R, ex, ez, 20, 20, 12, '#ffd98a', { y: 500 });
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; RLine(R, [ex + Math.cos(a) * 75, 112, ez + Math.sin(a) * 75], [ex + Math.cos(a + Math.PI / 2) * 75, 112, ez + Math.sin(a + Math.PI / 2) * 75], 2.5, iron); }
+    // Haussmann blocks: cream stone, grey mansard roofs
+    for (let k = 0; k < 5; k++) { const z = 520 + k * 150; for (const x of [150, 1450]) { RB(R, x, z, 150, 130, 92, '#e6dcc6', { solid: true }); RPrism(R, x, z, 150, 136, 30, '#5a6068', 92, false); } }
+    for (let k = 0; k < 16; k++) RTree(R, 270 + k * 72, 1060, 0.95, 'round', '#4f7a3a');
+    cityCommon(R, { name: 'LE PETIT BISTRO', tag: 'Cuisine française · depuis 1902', wall: '#e6dcc6', trim: '#2a3a5a', accent: '#b8322a', kiosk: '#2a3a5a', signBg: '#1a2a4a', signFg: '#f2e2c4', livery: '#1a3a8a', col: '#8fb4ff' });
+    for (let k = 0; k < 6; k++) RNPC(R, 560 + rnd() * 560, 960 + rnd() * 220, rnd() * 6, randomLook());
+  },
+  dubai(R, rnd) {
+    RDisc(R, 800, 880, 680, 560, '#c8baa0');
+    // Burj Khalifa: setbacks stepping up to a needle spire
+    const bx = 800, bz = 300, glass = '#aeb8c2';
+    const tiers = [[80, 70, 220], [66, 56, 200], [52, 42, 180], [38, 30, 160], [26, 18, 140], [14, 8, 120]];
+    let y = 0; for (const [rb, rt, h] of tiers) { RCyl(R, bx, bz, rt, rb, h, glass, 12, y); y += h; }
+    RCyl(R, bx, bz, 1.5, 6, 180, '#d0d6dc', 8, y);
+    for (let k = 0; k < 3; k++) { const a = k * Math.PI * 2 / 3; RCyl(R, bx + Math.cos(a) * 70, bz + Math.sin(a) * 70, 30, 36, 260, glass, 10); }
+    R.solids.push([bx - 110, bz - 110, bx + 110, bz + 110]);
+    // Glass towers either side
+    for (const [x, z, h] of [[340, 380, 420], [470, 300, 330], [1150, 330, 460], [1290, 420, 360]]) { RB(R, x, z, 90, 90, h, '#5a8ab0', { solid: true }); for (let k = 1; k < h / 60; k++) RB(R, x, z, 92, 92, 2, '#dfe8ee', { y: k * 60, shadow: false }); }
+    // The Dubai Fountain lake with dancing jets
+    RWater(R, 800, 600, 720, 170, { solid: true });
+    const jm = new THREE.MeshBasicMaterial({ color: 0xe8f6ff, transparent: true, opacity: 0.7 }), jets = [];
+    for (let k = 0; k < 14; k++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 4, 60, 6), jm); m.position.set(R.ox + 480 + k * 46, 30, R.oy + 600); R.group.add(m); jets.push(m); }
+    R.anims.push(t => jets.forEach((j, i) => { const h = 0.35 + 0.65 * Math.abs(Math.sin(t * 1.3 + i * 0.5)); j.scale.y = h * 2; j.position.y = 30 * h * 2; }));
+    for (let k = 0; k < 12; k++) palm(R, 260 + k * 100, 1070 + (k % 2) * 20);
+    cityCommon(R, { name: 'AL FANAR', tag: 'Emirati restaurant · مطعم الفنار', wall: '#e0cfa8', trim: '#8a6a3a', accent: '#1f7a5a', kiosk: '#e0cfa8', signBg: '#1f4a3a', signFg: '#f2e2c4', livery: '#b8922a', col: '#f2c230' });
+    for (let k = 0; k < 6; k++) RNPC(R, 560 + rnd() * 560, 960 + rnd() * 220, rnd() * 6, { ...randomLook(), shirt: k % 2 ? '#f4f1ea' : undefined });
+  },
+  moscow(R, rnd) {
+    RDisc(R, 800, 760, 700, 560, '#7a6a62'); RDisc(R, 800, 1000, 640, 400, '#6a5e58', 0.7);
+    // Kremlin wall and the Spasskaya tower
+    RB(R, 800, 240, 1400, 26, 56, '#a8322a', { solid: true });
+    for (let k = 0; k < 40; k++) RB(R, 120 + k * 35, 240, 14, 28, 12, '#a8322a', { y: 56, shadow: false });
+    RB(R, 800, 240, 70, 70, 150, '#a8322a', { solid: true }); RB(R, 800, 240, 54, 54, 40, '#b8422a', { y: 150 });
+    RCone(R, 800, 240, 32, 90, '#2f6b4a', 8, 190); RB(R, 800, 240, 10, 3, 10, '#ff2a2a', { y: 284 });
+    const clock = new THREE.Mesh(new THREE.CircleGeometry(16, 20), rmat('#f2efe8')); clock.position.set(R.ox + 800, 130, R.oy + 276); R.group.add(clock);
+    // St Basil's Cathedral: coloured onion domes around a central tent roof
+    const bx = 1150, bz = 520; RB(R, bx, bz, 190, 170, 56, '#b84a3a', { solid: true });
+    RCyl(R, bx, bz, 26, 30, 110, '#c85a3a', 10, 56); RCone(R, bx, bz, 30, 90, '#e8c84a', 10, 166);
+    const domes = [['#2f8a4a', -64, -50], ['#d9a02a', 64, -50], ['#2d6bd0', -64, 54], ['#c83a3a', 64, 54], ['#e8e4dc', 0, -76]];
+    for (const [c, dx, dz] of domes) { RCyl(R, bx + dx, bz + dz, 16, 18, 70, '#c85a3a', 10, 56); const d = new THREE.Mesh(new THREE.SphereGeometry(20, 14, 10), rmat(c)); d.scale.y = 1.25; d.position.set(R.ox + bx + dx, 140, R.oy + bz + dz); d.castShadow = true; R.group.add(d); RCone(R, bx + dx, bz + dz, 8, 22, '#e8c84a', 8, 160); }
+    // GUM arcade along the west side
+    RB(R, 260, 620, 240, 360, 70, '#d8c8b0', { solid: true }); RPrism(R, 260, 620, 360, 246, 26, '#6a7a78', 70, false);
+    for (let k = 0; k < 8; k++) RTree(R, 560 + k * 70, 1080, 0.9, 'cone', '#2f5a3a');
+    cityCommon(R, { name: 'CAFÉ PUSHKIN', tag: 'Russian cuisine · Кафе Пушкинъ', wall: '#d8c8b0', trim: '#3a2a1e', accent: '#2f5a3a', kiosk: '#a8322a', signBg: '#2a1a12', signFg: '#e8d4a0', livery: '#2a4a9a', col: '#ff8a7a' });
+    for (let k = 0; k < 6; k++) RNPC(R, 560 + rnd() * 560, 960 + rnd() * 220, rnd() * 6, randomLook());
+  },
+};
+function buildIntlCity(R) {
+  const g = R.group = new THREE.Group(); scene.add(g);
+  let seed = R.oy + 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed & 0xffff) / 0x10000; };
+  const gr = new THREE.Mesh(new THREE.CircleGeometry(7000, 48).rotateX(-Math.PI / 2), rmat(R.ground, 'ground')); gr.position.set(R.ox + 800, 0, R.oy + 800); gr.receiveShadow = true; g.add(gr);
+  for (let k = 0; k < 24; k++) {   // a distant skyline ring
+    const a = k / 24 * Math.PI * 2 + rnd() * 0.2, d = 2600 + rnd() * 1200;
+    RB(R, 800 + Math.cos(a) * d, 800 + Math.sin(a) * d, 200 + rnd() * 260, 200 + rnd() * 260, 120 + rnd() * 380, R.hills, { shadow: false });
+  }
+  CITY_BUILD[R.key](R, rnd);
+  R.solids = R.solids.filter(r => !(R.spawn[0] >= r[0] - 8 && R.spawn[0] <= r[2] + 8 && R.spawn[1] >= r[1] - 8 && R.spawn[1] <= r[3] + 8));
+  g.visible = false;
+}
+
+// ─── Restaurants: one per city, each an interior with its own menu ───
+const RESTAURANTS = {
+  tbilisi: { name: 'Khinkali House', waiter: 'Nino', floor: '#8a6a4a', wall: '#e6d2b0', accent: '#a8322a',
+    dishes: [['Khinkali (5)', 12, 25, 'Juicy dumplings — you ate them by the knot, like a local.'], ['Khachapuri Adjaruli', 15, 30, 'A boat of bread, molten cheese, butter and an egg.'], ['Churchkhela & Georgian wine', 9, 15, 'Walnuts in grape must, and a glass of Saperavi.']],
+    lines: [['Gamarjoba! Take a seat.', 'Hello! Take a seat.'], ['The khinkali are fresh — twelve pleats each.', 'The khinkali are fresh — twelve pleats each.'], ['Gaumarjos! To your health!', 'Cheers! To your health!']] },
+  paris:   { name: 'Le Petit Bistro', waiter: 'Camille', floor: '#5a3a2a', wall: '#f0e6d2', accent: '#b8322a',
+    dishes: [['Croissant & café crème', 8, 12, 'Flaky, buttery, and a café crème on the side.'], ['Coq au vin', 24, 35, 'Chicken slow-braised in Burgundy wine.'], ['Crème brûlée', 10, 15, 'You crack the caramel crust with your spoon.']],
+    lines: [['Bonsoir ! Une table pour une personne ?', 'Good evening! A table for one?'], ['Le coq au vin est la spécialité de la maison.', 'The coq au vin is the house speciality.'], ['Bon appétit !', 'Enjoy your meal!']] },
+  dubai:   { name: 'Al Fanar', waiter: 'Omar', floor: '#b89a6a', wall: '#f0e2c4', accent: '#1f7a5a',
+    dishes: [['Chicken machboos', 20, 30, 'Spiced rice with slow-cooked chicken and loomi.'], ['Shawarma platter', 14, 22, 'Shaved lamb, garlic toum and warm flatbread.'], ['Luqaimat & karak chai', 9, 15, 'Golden dumplings in date syrup, and sweet spiced tea.']],
+    lines: [['Ahlan wa sahlan! Welcome.', 'Welcome!'], ['The machboos is my grandmother’s recipe.', 'The machboos is my grandmother’s recipe.'], ['Sahtein — enjoy!', 'Enjoy!']] },
+  moscow:  { name: 'Café Pushkin', waiter: 'Dmitri', floor: '#4a3020', wall: '#e8dcc0', accent: '#2f5a3a',
+    dishes: [['Borscht with smetana', 12, 22, 'Deep red beet soup with a spoon of sour cream.'], ['Pelmeni', 14, 25, 'Little meat dumplings with butter and dill.'], ['Blini with red caviar', 22, 20, 'Thin pancakes, sour cream and salmon roe.']],
+    lines: [['Dobryy vecher! Please, come in.', 'Good evening! Please, come in.'], ['The borscht is my mother’s way — with a little sugar.', 'The borscht is my mother’s way — with a little sugar.'], ['Priyatnogo appetita!', 'Enjoy your meal!']] },
+};
+Object.entries(RESTAURANTS).forEach(([key, S], i) => {
+  const R = REGIONS[key], id = 'r_' + key;
+  INTERIORS[id] = { name: `${S.name} · ${R.name}`, ox: -3200, oy: 9600 + i * 800, w: 520, h: 400, spawn: [260, 356], door: [260, 386],
+    street: { x: R.ox + REST_AT[0], y: R.oy + REST_AT[1] + 104, a: Math.PI / 2 }, region: key, solids: [] };
+  CAST['waiter_' + key] = [S.waiter + ' · waiter', R.col];
+  const I = INTERIORS[id], il = (c, e = 0.42) => ilam(c, e);
+  IRoom(I, il(S.floor, 0.4), il(S.wall, 0.45), il(S.accent, 0.4));
+  // Open kitchen and bar along the north wall
+  IB(I, 20, 12, 500, 60, 30, il('#3a3a3e', 0.35), { solid: true }); IB(I, 18, 58, 502, 64, 2, il('#dfe3e6', 0.45), { y: 30 });
+  for (let k = 0; k < 6; k++) IB(I, 50 + k * 78, 20, 90 + k * 78, 40, 8, il('#c8ccd0', 0.4), { y: 30 });   // pots and pans
+  const menuTex = canvasTex(256, 128, g => {
+    g.fillStyle = '#1a1a1c'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#f2e2c4'; g.font = 'bold 16px Arial'; g.fillText(S.name.toUpperCase(), 12, 22);
+    g.font = '13px Arial'; S.dishes.forEach((d, k) => { g.fillStyle = '#e8e4dc'; g.fillText(d[0], 12, 50 + k * 24); g.fillStyle = '#f2c230'; g.fillText('$' + d[1], 206, 50 + k * 24); });
+  }, false);
+  const menu = new THREE.Mesh(new THREE.PlaneGeometry(110, 55), basic(0xffffff, { map: menuTex })); menu.position.set(I.ox + 260, 46, I.oy + 12); interiorGroup.add(menu);
+  // Tables with chairs and a lamp over each
+  for (const [x, y] of [[110, 150], [260, 150], [410, 150], [110, 260], [410, 260]]) {
+    IB(I, x - 26, y - 20, x + 26, y + 20, 16, il('#6a4a30', 0.38), { solid: true }); IB(I, x - 28, y - 22, x + 28, y + 22, 1.5, il('#f4f1ea', 0.45), { y: 16 });
+    for (const dy of [-30, 30]) IB(I, x - 10, y + dy - 7, x + 10, y + dy + 7, 10, il(S.accent, 0.35));
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(6, 10, 8), basic(0xffe2a0)); lamp.position.set(I.ox + x, 52, I.oy + y); interiorGroup.add(lamp);
+  }
+  // Staff and diners
+  INPC(I, 260, 90, Math.PI / 2, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#f4f1ea', pants: '#1a1a1e' });            // chef at the pass
+  INPC(I, 330, 330, Math.PI, { skin: pick(SKINS), hair: pick(HAIR), shirt: '#1a1a1e', pants: '#1a1a1e' });              // waiter
+  for (const [x, y, a] of [[110, 120, Math.PI / 2], [410, 290, -Math.PI / 2], [110, 290, -Math.PI / 2], [410, 120, Math.PI / 2]]) INPC(I, x, y, a, { skin: pick(SKINS), hair: pick(HAIR), shirt: pick(SHIRTS), pants: pick(PANTS) });
+  // Interactions: leave, talk to the waiter, and order each dish
+  addInteract(id, 260, 386, 28, `Leave ${S.name}`, exitInterior);
+  addInteract(id, 330, 350, 34, `Talk to ${S.waiter}, the waiter`, () => talk(S.lines.map(([a, b]) => ['waiter_' + key, a, b])));
+  S.dishes.forEach(([dish, price, hp, blurb], k) => addInteract(id, 110 + k * 150, 205, 40, `Order ${dish} · $${price} (+${hp} health)`, () => {
+    if (!pay(price)) return; player.hp = Math.min(100, player.hp + hp); hg.followers += 5;
+    showBanner(dish, blurb, R.col, 3.5); toast(`+${hp} health · posted a food pic to Hayagram`, R.col);
+  }));
+});
+// City interactions: the restaurant door, the kiosk, the local guide and the flight home
+const KIOSK_SNACKS = { tbilisi: ['Churchkhela', 4], paris: ['Crêpe au Nutella', 6], dubai: ['Fresh date shake', 5], moscow: ['Hot pirozhki', 4] };
+for (const key of Object.keys(CITIES)) {
+  const R = REGIONS[key], here = () => player.region === key && !player.car;
+  interactables.push({ x: R.ox + REST_AT[0], y: R.oy + REST_AT[1] + 96, r: 34, when: here, label: `Enter ${RESTAURANTS[key].name}`, act: () => { player.region = null; enterInterior('r_' + key); showBanner(RESTAURANTS[key].name, `${R.name} · table for one`, R.col, 3); } });
+  interactables.push({ x: R.ox + KIOSK_AT[0], y: R.oy + KIOSK_AT[1] + 40, r: 30, when: here, label: () => `Buy a ${KIOSK_SNACKS[key][0]} · $${KIOSK_SNACKS[key][1]} (+10 health)`, act: () => { if (!pay(KIOSK_SNACKS[key][1])) return; player.hp = Math.min(100, player.hp + 10); toast(`${KIOSK_SNACKS[key][0]} — delicious. +10 health`, R.col); } });
+  interactables.push({ x: R.ox + R.guide[0], y: R.oy + R.guide[1], r: 30, when: here, label: 'Talk to the local', act: () => say('guide:' + key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true) });
+  interactables.push({ x: R.ox + STAND_AT[0] - 120, y: R.oy + STAND_AT[1] - 10, r: 44, when: here, label: `Fly home to Yerevan · ${CITIES[key].code} → EVN`, act: () => flyToCity(null) });
+}
+
+// ─── The flight itself: board, fade through a short cinematic, land at the other end ───
+const intl = { on: false, t: 0, to: null, seen: new Set() };
+function flyToCity(key) {
+  if (intl.on || QT.state !== 'idle') return;
+  const why = travelBlocked(); if (why) { toast(why, '#ff8a7a'); return; }
+  closePhone(); wheel.open = false; caption = null;
+  if (player.car) exitCar(true);
+  intl.on = true; intl.t = 0; intl.to = key; mode = 'travel'; keys.clear(); mouseFire = false;
+  const from = player.region && REGIONS[player.region].intl ? CITIES[player.region] : { name: 'Yerevan', code: 'EVN' };
+  const to = key ? CITIES[key] : { name: 'Yerevan', code: 'EVN', hours: '' };
+  showBanner(`Flight ${from.code} → ${to.code}`, `${from.name} → ${to.name}${to.hours ? ' · ' + to.hours : ''} · Armenia Airways`, '#9fd4e8', 3);
+}
+function updateIntlFlight(dt) {
+  if (!intl.on) return;
+  intl.t += dt; fade = Math.max(fade, Math.min(1, intl.t / 1.4));
+  if (intl.t < 2.6) return;
+  intl.on = false; mode = 'play';
+  if (player.interior === 'generic') disposeGeneric();
+  player.interior = null; player.vx = player.vy = 0; fade = 1; camSnap = true;
+  if (!intl.to) {   // landing back at Zvartnots
+    const s = INTERIORS.zvartnots.street; player.region = null; player.x = s.x; player.y = s.y; player.a = s.a;
+    showBanner('Welcome home', 'Zvartnots International Airport · Yerevan', '#9fd4e8', 3.5); return;
+  }
+  const R = REGIONS[intl.to]; buildRegion(R);
+  player.region = intl.to; player.x = R.ox + R.spawn[0]; player.y = R.oy + R.spawn[1]; player.a = -Math.PI / 2;
+  showBanner(R.name, R.sub, R.col, 4);
+  if (!intl.seen.has(intl.to)) { intl.seen.add(intl.to); hg.followers += 40; }
+  setTimeout(() => { if (player.region === R.key) say('guide:' + R.key, 'Local', { x: R.ox + R.guide[0], y: R.oy + R.guide[1] }, true); }, 1600);
+}
+function openIntlFlights() {
+  showMenu({ eyebrow: 'Zvartnots · International departures', title: 'Where to?',
+    body: '<p>Armenia Airways flies from Zvartnots to four cities. Each has a restaurant to try — and a flight straight back.</p>',
+    options: Object.entries(CITIES).map(([k, C]) => ({ label: `${C.name} · ${C.code}`, sub: `${C.hours} · ${C.sub} · ${RESTAURANTS[k].name}`, act: () => { closeMenu(); flyToCity(k); } })) });
+}
+addInteract('zvartnots', 420, 420, 36, 'International flights · Tbilisi, Paris, Dubai, Moscow', () => openIntlFlights());
+
+// ─── More planes: jets at the gates, and a fleet in the sky ───
+{
+  const Z = window.__zvt, mk = livery => { const g = new THREE.Group(); airlinerModel(g, lam('#eef1f4', { emissive: 0x333333 }), lam(livery, { emissive: new THREE.Color(livery).multiplyScalar(0.3) }), lam('#8a9096')); scene.add(g); return g; };
+  // Two more jets parked nose-in at the terminal apron
+  for (const [x, livery] of [[80, '#1f5aa8'], [85, '#2d8a4a']]) {
+    const g = mk(livery); g.position.set(x * T, 0, 10.4 * T); g.rotation.y = -Math.PI / 2;
+    for (let k = -60; k <= 80; k += 20) addObstacle(x * T, 10.4 * T + k, 14);
+  }
+  const circle = (cx, cz, R, ry, alt, dir) => p => ({ x: cx + Math.cos(p * dir) * R, y: alt + Math.sin(p * 2) * 30, z: cz + Math.sin(p * dir) * R * ry });
+  // A touch-and-go circuit: low along the runway, climb out, a wide loop, descend again
+  const xA = 2400, xB = 4700, zR = 15.5 * T, r = 700, zc = zR - r, L = xB - xA, P = 2 * L + 2 * Math.PI * r;
+  const stadium = s => {
+    s = ((s % P) + P) % P;
+    if (s < L) { const x = xB - s; const y = x > 3900 ? (x - 3900) / 800 * 220 : x < 3300 ? (3300 - x) / 900 * 260 : 0; return { x, y, z: zR }; }
+    s -= L; if (s < Math.PI * r) { const u = s / (Math.PI * r), th = Math.PI / 2 + u * Math.PI; return { x: xA + Math.cos(th) * r, y: 260 + u * 160, z: zc + Math.sin(th) * r }; }
+    s -= Math.PI * r; if (s < L) return { x: xA + s, y: 420, z: zc - r };
+    s -= L; const u = s / (Math.PI * r), th = -Math.PI / 2 + u * Math.PI; return { x: xB + Math.cos(th) * r, y: 420 - u * 200, z: zc + Math.sin(th) * r };
+  };
+  const old = Z.skyPlane;   // the first circling airliner joins the fleet
+  Z.fleet = [
+    { g: old, p: 0, speed: 0.07, eps: 0.01, pos: circle(62 * T, 22 * T, 1500, 0.6, 360, 1) },
+    { g: mk('#2d8a4a'), p: 2, speed: 0.05, eps: 0.01, pos: circle(30 * T, 26 * T, 1900, 0.7, 520, -1) },
+    { g: mk('#f2a800'), p: 4, speed: 0.09, eps: 0.01, pos: circle(70 * T, 30 * T, 1100, 0.8, 300, 1) },
+    { g: mk('#8a1f3a'), p: 0, speed: 230, eps: 4, pos: stadium },
+  ];
 }
 function updateLandmarks(dt) {
   const L = window.__yerLm; if (!L) return;
@@ -10676,7 +10951,7 @@ function drawHud() {
   if (player.interior || player.region) {
     ctx.fillStyle = 'rgba(12,14,18,0.82)'; ctx.beginPath(); ctx.roundRect(mx, my, S, S, 6); ctx.fill();
     ctx.textAlign = 'center'; ctx.fillStyle = player.region ? '#f2a800' : '#9a978f'; ctx.font = `600 ${Math.round(11 * s + 1)}px ${MONO}`;
-    ctx.fillText(player.region ? 'ARMENIA' : 'INDOORS', mx + S / 2, my + S / 2 - 8);
+    ctx.fillText(player.region ? (REGIONS[player.region] && REGIONS[player.region].intl ? 'ABROAD' : 'ARMENIA') : 'INDOORS', mx + S / 2, my + S / 2 - 8);
     ctx.fillStyle = '#efe6d2'; ctx.font = `800 ${Math.round(18 * s)}px ${DISPLAY}`; wrapText((player.region ? REGIONS[player.region].name : INTERIORS[player.interior].name).toUpperCase(), mx + S / 2, my + S / 2 + 16, S - 20, 20);
   } else {
   ctx.save();
