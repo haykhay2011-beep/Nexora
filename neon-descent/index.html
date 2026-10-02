@@ -67,6 +67,16 @@
     display: inline-block; min-width: 1.7em; padding: 0 0.4em; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px;
     font: inherit; color: #fff; background: rgba(255,255,255,0.06);
   }
+  .speedSel { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 1.3em; pointer-events: auto; }
+  .spdBtn {
+    width: 44px; height: 44px; border: 2px solid var(--neon); border-radius: 10px; background: rgba(0,0,0,0.35);
+    color: var(--neon); font: inherit; font-size: 18px; font-weight: 700; cursor: pointer; padding: 0;
+    box-shadow: 0 0 10px var(--neon); display: flex; align-items: center; justify-content: center;
+  }
+  .spdBtn:disabled { opacity: 0.25; box-shadow: none; cursor: default; }
+  .spdLabel { min-width: 11.5em; font-size: clamp(14px, 3.8vw, 19px); letter-spacing: 0.12em; }
+  .spdLabel b { color: #fff; text-shadow: 0 0 8px var(--neon), 0 0 18px var(--neon); }
+  .spdHint { font-size: clamp(10px, 2.6vw, 12px); margin-top: 0.5em; letter-spacing: 0.08em; }
   .best { margin-top: 1.4em; font-size: clamp(13px, 3.4vw, 17px); letter-spacing: 0.1em; }
   .panel {
     padding: clamp(18px, 4vw, 34px) clamp(22px, 6vw, 54px); border: 2px solid var(--neon); border-radius: 14px;
@@ -107,7 +117,7 @@
 
 <div id="hud" class="hidden">
   <div id="score">0</div>
-  <div id="stats">BEST <b id="hudBest">0</b><br>SPEED <b id="hudSpeed">0</b> m/s</div>
+  <div id="stats">BEST <b id="hudBest">0</b><br>SPEED <b id="hudSpeed">0</b> m/s<br><span id="hudLevel">NORMAL</span></div>
   <button id="pauseBtn" class="hidden" aria-label="Pause">II</button>
   <div id="touchL" class="touchHint hidden">&#9664;</div>
   <div id="touchR" class="touchHint hidden">&#9654;</div>
@@ -120,6 +130,8 @@
     <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>P</kbd> pause &nbsp;·&nbsp; <kbd>M</kbd> mute<br>
     Avoid the <span style="color:#ff2a2a;text-shadow:0 0 8px #ff2a2a">red blocks</span>. Don't fall off.
   </div>
+  <div class="speedSel"><button class="spdBtn" data-dir="-1" aria-label="Slower">&#9664;</button><span class="spdLabel neon">SPEED <b class="spdName">NORMAL</b></span><button class="spdBtn" data-dir="1" aria-label="Faster">&#9654;</button></div>
+  <div class="spdHint dim">&larr; &rarr; change speed</div>
   <div class="best neon">BEST <span id="menuBest">0</span></div>
 </div>
 
@@ -137,6 +149,8 @@
     <div class="finalScore" id="goScore">0</div>
     <div id="newBest" class="hidden">NEW BEST!</div>
     <div class="best neon">BEST <span id="goBest">0</span></div>
+    <div class="speedSel"><button class="spdBtn" data-dir="-1" aria-label="Slower">&#9664;</button><span class="spdLabel neon">SPEED <b class="spdName">NORMAL</b></span><button class="spdBtn" data-dir="1" aria-label="Faster">&#9654;</button></div>
+    <div class="spdHint dim">&larr; &rarr; change speed</div>
     <div class="prompt neon" id="retry">SPACE / TAP TO RETRY</div>
   </div>
 </div>
@@ -177,9 +191,18 @@ const CONFIG = {
   ballRadius: 0.5,
 
   // --- Forward speed ---
-  startSpeed: 14,            // units/s
-  speedGain: 0.35,           // units/s gained per second
-  maxSpeed: 55,
+  startSpeed: 18,            // units/s (at the NORMAL speed level)
+  speedGain: 0.45,           // units/s gained per second
+  maxSpeed: 65,
+  // Player-selectable speed levels: start speed, gain and cap are all multiplied by `mult`.
+  speedLevels: [
+    { name: 'CHILL', mult: 0.75 },
+    { name: 'NORMAL', mult: 1 },
+    { name: 'FAST', mult: 1.25 },
+    { name: 'TURBO', mult: 1.5 },
+    { name: 'INSANE', mult: 1.75 },
+  ],
+  defaultSpeedLevel: 1,
 
   // --- Steering ---
   steerAccel: 45,            // units/s²
@@ -293,9 +316,13 @@ function mulberry32(seed) {
   };
 }
 
+// Effective speed values: CONFIG × the chosen speed level (set by applySpeedLevel).
+// `view` stretches fog / draw distance so hazards stay visible >= 1.5 s at higher speeds.
+const SPEED = { level: CONFIG.defaultSpeedLevel, mult: 1, start: CONFIG.startSpeed, gain: CONFIG.speedGain, max: CONFIG.maxSpeed, view: 1 };
+
 // Predicted forward speed after travelling D units (v² = v0² + 2aD, capped).
 function speedAtDistance(D) {
-  return Math.min(CONFIG.maxSpeed, Math.sqrt(CONFIG.startSpeed * CONFIG.startSpeed + 2 * CONFIG.speedGain * Math.max(0, D)));
+  return Math.min(SPEED.max, Math.sqrt(SPEED.start * SPEED.start + 2 * SPEED.gain * Math.max(0, D)));
 }
 
 const store = {
@@ -331,6 +358,21 @@ scene.fog = new THREE.Fog(0x000000, CONFIG.fogNear, CONFIG.fogFar);
 const camera = new THREE.PerspectiveCamera(CONFIG.fovMin, window.innerWidth / window.innerHeight, CONFIG.camNear, CONFIG.camFar);
 camera.position.set(0, CONFIG.camOffsetY, CONFIG.camOffsetZ);
 scene.add(camera);
+
+function applySpeedLevel(i) {
+  i = clamp(Math.round(i), 0, CONFIG.speedLevels.length - 1);
+  const m = CONFIG.speedLevels[i].mult;
+  SPEED.level = i; SPEED.mult = m;
+  SPEED.start = CONFIG.startSpeed * m;
+  SPEED.gain = CONFIG.speedGain * m;
+  SPEED.max = CONFIG.maxSpeed * m;
+  SPEED.view = Math.max(1, m);
+  scene.fog.near = CONFIG.fogNear * SPEED.view;
+  scene.fog.far = CONFIG.fogFar * SPEED.view;
+  camera.far = CONFIG.camFar * SPEED.view;
+  camera.updateProjectionMatrix();
+}
+applySpeedLevel(Number(store.get('speedLevel', CONFIG.defaultSpeedLevel)));
 
 // Lights only affect the ball (everything else uses unlit materials).
 scene.add(new THREE.HemisphereLight(0xffffff, 0x223322, 1.5));
@@ -882,7 +924,7 @@ const BUILDERS = {
     runTile(rand(6, 10));
     const w = G.w;
     const vEst = vAt(G.s);
-    const spdF = clamp((vEst - CONFIG.startSpeed) / (CONFIG.maxSpeed - CONFIG.startSpeed), 0, 1);
+    const spdF = clamp((vEst - SPEED.start) / (SPEED.max - SPEED.start), 0, 1);
     const ang = lerp(CONFIG.rampAngleMin, CONFIG.rampAngleMax, clamp(G.rng() * (1 - 0.6 * spdF), 0, 1)) * DEG;
     const tanA = Math.tan(ang);
     const lr = rand(4, 6);
@@ -1442,7 +1484,7 @@ const streaks = (() => {
 })();
 function updateStreaks(dt, speed) {
   if (!CONFIG.streaks) { streaks.ls.visible = false; return; }
-  const f = clamp((speed - 38) / (CONFIG.maxSpeed - 38), 0, 1);
+  const f = clamp((speed - SPEED.max * 0.7) / (SPEED.max * 0.3), 0, 1);
   streaks.mat.opacity = f * 0.3;
   streaks.mat.color.copy(neon).lerp(_white, 0.5);
   streaks.ls.visible = f > 0.001;
@@ -1516,7 +1558,7 @@ const game = {
   state: STATE.MENU,
   time: 0,              // simulation clock of the current run (drives moving blocks)
   distance: 0,          // score
-  best: Number(store.get('best', 0)) || 0,
+  best: 0,               // best score for the current speed level (see loadBest)
   newBest: false,
   deathKind: '',
   dyingT: 0, overT: 0,
@@ -1530,7 +1572,7 @@ const game = {
 
 const ball = {
   x: 0, y: R, s: 0, px: 0, py: R, ps: 0,
-  vx: 0, vy: 0, vs: CONFIG.startSpeed,
+  vx: 0, vy: 0, vs: SPEED.start,
   grounded: true, tile: null, airTime: 0,
   quat: new THREE.Quaternion(),
 };
@@ -1543,7 +1585,7 @@ function ensureTrack(refS) {
   let guard = 0;
   while (guard++ < 40) {
     const last = world.chunks[world.chunks.length - 1];
-    if (last && last.s0 > refS + CONFIG.buildAhead) break;
+    if (last && last.s0 > refS + CONFIG.buildAhead * SPEED.view) break;
     generateChunk();
   }
   // Mesh every chunk that has a successor (edge flags are final once the next chunk exists).
@@ -1745,7 +1787,7 @@ function die(kind) {
     cam.freeze();
   }
   const score = Math.floor(game.distance);
-  if (score > game.best) { game.best = score; game.newBest = true; store.set('best', score); }
+  if (score > game.best) { game.best = score; game.newBest = true; store.set(bestKey(), score); }
   ui.hud(false);
 }
 
@@ -1811,7 +1853,7 @@ const cam = {
     this.look.set(lerp(this.x, bx, 0.55), this.ys + SLOPE * CONFIG.camLookAhead + 0.6, -(bs + CONFIG.camLookAhead));
     camera.lookAt(this.look);
 
-    const f = clamp((speed - CONFIG.startSpeed) / (CONFIG.maxSpeed - CONFIG.startSpeed), 0, 1);
+    const f = clamp((speed - SPEED.start) / (SPEED.max - SPEED.start), 0, 1);
     const targetFov = fovForAspect(lerp(CONFIG.fovMin, CONFIG.fovMax, f));
     this.fov = damp(this.fov, targetFov, 2, dt);
     if (Math.abs(camera.fov - this.fov) > 0.02) { camera.fov = this.fov; camera.updateProjectionMatrix(); }
@@ -1983,6 +2025,7 @@ const ui = {
   menu: $('menu'), menuBest: $('menuBest'), menuPrompt: $('menuPrompt'), menuHint: $('menuHint'),
   pause: $('pause'), pauseHint: $('pauseHint'), pauseBtn: $('pauseBtn'),
   over: $('gameover'), goScore: $('goScore'), goBest: $('goBest'), newBest: $('newBest'), retry: $('retry'),
+  hudLevel: $('hudLevel'),
   touchL: $('touchL'), touchR: $('touchR'), debug: $('debug'),
   lastScore: -1, lastSpeed: -1, debugOn: false, debugT: 0,
   init() {
@@ -1995,8 +2038,20 @@ const ui = {
       this.pauseHint.textContent = 'Tap to resume';
       this.retry.textContent = 'TAP TO RETRY';
     }
-    this.menuBest.textContent = game.best;
     this.stats.dataset.muted = audio.muted;
+    if (IS_TOUCH) document.querySelectorAll('.spdHint').forEach((e) => { e.textContent = 'tap \u25C0 \u25B6 to change speed'; });
+    loadBest();
+    this.updateSpeedSel();
+  },
+  updateSpeedSel() {
+    const n = CONFIG.speedLevels.length, name = CONFIG.speedLevels[SPEED.level].name;
+    document.querySelectorAll('.spdName').forEach((e) => { e.textContent = name; });
+    document.querySelectorAll('.spdBtn').forEach((b) => {
+      b.disabled = Number(b.dataset.dir) < 0 ? SPEED.level === 0 : SPEED.level === n - 1;
+    });
+    this.hudLevel.textContent = name;
+    this.menuBest.textContent = game.best;
+    this.goBest.textContent = game.best;
   },
   showOnly(el) {
     for (const e of [this.menu, this.pause, this.over]) e.classList.toggle('hidden', e !== el);
@@ -2085,7 +2140,9 @@ window.addEventListener('keydown', (e) => {
   audio.init();
   switch (e.code) {
     case 'ArrowLeft': case 'KeyA': case 'ArrowRight': case 'KeyD':
-      input.keys.add(e.code); input.recompute(); break;
+      input.keys.add(e.code); input.recompute();
+      if (!e.repeat) changeSpeed(e.code === 'ArrowLeft' || e.code === 'KeyA' ? -1 : 1);
+      break;
     case 'Space': case 'Enter': case 'NumpadEnter':
       if (!e.repeat) primaryAction(); break;
     case 'KeyP': case 'Escape':
@@ -2104,7 +2161,7 @@ window.addEventListener('keyup', (e) => {
 }, { passive: false });
 
 window.addEventListener('pointerdown', (e) => {
-  if (e.target === ui.pauseBtn) return;
+  if (e.target === ui.pauseBtn || (e.target.closest && e.target.closest('.speedSel'))) return;
   audio.init();
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   if (game.state === STATE.PLAYING) {
@@ -2123,6 +2180,9 @@ const endPointer = (e) => { if (input.pointers.delete(e.pointerId)) input.recomp
 window.addEventListener('pointerup', endPointer);
 window.addEventListener('pointercancel', endPointer);
 window.addEventListener('lostpointercapture', endPointer);
+document.querySelectorAll('.spdBtn').forEach((b) => b.addEventListener('pointerdown', (e) => {
+  e.stopPropagation(); e.preventDefault(); audio.init(); changeSpeed(Number(b.dataset.dir));
+}));
 ui.pauseBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); audio.init(); togglePause(); });
 
 // Block scrolling, pinch-zoom, double-tap zoom, context menus and text selection.
@@ -2163,7 +2223,7 @@ function placeBallAtStart() {
   const q = groundQuery(0, 0, 1e6, 0);
   ball.x = ball.px = 0; ball.s = ball.ps = 0;
   ball.y = ball.py = (q ? q.h : 0) + R;
-  ball.vx = 0; ball.vy = 0; ball.vs = CONFIG.startSpeed;
+  ball.vx = 0; ball.vy = 0; ball.vs = SPEED.start;
   ball.grounded = true; ball.tile = q ? q.tile : null; ball.airTime = 0;
   ball.quat.identity();
 }
@@ -2184,6 +2244,23 @@ function enterMenu() {
   cam.reset(0, R, 0);
   ui.hud(false);
   ui.showOnly(ui.menu);
+}
+
+// Best scores are kept per speed level.
+function bestKey() { return 'best.' + CONFIG.speedLevels[SPEED.level].name; }
+function loadBest() { game.best = Number(store.get(bestKey(), 0)) || 0; }
+
+// Change the speed level (menu / game-over screens only, never mid-run).
+function changeSpeed(dir) {
+  if (game.state !== STATE.MENU && game.state !== STATE.GAME_OVER) return;
+  const prev = SPEED.level;
+  applySpeedLevel(SPEED.level + dir);
+  if (SPEED.level === prev) return;
+  store.set('speedLevel', SPEED.level);
+  loadBest();
+  game.newBest = false;
+  ui.newBest.classList.add('hidden');
+  ui.updateSpeedSel();
 }
 
 function startRun() {
@@ -2260,7 +2337,7 @@ function frame(now) {
 
   switch (game.state) {
     case STATE.MENU: {
-      const sp = 13;
+      const sp = SPEED.start * 0.9;
       game.menuS += sp * dt;
       game.time += dt;
       renderTime = game.time;
@@ -2345,7 +2422,7 @@ function frame(now) {
   updateObstacleInstances(renderTime);
   stars.position.copy(camera.position);
   updateStreaks(game.state === STATE.PAUSED ? 0 : dt, game.state === STATE.PLAYING ? ball.vs : 0);
-  audio.update(clamp((ball.vs - CONFIG.startSpeed) / (CONFIG.maxSpeed - CONFIG.startSpeed), 0, 1), ball.grounded, game.state === STATE.PLAYING);
+  audio.update(clamp((ball.vs - SPEED.start) / (SPEED.max - SPEED.start), 0, 1), ball.grounded, game.state === STATE.PLAYING);
   if (game.state === STATE.PLAYING) ui.update();
   ui.updateDebug(dt, fpsMeter.fps);
   renderer.info.reset();
@@ -2360,7 +2437,7 @@ enterMenu();
 // Test hook (only with ?debug in the URL): exposes internals for automated checks.
 if (/[?&]debug\b/.test(location.search)) {
   window.__neon = { THREE, CONFIG, game, ball, world, G, input, physicsStep, startRun, ensureTrack, recycleTrack,
-    groundQuery, baselineAt, obstacleX, hitObstacle, tileHeightRaw, speedAtDistance, STATE, chunkMeshPool, bloom, shiftOrigin, renderer, cam };
+    groundQuery, baselineAt, obstacleX, hitObstacle, tileHeightRaw, speedAtDistance, STATE, chunkMeshPool, bloom, shiftOrigin, renderer, cam, SPEED, changeSpeed };
 }
 onResize();
 initBloom();
