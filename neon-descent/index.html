@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>NEON DESCENT</title>
+<style>
+  :root { --neon: #39ff14; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+    background: #000; color: #fff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    touch-action: none; -ms-touch-action: none;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+  }
+  canvas#game { display: block; position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; outline: none; }
+  .overlay {
+    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; pointer-events: none; padding: 16px;
+  }
+  .hidden { display: none !important; }
+  .neon { color: var(--neon); text-shadow: 0 0 6px var(--neon), 0 0 18px var(--neon), 0 0 42px var(--neon); }
+  .dim { color: rgba(255,255,255,0.62); }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  #score {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+    font-size: clamp(34px, 8vw, 64px); font-weight: 700; letter-spacing: 0.06em;
+    color: #fff; text-shadow: 0 0 8px var(--neon), 0 0 24px var(--neon);
+    font-variant-numeric: tabular-nums;
+  }
+  #stats {
+    position: absolute; top: max(16px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right));
+    text-align: right; font-size: clamp(11px, 2.6vw, 14px); line-height: 1.6; color: rgba(255,255,255,0.75);
+    font-variant-numeric: tabular-nums;
+  }
+  #stats b { color: var(--neon); font-weight: 700; }
+  #stats[data-muted="true"]::after { content: "\A MUTED"; white-space: pre; color: rgba(255,255,255,0.5); }
+  #pauseBtn {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left));
+    width: 44px; height: 44px; border: 2px solid var(--neon); border-radius: 10px; background: rgba(0,0,0,0.35);
+    color: var(--neon); font: inherit; font-size: 18px; font-weight: 700; pointer-events: auto; cursor: pointer;
+    box-shadow: 0 0 10px var(--neon); display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .touchHint {
+    position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid var(--neon); opacity: 0.22; display: flex; align-items: center; justify-content: center;
+    color: var(--neon); font-size: 28px; transition: opacity 0.08s;
+  }
+  .touchHint.on { opacity: 0.75; box-shadow: 0 0 16px var(--neon); }
+  #touchL { left: max(18px, env(safe-area-inset-left)); }
+  #touchR { right: max(18px, env(safe-area-inset-right)); }
+
+  /* ---------- Menu / overlays ---------- */
+  .title {
+    margin: 0 0 0.35em; font-size: clamp(38px, 11vw, 104px); font-weight: 800; letter-spacing: 0.08em; line-height: 1.02;
+  }
+  .prompt { font-size: clamp(15px, 4vw, 22px); letter-spacing: 0.12em; margin: 1.1em 0; animation: blink 1.1s ease-in-out infinite; }
+  .hint { font-size: clamp(11px, 3vw, 14px); line-height: 1.8; max-width: 560px; }
+  .hint kbd {
+    display: inline-block; min-width: 1.7em; padding: 0 0.4em; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px;
+    font: inherit; color: #fff; background: rgba(255,255,255,0.06);
+  }
+  .best { margin-top: 1.4em; font-size: clamp(13px, 3.4vw, 17px); letter-spacing: 0.1em; }
+  .panel {
+    padding: clamp(18px, 4vw, 34px) clamp(22px, 6vw, 54px); border: 2px solid var(--neon); border-radius: 14px;
+    background: rgba(0,0,0,0.55); box-shadow: 0 0 22px var(--neon), inset 0 0 22px rgba(0,0,0,0.8);
+    backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); max-width: 92vw;
+  }
+  .big { font-size: clamp(30px, 9vw, 70px); font-weight: 800; letter-spacing: 0.1em; margin: 0 0 0.3em; }
+  .finalScore { font-size: clamp(40px, 12vw, 88px); font-weight: 800; color: #fff; text-shadow: 0 0 10px var(--neon), 0 0 28px var(--neon); line-height: 1.1; }
+  .label { font-size: clamp(11px, 2.8vw, 13px); letter-spacing: 0.3em; color: rgba(255,255,255,0.6); }
+  #newBest { font-size: clamp(18px, 5vw, 28px); font-weight: 800; letter-spacing: 0.2em; color: #fff; margin-top: 0.4em;
+    text-shadow: 0 0 8px #fff, 0 0 20px var(--neon), 0 0 40px var(--neon); animation: flash 0.45s steps(2, start) infinite; }
+  #retry { visibility: hidden; }
+  #retry.show { visibility: visible; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @keyframes flash { to { visibility: hidden; } }
+  @media (prefers-reduced-motion: reduce) {
+    .prompt, #newBest { animation: none; }
+  }
+
+  /* ---------- Debug ---------- */
+  #debug {
+    position: fixed; left: 8px; bottom: 8px; padding: 8px 10px; background: rgba(0,0,0,0.72); border: 1px solid #555;
+    font-size: 12px; line-height: 1.45; color: #cfc; white-space: pre; pointer-events: none; border-radius: 6px; z-index: 5;
+  }
+  #loadError { color: #fff; font-size: 16px; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="game" tabindex="0"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="score">0</div>
+  <div id="stats">BEST <b id="hudBest">0</b><br>SPEED <b id="hudSpeed">0</b> m/s</div>
+  <button id="pauseBtn" class="hidden" aria-label="Pause">II</button>
+  <div id="touchL" class="touchHint hidden">&#9664;</div>
+  <div id="touchR" class="touchHint hidden">&#9654;</div>
+</div>
+
+<div id="menu" class="overlay">
+  <h1 class="title neon" id="menuTitle">NEON DESCENT</h1>
+  <div class="prompt neon" id="menuPrompt">PRESS SPACE / TAP TO PLAY</div>
+  <div class="hint dim" id="menuHint">
+    <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>P</kbd> pause &nbsp;·&nbsp; <kbd>M</kbd> mute<br>
+    Avoid the <span style="color:#ff2a2a;text-shadow:0 0 8px #ff2a2a">red blocks</span>. Don't fall off.
+  </div>
+  <div class="best neon">BEST <span id="menuBest">0</span></div>
+</div>
+
+<div id="pause" class="overlay hidden">
+  <div class="panel">
+    <div class="big neon">PAUSED</div>
+    <div class="hint dim" id="pauseHint">P / Esc / Space to resume</div>
+  </div>
+</div>
+
+<div id="gameover" class="overlay hidden">
+  <div class="panel">
+    <div class="big neon">GAME OVER</div>
+    <div class="label">SCORE</div>
+    <div class="finalScore" id="goScore">0</div>
+    <div id="newBest" class="hidden">NEW BEST!</div>
+    <div class="best neon">BEST <span id="goBest">0</span></div>
+    <div class="prompt neon" id="retry">SPACE / TAP TO RETRY</div>
+  </div>
+</div>
+
+<div id="loadError" class="overlay hidden">
+  <div class="panel">Could not load the 3D engine.<br><span class="dim">Check your internet connection and reload.</span></div>
+</div>
+
+<div id="debug" class="hidden"></div>
+
+<script>
+  // Fallback: if the module never boots (CDN blocked / very old browser), say so instead of a black screen.
+  setTimeout(function () {
+    if (!window.__neonBooted) {
+      var e = document.getElementById('loadError'); if (e) e.classList.remove('hidden');
+      var m = document.getElementById('menu'); if (m) m.classList.add('hidden');
+    }
+  }, 12000);
+</script>
+<script type="module">
+import * as THREE from 'three';
+window.__neonBooted = true;
+
+/* =====================================================================
+   CONFIG — every tunable number lives here
+   ===================================================================== */
+const CONFIG = {
+  title: 'NEON DESCENT',
+  storageKey: 'neonDescent.v1',
+
+  // --- Simulation ---
+  physicsHz: 120,            // fixed simulation rate
+  substeps: 2,               // collision substeps per fixed step
+  maxFrameDelta: 0.1,        // clamp for lag spikes / tab switches (s)
+  maxStepsPerFrame: 12,
+
+  // --- Ball ---
+  ballRadius: 0.5,
+
+  // --- Forward speed ---
+  startSpeed: 14,            // units/s
+  speedGain: 0.35,           // units/s gained per second
+  maxSpeed: 55,
+
+  // --- Steering ---
+  steerAccel: 45,            // units/s²
+  maxSideSpeed: 13,
+  sideDamping: 7,            // 1/s, exponential damping with no input (grounded)
+  airSideDamping: 2.5,       // 1/s, damping with no input (airborne)
+  airSteerFactor: 0.5,
+
+  // --- Gravity / ground contact ---
+  gravity: 32,
+  groundSnapDown: 0.3,       // surface this far below the ball bottom => airborne
+  groundSnapUp: 0.35,        // max upward follow while grounded (continuous ramps only)
+  landTolerance: 0.12,       // ball may be this far below a surface (previous step) and still land
+  fallDeathDepth: 6,         // below baseline => dead
+  obstacleHitboxScale: 0.9,
+
+  // --- Track shape ---
+  trackSlopeDeg: 12,         // overall descent
+  tileThickness: 0.7,
+  startWidth: 8,
+  minWidth: 3,
+  warmupLength: 150,
+  buildAhead: 250,
+  recycleBehind: 30,
+  chunkMinLen: 30,
+  chunkMaxLen: 60,
+  rampAngleMin: 15,
+  rampAngleMax: 25,
+  difficultyStart: 150,      // distance where difficulty starts ramping
+  difficultyFull: 1500,      // distance where difficulty reaches 1 (~60 s)
+  breatherEvery: 3,          // easy chunk after this many hard ones
+  pipeWallHeight: 5,
+  pipeWallWidth: 3.2,        // horizontal extent of each half-pipe wall
+  wallFriction: 2,           // extra damping while rolling up a slope (keeps pipe rides inside the walls)
+
+  // --- Fairness ---
+  minOpeningDiameters: 2.5,  // every opening >= 2.5 ball diameters
+  gapFlightFraction: 0.65,   // gap <= 65% of predicted flight
+  landingClearTime: 0.75,    // s of clear track after a landing
+  reactionTime: 0.3,         // s added to every lateral manoeuvre
+  reachSafety: 1.25,         // required lateral move is multiplied by this
+  landingMargin: 0.25,       // landing surface sits this far below the ball's predicted path at the gap end
+  minVisibleTime: 1.5,       // hazards visible this long before reaching them
+
+  // --- World ---
+  originShiftDistance: 1000,
+
+  // --- Camera ---
+  camOffsetX: 0, camOffsetY: 3.5, camOffsetZ: 7,
+  camLookAhead: 10,
+  camFollowX: 4.5,           // damping rate (1/s) for sideways follow (lower = more trail)
+  camFollowY: 5,
+  fovMin: 70, fovMax: 85,
+  minHorizontalFov: 58,      // portrait screens widen the vertical FOV to keep at least this much width
+  maxPortraitFov: 100,
+  camNear: 0.1, camFar: 340,
+  fogNear: 80, fogFar: 285,
+  shakeLanding: 0.18, shakeDeath: 0.55,
+  landingBump: 0.35,
+
+  // --- Visuals ---
+  palette: ['#39ff14', '#00f0ff', '#2f6bff', '#a640ff', '#ffc21a'],
+  colorStep: 1000,
+  colorBlendRate: 0.9,
+  obstacleColor: '#ff2a2a',
+  gridSize: 2,
+  edgeThickness: 0.1,
+  edgeGlowWidth: 0.9,
+  bloom: true,
+  bloomStrength: 0.62, bloomRadius: 0.35, bloomThreshold: 0.3,
+  bloomMinFps: 45,           // auto-disable bloom below this
+  maxPixelRatio: 2,
+  starCount: 900,
+  streaks: true, streakCount: 70,
+
+  // --- Timing ---
+  dyingDuration: 1.0,
+  restartLockout: 0.6,
+  slowMoScale: 0.18,
+  slowMoDuration: 0.4,
+
+  // --- Audio ---
+  masterVolume: 0.55,
+
+  // --- Pools / capacities ---
+  maxObstacles: 512,
+  shardCount: 56,
+  capSurfVerts: 9000, capSideVerts: 9000, capEdgeVerts: 30000, capGlowVerts: 9000,
+};
+
+/* =====================================================================
+   Small utilities
+   ===================================================================== */
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const damp = (cur, target, rate, dt) => lerp(cur, target, 1 - Math.exp(-rate * dt));
+const DEG = Math.PI / 180;
+const R = CONFIG.ballRadius;
+const SLOPE = -Math.tan(CONFIG.trackSlopeDeg * DEG);   // dy per unit of forward travel
+const MIN_OPEN = CONFIG.minOpeningDiameters * 2 * R;
+const STEP = 1 / CONFIG.physicsHz;
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Predicted forward speed after travelling D units (v² = v0² + 2aD, capped).
+function speedAtDistance(D) {
+  return Math.min(CONFIG.maxSpeed, Math.sqrt(CONFIG.startSpeed * CONFIG.startSpeed + 2 * CONFIG.speedGain * Math.max(0, D)));
+}
+
+const store = {
+  get(key, fallback) {
+    try { const v = localStorage.getItem(CONFIG.storageKey + '.' + key); return v === null ? fallback : JSON.parse(v); }
+    catch (e) { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(CONFIG.storageKey + '.' + key, JSON.stringify(value)); } catch (e) { /* storage blocked */ }
+  },
+};
+
+const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+const IS_MOBILE = IS_TOUCH && (window.matchMedia('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 820);
+const reduceMotionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+let REDUCED_MOTION = reduceMotionMQ.matches;
+if (reduceMotionMQ.addEventListener) reduceMotionMQ.addEventListener('change', (e) => { REDUCED_MOTION = e.matches; });
+
+/* =====================================================================
+   SETUP — renderer, scene, camera, textures, shared materials
+   ===================================================================== */
+const canvas = document.getElementById('game');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !IS_MOBILE, powerPreference: 'high-performance', alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, CONFIG.maxPixelRatio));
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+renderer.setClearColor(0x000000, 1);
+renderer.info.autoReset = false;   // reset once per frame so the debug overlay counts every pass
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.Fog(0x000000, CONFIG.fogNear, CONFIG.fogFar);
+
+const camera = new THREE.PerspectiveCamera(CONFIG.fovMin, window.innerWidth / window.innerHeight, CONFIG.camNear, CONFIG.camFar);
+camera.position.set(0, CONFIG.camOffsetY, CONFIG.camOffsetZ);
+scene.add(camera);
+
+// Lights only affect the ball (everything else uses unlit materials).
+scene.add(new THREE.HemisphereLight(0xffffff, 0x223322, 1.5));
+const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+sun.position.set(-3, 8, 4);
+scene.add(sun);
+
+// ---- Canvas textures ----
+function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+
+function makeGridTexture() {
+  const c = makeCanvas(128, 128), g = c.getContext('2d');
+  g.fillStyle = '#0b0d0b'; g.fillRect(0, 0, 128, 128);
+  // subtle inner sub-grid
+  g.strokeStyle = 'rgba(255,255,255,0.07)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(64, 0); g.lineTo(64, 128); g.moveTo(0, 64); g.lineTo(128, 64); g.stroke();
+  // main cell border
+  g.strokeStyle = 'rgba(255,255,255,0.42)'; g.lineWidth = 3;
+  g.strokeRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeGlowStripTexture() {
+  // Horizontal falloff across the strip (u axis), constant along it.
+  const c = makeCanvas(64, 4), g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, 64, 0);
+  grad.addColorStop(0, 'rgba(255,255,255,0)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.25)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.65, 'rgba(255,255,255,0.25)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 64, 4);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+function makeRadialTexture(inner = 'rgba(255,255,255,1)', mid = 'rgba(255,255,255,0.25)') {
+  const c = makeCanvas(128, 128), g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, inner); grad.addColorStop(0.3, mid); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+function makeRingTexture() {
+  const c = makeCanvas(128, 128), g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 20, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(255,255,255,0)');
+  grad.addColorStop(0.55, 'rgba(255,255,255,0.15)');
+  grad.addColorStop(0.8, 'rgba(255,255,255,0.9)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+function makeBallTexture() {
+  const c = makeCanvas(512, 256), g = c.getContext('2d');
+  const cols = 8, rows = 4, cw = 512 / cols, ch = 256 / rows;
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    g.fillStyle = (x + y) % 2 === 0 ? '#f4f6f8' : '#1a1c20';
+    g.fillRect(x * cw, y * ch, cw, ch);
+  }
+  // equatorial accent stripe
+  g.fillStyle = '#ffffff'; g.fillRect(0, 122, 512, 12);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+const TEX = {
+  grid: makeGridTexture(),
+  glowStrip: makeGlowStripTexture(),
+  glow: makeRadialTexture(),
+  ring: makeRingTexture(),
+  ball: makeBallTexture(),
+};
+
+// ---- Shared materials (one set for the whole game; colors are retinted live) ----
+const neon = new THREE.Color(CONFIG.palette[0]);
+const MAT = {
+  surface: new THREE.MeshBasicMaterial({ map: TEX.grid, color: neon.clone(), side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }),
+  side: new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide, vertexColors: true }),
+  edge: new THREE.MeshBasicMaterial({ color: neon.clone(), side: THREE.DoubleSide }),
+  glow: new THREE.MeshBasicMaterial({ map: TEX.glowStrip, color: neon.clone(), transparent: true, opacity: 0.55,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
+  obstacle: new THREE.MeshBasicMaterial({ color: new THREE.Color(CONFIG.obstacleColor), vertexColors: true }),
+  obstacleEdge: new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff8a7a') }),
+  obstacleShell: new THREE.MeshBasicMaterial({ color: new THREE.Color(CONFIG.obstacleColor), transparent: true, opacity: 0.16,
+    blending: THREE.AdditiveBlending, depthWrite: false }),
+  ball: new THREE.MeshPhongMaterial({ map: TEX.ball, shininess: 90, specular: 0x888888, emissive: 0x151515 }),
+  ballGlow: new THREE.SpriteMaterial({ map: TEX.glow, color: 0xffffff, transparent: true, opacity: 0.3,
+    blending: THREE.AdditiveBlending, depthWrite: false }),
+  ring: new THREE.MeshBasicMaterial({ map: TEX.ring, color: neon.clone(), transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
+  shard: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+};
+
+// Apply the current neon colour to every tinted material.
+const _white = new THREE.Color(0xffffff);
+function applyNeon(color) {
+  MAT.surface.color.copy(color).multiplyScalar(0.72);
+  MAT.edge.color.copy(color).lerp(_white, 0.28);
+  MAT.glow.color.copy(color);
+  MAT.ring.color.copy(color);
+  MAT.side.color.copy(color).multiplyScalar(0.11);
+  MAT.ballGlow.color.copy(color).lerp(_white, 0.6);
+  document.documentElement.style.setProperty('--neon', '#' + color.getHexString());
+}
+applyNeon(neon);
+
+/* =====================================================================
+   TRACK DATA
+   Coordinates: x = right, y = up, s = forward distance (world z = -s).
+   Tiles are plain data; all physics queries are analytic against them.
+   ===================================================================== */
+const world = {
+  shiftS: 0,          // total forward distance removed by origin shifts
+  shiftY: 0,
+  chunks: [],         // active chunks, ordered by s
+  baseline: [],       // [{s, y, x}] main track floor line, monotonic in s
+  obstacles: [],      // obstacles of active chunks
+  nextChunkId: 1,
+};
+
+// Surface height of a tile at (x, s) without bounds checks (used for extrapolation).
+function tileHeightRaw(t, x, s) {
+  const dx = x - t.cx;
+  let y = t.y0 + (s - t.s0) * t.slope;
+  if (t.bankTan) y -= t.bankTan * (t.bankDir * dx + t.w * 0.5);
+  if (t.pipeK) { const e = Math.abs(dx) - t.pipeFlat; if (e > 0) y += t.pipeK * e * e; }
+  return y;
+}
+// Sideways gradient dy/dx of a tile surface at x.
+function tileGradX(t, x) {
+  let g = 0;
+  if (t.bankTan) g -= t.bankTan * t.bankDir;
+  if (t.pipeK) { const dx = x - t.cx, e = Math.abs(dx) - t.pipeFlat; if (e > 0) g += 2 * t.pipeK * e * Math.sign(dx); }
+  return g;
+}
+function tileContains(t, x, s) {
+  return s >= t.s0 && s <= t.s1 && Math.abs(x - t.cx) <= t.w * 0.5;
+}
+
+// Highest surface under (x, s) that is not more than `upTol` above `bottom`.
+const _gq = { tile: null, h: 0 };
+function groundQuery(x, s, bottom, upTol) {
+  let best = null, bestH = -Infinity;
+  const chunks = world.chunks;
+  for (let ci = 0; ci < chunks.length; ci++) {
+    const c = chunks[ci];
+    if (s < c.s0 - 0.5 || s > c.s1 + 0.5) continue;
+    const tiles = c.tiles;
+    for (let i = 0; i < tiles.length; i++) {
+      const t = tiles[i];
+      if (!tileContains(t, x, s)) continue;
+      const h = tileHeightRaw(t, x, s);
+      if (h <= bottom + upTol && h > bestH) { bestH = h; best = t; }
+    }
+  }
+  if (!best) return null;
+  _gq.tile = best; _gq.h = bestH;
+  return _gq;
+}
+
+// Landing test: the ball bottom crossed a surface between the previous and current substep.
+// It only lands if it was above (or within tolerance of) that surface on the previous step,
+// so a ball below a tile edge never pops up onto it.
+function landingQuery(px, ps, pBottom, x, s, bottom) {
+  let best = null, bestH = -Infinity;
+  const chunks = world.chunks;
+  for (let ci = 0; ci < chunks.length; ci++) {
+    const c = chunks[ci];
+    if (s < c.s0 - 0.5 || s > c.s1 + 0.5) continue;
+    const tiles = c.tiles;
+    for (let i = 0; i < tiles.length; i++) {
+      const t = tiles[i];
+      if (!tileContains(t, x, s)) continue;
+      const h = tileHeightRaw(t, x, s);
+      if (bottom > h) continue;
+      const hp = tileHeightRaw(t, px, ps);
+      if (pBottom < hp - CONFIG.landTolerance) continue;
+      if (h > bestH) { bestH = h; best = t; }
+    }
+  }
+  if (!best) return null;
+  _gq.tile = best; _gq.h = bestH;
+  return _gq;
+}
+
+// Baseline (track floor line) — interpolated across gaps.
+function baselineIndex(s) {
+  const b = world.baseline;
+  let lo = 0, hi = b.length - 1;
+  if (hi < 0) return -1;
+  if (s <= b[0].s) return 0;
+  if (s >= b[hi].s) return hi;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (b[m].s <= s) lo = m; else hi = m; }
+  return lo;
+}
+function baselineAt(s) {
+  const b = world.baseline;
+  if (!b.length) return 0;
+  const i = baselineIndex(s);
+  if (i >= b.length - 1 || s <= b[0].s) return b[i].y;
+  const p = b[i], q = b[i + 1];
+  const t = q.s > p.s ? (s - p.s) / (q.s - p.s) : 1;
+  return lerp(p.y, q.y, clamp(t, 0, 1));
+}
+function baselineXAt(s) {
+  const b = world.baseline;
+  if (!b.length) return 0;
+  const i = baselineIndex(s);
+  if (i >= b.length - 1) return b[i].x;
+  const p = b[i], q = b[i + 1];
+  const t = q.s > p.s ? clamp((s - p.s) / (q.s - p.s), 0, 1) : 1;
+  return lerp(p.x, q.x, t);
+}
+
+/* =====================================================================
+   TRACK GENERATOR
+   Builds chunks ahead of the ball from a seeded RNG. Fairness rules
+   (opening sizes, lateral reach, jump distances, landing clearance)
+   are enforced here in code.
+   ===================================================================== */
+const G = {
+  rng: Math.random, seed: 0,
+  s: 0, y: 0, x: 0, w: CONFIG.startWidth,
+  lastSafe: [[-3, 3]], lastConS: 0,   // where the ball must be (x intervals) at s = lastConS
+  lastTile: null,                     // last plain runway tile (for merging)
+  chunk: null,
+  hardCount: 0, lastType: '',
+};
+const rand = (a, b) => a + (b - a) * G.rng();
+const randInt = (a, b) => Math.floor(rand(a, b + 1));
+const chance = (p) => G.rng() < p;
+
+function absS(s) { return s + world.shiftS; }
+function vAt(s) { return speedAtDistance(absS(s)); }
+function difficultyAt(s) {
+  return clamp((absS(s) - CONFIG.difficultyStart) / (CONFIG.difficultyFull - CONFIG.difficultyStart), 0, 1);
+}
+
+// ---- Lateral reach model (from steering accel + max sideways speed) ----
+function lateralReach(t) {
+  t -= CONFIG.reactionTime;
+  if (t <= 0) return 0;
+  const a = CONFIG.steerAccel, vm = CONFIG.maxSideSpeed, ta = vm / a;
+  const d = t < ta ? 0.5 * a * t * t : 0.5 * a * ta * ta + vm * (t - ta);
+  return d / CONFIG.reachSafety;
+}
+function timeToReach(dist) {
+  if (dist <= 0) return 0;
+  dist *= CONFIG.reachSafety;
+  const a = CONFIG.steerAccel, vm = CONFIG.maxSideSpeed, ta = vm / a, da = 0.5 * a * ta * ta;
+  const t = dist <= da ? Math.sqrt(2 * dist / a) : ta + (dist - da) / vm;
+  return t + CONFIG.reactionTime;
+}
+// Worst-case sideways move needed to get from anywhere in `from` into some interval of `to`.
+function requiredMove(from, to) {
+  let worst = 0;
+  for (const [lo, hi] of from) {
+    const n = Math.max(1, Math.ceil((hi - lo) / 0.2));
+    for (let k = 0; k <= n; k++) {
+      const x = lo + (hi - lo) * (k / n);
+      let best = Infinity;
+      for (const [a, b] of to) {
+        const d = x < a ? a - x : x > b ? x - b : 0;
+        if (d < best) best = d;
+      }
+      if (best > worst) worst = best;
+    }
+  }
+  return worst;
+}
+function minSpacing(from, to, v) { return v * timeToReach(requiredMove(from, to)); }
+// Safe ball-centre interval for a tile/opening spanning [a, b].
+function centreIv(a, b, margin = 0.15) { return [a + margin, b - margin]; }
+function tileIv(cx, w) { return centreIv(cx - w / 2, cx + w / 2, 0.25); }
+
+// ---- Flight prediction (ball bottom), used to size gaps and drops ----
+// Returns the forward distance at which the ball bottom meets the plane y = planeY0 + planeSlope * s,
+// only counting contacts at s >= minS.
+function flightDistance(v, vy0, yBottom0, planeY0, planeSlope, minS = 0) {
+  const h = 1 / 240, g = CONFIG.gravity;
+  let s = 0, y = yBottom0, vy = vy0;
+  for (let i = 0; i < 6000; i++) {
+    vy -= g * h; y += vy * h; s += v * h;
+    if (s >= minS && y <= planeY0 + planeSlope * s) return s;
+  }
+  return s;
+}
+function ballBottomAfter(v, vy0, yBottom0, dist) {
+  const t = dist / v;
+  return yBottom0 + vy0 * t - 0.5 * CONFIG.gravity * t * t;
+}
+
+// ---- Data emitters ----
+function pushBase(s, y, x) {
+  const b = world.baseline, last = b[b.length - 1];
+  if (last && s <= last.s + 1e-4) {
+    // same s: keep the lower point (drop-offs), nudge forward to stay monotonic
+    if (y < last.y) b.push({ s: last.s + 1e-3, y, x });
+    return;
+  }
+  b.push({ s, y, x });
+}
+
+function addTile(o) {
+  const t = {
+    kind: o.kind || 'flat',
+    cx: o.cx, w: o.w, s0: o.s0, s1: o.s0 + o.len, y0: o.y0,
+    slope: o.slope !== undefined ? o.slope : SLOPE,
+    botSlope: o.botSlope !== undefined ? o.botSlope : (o.slope !== undefined ? o.slope : SLOPE),
+    bankTan: o.bankTan || 0, bankDir: o.bankDir || 0,
+    pipeK: o.pipeK || 0, pipeFlat: o.pipeFlat || 0,
+    edgeStart: true, edgeEnd: true, chunk: G.chunk,
+  };
+  G.chunk.tiles.push(t);
+  return t;
+}
+
+// Plain runway tile continuing the main track at the current x / width.
+function runTile(len) {
+  if (len <= 0.001) return;
+  const lt = G.lastTile;
+  if (lt && lt.kind === 'flat' && Math.abs(lt.s1 - G.s) < 1e-6 && Math.abs(lt.cx - G.x) < 1e-6 &&
+      Math.abs(lt.w - G.w) < 1e-6 && Math.abs(tileHeightRaw(lt, lt.cx, lt.s1) - G.y) < 1e-4) {
+    if (lt.chunk === G.chunk) {
+      lt.s1 += len;                       // extend the same tile
+    } else {
+      const t = addTile({ cx: G.x, w: G.w, s0: G.s, len, y0: G.y });
+      t.chunk = G.chunk; lt.edgeEnd = false; t.edgeStart = false;
+      G.lastTile = t;
+    }
+  } else {
+    const t = addTile({ cx: G.x, w: G.w, s0: G.s, len, y0: G.y });
+    t.chunk = G.chunk;
+    G.lastTile = t;
+  }
+  G.s += len; G.y += len * SLOPE;
+  pushBase(G.s, G.y, G.x);
+}
+
+// Extend the current track until the ball can reach `toIv` from where it was last constrained.
+function prepare(toIv, vLookAhead = 20) {
+  const v = vAt(G.s + vLookAhead);
+  const need = G.lastConS + minSpacing(G.lastSafe, toIv, v) - G.s;
+  if (need > 0) runTile(need + 0.01);
+}
+function setSafe(iv, s) { G.lastSafe = iv; G.lastConS = s; }
+function changeTrack(cx, w) {
+  const iv = [tileIv(cx, w)];
+  prepare(iv);
+  if (Math.abs(cx - G.x) > 1e-6 || Math.abs(w - G.w) > 1e-6) {
+    G.x = cx; G.w = w;
+    setSafe(iv, G.s);
+  }
+}
+
+function addObstacle(o) {
+  // o: {x, s, w, d, h, yBase, moving?}
+  const ob = {
+    x: o.x, s: o.s, w: o.w, d: o.d, h: o.h, yb: o.yBase - 0.45,
+    hTotal: o.h + 0.45,
+    amp: o.amp || 0, freq: o.freq || 0, phase: o.phase || 0,
+    cx: o.x, // current x (moving blocks update this)
+  };
+  G.chunk.obstacles.push(ob);
+  return ob;
+}
+// Height of the straight main track at s, relative to the generator cursor (before advancing).
+function yAhead(s) { return G.y + (s - G.s) * SLOPE; }
+
+// Split a solid span [a, b] (track-relative x) into boxes no wider than 2.6 and add them.
+function addBlockSpan(a, b, s, d, h) {
+  const len = b - a;
+  if (len < 0.05) return;
+  const n = Math.max(1, Math.ceil(len / 2.6));
+  const bw = len / n;
+  for (let i = 0; i < n; i++) {
+    addObstacle({ x: G.x + a + bw * (i + 0.5), s, w: bw, d, h, yBase: yAhead(s) });
+  }
+}
+
+// Turn a list of solid spans across the track into normalised spans where every
+// gap (between blocks, or block-to-edge) is either 0 or >= MIN_OPEN.
+// Returns {blocks:[[a,b]], openings:[[a,b]]} in track-relative x.
+function normaliseRow(spans, w) {
+  spans = spans.map((p) => [clamp(p[0], -w / 2, w / 2), clamp(p[1], -w / 2, w / 2)]).filter((p) => p[1] - p[0] > 0.05);
+  spans.sort((p, q) => p[0] - q[0]);
+  // merge overlaps
+  const merged = [];
+  for (const sp of spans) {
+    const last = merged[merged.length - 1];
+    if (last && sp[0] <= last[1] + 1e-6) last[1] = Math.max(last[1], sp[1]); else merged.push(sp.slice());
+  }
+  // close narrow gaps
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i <= merged.length; i++) {
+      const left = i === 0 ? -w / 2 : merged[i - 1][1];
+      const right = i === merged.length ? w / 2 : merged[i][0];
+      const gap = right - left;
+      if (gap > 1e-6 && gap < MIN_OPEN) {
+        if (i === 0) merged[0][0] = -w / 2;
+        else if (i === merged.length) merged[i - 1][1] = w / 2;
+        else { merged[i - 1][1] = merged[i][1]; merged.splice(i, 1); }
+        changed = true; break;
+      }
+    }
+  }
+  const openings = [];
+  let cur = -w / 2;
+  for (const sp of merged) { if (sp[0] - cur >= MIN_OPEN - 1e-6) openings.push([cur, sp[0]]); cur = sp[1]; }
+  if (w / 2 - cur >= MIN_OPEN - 1e-6) openings.push([cur, w / 2]);
+  return { blocks: merged, openings };
+}
+
+/* ---------------- Chunk builders ---------------- */
+// Chunks are ~30-60 units at low speed; at high speed allow ~1.5 s of travel so a chunk still holds a full feature.
+function chunkLenCap(s) { return Math.max(CONFIG.chunkMaxLen, vAt(s) * 1.5); }
+function trackWidthFor(d) {
+  return clamp(lerp(CONFIG.startWidth, CONFIG.minWidth + 0.3, d) * rand(0.88, 1.12), CONFIG.minWidth, CONFIG.startWidth + 0.5);
+}
+
+const BUILDERS = {
+  warmup() {
+    changeTrack(G.x, CONFIG.startWidth);
+    runTile(Math.min(50, CONFIG.warmupLength - absS(G.s) + 1));
+  },
+
+  breather() {
+    const v = vAt(G.s);
+    changeTrack(G.x, Math.max(G.w, 6.5));
+    runTile(Math.max(18, v * 1.3));
+  },
+
+  runway() {
+    const d = difficultyAt(G.s);
+    changeTrack(G.x, trackWidthFor(d));
+    const len = rand(CONFIG.chunkMinLen, CONFIG.chunkMaxLen);
+    const start = G.s;
+    // later on, a runway can carry a few sparse single blocks
+    if (d > 0.45 && G.w >= 5.5 && chance(0.5)) {
+      let s = G.s + 10, rowS = s;
+      const end = start + len - 4;
+      while (true) {
+        const v = vAt(s);
+        const bw = rand(1, Math.min(2.2, G.w - MIN_OPEN - 0.2));
+        const xc = chance(0.5) ? -G.w / 2 + bw / 2 : G.w / 2 - bw / 2;
+        const row = normaliseRow([[xc - bw / 2, xc + bw / 2]], G.w);
+        if (!row.openings.length) break;
+        const iv = row.openings.map(([a, b]) => centreIv(G.x + a, G.x + b));
+        rowS = Math.max(s, G.lastConS + minSpacing(G.lastSafe, iv, v));
+        if (rowS > end) break;
+        for (const [a, b] of row.blocks) addBlockSpan(a, b, rowS, 1.2, rand(1.1, 1.8));
+        setSafe(iv, rowS + 0.6);
+        s = rowS + v * rand(1.1, 1.6);
+      }
+    }
+    runTile(Math.max(len, G.lastConS - G.s + 2) - (G.s - start));
+  },
+
+  blocks() {
+    const d = difficultyAt(G.s);
+    changeTrack(G.x, clamp(lerp(8.5, 6, d) * rand(0.95, 1.1), 6, 9.2));
+    const w = G.w;
+    const pattern = ['single', 'row', 'slalom', 'row'][randInt(0, 3)];
+    const rows = randInt(3, 4 + Math.round(3 * d));
+    const open = Math.max(MIN_OPEN, lerp(4.2, MIN_OPEN, d) * rand(1, 1.15));
+    let prevRowS = G.s + rand(4, 8);
+    let side = chance(0.5) ? 1 : -1;
+    const bStart = G.s, cap = chunkLenCap(G.s);
+    for (let i = 0; i < rows; i++) {
+      if (i >= 2 && prevRowS - bStart > cap) break;
+      let spans;
+      if (pattern === 'single') {
+        const bw = rand(1.2, Math.min(3, w - open - 0.3));
+        const xc = rand(-w / 2 + bw / 2, w / 2 - bw / 2);
+        spans = [[xc - bw / 2, xc + bw / 2]];
+      } else if (pattern === 'slalom') {
+        spans = side > 0 ? [[-w / 2, w / 2 - open]] : [[-w / 2 + open, w / 2]];
+        side = -side;
+      } else {
+        const two = w >= 2 * open + 1.2 && chance(0.45);
+        if (two) {
+          const a1 = rand(-w / 2, -w / 2 + (w - 2 * open - 1.0) * 0.5);
+          const a2 = rand(a1 + open + 1.0, w / 2 - open);
+          spans = [[-w / 2, a1], [a1 + open, a2], [a2 + open, w / 2]];
+        } else {
+          const a = rand(-w / 2, w / 2 - open);
+          spans = [[-w / 2, a], [a + open, w / 2]];
+        }
+      }
+      const row = normaliseRow(spans, w);
+      if (!row.openings.length || !row.blocks.length) continue;
+      const iv = row.openings.map(([a, b]) => centreIv(G.x + a, G.x + b));
+      const sGuess = prevRowS + vAt(prevRowS) * lerp(1.35, 0.7, d) * rand(0.9, 1.15);
+      const v = vAt(sGuess);
+      const rowS = Math.max(sGuess, G.lastConS + minSpacing(G.lastSafe, iv, v));
+      const depth = rand(1.0, 1.6), h = rand(1.2, 2.2);
+      for (const [a, b] of row.blocks) addBlockSpan(a, b, rowS, depth, h);
+      setSafe(iv, rowS + depth / 2);
+      prevRowS = rowS;
+    }
+    runTile(Math.max(prevRowS + Math.max(6, vAt(prevRowS) * 0.4), G.lastConS + 2) - G.s);
+  },
+
+  moving() {
+    const d = difficultyAt(G.s);
+    changeTrack(G.x, clamp(lerp(8.5, 6.6, d) * rand(0.95, 1.08), 6.4, 9.2));
+    const w = G.w;
+    const rows = randInt(3, 4 + Math.round(2 * d));
+    const full = [tileIv(G.x, w)];
+    let prevRowS = G.s + rand(5, 9);
+    const mStart = G.s, cap = chunkLenCap(G.s);
+    for (let i = 0; i < rows; i++) {
+      if (i >= 2 && prevRowS - mStart > cap) break;
+      // A sliding block always leaves w - bw >= 2 * MIN_OPEN of free width, so one side is always >= MIN_OPEN.
+      const bw = rand(1.2, Math.min(2.6, w - 2 * MIN_OPEN));
+      const amp = (w - bw) / 2;
+      const freq = lerp(1.1, 2.4, d) * rand(0.85, 1.15);
+      const sGuess = prevRowS + vAt(prevRowS) * lerp(1.5, 0.9, d) * rand(0.95, 1.2);
+      const v = vAt(sGuess);
+      // The opening can be on either side when the ball arrives, so allow a cross-track move.
+      const crossIv = [[G.x + w / 2 - MIN_OPEN + 0.4, G.x + w / 2 - 0.4]];
+      const leftIv = [[G.x - w / 2 + 0.4, G.x - w / 2 + MIN_OPEN - 0.4]];
+      const sp = Math.max(minSpacing(G.lastSafe, crossIv, v), minSpacing(G.lastSafe, leftIv, v));
+      const rowS = Math.max(sGuess, G.lastConS + sp);
+      addObstacle({ x: G.x, s: rowS, w: bw, d: rand(1.0, 1.4), h: rand(1.2, 1.9), yBase: yAhead(rowS),
+        amp, freq, phase: rand(0, Math.PI * 2) });
+      setSafe(full, rowS + 0.7);
+      prevRowS = rowS;
+    }
+    runTile(Math.max(prevRowS + 8, G.lastConS + 2) - G.s);
+  },
+
+  ramp() {
+    const d = difficultyAt(G.s);
+    changeTrack(G.x, clamp(G.w, 4.5, 8));
+    runTile(rand(6, 10));
+    const w = G.w;
+    const vEst = vAt(G.s);
+    const spdF = clamp((vEst - CONFIG.startSpeed) / (CONFIG.maxSpeed - CONFIG.startSpeed), 0, 1);
+    const ang = lerp(CONFIG.rampAngleMin, CONFIG.rampAngleMax, clamp(G.rng() * (1 - 0.6 * spdF), 0, 1)) * DEG;
+    const tanA = Math.tan(ang);
+    const lr = rand(4, 6);
+    const ramp = addTile({ kind: 'ramp', cx: G.x, w, s0: G.s, len: lr, y0: G.y, slope: tanA, botSlope: SLOPE });
+    ramp.chunk = G.chunk;
+    const sEdge = G.s + lr, yTop = G.y + lr * tanA;
+    const baseEdge = G.y + lr * SLOPE;
+    pushBase(sEdge, baseEdge, G.x);
+    const v = vAt(sEdge);
+    const drop = rand(1, 2.5 + 3 * d);
+    const planeY0 = baseEdge - drop;                       // landing plane height at the ramp edge
+    const F = flightDistance(v, v * tanA, yTop, planeY0, SLOPE);
+    const gap = Math.max(2, CONFIG.gapFlightFraction * F);
+    // landing surface: below the predicted path at the gap end by at least landingMargin
+    const bottomAtGap = ballBottomAfter(v, v * tanA, yTop, gap);
+    const landY = Math.min(planeY0 + gap * SLOPE, bottomAtGap - CONFIG.landingMargin);
+    const F2 = flightDistance(v, v * tanA, yTop, landY - gap * SLOPE, SLOPE, gap);
+    const clear = CONFIG.landingClearTime * v;
+    const lw = w + 2;
+    const platLen = (F2 - gap) + clear + rand(5, 9);
+    const land = addTile({ cx: G.x, w: lw, s0: sEdge + gap, len: platLen, y0: landY });
+    land.chunk = G.chunk;
+    G.s = sEdge + gap; G.y = landY;
+    pushBase(G.s, G.y, G.x);
+    G.s += platLen; G.y += platLen * SLOPE;
+    pushBase(G.s, G.y, G.x);
+    G.w = lw; G.lastTile = null;
+    setSafe([tileIv(G.x, lw)], sEdge + F2 + clear);
+  },
+
+  stepdown() {
+    const d = difficultyAt(G.s);
+    changeTrack(G.x, Math.max(G.w, clamp(trackWidthFor(d), 4, 8)));
+    const n = randInt(2, 3 + Math.round(d));
+    runTile(rand(4, 8));
+    const sdStart = G.s, cap = chunkLenCap(G.s);
+    for (let i = 0; i < n; i++) {
+      if (i >= 1 && G.s - sdStart > cap) break;
+      const v = vAt(G.s);
+      const drop = rand(1.2, 2.2 + 2 * d);
+      const F = flightDistance(v, v * SLOPE, G.y, G.y - drop, SLOPE);
+      const clear = CONFIG.landingClearTime * v;
+      const len = F + clear + rand(3, 7);
+      const t = addTile({ cx: G.x, w: G.w, s0: G.s, len, y0: G.y - drop });
+      t.chunk = G.chunk;
+      pushBase(G.s, G.y - drop, G.x);
+      setSafe([tileIv(G.x, G.w)], G.s + F + clear);
+      G.y -= drop; G.s += len; G.y += len * SLOPE;
+      pushBase(G.s, G.y, G.x);
+      G.lastTile = t;
+    }
+  },
+
+  jog() {
+    const d = difficultyAt(G.s);
+    changeTrack(G.x, clamp(trackWidthFor(d), 3.6, 8));
+    const n = randInt(2, 3 + Math.round(d));
+    const jStart = G.s, cap = chunkLenCap(G.s);
+    for (let i = 0; i < n; i++) {
+      if (i >= 1 && G.s - jStart > cap) break;
+      let dir = chance(0.5) ? 1 : -1;
+      if (Math.abs(G.x) > 12) dir = -Math.sign(G.x);
+      const J = dir * rand(1.4, Math.min(Math.max(G.w * 0.85, 1.8), 4.5));
+      const nx = G.x + J;
+      const iv = [tileIv(nx, G.w)];
+      prepare(iv);
+      const drop = chance(0.4) ? rand(0.3, 0.8) : 0;
+      G.x = nx; G.y -= drop; G.lastTile = null;
+      pushBase(G.s + 1e-3, G.y, G.x);
+      setSafe(iv, G.s);
+      runTile(rand(10, 16));
+    }
+  },
+
+  bank() {
+    const d = difficultyAt(G.s);
+    changeTrack(G.x, clamp(Math.max(G.w, 5), 5, 8));
+    const n = chance(0.35 + 0.3 * d) ? 2 : 1;
+    let dir = chance(0.5) ? 1 : -1;
+    for (let i = 0; i < n; i++) {
+      const ang = lerp(9, 17, d) * rand(0.9, 1.1) * DEG;
+      const tanB = Math.tan(ang);
+      const len = rand(26, 44);
+      const t = addTile({ kind: 'bank', cx: G.x, w: G.w, s0: G.s, len, y0: G.y, bankTan: tanB, bankDir: dir });
+      t.chunk = G.chunk;
+      G.s += len; G.y += len * SLOPE;
+      const low = G.y - G.w * tanB;
+      pushBase(G.s, low, G.x);
+      G.y = low - 0.02;                                  // next tile starts at/below the lowest edge
+      dir = -dir;
+    }
+    G.lastTile = null;
+    setSafe([tileIv(G.x, G.w)], G.s);
+    runTile(rand(6, 10));
+  },
+
+  pipe() {
+    const d = difficultyAt(G.s);
+    const flat = Math.max(G.w / 2, 1.6);
+    const e = CONFIG.pipeWallWidth;
+    const k = CONFIG.pipeWallHeight / (e * e);
+    const len = rand(40, 66);
+    const W = 2 * (flat + e);
+    const t = addTile({ kind: 'pipe', cx: G.x, w: W, s0: G.s, len, y0: G.y, pipeK: k, pipeFlat: flat });
+    t.chunk = G.chunk;
+    const startS = G.s, startY = G.y;
+    // optional blocks in the middle: the ball rides the walls around them
+    const sideOpen = (bw) => flat - bw / 2 + 1.1;     // usable width per side (flat + low wall)
+    if (d > 0.3 && flat >= 1.8) {
+      const bw = Math.min(2.4, 2 * (flat + 1.1 - MIN_OPEN));
+      if (bw >= 0.9 && sideOpen(bw) >= MIN_OPEN) {
+        let sCur = startS + 12;
+        const iv = [centreIv(G.x + bw / 2, G.x + flat + 1.1), centreIv(G.x - flat - 1.1, G.x - bw / 2)];
+        const cnt = randInt(1, 2 + Math.round(d));
+        for (let i = 0; i < cnt; i++) {
+          const v = vAt(sCur);
+          const rowS = Math.max(sCur, G.lastConS + minSpacing(G.lastSafe, iv, v));
+          if (rowS > startS + len - 8) break;
+          addObstacle({ x: G.x, s: rowS, w: bw, d: 1.2, h: rand(1.3, 1.8), yBase: startY + (rowS - startS) * SLOPE });
+          setSafe([[G.x - flat - 1.1, G.x + flat + 1.1]], rowS + 0.6);
+          sCur = rowS + v * rand(1.0, 1.4);
+        }
+      }
+    }
+    G.s += len; G.y += len * SLOPE;
+    pushBase(G.s, G.y, G.x);
+    G.w = W; G.lastTile = null;
+    if (G.lastConS < G.s) setSafe([tileIv(G.x, W)], G.s);
+    runTile(rand(8, 12));
+  },
+
+  stepping() {
+    const d = difficultyAt(G.s);
+    const sz = clamp(lerp(4.2, 3.0, d) * rand(0.95, 1.1), 3, 4.6);
+    const n = randInt(6, 8 + Math.round(3 * d));
+    let cx = G.x;
+    let prevIv = [tileIv(cx, sz)];
+    prepare(prevIv);
+    let dir = chance(0.5) ? 1 : -1;
+    G.lastTile = null;
+    for (let i = 0; i < n; i++) {
+      const v = vAt(G.s);
+      let gap = rand(0.6, 1.3);
+      // drop so that the gap is <= 65% of the flight distance and the ball is above the next tile
+      let drop = CONFIG.landingMargin;
+      for (let it = 0; it < 30; it++) {
+        const yb = ballBottomAfter(v, v * SLOPE, G.y, gap);
+        const nextY = Math.min(G.y + gap * SLOPE, yb) - drop;
+        const F = flightDistance(v, v * SLOPE, G.y, nextY - gap * SLOPE, SLOPE);
+        if (gap <= CONFIG.gapFlightFraction * F) break;
+        drop += 0.05;
+      }
+      const nextY = Math.min(G.y + gap * SLOPE, ballBottomAfter(v, v * SLOPE, G.y, gap)) - drop;
+      // zig-zag offset limited by what the ball can actually reach across one tile
+      let off = dir * rand(0.35, 0.6) * sz;
+      for (let it = 0; it < 12; it++) {
+        const iv = [tileIv(cx + off, sz)];
+        const T = (sz + gap) / v;
+        if (requiredMove(prevIv, iv) <= lateralReach(T)) break;
+        off *= 0.6;
+      }
+      if (Math.abs(cx + off - G.x) > 6) off = -off;
+      cx += off; dir = -dir;
+      const t = addTile({ cx, w: sz, s0: G.s + gap, len: sz, y0: nextY });
+      t.chunk = G.chunk;
+      pushBase(G.s + gap, nextY, cx);
+      G.s += gap + sz; G.y = nextY + sz * SLOPE;
+      pushBase(G.s, G.y, cx);
+      prevIv = [tileIv(cx, sz)];
+      setSafe(prevIv, G.s - sz);
+    }
+    G.x = cx; G.w = sz;
+    runTile(rand(4, 6));
+  },
+
+  lanes() {
+    const d = difficultyAt(G.s);
+    const n = chance(0.35 + 0.3 * d) ? 3 : 2;
+    const lw = Math.max(MIN_OPEN + 0.1, lerp(3.4, 2.6, d) * rand(1, 1.1));
+    const gap = rand(0.9, 1.6);
+    const W = n * lw + (n - 1) * gap;
+    changeTrack(G.x, W);
+    const clearLane = randInt(0, n - 1);
+    const centres = [];
+    for (let i = 0; i < n; i++) centres.push(G.x - W / 2 + lw / 2 + i * (lw + gap));
+    // The ball must be able to reach the clear lane before the split.
+    prepare([tileIv(centres[clearLane], lw)]);
+    const len = rand(32, 52);
+    const startS = G.s, startY = G.y;
+    for (let i = 0; i < n; i++) {
+      const t = addTile({ cx: centres[i], w: lw, s0: startS, len, y0: startY });
+      t.chunk = G.chunk;
+      if (i === clearLane) continue;
+      if (n === 3 && chance(0.3) && i !== (clearLane + 1) % 3) continue; // sometimes a second clear lane
+      const cnt = randInt(1, 2);
+      for (let k = 0; k < cnt; k++) {
+        const s = startS + len * (0.3 + 0.55 * (cnt === 1 ? G.rng() : (k + G.rng()) / cnt));
+        addObstacle({ x: centres[i], s, w: lw + 0.2, d: 1.2, h: rand(1.3, 2), yBase: startY + (s - startS) * SLOPE });
+      }
+    }
+    G.s += len; G.y += len * SLOPE;
+    pushBase(G.s, G.y, G.x);
+    G.lastTile = null;
+    setSafe(centres.map((c) => tileIv(c, lw)), G.s);
+    runTile(rand(6, 10));
+  },
+};
+
+const CHUNK_TYPES = [
+  { type: 'runway',   min: 0,   weight: (d) => 3 - 2 * d, hard: () => false },
+  { type: 'blocks',   min: 150, weight: () => 3,           hard: (d) => d > 0.3 },
+  { type: 'jog',      min: 250, weight: () => 1.6,         hard: () => false },
+  { type: 'stepdown', min: 300, weight: () => 1.3,         hard: () => false },
+  { type: 'bank',     min: 400, weight: () => 1.3,         hard: () => false },
+  { type: 'ramp',     min: 480, weight: () => 1.8,         hard: () => true },
+  { type: 'moving',   min: 600, weight: (d) => 1 + 2 * d,  hard: () => true },
+  { type: 'pipe',     min: 650, weight: () => 1.3,         hard: () => false },
+  { type: 'stepping', min: 850, weight: (d) => 0.8 + 1.5 * d, hard: () => true },
+  { type: 'lanes',    min: 950, weight: (d) => 0.8 + 1.5 * d, hard: () => true },
+];
+
+function chooseChunkType() {
+  const D = absS(G.s);
+  if (D < CONFIG.warmupLength) return 'warmup';
+  if (G.hardCount >= CONFIG.breatherEvery) { G.hardCount = 0; return 'breather'; }
+  const d = difficultyAt(G.s);
+  const pool = CHUNK_TYPES.filter((c) => D >= c.min && (c.type !== G.lastType || c.type === 'blocks'));
+  let total = 0;
+  for (const c of pool) total += Math.max(0, c.weight(d));
+  let r = G.rng() * total;
+  let pick = pool[0];
+  for (const c of pool) { r -= Math.max(0, c.weight(d)); if (r <= 0) { pick = c; break; } }
+  if (pick.hard(d)) G.hardCount++; else if (pick.type === 'runway') G.hardCount = Math.max(0, G.hardCount - 1);
+  return pick.type;
+}
+
+function generateChunk() {
+  const c = {
+    id: world.nextChunkId++, type: '', s0: G.s, s1: G.s, oS: G.s, oY: G.y,
+    tiles: [], obstacles: [], mesh: null,
+  };
+  G.chunk = c;
+  // never start a new feature inside a landing's clear zone
+  if (G.s < G.lastConS) runTile(G.lastConS - G.s);
+  const type = chooseChunkType();
+  c.type = type;
+  BUILDERS[type]();
+  G.lastType = type;
+  let s0 = Infinity, s1 = -Infinity;
+  for (const t of c.tiles) { s0 = Math.min(s0, t.s0); s1 = Math.max(s1, t.s1); }
+  for (const o of c.obstacles) { s0 = Math.min(s0, o.s - o.d); s1 = Math.max(s1, o.s + o.d); }
+  c.s0 = Math.min(s0, c.oS); c.s1 = Math.max(s1, G.s);
+  world.chunks.push(c);
+  for (const o of c.obstacles) world.obstacles.push(o);
+  return c;
+}
+
+function resetGenerator(seed) {
+  G.seed = seed >>> 0;
+  G.rng = mulberry32(G.seed);
+  G.s = -24; G.y = -24 * SLOPE; G.x = 0; G.w = CONFIG.startWidth;
+  G.lastSafe = [tileIv(0, CONFIG.startWidth)]; G.lastConS = -24;
+  G.lastTile = null; G.chunk = null; G.hardCount = 0; G.lastType = '';
+  world.baseline.length = 0;
+  pushBase(G.s, G.y, 0);
+}
+
+/* =====================================================================
+   TRACK MESHES — display only. Each chunk is merged into 4 pooled,
+   preallocated geometries (surface, sides, edges, glow) => 4 draw calls.
+   ===================================================================== */
+function makeDynGeo(cap, withUV, withColor) {
+  const g = new THREE.BufferGeometry();
+  const pos = new THREE.BufferAttribute(new Float32Array(cap * 3), 3);
+  pos.setUsage(THREE.DynamicDrawUsage);
+  g.setAttribute('position', pos);
+  if (withUV) { const uv = new THREE.BufferAttribute(new Float32Array(cap * 2), 2); uv.setUsage(THREE.DynamicDrawUsage); g.setAttribute('uv', uv); }
+  if (withColor) { const c = new THREE.BufferAttribute(new Float32Array(cap * 3), 3); c.setUsage(THREE.DynamicDrawUsage); g.setAttribute('color', c); }
+  g.setDrawRange(0, 0);
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1);
+  g.boundingBox = new THREE.Box3();
+  return g;
+}
+
+class GeoWriter {
+  constructor(geo) {
+    this.geo = geo;
+    this.pos = geo.attributes.position.array;
+    this.uv = geo.attributes.uv ? geo.attributes.uv.array : null;
+    this.col = geo.attributes.color ? geo.attributes.color.array : null;
+    this.cap = this.pos.length / 3;
+    this.n = 0;
+  }
+  reset() { this.n = 0; }
+  room(k) { return this.n + k <= this.cap; }
+  v(x, y, z, u, w, c) {
+    const i = this.n * 3;
+    this.pos[i] = x; this.pos[i + 1] = y; this.pos[i + 2] = z;
+    if (this.uv) { this.uv[this.n * 2] = u; this.uv[this.n * 2 + 1] = w; }
+    if (this.col) { this.col[i] = c; this.col[i + 1] = c; this.col[i + 2] = c; }
+    this.n++;
+  }
+  // quad a-b-c-d (arrays [x,y,z,u,v,c])
+  quad(a, b, c, d) {
+    if (!this.room(6)) return;
+    this.v(...a); this.v(...b); this.v(...c);
+    this.v(...a); this.v(...c); this.v(...d);
+  }
+  finish(center, radius) {
+    const g = this.geo;
+    for (const name of ['position', 'uv', 'color']) {
+      const at = g.attributes[name];
+      if (!at) continue;
+      if (at.clearUpdateRanges) { at.clearUpdateRanges(); at.addUpdateRange(0, this.n * at.itemSize); }
+      at.needsUpdate = true;
+    }
+    g.setDrawRange(0, this.n);
+    g.boundingSphere.center.copy(center); g.boundingSphere.radius = radius;
+  }
+}
+
+const chunkMeshPool = [];
+const trackRoot = new THREE.Group();
+scene.add(trackRoot);
+
+function acquireChunkMesh() {
+  let m = chunkMeshPool.pop();
+  if (!m) {
+    const group = new THREE.Group();
+    const surf = new THREE.Mesh(makeDynGeo(CONFIG.capSurfVerts, true, false), MAT.surface);
+    const side = new THREE.Mesh(makeDynGeo(CONFIG.capSideVerts, false, true), MAT.side);
+    const edge = new THREE.Mesh(makeDynGeo(CONFIG.capEdgeVerts, false, false), MAT.edge);
+    const glow = new THREE.Mesh(makeDynGeo(CONFIG.capGlowVerts, true, false), MAT.glow);
+    glow.renderOrder = 2;
+    group.add(side, surf, edge, glow);
+    m = { group, surf, side, edge, glow,
+      wSurf: new GeoWriter(surf.geometry), wSide: new GeoWriter(side.geometry),
+      wEdge: new GeoWriter(edge.geometry), wGlow: new GeoWriter(glow.geometry) };
+  }
+  trackRoot.add(m.group);
+  return m;
+}
+function releaseChunkMesh(m) {
+  trackRoot.remove(m.group);
+  chunkMeshPool.push(m);
+}
+
+// Cross-section sample points of a tile (pipes need many, flat/bank tiles need two).
+function tileXs(t) {
+  const half = t.w / 2;
+  if (!t.pipeK) return [t.cx - half, t.cx + half];
+  const xs = [], segs = 10, f = t.pipeFlat;
+  for (let i = 0; i <= segs; i++) { const u = i / segs; xs.push(t.cx - half + (half - f) * (u * u * 0.35 + u * 0.65)); }
+  for (let i = 0; i <= segs; i++) { const u = 1 - i / segs; xs.push(t.cx + half - (half - f) * (u * u * 0.35 + u * 0.65)); }
+  return xs;
+}
+function tileBottom(t, s) {
+  let y = t.y0 + (s - t.s0) * t.botSlope - CONFIG.tileThickness;
+  if (t.bankTan) y -= t.w * t.bankTan;
+  return y;
+}
+
+const _v0 = new THREE.Vector3(), _v1 = new THREE.Vector3(), _dir = new THREE.Vector3(), _side = new THREE.Vector3(), _up = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0);
+
+// Thick neon edge segment as a small square tube (3 visible faces) + a soft additive glow quad.
+function writeEdge(m, x0, y0, z0, x1, y1, z1) {
+  _v0.set(x0, y0, z0); _v1.set(x1, y1, z1);
+  _dir.subVectors(_v1, _v0);
+  const len = _dir.length();
+  if (len < 1e-4) return;
+  _dir.multiplyScalar(1 / len);
+  _side.crossVectors(_dir, UP);
+  if (_side.lengthSq() < 0.01) _side.set(0, 0, 1); else _side.normalize();
+  _up.crossVectors(_side, _dir).normalize();
+  const th = CONFIG.edgeThickness, h = th / 2;
+  const corner = (p, a, b) => [p.x + _side.x * a + _up.x * b, p.y + _side.y * a + _up.y * b, p.z + _side.z * a + _up.z * b, 0, 0, 1];
+  // tube sits on top of the surface edge
+  const A0 = corner(_v0, -h, 0), B0 = corner(_v0, h, 0), C0 = corner(_v0, h, th), D0 = corner(_v0, -h, th);
+  const A1 = corner(_v1, -h, 0), B1 = corner(_v1, h, 0), C1 = corner(_v1, h, th), D1 = corner(_v1, -h, th);
+  const w = m.wEdge;
+  w.quad(D0, C0, C1, D1); // top
+  w.quad(B0, C0, C1, B1); // +side
+  w.quad(A0, D0, D1, A1); // -side
+  // glow strip
+  const gw = CONFIG.edgeGlowWidth / 2, lift = 0.03;
+  const g = m.wGlow;
+  const q = (p, a, u, vv) => [p.x + _side.x * a + _up.x * lift, p.y + _side.y * a + _up.y * lift, p.z + _side.z * a + _up.z * lift, u, vv, 1];
+  g.quad(q(_v0, -gw, 0, 0), q(_v0, gw, 1, 0), q(_v1, gw, 1, 1), q(_v1, -gw, 0, 1));
+}
+
+function buildChunkMesh(c) {
+  const m = acquireChunkMesh();
+  m.wSurf.reset(); m.wSide.reset(); m.wEdge.reset(); m.wGlow.reset();
+  const oS = c.oS, oY = c.oY, gs = CONFIG.gridSize;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  const L = (x, y, s, u, v, col = 1) => [x, y - oY, -(s - oS), u, v, col];
+
+  for (const t of c.tiles) {
+    const xs = tileXs(t);
+    const top0 = xs.map((x) => tileHeightRaw(t, x, t.s0));
+    const top1 = xs.map((x) => tileHeightRaw(t, x, t.s1));
+    const b0 = tileBottom(t, t.s0), b1 = tileBottom(t, t.s1);
+    // --- surface ---
+    for (let i = 0; i < xs.length - 1; i++) {
+      const xa = xs[i], xb = xs[i + 1];
+      if (xb - xa < 1e-4) continue;
+      m.wSurf.quad(
+        L(xa, top0[i], t.s0, xa / gs, t.s0 / gs), L(xb, top0[i + 1], t.s0, xb / gs, t.s0 / gs),
+        L(xb, top1[i + 1], t.s1, xb / gs, t.s1 / gs), L(xa, top1[i], t.s1, xa / gs, t.s1 / gs));
+    }
+    // --- sides (vertical faces with a top-bright gradient) ---
+    const xl = xs[0], xr = xs[xs.length - 1], last = xs.length - 1;
+    m.wSide.quad(L(xl, top0[0], t.s0, 0, 0, 1), L(xl, top1[0], t.s1, 0, 0, 1), L(xl, b1, t.s1, 0, 0, 0.15), L(xl, b0, t.s0, 0, 0, 0.15));
+    m.wSide.quad(L(xr, top0[last], t.s0, 0, 0, 1), L(xr, top1[last], t.s1, 0, 0, 1), L(xr, b1, t.s1, 0, 0, 0.15), L(xr, b0, t.s0, 0, 0, 0.15));
+    for (let i = 0; i < xs.length - 1; i++) {
+      const xa = xs[i], xb = xs[i + 1];
+      m.wSide.quad(L(xa, top0[i], t.s0, 0, 0, 1), L(xb, top0[i + 1], t.s0, 0, 0, 1), L(xb, b0, t.s0, 0, 0, 0.15), L(xa, b0, t.s0, 0, 0, 0.15));
+      m.wSide.quad(L(xa, top1[i], t.s1, 0, 0, 1), L(xb, top1[i + 1], t.s1, 0, 0, 1), L(xb, b1, t.s1, 0, 0, 0.15), L(xa, b1, t.s1, 0, 0, 0.15));
+    }
+    // --- neon edges ---
+    const E = (xa, ya, sa, xb, yb, sb) => writeEdge(m, xa, ya - oY, -(sa - oS), xb, yb - oY, -(sb - oS));
+    E(xl, top0[0], t.s0, xl, top1[0], t.s1);
+    E(xr, top0[last], t.s0, xr, top1[last], t.s1);
+    if (t.edgeStart) for (let i = 0; i < last; i++) E(xs[i], top0[i], t.s0, xs[i + 1], top0[i + 1], t.s0);
+    if (t.edgeEnd) for (let i = 0; i < last; i++) E(xs[i], top1[i], t.s1, xs[i + 1], top1[i + 1], t.s1);
+    if (t.pipeK) {
+      // faint seams where the pipe walls begin help read the curve
+      const f0 = t.cx - t.pipeFlat, f1 = t.cx + t.pipeFlat;
+      E(f0, tileHeightRaw(t, f0, t.s0), t.s0, f0, tileHeightRaw(t, f0, t.s1), t.s1);
+      E(f1, tileHeightRaw(t, f1, t.s0), t.s0, f1, tileHeightRaw(t, f1, t.s1), t.s1);
+    }
+    minX = Math.min(minX, xl); maxX = Math.max(maxX, xr);
+    minY = Math.min(minY, b0, b1); maxY = Math.max(maxY, ...top0, ...top1);
+  }
+  const center = new THREE.Vector3((minX + maxX) / 2, (minY + maxY) / 2 - oY, -((c.s0 + c.s1) / 2 - oS));
+  const radius = Math.hypot(maxX - minX, maxY - minY, c.s1 - c.s0) / 2 + 2;
+  m.wSurf.finish(center, radius); m.wSide.finish(center, radius);
+  m.wEdge.finish(center, radius); m.wGlow.finish(center, radius);
+  m.group.position.set(0, oY, -oS);
+  c.mesh = m;
+}
+
+/* =====================================================================
+   OBSTACLES — three InstancedMeshes shared by every chunk
+   ===================================================================== */
+function makeObstacleGeometry() {
+  const g = new THREE.BoxGeometry(1, 1, 1).toNonIndexed();
+  // per-face shading baked into vertex colours: +x,-x,+y,-y,+z,-z
+  const shade = [0.62, 0.62, 1.0, 0.3, 0.82, 0.5];
+  const cols = new Float32Array(g.attributes.position.count * 3);
+  for (let f = 0; f < 6; f++) for (let k = 0; k < 6; k++) {
+    const i = (f * 6 + k) * 3; cols[i] = cols[i + 1] = cols[i + 2] = shade[f];
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  return g;
+}
+function makeCubeEdgeGeometry() {
+  const geo = makeDynGeo(12 * 18, false, false);
+  const fake = { wEdge: new GeoWriter(geo), wGlow: { quad() {} } };
+  const c = [-0.5, 0.5];
+  const P = (i) => [c[i & 1], c[(i >> 1) & 1], c[(i >> 2) & 1]];
+  const pairs = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];
+  const saved = CONFIG.edgeThickness;
+  CONFIG.edgeThickness = 0.06;
+  for (const [a, b] of pairs) { const p = P(a), q = P(b); writeEdge(fake, p[0], p[1], p[2], q[0], q[1], q[2]); }
+  CONFIG.edgeThickness = saved;
+  fake.wEdge.finish(new THREE.Vector3(), 1);
+  return geo;
+}
+const obstacleMesh = new THREE.InstancedMesh(makeObstacleGeometry(), MAT.obstacle, CONFIG.maxObstacles);
+const obstacleEdgeMesh = new THREE.InstancedMesh(makeCubeEdgeGeometry(), MAT.obstacleEdge, CONFIG.maxObstacles);
+const obstacleShellMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), MAT.obstacleShell, CONFIG.maxObstacles);
+for (const im of [obstacleMesh, obstacleEdgeMesh, obstacleShellMesh]) {
+  im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  im.frustumCulled = false;
+  im.count = 0;
+  scene.add(im);
+}
+obstacleShellMesh.renderOrder = 3;
+
+const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _qId = new THREE.Quaternion(), _p = new THREE.Vector3(), _sc = new THREE.Vector3();
+function obstacleX(o, time) { return o.amp ? o.x + o.amp * Math.sin(o.freq * time + o.phase) : o.x; }
+function updateObstacleInstances(time) {
+  const list = world.obstacles;
+  let n = 0;
+  for (let i = 0; i < list.length && n < CONFIG.maxObstacles; i++) {
+    const o = list[i];
+    const x = obstacleX(o, time);
+    _p.set(x, o.yb + o.hTotal / 2, -o.s);
+    _sc.set(o.w, o.hTotal, o.d);
+    _m4.compose(_p, _qId, _sc);
+    obstacleMesh.setMatrixAt(n, _m4);
+    _sc.set(o.w + 0.02, o.hTotal + 0.02, o.d + 0.02);
+    _m4.compose(_p, _qId, _sc);
+    obstacleEdgeMesh.setMatrixAt(n, _m4);
+    _sc.set(o.w + 0.4, o.hTotal + 0.3, o.d + 0.4);
+    _m4.compose(_p, _qId, _sc);
+    obstacleShellMesh.setMatrixAt(n, _m4);
+    n++;
+  }
+  for (const im of [obstacleMesh, obstacleEdgeMesh, obstacleShellMesh]) {
+    im.count = n;
+    im.instanceMatrix.needsUpdate = true;
+  }
+}
+
+/* =====================================================================
+   BALL + EFFECT OBJECTS
+   ===================================================================== */
+const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 20), MAT.ball);
+const ballGlow = new THREE.Sprite(MAT.ballGlow);
+ballGlow.scale.set(2.6, 2.6, 1);
+ballGlow.renderOrder = 4;
+const ballRing = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), MAT.ring);
+ballRing.rotation.x = -Math.PI / 2;
+ballRing.renderOrder = 4;
+scene.add(ballMesh, ballGlow, ballRing);
+
+// Starfield — follows the camera position so it reads as infinitely far away.
+const stars = (() => {
+  const n = CONFIG.starCount, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  const rng = mulberry32(1234);
+  for (let i = 0; i < n; i++) {
+    const u = rng() * 2 - 1, th = rng() * Math.PI * 2, r = 290 + rng() * 30;
+    const sq = Math.sqrt(1 - u * u);
+    pos[i * 3] = r * sq * Math.cos(th); pos[i * 3 + 1] = r * u * 0.85; pos[i * 3 + 2] = r * sq * Math.sin(th);
+    const b = 0.2 + rng() * 0.45; col[i * 3] = b; col[i * 3 + 1] = b; col[i * 3 + 2] = b * (0.85 + rng() * 0.15);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ size: IS_MOBILE ? 1.8 : 1.3, sizeAttenuation: false, vertexColors: true,
+    fog: false, transparent: true, opacity: 0.85, depthWrite: false }));
+  p.frustumCulled = false;
+  p.renderOrder = -1;
+  scene.add(p);
+  return p;
+})();
+
+// Speed streaks — short lines in camera space, only visible near top speed.
+const streaks = (() => {
+  const n = CONFIG.streakCount, pos = new Float32Array(n * 6), data = [];
+  const rng = mulberry32(99);
+  for (let i = 0; i < n; i++) {
+    const a = rng() * Math.PI * 2, r = 2.5 + rng() * 7;
+    data.push({ x: Math.cos(a) * r, y: Math.sin(a) * r * 0.7 + 0.5, z: -rng() * 90, len: 2 + rng() * 4 });
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+  const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending,
+    depthWrite: false, fog: false });
+  const ls = new THREE.LineSegments(g, mat);
+  ls.frustumCulled = false;
+  camera.add(ls);
+  return { ls, data, pos, mat, rng };
+})();
+function updateStreaks(dt, speed) {
+  if (!CONFIG.streaks) { streaks.ls.visible = false; return; }
+  const f = clamp((speed - 38) / (CONFIG.maxSpeed - 38), 0, 1);
+  streaks.mat.opacity = f * 0.3;
+  streaks.mat.color.copy(neon).lerp(_white, 0.5);
+  streaks.ls.visible = f > 0.001;
+  if (!streaks.ls.visible) return;
+  const p = streaks.pos;
+  for (let i = 0; i < streaks.data.length; i++) {
+    const s = streaks.data[i];
+    s.z += speed * 1.4 * dt;
+    if (s.z > 2) { s.z = -90 + streaks.rng() * 10; }
+    const k = i * 6, l = s.len * (0.5 + f);
+    p[k] = s.x; p[k + 1] = s.y; p[k + 2] = s.z;
+    p[k + 3] = s.x; p[k + 4] = s.y; p[k + 5] = s.z - l;
+  }
+  streaks.ls.geometry.attributes.position.needsUpdate = true;
+}
+
+// Shards — the ball bursting on impact (one InstancedMesh, pooled particles).
+const shards = (() => {
+  const geo = new THREE.TetrahedronGeometry(0.2);
+  const im = new THREE.InstancedMesh(geo, MAT.shard, CONFIG.shardCount);
+  im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  im.frustumCulled = false;
+  im.count = 0;
+  const parts = [];
+  for (let i = 0; i < CONFIG.shardCount; i++) parts.push({ p: new THREE.Vector3(), v: new THREE.Vector3(), axis: new THREE.Vector3(1, 0, 0), ang: 0, spin: 0, scale: 1, life: 0 });
+  scene.add(im);
+  return { im, parts, active: false };
+})();
+const _c = new THREE.Color();
+function burstShards(x, y, z, vz) {
+  const rng = Math.random;
+  shards.parts.forEach((s, i) => {
+    s.p.set(x, y, z);
+    const u = rng() * 2 - 1, th = rng() * Math.PI * 2, sq = Math.sqrt(1 - u * u), sp = 5 + rng() * 10;
+    s.v.set(sq * Math.cos(th) * sp, Math.abs(u) * sp * 0.8 + 3, sq * Math.sin(th) * sp + vz * 0.35);
+    s.axis.set(rng() - 0.5, rng() - 0.5, rng() - 0.5).normalize();
+    s.ang = 0; s.spin = (rng() - 0.5) * 20; s.scale = 0.6 + rng() * 1.1; s.life = 1;
+    _c.copy(i % 3 === 0 ? neon : _white).lerp(_white, i % 3 === 0 ? 0.2 : 0);
+    shards.im.setColorAt(i, _c);
+  });
+  if (shards.im.instanceColor) shards.im.instanceColor.needsUpdate = true;
+  shards.im.count = shards.parts.length;
+  shards.active = true;
+}
+function updateShards(dt) {
+  if (!shards.active) return;
+  let alive = 0;
+  shards.parts.forEach((s, i) => {
+    s.life -= dt * 0.55;
+    s.v.y -= CONFIG.gravity * 0.6 * dt;
+    s.v.multiplyScalar(Math.exp(-0.6 * dt));
+    s.p.addScaledVector(s.v, dt);
+    s.ang += s.spin * dt;
+    _q.setFromAxisAngle(s.axis, s.ang);
+    const k = Math.max(0, s.life) * s.scale;
+    _sc.set(k, k, k);
+    _m4.compose(s.p, _q, _sc);
+    shards.im.setMatrixAt(i, _m4);
+    if (s.life > 0) alive++;
+  });
+  shards.im.instanceMatrix.needsUpdate = true;
+  if (!alive) { shards.active = false; shards.im.count = 0; }
+}
+function clearShards() { shards.active = false; shards.im.count = 0; }
+
+/* =====================================================================
+   GAME STATE
+   ===================================================================== */
+const STATE = { MENU: 'MENU', PLAYING: 'PLAYING', PAUSED: 'PAUSED', DYING: 'DYING', GAME_OVER: 'GAME_OVER' };
+const game = {
+  state: STATE.MENU,
+  time: 0,              // simulation clock of the current run (drives moving blocks)
+  distance: 0,          // score
+  best: Number(store.get('best', 0)) || 0,
+  newBest: false,
+  deathKind: '',
+  dyingT: 0, overT: 0,
+  timeScale: 1, slowMoT: 0,
+  invincible: false,
+  seed: 0,
+  menuS: 0, menuX: 0,
+  acc: 0,               // fixed-step accumulator
+  colorIndex: 0,
+};
+
+const ball = {
+  x: 0, y: R, s: 0, px: 0, py: R, ps: 0,
+  vx: 0, vy: 0, vs: CONFIG.startSpeed,
+  grounded: true, tile: null, airTime: 0,
+  quat: new THREE.Quaternion(),
+};
+
+/* =====================================================================
+   WORLD MANAGEMENT — build ahead, recycle behind, floating origin
+   ===================================================================== */
+function ensureTrack(refS) {
+  // Keep generating until the newest (not yet meshed) chunk starts beyond the build distance.
+  let guard = 0;
+  while (guard++ < 40) {
+    const last = world.chunks[world.chunks.length - 1];
+    if (last && last.s0 > refS + CONFIG.buildAhead) break;
+    generateChunk();
+  }
+  // Mesh every chunk that has a successor (edge flags are final once the next chunk exists).
+  for (let i = 0; i < world.chunks.length - 1; i++) {
+    const c = world.chunks[i];
+    if (!c.mesh) buildChunkMesh(c);
+  }
+}
+
+function recycleTrack(refS) {
+  let removed = false;
+  while (world.chunks.length > 2 && world.chunks[0].s1 < refS - CONFIG.recycleBehind) {
+    const c = world.chunks.shift();
+    if (c.mesh) { releaseChunkMesh(c.mesh); c.mesh = null; }
+    c.tiles.length = 0;
+    removed = true;
+  }
+  if (removed) {
+    world.obstacles.length = 0;
+    for (const c of world.chunks) for (const o of c.obstacles) world.obstacles.push(o);
+    if (G.lastTile && !world.chunks.includes(G.lastTile.chunk)) G.lastTile = null;
+  }
+  // prune baseline points far behind
+  const b = world.baseline;
+  let cut = 0;
+  while (cut < b.length - 2 && b[cut + 1].s < refS - 80) cut++;
+  if (cut > 0) b.splice(0, cut);
+}
+
+function clearTrack() {
+  for (const c of world.chunks) if (c.mesh) { releaseChunkMesh(c.mesh); c.mesh = null; }
+  world.chunks.length = 0;
+  world.obstacles.length = 0;
+  world.baseline.length = 0;
+  world.shiftS = 0; world.shiftY = 0;
+}
+
+// Shift everything back toward the origin to avoid float jitter on long runs.
+function shiftOrigin(dS, dY) {
+  world.shiftS += dS; world.shiftY += dY;
+  for (const c of world.chunks) {
+    c.s0 -= dS; c.s1 -= dS; c.oS -= dS; c.oY -= dY;
+    for (const t of c.tiles) { t.s0 -= dS; t.s1 -= dS; t.y0 -= dY; }
+    for (const o of c.obstacles) { o.s -= dS; o.yb -= dY; }
+    if (c.mesh) c.mesh.group.position.set(0, c.oY, -c.oS);
+  }
+  for (const p of world.baseline) { p.s -= dS; p.y -= dY; }
+  G.s -= dS; G.y -= dY; G.lastConS -= dS;
+  ball.s -= dS; ball.ps -= dS; ball.y -= dY; ball.py -= dY;
+  game.menuS -= dS;
+  cam.shift(dS, dY);
+  for (const s of shards.parts) { s.p.z += dS; s.p.y -= dY; }
+}
+
+/* =====================================================================
+   PHYSICS — fixed timestep, analytic ground, no physics engine
+   ===================================================================== */
+function steerInput() { return (input.right ? 1 : 0) - (input.left ? 1 : 0); }
+
+function physicsStep(dt) {
+  const b = ball;
+  b.px = b.x; b.py = b.y; b.ps = b.s;
+  game.time += dt;
+  b.vs = speedAtDistance(game.distance);
+
+  const steer = steerInput();
+  const h = dt / CONFIG.substeps;
+  let touched = false;               // returned so tools can tell a step touched a block
+  for (let k = 0; k < CONFIG.substeps; k++) {
+    // ---- sideways acceleration ----
+    let ax = 0, steerScale = 1;
+    if (b.grounded && b.tile) {
+      const gx = tileGradX(b.tile, b.x);
+      if (gx !== 0) {
+        const inv = 1 / Math.sqrt(1 + gx * gx);
+        ax -= CONFIG.gravity * gx * inv;     // g·sin(angle) down the bank / pipe wall
+        steerScale = inv * inv;              // steering pushes along the surface: weaker on steep walls
+        if (b.vx * gx > 0) b.vx *= Math.exp(-CONFIG.wallFriction * Math.abs(gx) * h); // climbing bleeds speed
+      }
+    }
+    if (steer !== 0) {
+      ax += steer * CONFIG.steerAccel * steerScale * (b.grounded ? 1 : CONFIG.airSteerFactor);
+    } else {
+      b.vx *= Math.exp(-(b.grounded ? CONFIG.sideDamping : CONFIG.airSideDamping) * h);
+    }
+    b.vx = clamp(b.vx + ax * h, -CONFIG.maxSideSpeed, CONFIG.maxSideSpeed);
+
+    const pBottom = b.y - R, px = b.x, ps = b.s;
+    b.x += b.vx * h;
+    b.s += b.vs * h;
+
+    if (b.grounded) {
+      const q = groundQuery(b.x, b.s, b.y - R, CONFIG.groundSnapUp);
+      if (q && q.h >= b.y - R - CONFIG.groundSnapDown) {
+        b.y = q.h + R;
+        b.tile = q.tile;
+        b.vy = b.vs * q.tile.slope + b.vx * tileGradX(q.tile, b.x);
+      } else {
+        // left the surface: keep vertical velocity (downhill edge = gentle drop, ramp lip = launch)
+        b.grounded = false; b.tile = null; b.airTime = 0;
+        if (b.vy > 3) { audio.whoosh(); }
+        b.vy -= CONFIG.gravity * h;
+        b.y += b.vy * h;
+      }
+    } else {
+      b.airTime += h;
+      b.vy -= CONFIG.gravity * h;
+      b.y += b.vy * h;
+      const q = landingQuery(px, ps, pBottom, b.x, b.s, b.y - R);
+      if (q) {
+        const surfVy = b.vs * q.tile.slope + b.vx * tileGradX(q.tile, b.x);
+        const impact = Math.max(0, surfVy - b.vy);
+        b.y = q.h + R; b.grounded = true; b.tile = q.tile; b.vy = surfVy;
+        onLand(impact);
+      }
+    }
+
+    // ---- obstacles ----
+    if (hitObstacle()) {
+      touched = true;
+      if (game.state === STATE.PLAYING && !game.invincible) { die('crash'); return true; }
+    }
+  }
+
+  // rolling: rotate around the axis perpendicular to the velocity by distance / radius
+  const dx = b.x - b.px, ds = b.s - b.ps;
+  const dist = Math.hypot(dx, ds);
+  if (dist > 1e-6) {
+    _axis.set(-ds, 0, -dx).normalize();
+    _dq.setFromAxisAngle(_axis, dist / R);
+    b.quat.premultiply(_dq);
+  }
+
+  game.distance += ds;
+
+  // ---- falling death ----
+  if (game.state === STATE.PLAYING && b.y < baselineAt(b.s) - CONFIG.fallDeathDepth) {
+    if (game.invincible) respawnOnTrack(); else die('fall');
+  }
+  return touched;
+}
+const _axis = new THREE.Vector3(), _dq = new THREE.Quaternion();
+
+// Sphere vs box (hitbox ~90% of the visible box).
+function hitObstacle() {
+  const b = ball, list = world.obstacles, sc = CONFIG.obstacleHitboxScale;
+  for (let i = 0; i < list.length; i++) {
+    const o = list[i];
+    if (Math.abs(o.s - b.s) > o.d + 2) continue;
+    const ox = obstacleX(o, game.time);
+    const hw = o.w * 0.5 * sc, hd = o.d * 0.5 * sc;
+    const yMin = o.yb, yMax = o.yb + o.hTotal - o.h * (1 - sc);
+    const cx = clamp(b.x, ox - hw, ox + hw);
+    const cs = clamp(b.s, o.s - hd, o.s + hd);
+    const cy = clamp(b.y, yMin, yMax);
+    const ddx = b.x - cx, dds = b.s - cs, ddy = b.y - cy;
+    if (ddx * ddx + dds * dds + ddy * ddy < R * R) return true;
+  }
+  return false;
+}
+
+function onLand(impact) {
+  if (impact > 2) {
+    audio.thud(clamp(impact / 25, 0.15, 1));
+    cam.bump(clamp(impact / 25, 0.1, 1));
+    if (impact > 14) cam.shake(CONFIG.shakeLanding * clamp(impact / 30, 0.4, 1));
+  }
+}
+
+// Debug invincibility: put the ball back on the nearest tile ahead instead of dying.
+function respawnOnTrack() {
+  for (let ahead = 2; ahead < 60; ahead += 2) {
+    const s = ball.s + ahead;
+    for (const c of world.chunks) for (const t of c.tiles) {
+      if (s >= t.s0 && s <= t.s1 && !t.pipeK && !t.bankTan && t.kind !== 'ramp') {
+        ball.s = ball.ps = s; ball.x = ball.px = t.cx;
+        ball.y = ball.py = tileHeightRaw(t, t.cx, s) + R + 0.5;
+        ball.vx = 0; ball.vy = 0; ball.grounded = false; ball.tile = null;
+        return;
+      }
+    }
+  }
+}
+
+function die(kind) {
+  if (game.state !== STATE.PLAYING) return;
+  game.state = STATE.DYING;
+  game.deathKind = kind;
+  game.dyingT = 0;
+  input.clearTouches();
+  if (kind === 'crash') {
+    audio.crash();
+    burstShards(ball.x, ball.y, -ball.s, -ball.vs);
+    ballMesh.visible = false; ballGlow.visible = false; ballRing.visible = false;
+    game.timeScale = CONFIG.slowMoScale; game.slowMoT = 0;
+    cam.shake(CONFIG.shakeDeath);
+  } else {
+    audio.fall();
+    cam.freeze();
+  }
+  const score = Math.floor(game.distance);
+  if (score > game.best) { game.best = score; game.newBest = true; store.set('best', score); }
+  ui.hud(false);
+}
+
+// Free-fall used while the death animation plays after falling off.
+function dyingFallStep(dt) {
+  ball.px = ball.x; ball.py = ball.y; ball.ps = ball.s;
+  ball.vy -= CONFIG.gravity * dt;
+  ball.y += ball.vy * dt;
+  ball.x += ball.vx * dt;
+  ball.s += ball.vs * 0.6 * dt;
+  ball.vs *= Math.exp(-1.2 * dt);
+  _axis.set(-1, 0, 0);
+  _dq.setFromAxisAngle(_axis, ball.vs * dt / R);
+  ball.quat.premultiply(_dq);
+}
+
+// Keep a minimum horizontal field of view on tall (portrait) screens.
+function fovForAspect(vFov) {
+  const minV = 2 * Math.atan(Math.tan(CONFIG.minHorizontalFov * DEG / 2) / camera.aspect) / DEG;
+  return Math.min(Math.max(vFov, minV), Math.max(vFov, CONFIG.maxPortraitFov));
+}
+
+/* =====================================================================
+   CAMERA — damped third-person chase cam
+   ===================================================================== */
+const cam = {
+  x: 0, ys: 0, look: new THREE.Vector3(), frozen: false,
+  shakeAmp: 0, bumpY: 0, bumpV: 0, fov: CONFIG.fovMin,
+  reset(bx, by, bs) {
+    this.x = bx; this.ys = by; this.frozen = false; this.shakeAmp = 0; this.bumpY = 0; this.bumpV = 0;
+    camera.position.set(bx + CONFIG.camOffsetX, by + CONFIG.camOffsetY, -bs + CONFIG.camOffsetZ);
+    this.look.set(bx, by + SLOPE * CONFIG.camLookAhead + 0.6, -(bs + CONFIG.camLookAhead));
+    camera.lookAt(this.look);
+  },
+  shift(dS, dY) {
+    camera.position.z += dS; camera.position.y -= dY;
+    this.ys -= dY; this.look.z += dS; this.look.y -= dY;
+  },
+  freeze() { this.frozen = true; },
+  shake(a) { if (!REDUCED_MOTION) this.shakeAmp = Math.max(this.shakeAmp, a); },
+  bump(k) { if (!REDUCED_MOTION) this.bumpV -= CONFIG.landingBump * 9 * k; },
+  update(dt, bx, by, bs, vyGround, speed) {
+    // spring for the landing bump
+    this.bumpV += (-140 * this.bumpY - 16 * this.bumpV) * dt;
+    this.bumpY += this.bumpV * dt;
+    this.shakeAmp *= Math.exp(-6 * dt);
+    const sh = this.shakeAmp;
+    const shx = sh > 0.002 ? (Math.random() - 0.5) * 2 * sh : 0;
+    const shy = sh > 0.002 ? (Math.random() - 0.5) * 2 * sh : 0;
+
+    if (this.frozen) {
+      // falling death: stop following, watch the ball drop away
+      this.look.x = damp(this.look.x, bx, 5, dt);
+      this.look.y = damp(this.look.y, by, 5, dt);
+      this.look.z = damp(this.look.z, -bs, 5, dt);
+      camera.lookAt(this.look.x + shx, this.look.y + shy, this.look.z);
+      return;
+    }
+    this.ys += vyGround * dt;                       // feed-forward so the camera keeps up on long descents
+    this.ys = damp(this.ys, by, CONFIG.camFollowY, dt);
+    this.x = damp(this.x, bx, CONFIG.camFollowX, dt); // trails the ball's sideways motion
+    camera.position.set(this.x + CONFIG.camOffsetX + shx, this.ys + CONFIG.camOffsetY + this.bumpY + shy, -bs + CONFIG.camOffsetZ);
+    this.look.set(lerp(this.x, bx, 0.55), this.ys + SLOPE * CONFIG.camLookAhead + 0.6, -(bs + CONFIG.camLookAhead));
+    camera.lookAt(this.look);
+
+    const f = clamp((speed - CONFIG.startSpeed) / (CONFIG.maxSpeed - CONFIG.startSpeed), 0, 1);
+    const targetFov = fovForAspect(lerp(CONFIG.fovMin, CONFIG.fovMax, f));
+    this.fov = damp(this.fov, targetFov, 2, dt);
+    if (Math.abs(camera.fov - this.fov) > 0.02) { camera.fov = this.fov; camera.updateProjectionMatrix(); }
+  },
+};
+
+/* =====================================================================
+   EFFECTS — palette blending and optional bloom
+   ===================================================================== */
+const paletteColors = CONFIG.palette.map((c) => new THREE.Color(c));
+const _target = new THREE.Color();
+function updateNeonColor(dt, index) {
+  _target.copy(paletteColors[((index % paletteColors.length) + paletteColors.length) % paletteColors.length]);
+  const k = 1 - Math.exp(-CONFIG.colorBlendRate * dt);
+  const dr = _target.r - neon.r, dg = _target.g - neon.g, db = _target.b - neon.b;
+  if (Math.abs(dr) + Math.abs(dg) + Math.abs(db) < 0.002) { if (!neon.equals(_target)) { neon.copy(_target); applyNeon(neon); } return; }
+  neon.r += dr * k; neon.g += dg * k; neon.b += db * k;
+  applyNeon(neon);
+}
+
+const bloom = { composer: null, pass: null, active: false, wanted: CONFIG.bloom && !IS_MOBILE && !/[?&]nobloom\b/.test(location.search), lowFpsSeconds: 0 };
+async function initBloom() {
+  if (!bloom.wanted) return;
+  try {
+    const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+      import('three/addons/postprocessing/EffectComposer.js'),
+      import('three/addons/postprocessing/RenderPass.js'),
+      import('three/addons/postprocessing/UnrealBloomPass.js'),
+      import('three/addons/postprocessing/OutputPass.js'),
+    ]);
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const size = new THREE.Vector2(window.innerWidth, window.innerHeight);
+    const pass = new UnrealBloomPass(size, CONFIG.bloomStrength, CONFIG.bloomRadius, CONFIG.bloomThreshold);
+    composer.addPass(pass);
+    composer.addPass(new OutputPass());
+    composer.setPixelRatio(renderer.getPixelRatio());
+    composer.setSize(window.innerWidth, window.innerHeight);
+    bloom.composer = composer; bloom.pass = pass;
+    bloom.active = bloom.wanted;
+  } catch (e) {
+    bloom.active = false; // bloom is optional; the game looks fine without it
+  }
+}
+function disableBloom() {
+  bloom.active = false; bloom.wanted = false;
+  if (bloom.composer) { bloom.composer.dispose && bloom.composer.dispose(); bloom.composer = null; }
+}
+function renderFrame() {
+  if (bloom.active && bloom.composer) bloom.composer.render();
+  else renderer.render(scene, camera);
+}
+
+/* =====================================================================
+   AUDIO — everything synthesised with Web Audio (starts on first input)
+   ===================================================================== */
+const audio = {
+  ctx: null, master: null, muted: !!store.get('muted', false),
+  humGain: null, humOsc1: null, humOsc2: null, humFilter: null, rollGain: null, rollFilter: null, noiseBuf: null,
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      const ctx = this.ctx = new AC();
+      const comp = ctx.createDynamicsCompressor();
+      comp.connect(ctx.destination);
+      this.master = ctx.createGain();
+      this.master.gain.value = this.muted ? 0 : CONFIG.masterVolume;
+      this.master.connect(comp);
+      // white-noise buffer shared by all noisy sounds
+      const len = ctx.sampleRate * 2;
+      this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      // rolling hum: two detuned low oscillators + filtered noise rumble
+      this.humFilter = ctx.createBiquadFilter(); this.humFilter.type = 'lowpass'; this.humFilter.frequency.value = 220; this.humFilter.Q.value = 2;
+      this.humGain = ctx.createGain(); this.humGain.gain.value = 0;
+      this.humOsc1 = ctx.createOscillator(); this.humOsc1.type = 'sawtooth'; this.humOsc1.frequency.value = 42;
+      this.humOsc2 = ctx.createOscillator(); this.humOsc2.type = 'triangle'; this.humOsc2.frequency.value = 84.5;
+      this.humOsc1.connect(this.humFilter); this.humOsc2.connect(this.humFilter);
+      this.humFilter.connect(this.humGain); this.humGain.connect(this.master);
+      this.humOsc1.start(); this.humOsc2.start();
+      const roll = ctx.createBufferSource(); roll.buffer = this.noiseBuf; roll.loop = true;
+      this.rollFilter = ctx.createBiquadFilter(); this.rollFilter.type = 'bandpass'; this.rollFilter.frequency.value = 300; this.rollFilter.Q.value = 0.8;
+      this.rollGain = ctx.createGain(); this.rollGain.gain.value = 0;
+      roll.connect(this.rollFilter); this.rollFilter.connect(this.rollGain); this.rollGain.connect(this.master);
+      roll.start();
+    } catch (e) { this.ctx = null; }
+  },
+  setMuted(m) {
+    this.muted = m; store.set('muted', m);
+    if (this.master) this.master.gain.setTargetAtTime(m ? 0 : CONFIG.masterVolume, this.ctx.currentTime, 0.03);
+  },
+  suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); },
+  resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); },
+  update(speedFrac, grounded, active) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const on = active && grounded;
+    this.humGain.gain.setTargetAtTime(on ? 0.08 + 0.14 * speedFrac : 0, t, on ? 0.08 : 0.05);
+    this.humOsc1.frequency.setTargetAtTime(38 + 46 * speedFrac, t, 0.2);
+    this.humOsc2.frequency.setTargetAtTime(77 + 92 * speedFrac, t, 0.2);
+    this.humFilter.frequency.setTargetAtTime(160 + 380 * speedFrac, t, 0.2);
+    this.rollGain.gain.setTargetAtTime(on ? 0.05 + 0.09 * speedFrac : 0, t, 0.06);
+    this.rollFilter.frequency.setTargetAtTime(220 + 600 * speedFrac, t, 0.2);
+  },
+  noise(dur) {
+    const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuf;
+    src.start(this.ctx.currentTime, Math.random() * 1.5, dur + 0.05);
+    return src;
+  },
+  whoosh() {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime, src = this.noise(0.6);
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.4;
+    f.frequency.setValueAtTime(350, t); f.frequency.exponentialRampToValueAtTime(2600, t + 0.45);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.35, t + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+    src.connect(f); f.connect(g); g.connect(this.master);
+  },
+  thud(k) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const o = ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.16);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.25 + 0.45 * k, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 0.3);
+    const n = this.noise(0.1), f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 500;
+    const ng = ctx.createGain(); ng.gain.setValueAtTime(0.18 * k, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+    n.connect(f); f.connect(ng); ng.connect(this.master);
+  },
+  crash() {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const n = this.noise(0.9);
+    const shaper = ctx.createWaveShaper();
+    const curve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 6) * 0.9; }
+    shaper.curve = curve;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass';
+    f.frequency.setValueAtTime(6000, t); f.frequency.exponentialRampToValueAtTime(180, t + 0.8);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+    n.connect(shaper); shaper.connect(f); f.connect(g); g.connect(this.master);
+    const o = ctx.createOscillator(); o.type = 'square';
+    o.frequency.setValueAtTime(240, t); o.frequency.exponentialRampToValueAtTime(35, t + 0.5);
+    const og = ctx.createGain(); og.gain.setValueAtTime(0.22, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o.connect(og); og.connect(this.master); o.start(t); o.stop(t + 0.55);
+  },
+  fall() {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    for (const [type, f0, vol] of [['sine', 720, 0.28], ['triangle', 726, 0.12]]) {
+      const o = ctx.createOscillator(); o.type = type;
+      o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(70, t + 1.3);
+      const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.35);
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 1.4);
+    }
+  },
+};
+
+/* =====================================================================
+   UI
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const ui = {
+  hudEl: $('hud'), score: $('score'), hudBest: $('hudBest'), hudSpeed: $('hudSpeed'), stats: $('stats'),
+  menu: $('menu'), menuBest: $('menuBest'), menuPrompt: $('menuPrompt'), menuHint: $('menuHint'),
+  pause: $('pause'), pauseHint: $('pauseHint'), pauseBtn: $('pauseBtn'),
+  over: $('gameover'), goScore: $('goScore'), goBest: $('goBest'), newBest: $('newBest'), retry: $('retry'),
+  touchL: $('touchL'), touchR: $('touchR'), debug: $('debug'),
+  lastScore: -1, lastSpeed: -1, debugOn: false, debugT: 0,
+  init() {
+    document.title = CONFIG.title;
+    $('menuTitle').textContent = CONFIG.title;
+    if (IS_TOUCH) {
+      this.menuPrompt.textContent = 'TAP TO PLAY';
+      this.menuHint.innerHTML = 'Hold the <b>left</b> or <b>right</b> half of the screen to steer.<br>' +
+        'Avoid the <span style="color:#ff2a2a;text-shadow:0 0 8px #ff2a2a">red blocks</span>. Don\'t fall off.';
+      this.pauseHint.textContent = 'Tap to resume';
+      this.retry.textContent = 'TAP TO RETRY';
+    }
+    this.menuBest.textContent = game.best;
+    this.stats.dataset.muted = audio.muted;
+  },
+  showOnly(el) {
+    for (const e of [this.menu, this.pause, this.over]) e.classList.toggle('hidden', e !== el);
+  },
+  hud(on) {
+    this.hudEl.classList.toggle('hidden', !on);
+    this.pauseBtn.classList.toggle('hidden', !(on && IS_TOUCH));
+    this.touchL.classList.toggle('hidden', !(on && IS_TOUCH));
+    this.touchR.classList.toggle('hidden', !(on && IS_TOUCH));
+  },
+  update() {
+    const sc = Math.floor(game.distance);
+    if (sc !== this.lastScore) { this.lastScore = sc; this.score.textContent = sc; }
+    const sp = Math.round(ball.vs);
+    if (sp !== this.lastSpeed) { this.lastSpeed = sp; this.hudSpeed.textContent = sp; }
+    this.hudBest.textContent = Math.max(game.best, sc);
+    if (IS_TOUCH) { this.touchL.classList.toggle('on', input.left); this.touchR.classList.toggle('on', input.right); }
+  },
+  showGameOver() {
+    this.goScore.textContent = Math.floor(game.distance);
+    this.goBest.textContent = game.best;
+    this.newBest.classList.toggle('hidden', !game.newBest);
+    this.retry.classList.remove('show');
+    this.showOnly(this.over);
+  },
+  updateDebug(dt, fps) {
+    if (!this.debugOn) return;
+    this.debugT -= dt;
+    if (this.debugT > 0) return;
+    this.debugT = 0.25;
+    let type = '-';
+    const s = game.state === STATE.MENU ? game.menuS : ball.s;
+    for (const c of world.chunks) if (s >= c.s0 && s <= c.s1) { type = c.type; }
+    const info = renderer.info.render;
+    this.debug.textContent =
+      `FPS      ${fps.toFixed(0)}\n` +
+      `speed    ${ball.vs.toFixed(1)} u/s\n` +
+      `distance ${game.distance.toFixed(1)}\n` +
+      `chunk    ${type}\n` +
+      `diff     ${difficultyAt(s).toFixed(2)}\n` +
+      `seed     ${game.seed}\n` +
+      `ball     x ${ball.x.toFixed(2)} y ${ball.y.toFixed(2)} ${ball.grounded ? 'ground' : 'air'}\n` +
+      `chunks   ${world.chunks.length}  pool ${chunkMeshPool.length}  obst ${world.obstacles.length}\n` +
+      `draws    ${info.calls}  tris ${info.triangles}\n` +
+      `bloom    ${bloom.active ? 'on' : 'off'}  pr ${renderer.getPixelRatio().toFixed(2)}\n` +
+      `invincible ${game.invincible ? 'ON' : 'off'}  [I] toggle`;
+  },
+  toggleDebug() {
+    this.debugOn = !this.debugOn;
+    this.debug.classList.toggle('hidden', !this.debugOn);
+    this.debugT = 0;
+  },
+};
+
+/* =====================================================================
+   INPUT — keyboard + touch / pointer
+   ===================================================================== */
+const input = {
+  left: false, right: false,
+  keys: new Set(),
+  pointers: new Map(),   // pointerId -> side (-1 / +1)
+  recompute() {
+    let l = this.keys.has('ArrowLeft') || this.keys.has('KeyA');
+    let r = this.keys.has('ArrowRight') || this.keys.has('KeyD');
+    for (const side of this.pointers.values()) { if (side < 0) l = true; else r = true; }
+    this.left = l; this.right = r;
+  },
+  clearTouches() { this.pointers.clear(); this.recompute(); },
+  clearAll() { this.keys.clear(); this.pointers.clear(); this.recompute(); },
+};
+const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'Space', 'Enter',
+  'NumpadEnter', 'KeyP', 'Escape', 'KeyM', 'Backquote', 'KeyI']);
+
+function primaryAction() {
+  if (game.state === STATE.MENU) startRun();
+  else if (game.state === STATE.GAME_OVER) { if (game.overT >= CONFIG.restartLockout) startRun(); }
+  else if (game.state === STATE.PAUSED) resumeGame();
+}
+function togglePause() {
+  if (game.state === STATE.PLAYING) pauseGame();
+  else if (game.state === STATE.PAUSED) resumeGame();
+}
+
+window.addEventListener('keydown', (e) => {
+  if (GAME_KEYS.has(e.code)) e.preventDefault();
+  audio.init();
+  switch (e.code) {
+    case 'ArrowLeft': case 'KeyA': case 'ArrowRight': case 'KeyD':
+      input.keys.add(e.code); input.recompute(); break;
+    case 'Space': case 'Enter': case 'NumpadEnter':
+      if (!e.repeat) primaryAction(); break;
+    case 'KeyP': case 'Escape':
+      if (!e.repeat) togglePause(); break;
+    case 'KeyM':
+      if (!e.repeat) { audio.setMuted(!audio.muted); ui.stats.dataset.muted = audio.muted; } break;
+    case 'Backquote':
+      if (!e.repeat) ui.toggleDebug(); break;
+    case 'KeyI':
+      if (!e.repeat && ui.debugOn) game.invincible = !game.invincible; break;
+  }
+}, { passive: false });
+window.addEventListener('keyup', (e) => {
+  if (GAME_KEYS.has(e.code)) e.preventDefault();
+  input.keys.delete(e.code); input.recompute();
+}, { passive: false });
+
+window.addEventListener('pointerdown', (e) => {
+  if (e.target === ui.pauseBtn) return;
+  audio.init();
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (game.state === STATE.PLAYING) {
+    input.pointers.set(e.pointerId, e.clientX < window.innerWidth / 2 ? -1 : 1);
+    input.recompute();
+  } else {
+    primaryAction();
+  }
+}, { passive: true });
+window.addEventListener('pointermove', (e) => {
+  if (!input.pointers.has(e.pointerId)) return;
+  input.pointers.set(e.pointerId, e.clientX < window.innerWidth / 2 ? -1 : 1);
+  input.recompute();
+}, { passive: true });
+const endPointer = (e) => { if (input.pointers.delete(e.pointerId)) input.recompute(); };
+window.addEventListener('pointerup', endPointer);
+window.addEventListener('pointercancel', endPointer);
+window.addEventListener('lostpointercapture', endPointer);
+ui.pauseBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); audio.init(); togglePause(); });
+
+// Block scrolling, pinch-zoom, double-tap zoom, context menus and text selection.
+const blockEvt = (e) => { if (e.cancelable) e.preventDefault(); };
+for (const type of ['touchstart', 'touchmove', 'touchend', 'gesturestart', 'gesturechange', 'dblclick', 'contextmenu', 'selectstart'])
+  document.addEventListener(type, blockEvt, { passive: false });
+window.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+
+// Auto-pause when the tab is hidden or the window loses focus.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (game.state === STATE.PLAYING) pauseGame(); audio.suspend(); }
+  else { audio.resume(); lastFrame = performance.now(); }
+});
+window.addEventListener('blur', () => { if (game.state === STATE.PLAYING) pauseGame(); input.clearAll(); });
+
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.pixelRatioCap));
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  cam.fov = camera.fov = fovForAspect(cam.fov);
+  camera.updateProjectionMatrix();
+  if (bloom.composer) { bloom.composer.setPixelRatio(renderer.getPixelRatio()); bloom.composer.setSize(w, h); }
+}
+const quality = { pixelRatioCap: CONFIG.maxPixelRatio, lowFps: 0 };
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', () => setTimeout(onResize, 150));
+
+/* =====================================================================
+   GAME FLOW
+   ===================================================================== */
+const urlSeed = (() => {
+  try { const v = new URLSearchParams(location.search).get('seed'); return v !== null && v !== '' ? (Number(v) >>> 0) : null; }
+  catch (e) { return null; }
+})();
+
+function placeBallAtStart() {
+  const q = groundQuery(0, 0, 1e6, 0);
+  ball.x = ball.px = 0; ball.s = ball.ps = 0;
+  ball.y = ball.py = (q ? q.h : 0) + R;
+  ball.vx = 0; ball.vy = 0; ball.vs = CONFIG.startSpeed;
+  ball.grounded = true; ball.tile = q ? q.tile : null; ball.airTime = 0;
+  ball.quat.identity();
+}
+
+function resetWorld(seed) {
+  clearTrack();
+  resetGenerator(seed);
+  ensureTrack(0);
+}
+
+function enterMenu() {
+  game.state = STATE.MENU;
+  game.seed = urlSeed !== null ? urlSeed : 20240901;
+  resetWorld(game.seed);
+  placeBallAtStart();
+  game.menuS = 0; game.menuX = 0; game.time = 0; game.distance = 0;
+  ballMesh.visible = false; ballGlow.visible = false; ballRing.visible = false;
+  cam.reset(0, R, 0);
+  ui.hud(false);
+  ui.showOnly(ui.menu);
+}
+
+function startRun() {
+  audio.init();
+  game.seed = urlSeed !== null ? urlSeed : ((Math.random() * 4294967296) >>> 0);
+  resetWorld(game.seed);
+  placeBallAtStart();
+  game.state = STATE.PLAYING;
+  game.time = 0; game.distance = 0; game.acc = 0;
+  game.newBest = false; game.deathKind = ''; game.dyingT = 0; game.overT = 0;
+  game.timeScale = 1; game.slowMoT = 0;
+  input.clearTouches();
+  clearShards();
+  ballMesh.visible = true; ballGlow.visible = true; ballRing.visible = true;
+  cam.reset(ball.x, ball.y, ball.s);
+  cam.fov = camera.fov = fovForAspect(CONFIG.fovMin); camera.updateProjectionMatrix();
+  ui.lastScore = -1;
+  ui.hud(true);
+  ui.showOnly(null);
+  lastFrame = performance.now();
+}
+
+function pauseGame() {
+  if (game.state !== STATE.PLAYING) return;
+  game.state = STATE.PAUSED;
+  input.clearAll();
+  audio.update(0, false, false);
+  ui.showOnly(ui.pause);
+}
+function resumeGame() {
+  if (game.state !== STATE.PAUSED) return;
+  game.state = STATE.PLAYING;
+  game.acc = 0;
+  lastFrame = performance.now();
+  ui.showOnly(null);
+}
+
+function enterGameOver() {
+  game.state = STATE.GAME_OVER;
+  game.overT = 0;
+  ui.showGameOver();
+  ui.menuBest.textContent = game.best;
+}
+
+/* =====================================================================
+   MAIN LOOP
+   ===================================================================== */
+let lastFrame = performance.now();
+const fpsMeter = { frames: 0, t: 0, fps: 60 };
+const _rp = { x: 0, y: 0, s: 0 };
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  let dt = (now - lastFrame) / 1000;
+  lastFrame = now;
+  if (!(dt > 0)) dt = 0;
+  dt = Math.min(dt, CONFIG.maxFrameDelta);   // lag spike / tab switch clamp
+
+  // FPS meter + automatic quality fallback
+  fpsMeter.frames++; fpsMeter.t += dt;
+  if (fpsMeter.t >= 1) {
+    fpsMeter.fps = fpsMeter.frames / fpsMeter.t; fpsMeter.frames = 0; fpsMeter.t = 0;
+    if (game.state === STATE.PLAYING) {
+      if (bloom.active && fpsMeter.fps < CONFIG.bloomMinFps) { if (++bloom.lowFpsSeconds >= 3) disableBloom(); }
+      else bloom.lowFpsSeconds = 0;
+      if (!bloom.active && fpsMeter.fps < 40 && quality.pixelRatioCap > 1) {
+        if (++quality.lowFps >= 4) { quality.pixelRatioCap = 1; quality.lowFps = 0; onResize(); }
+      } else quality.lowFps = 0;
+    }
+  }
+
+  let renderTime = game.time;
+  let vyCam = ball.grounded ? ball.vy : ball.vs * SLOPE;
+
+  switch (game.state) {
+    case STATE.MENU: {
+      const sp = 13;
+      game.menuS += sp * dt;
+      game.time += dt;
+      renderTime = game.time;
+      if (game.menuS > CONFIG.originShiftDistance) shiftOrigin(CONFIG.originShiftDistance, Math.round(baselineAt(game.menuS)));
+      ensureTrack(game.menuS);
+      recycleTrack(game.menuS);
+      game.menuX = damp(game.menuX, baselineXAt(game.menuS + 8), 1.5, dt);
+      _rp.x = game.menuX; _rp.s = game.menuS; _rp.y = baselineAt(game.menuS) + 1.2;
+      vyCam = sp * SLOPE;
+      cam.update(dt, _rp.x, _rp.y, _rp.s, vyCam, sp);
+      updateNeonColor(dt, Math.floor(now / 6000));
+      break;
+    }
+    case STATE.PLAYING: {
+      game.acc += dt;
+      let steps = 0;
+      while (game.acc >= STEP && steps < CONFIG.maxStepsPerFrame) {
+        physicsStep(STEP);
+        game.acc -= STEP; steps++;
+        if (game.state !== STATE.PLAYING) { game.acc = 0; break; }
+      }
+      if (steps >= CONFIG.maxStepsPerFrame) game.acc = 0;
+      const a = game.state === STATE.PLAYING ? game.acc / STEP : 1;
+      _rp.x = lerp(ball.px, ball.x, a); _rp.y = lerp(ball.py, ball.y, a); _rp.s = lerp(ball.ps, ball.s, a);
+      renderTime = game.time - (1 - a) * STEP;
+      if (game.state === STATE.PLAYING && ball.s > CONFIG.originShiftDistance) {
+        const dS = CONFIG.originShiftDistance, dY = Math.round(ball.y);
+        shiftOrigin(dS, dY);
+        _rp.s -= dS; _rp.y -= dY;
+      }
+      ensureTrack(ball.s);
+      recycleTrack(ball.s);
+      cam.update(dt, _rp.x, _rp.y, _rp.s, vyCam, ball.vs);
+      updateNeonColor(dt, Math.floor(game.distance / CONFIG.colorStep));
+      break;
+    }
+    case STATE.PAUSED: {
+      _rp.x = ball.x; _rp.y = ball.y; _rp.s = ball.s;
+      break;
+    }
+    case STATE.DYING:
+    case STATE.GAME_OVER: {
+      // slow-motion beat after a crash
+      if (game.timeScale < 1) {
+        game.slowMoT += dt;
+        if (game.slowMoT > CONFIG.slowMoDuration) game.timeScale = Math.min(1, game.timeScale + dt * 2.5);
+      }
+      const sdt = dt * game.timeScale;
+      game.time += sdt;
+      renderTime = game.time;
+      if (game.deathKind === 'fall') dyingFallStep(dt);
+      _rp.x = ball.x; _rp.y = ball.y; _rp.s = ball.s;
+      updateShards(sdt);
+      cam.update(dt, _rp.x, _rp.y, _rp.s, 0, ball.vs);
+      if (game.state === STATE.DYING) {
+        game.dyingT += dt;
+        if (game.dyingT >= CONFIG.dyingDuration) enterGameOver();
+      } else {
+        game.overT += dt;
+        if (game.overT >= CONFIG.restartLockout) ui.retry.classList.add('show');
+      }
+      break;
+    }
+  }
+
+  // ---- ball visuals ----
+  if (ballMesh.visible) {
+    ballMesh.position.set(_rp.x, _rp.y, -_rp.s);
+    ballMesh.quaternion.copy(ball.quat);
+    ballGlow.position.copy(ballMesh.position);
+    const q = game.deathKind === 'fall' && game.state !== STATE.PLAYING ? null : groundQuery(_rp.x, _rp.s, _rp.y - R + 0.05, 0);
+    if (q) {
+      const hgt = Math.max(0, _rp.y - R - q.h);
+      ballRing.visible = true;
+      ballRing.position.set(_rp.x, q.h + 0.04, -_rp.s);
+      const k = 1.35 + hgt * 0.12;
+      ballRing.scale.set(k, k, 1);
+      MAT.ring.opacity = 0.5 * clamp(1 - hgt / 10, 0, 1);
+    } else ballRing.visible = false;
+  }
+
+  updateObstacleInstances(renderTime);
+  stars.position.copy(camera.position);
+  updateStreaks(game.state === STATE.PAUSED ? 0 : dt, game.state === STATE.PLAYING ? ball.vs : 0);
+  audio.update(clamp((ball.vs - CONFIG.startSpeed) / (CONFIG.maxSpeed - CONFIG.startSpeed), 0, 1), ball.grounded, game.state === STATE.PLAYING);
+  if (game.state === STATE.PLAYING) ui.update();
+  ui.updateDebug(dt, fpsMeter.fps);
+  renderer.info.reset();
+  renderFrame();
+}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+ui.init();
+enterMenu();
+// Test hook (only with ?debug in the URL): exposes internals for automated checks.
+if (/[?&]debug\b/.test(location.search)) {
+  window.__neon = { THREE, CONFIG, game, ball, world, G, input, physicsStep, startRun, ensureTrack, recycleTrack,
+    groundQuery, baselineAt, obstacleX, hitObstacle, tileHeightRaw, speedAtDistance, STATE, chunkMeshPool, bloom, shiftOrigin, renderer, cam };
+}
+onResize();
+initBloom();
+requestAnimationFrame((t) => { lastFrame = t; frame(t); });
+</script>
+</body>
+</html>
