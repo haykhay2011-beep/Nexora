@@ -1,0 +1,38 @@
+{
+  "_comment": "Bot configuration. Every URL MUST point at localhost: the bot refuses to start otherwise. To add a platform, write one adapter class in bot/src/main/java/bot/adapters and add one entry here.",
+  "settings": {
+    "headless": true,
+    "waitTimeoutSeconds": 10,
+    "screenshotDir": "screenshots",
+    "reportFile": "run-report.txt"
+  },
+  "platforms": [
+    {
+      "name": "MathDrill",
+      "adapter": "MathDrillAdapter",
+      "baseUrl": "http://localhost:4001",
+      "loginPath": "/login",
+      "dashboardPath": "/dashboard",
+      "username": "student",
+      "password": "practice123"
+    },
+    {
+      "name": "QuizZone",
+      "adapter": "QuizZoneAdapter",
+      "baseUrl": "http://localhost:4002",
+      "loginPath": "/login",
+      "dashboardPath": "/home",
+      "username": "student@quizzone.local",
+      "password": "practice123"
+    },
+    {
+      "name": "WriteWell",
+      "adapter": "WriteWellAdapter",
+      "baseUrl": "http://localhost:4003",
+      "loginPath": "/signin",
+      "dashboardPath": "/prompts",
+      "username": "student",
+      "password": "practice123"
+    }
+  ]
+}

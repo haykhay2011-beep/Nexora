@@ -1,0 +1,16 @@
+# Node
+node_modules/
+
+# Maven build output
+target/
+bot/target/
+
+# Bot output (regenerated on every run)
+screenshots/
+run-report.txt
+
+# Seeded platform databases (recreate with `npm run seed`)
+platforms/*/data/
+
+*.log
+.DS_Store

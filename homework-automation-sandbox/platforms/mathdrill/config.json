@@ -1,0 +1,8 @@
+{
+  "name": "MathDrill",
+  "port": 4001,
+  "cookieName": "md_session",
+  "demoUser": { "username": "student", "password": "practice123" },
+  "nextProblemDelayMs": 200,
+  "dashboardDelayMs": 300
+}

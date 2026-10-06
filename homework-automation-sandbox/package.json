@@ -1,0 +1,23 @@
+{
+  "name": "homework-automation-sandbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Three mock homework websites (localhost only) plus a Java/Selenium bot that automates them. A practice project for browser automation.",
+  "scripts": {
+    "seed": "node platforms/mathdrill/seed.js && node platforms/quizzone/seed.js && node platforms/writewell/seed.js",
+    "start:mathdrill": "node platforms/mathdrill/server.js",
+    "start:quizzone": "node platforms/quizzone/server.js",
+    "start:writewell": "node platforms/writewell/server.js",
+    "start-all": "concurrently --names MathDrill,QuizZone,WriteWell --prefix-colors blue,magenta,green \"npm:start:mathdrill\" \"npm:start:quizzone\" \"npm:start:writewell\"",
+    "test": "node --test platforms/test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}

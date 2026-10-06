@@ -1,0 +1,8 @@
+{
+  "name": "WriteWell",
+  "port": 4003,
+  "cookieName": "ww_session",
+  "demoUser": { "username": "student", "password": "practice123" },
+  "continueDelayMs": 250,
+  "dashboardDelayMs": 300
+}

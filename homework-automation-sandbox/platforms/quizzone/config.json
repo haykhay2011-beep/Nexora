@@ -1,0 +1,7 @@
+{
+  "name": "QuizZone",
+  "port": 4002,
+  "cookieName": "qz_session",
+  "demoUser": { "email": "student@quizzone.local", "password": "practice123" },
+  "dashboardDelayMs": 300
+}
