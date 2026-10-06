@@ -267,7 +267,7 @@
 <div id="screen-click" class="screen hidden">
   <div class="big">Click to play</div>
   <div class="small">WASD move &middot; Space jump (double-tap to fly) &middot; Shift sneak / descend &middot; Double-tap W or hold R to sprint<br>
-    Left click break &middot; Right click place &middot; Middle click pick block &middot; 1&ndash;9 / wheel select &middot; E blocks &middot; F3 or ` debug &middot; Esc pause</div>
+    Left click break / attack &middot; Right click place / use / eat &middot; Q throw &middot; Middle click pick block &middot; 1&ndash;9 / wheel select &middot; E blocks &middot; F3 or ` debug &middot; Esc pause</div>
   <div class="small" id="clickNote" style="color:#ffd27a"></div>
 </div>
 
@@ -357,7 +357,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    ===================================================================== */
 const CONFIG = {
   title: 'BLOCKWILD',
-  version: 'Milestone 3',
+  version: 'Milestone 4',
   storageKey: 'blockwild',
 
   world: {
@@ -537,6 +537,41 @@ const CONFIG = {
     itemDespawnSec: 300,    // dropped items vanish after 5 minutes
     maxItems: 400,
     maxSavedItems: 200,
+  },
+
+  creatures: {
+    maxPassive: 10,
+    maxHostile: 15,
+    passiveChunkChance: 0.3,  // chance a freshly loaded chunk gets a small group of passive creatures
+    hostileSpawnInterval: 0.5,
+    hostileAttempts: 3,       // random columns tried per spawn tick
+    hostileMin: 24,           // spawn ring around the player (blocks)
+    hostileMax: 64,
+    hostileDespawn: 64,
+    passiveDespawn: 112,
+    darkLevel: 7,             // hostiles need light at or below this
+    chaseRange: 16,
+    lookRange: 8,
+    wanderRadius: 8,
+    maxDrop: 3,               // creatures refuse drops taller than this
+    stepJump: 1.15,           // jump height used to climb 1-block steps
+    hopSpeed: 5.2,
+    swimUp: 14,
+    groundAccel: 12,
+    airAccel: 2,
+    knockback: 6,
+    knockbackUp: 4.5,
+    invulnSec: 0.45,
+    fleeSec: 4,
+    attackReach: 3,           // player melee reach
+    handDamage: 1,
+    lungeRange: 4.5,
+    lungeSpeed: 7.5,
+    lungeUp: 4.5,
+    lungeCooldown: 2.2,
+    crumbleDaylight: 0.6,
+    hearRange: 24,
+    maxParticles: 600,
   },
 
   audio: {
@@ -2479,10 +2514,98 @@ for (let stage = 0; stage < 10; stage++) {
   };
 }
 
-// Block textures first (shared with the workers), then item and crack textures (main thread only).
+// ---- Milestone 4 textures: original creature skins ----
+const CREATURE_TEXTURES = ['mb_shell_top', 'mb_shell_side', 'mb_skin', 'mb_face', 'ph_fur', 'ph_face', 'ho_stone', 'ho_face', 'ho_eye', 'sk_shell', 'sk_face'];
+Object.assign(PAINTERS, {
+  // Mossback: a flat shell of mossy plates
+  mb_shell_top(P) {
+    const n = P.vnoise(4);
+    P.each((x, y) => {
+      const seam = (x % 5 === 0) || ((y + (Math.floor(x / 5) % 2) * 2) % 5 === 0);
+      const v = n(x, y) * 0.5 + P.rnd() * 0.4;
+      if (seam) return [52, 66, 34];
+      if (P.rnd() < 0.06) return [150, 196, 82];                        // tiny sprouts
+      return [64 + v * 40, 104 + v * 46, 42 + v * 22];
+    });
+  },
+  mb_shell_side(P) {
+    P.each((x, y) => {
+      const v = P.rnd();
+      if (y < 4) return y === 3 ? [58, 84, 38] : [70 + v * 30, 110 + v * 34, 46 + v * 16];
+      if (x % 6 === 0) return [70, 54, 34];
+      return [104 + v * 24, 84 + v * 18, 54 + v * 12];
+    });
+  },
+  mb_skin(P) {
+    P.each((x, y) => {
+      const v = P.rnd();
+      const scale = ((x + (y % 2) * 2) % 4 === 0) ? 0.85 : 1;
+      return [(148 + v * 18) * scale, (128 + v * 14) * scale, (88 + v * 12) * scale];
+    });
+  },
+  mb_face(P) {
+    PAINTERS.mb_skin(P);
+    for (const ex of [3, 11]) { P.set(ex, 6, 20, 18, 16); P.set(ex + 1, 6, 20, 18, 16); P.set(ex, 7, 20, 18, 16); P.set(ex + 1, 7, 20, 18, 16); P.set(ex, 6, 230, 230, 220); }
+    for (let x = 5; x <= 10; x++) P.set(x, 11, 92, 74, 50);
+    P.set(7, 9, 110, 90, 62); P.set(8, 9, 110, 90, 62);
+  },
+  // Puffhop: soft cream fur with a rosy face
+  ph_fur(P) {
+    const n = P.vnoise(4);
+    P.each((x, y) => {
+      const v = n(x, y) * 0.4 + P.rnd() * 0.6;
+      const tuft = (x * 3 + y * 5) % 7 === 0 ? 0.9 : 1;
+      return [(226 + v * 26) * tuft, (206 + v * 24) * tuft, (198 + v * 22) * tuft];
+    });
+  },
+  ph_face(P) {
+    PAINTERS.ph_fur(P);
+    for (const ex of [3, 10]) for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) P.set(ex + dx, 5 + dy, 26, 22, 30);
+    P.set(4, 5, 250, 250, 255); P.set(11, 5, 250, 250, 255);
+    P.set(7, 9, 236, 120, 140); P.set(8, 9, 236, 120, 140); P.set(7, 10, 210, 100, 120); P.set(8, 10, 210, 100, 120);
+    for (const cx of [2, 13]) { P.set(cx, 10, 246, 170, 180); P.set(cx + (cx < 8 ? 1 : -1), 10, 246, 180, 188); }
+  },
+  // Hollow: cracked dark stone with faint ember seams
+  ho_stone(P) {
+    const n = P.vnoise(4);
+    P.each((x, y) => { const v = n(x, y) * 0.5 + P.rnd() * 0.35; return [44 + v * 26, 44 + v * 24, 50 + v * 26]; });
+    for (let i = 0; i < 4; i++) {
+      let x = Math.floor(P.rnd() * 16), y = Math.floor(P.rnd() * 16);
+      for (let k = 0; k < 6; k++) {
+        P.set(x, y, 22, 20, 22);
+        if (P.rnd() < 0.25) P.set(x + 1, y, 120, 62, 20);               // ember glints
+        x += P.rnd() < 0.5 ? 1 : -1; y += P.rnd() < 0.7 ? 1 : 0;
+      }
+    }
+  },
+  ho_face(P) {
+    PAINTERS.ho_stone(P);
+    for (let x = 3; x <= 6; x++) P.set(x, 6, 16, 10, 8);
+    for (let x = 9; x <= 12; x++) P.set(x, 6, 16, 10, 8);
+    for (let x = 5; x <= 10; x++) P.set(x, 11, 26, 22, 24);
+  },
+  ho_eye(P) { P.each((x, y) => [255, 178 + (y % 3) * 14, 40]); },
+  // Skitter: glossy plum-black chitin
+  sk_shell(P) {
+    P.each((x, y) => {
+      const v = P.rnd();
+      if (y % 5 === 0) return [24, 18, 32];
+      if ((x + y) % 9 === 0) return [112, 86, 150];                    // sheen
+      return [44 + v * 18, 32 + v * 12, 58 + v * 20];
+    });
+  },
+  sk_face(P) {
+    PAINTERS.sk_shell(P);
+    for (const [x, y] of [[4, 6], [11, 6], [6, 9], [9, 9]]) { P.set(x, y, 190, 250, 240); P.set(x + 1, y, 120, 210, 200); }
+    for (let x = 6; x <= 9; x++) P.set(x, 13, 160, 40, 60);
+  },
+});
+
+// Block textures first (shared with the workers), then item, crack and creature textures (main thread only).
 const ALL_TEXTURES = SH.TEXTURES.concat(
   [...new Set(ITEMS.filter(it => it && it.id >= 256).map(it => it.tex))],
-  Array.from({ length: 10 }, (_, i) => 'crack' + i));
+  Array.from({ length: 10 }, (_, i) => 'crack' + i),
+  CREATURE_TEXTURES);
 const TEXL = {};
 ALL_TEXTURES.forEach((n, i) => { TEXL[n] = i; });
 
@@ -3463,6 +3586,7 @@ class World {
       if (dx * dx + dz * dz > rr) continue;
       for (const s of r.sections) this.applySection(c, s);
       c.meshed = true;
+      if (!c.spawnChecked) { c.spawnChecked = true; if (this.onChunkReady) this.onChunkReady(c); }
       n++;
     }
   }
@@ -3815,6 +3939,7 @@ function breakBlock(x, y, z) {
   const harvest = canHarvest(id, stack);
   if (!world.setBlock(x, y, z, 0)) return false;
   Sound.dig(d.sound);
+  Particles.burst(x + 0.5, y + 0.5, z + 0.5, TEX_AVG[SH.B_TEX[id * 6 + 4]], 10, 2.5, 0.6);
   if (d.use === 'furnace') dropFurnaceContents(x, y, z);
   if (isSurvival()) {
     spawnDrops(id, x, y, z, harvest);
@@ -3900,8 +4025,6 @@ function doPlace() {
   updateTarget();
   return true;
 }
-// Hook for Milestone 4: creatures also block placement.
-function entitiesBlock(x, y, z) { return false; }
 
 function doPick() {
   updateTarget();
@@ -4106,6 +4229,521 @@ const crackMesh = new THREE.Mesh(new THREE.BoxGeometry(1.004, 1.004, 1.004), new
 crackMesh.visible = false;
 crackMesh.renderOrder = 4;
 scene.add(crackMesh);
+
+/* =====================================================================
+   PARTICLES — blocky square points for dust, hits and block breaking.
+   ===================================================================== */
+const Particles = (() => {
+  const MAX = CONFIG.creatures.maxParticles;
+  const pos = new Float32Array(MAX * 3), col = new Float32Array(MAX * 3);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  geo.setDrawRange(0, 0);
+  const points = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.13, vertexColors: true, sizeAttenuation: true }));
+  points.frustumCulled = false;
+  scene.add(points);
+  let list = [];
+  return {
+    burst(x, y, z, rgb, n, speed, spread) {
+      for (let i = 0; i < n && list.length < MAX; i++) {
+        const k = 0.75 + Math.random() * 0.4;
+        list.push({ x: x + (Math.random() - 0.5) * spread, y: y + (Math.random() - 0.5) * spread, z: z + (Math.random() - 0.5) * spread,
+          vx: (Math.random() - 0.5) * speed, vy: Math.random() * speed, vz: (Math.random() - 0.5) * speed,
+          life: 0.45 + Math.random() * 0.45, r: rgb[0] * k / 255, g: rgb[1] * k / 255, b: rgb[2] * k / 255 });
+      }
+    },
+    update(dt) {
+      const d = U.uDaylight.value;
+      let n = 0;
+      list = list.filter(p => (p.life -= dt) > 0);
+      for (const p of list) {
+        p.vy -= 14 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+        pos[n * 3] = p.x; pos[n * 3 + 1] = p.y; pos[n * 3 + 2] = p.z;
+        const lit = 0.35 + 0.65 * d;
+        col[n * 3] = p.r * lit; col[n * 3 + 1] = p.g * lit; col[n * 3 + 2] = p.b * lit;
+        n++;
+      }
+      geo.setDrawRange(0, n);
+      geo.attributes.position.needsUpdate = true;
+      geo.attributes.color.needsUpdate = true;
+    },
+    clear() { list = []; geo.setDrawRange(0, 0); },
+  };
+})();
+// Average colour of each texture layer (for break particles).
+const TEX_AVG = (() => {
+  const d = ATLAS.tex.image.data, out = [];
+  for (let l = 0; l < ALL_TEXTURES.length; l++) {
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let i = 0; i < 256; i++) { const o = l * 1024 + i * 4; if (d[o + 3] > 128) { r += d[o]; g += d[o + 1]; b += d[o + 2]; n++; } }
+    out.push(n ? [r / n, g / n, b / n] : [128, 128, 128]);
+  }
+  return out;
+})();
+
+/* =====================================================================
+   CREATURES — original box-built animals and monsters.
+   Every type is data: hitbox, stats, AI flags, drops and the box parts
+   of its model. All of them use the shared Body collision code.
+   Model space: feet at y = 0, facing -Z. Part pivots are relative to
+   the parent part (or the root); `off` moves the box away from its pivot.
+   ===================================================================== */
+const CREATURE_TYPES = {
+  mossback: {
+    name: 'Mossback', hostile: false, hw: 0.45, h: 0.8, health: 12, speed: 1.0, fleeSpeed: 2.8, turn: 3,
+    drops: [['raw_meat', 1, 3]], sound: 'mossback', particle: [96, 130, 64],
+    parts: [
+      { id: 'belly', box: [0.8, 0.2, 0.95], at: [0, 0.25, 0.05], off: [0, 0.1, 0], tex: { all: 'mb_skin' } },
+      { id: 'shell', box: [0.96, 0.42, 1.14], at: [0, 0.4, 0.05], off: [0, 0.2, 0], tex: { all: 'mb_shell_side', top: 'mb_shell_top', bottom: 'mb_skin' } },
+      { id: 'head', role: 'head', box: [0.38, 0.32, 0.38], at: [0, 0.44, -0.52], off: [0, 0, -0.17], tex: { all: 'mb_skin', front: 'mb_face' } },
+      { id: 'lfl', role: 'leg', phase: 0, box: [0.22, 0.32, 0.22], at: [-0.32, 0.32, -0.36], off: [0, -0.16, 0], tex: { all: 'mb_skin' } },
+      { id: 'lfr', role: 'leg', phase: Math.PI, box: [0.22, 0.32, 0.22], at: [0.32, 0.32, -0.36], off: [0, -0.16, 0], tex: { all: 'mb_skin' } },
+      { id: 'lbl', role: 'leg', phase: Math.PI, box: [0.22, 0.32, 0.22], at: [-0.32, 0.32, 0.42], off: [0, -0.16, 0], tex: { all: 'mb_skin' } },
+      { id: 'lbr', role: 'leg', phase: 0, box: [0.22, 0.32, 0.22], at: [0.32, 0.32, 0.42], off: [0, -0.16, 0], tex: { all: 'mb_skin' } },
+    ],
+  },
+  puffhop: {
+    name: 'Puffhop', hostile: false, hw: 0.26, h: 0.55, health: 6, speed: 2.4, fleeSpeed: 4.6, turn: 6, hops: true,
+    drops: [['raw_meat', 1, 1]], sound: 'puffhop', particle: [236, 214, 206],
+    parts: [
+      { id: 'body', role: 'body', box: [0.5, 0.4, 0.5], at: [0, 0.04, 0.04], off: [0, 0.2, 0], tex: { all: 'ph_fur' } },
+      { id: 'head', role: 'head', box: [0.36, 0.3, 0.3], at: [0, 0.3, -0.16], off: [0, 0.1, -0.1], tex: { all: 'ph_fur', front: 'ph_face' } },
+      { id: 'earl', role: 'ear', parent: 'head', side: -1, phase: 0, box: [0.12, 0.11, 0.08], at: [-0.12, 0.23, -0.1], off: [0, 0.05, 0], tex: { all: 'ph_fur' } },
+      { id: 'earr', role: 'ear', parent: 'head', side: 1, phase: 1.3, box: [0.12, 0.11, 0.08], at: [0.12, 0.23, -0.1], off: [0, 0.05, 0], tex: { all: 'ph_fur' } },
+      { id: 'tail', box: [0.16, 0.16, 0.14], at: [0, 0.24, 0.3], off: [0, 0, 0.05], tex: { all: 'ph_fur' } },
+      { id: 'footl', role: 'leg', phase: 0, box: [0.12, 0.08, 0.18], at: [-0.13, 0.08, -0.12], off: [0, -0.04, 0], tex: { all: 'ph_fur' } },
+      { id: 'footr', role: 'leg', phase: 0, box: [0.12, 0.08, 0.18], at: [0.13, 0.08, -0.12], off: [0, -0.04, 0], tex: { all: 'ph_fur' } },
+    ],
+  },
+  hollow: {
+    name: 'Hollow', hostile: true, hw: 0.3, h: 1.9, health: 20, speed: 1.2, chaseSpeed: 2.6, turn: 5,
+    damage: 3, reach: 1.7, attackCooldown: 1.1, burnsInDaylight: true, cave: 0.5,
+    drops: [['coal', 0, 2]], sound: 'hollow', particle: [70, 68, 74],
+    parts: [
+      { id: 'legl', role: 'leg', phase: 0, box: [0.26, 0.82, 0.26], at: [-0.16, 0.82, 0], off: [0, -0.41, 0], tex: { all: 'ho_stone' } },
+      { id: 'legr', role: 'leg', phase: Math.PI, box: [0.26, 0.82, 0.26], at: [0.16, 0.82, 0], off: [0, -0.41, 0], tex: { all: 'ho_stone' } },
+      { id: 'torso', box: [0.62, 0.72, 0.36], at: [0, 0.8, 0], off: [0, 0.36, 0], rot: -0.38, tex: { all: 'ho_stone' } },
+      { id: 'head', role: 'head', parent: 'torso', box: [0.44, 0.4, 0.44], at: [0, 0.72, -0.04], off: [0, 0.2, -0.08], tex: { all: 'ho_stone', front: 'ho_face' } },
+      { id: 'eyel', parent: 'head', emissive: true, box: [0.13, 0.035, 0.02], at: [-0.09, 0.24, -0.305], off: [0, 0, 0], tex: { all: 'ho_eye' } },
+      { id: 'eyer', parent: 'head', emissive: true, box: [0.13, 0.035, 0.02], at: [0.09, 0.24, -0.305], off: [0, 0, 0], tex: { all: 'ho_eye' } },
+      { id: 'arml', role: 'arm', parent: 'torso', phase: Math.PI, box: [0.2, 0.86, 0.2], at: [-0.42, 0.64, 0], off: [0, -0.4, 0], rot: -0.3, tex: { all: 'ho_stone' } },
+      { id: 'armr', role: 'arm', parent: 'torso', phase: 0, box: [0.2, 0.86, 0.2], at: [0.42, 0.64, 0], off: [0, -0.4, 0], rot: -0.3, tex: { all: 'ho_stone' } },
+    ],
+  },
+  skitter: {
+    name: 'Skitter', hostile: true, hw: 0.3, h: 0.45, health: 6, speed: 2.2, chaseSpeed: 4.6, turn: 9,
+    damage: 2, reach: 1.25, attackCooldown: 0.9, lunge: true, cave: 0.8,
+    drops: [], sound: 'skitter', particle: [70, 50, 90],
+    parts: [
+      { id: 'body', box: [0.5, 0.24, 0.66], at: [0, 0.2, 0.04], off: [0, 0.12, 0], tex: { all: 'sk_shell' } },
+      { id: 'head', role: 'head', box: [0.32, 0.2, 0.26], at: [0, 0.3, -0.29], off: [0, 0, -0.12], tex: { all: 'sk_shell', front: 'sk_face' } },
+      ...[-0.18, 0.06, 0.28].flatMap((z, i) => [
+        { id: 'll' + i, role: 'sleg', side: -1, phase: i * 2.1, box: [0.44, 0.06, 0.07], at: [-0.22, 0.26, z], off: [-0.2, -0.07, 0], tex: { all: 'sk_shell' } },
+        { id: 'lr' + i, role: 'sleg', side: 1, phase: i * 2.1 + Math.PI, box: [0.44, 0.06, 0.07], at: [0.22, 0.26, z], off: [0.2, -0.07, 0], tex: { all: 'sk_shell' } },
+      ]),
+    ],
+  },
+};
+for (const [k, T] of Object.entries(CREATURE_TYPES)) T.key = k;
+
+// Box geometry in the entity vertex format; each face samples a whole texture tile.
+const PART_GEOS = new Map();
+function partGeometry(typeKey, part) {
+  const key = typeKey + ':' + part.id;
+  if (PART_GEOS.has(key)) return PART_GEOS.get(key);
+  const g = new THREE.BoxGeometry(part.box[0], part.box[1], part.box[2]);
+  const t = part.tex;
+  const layerOf = (name) => TEXL[name];
+  // BoxGeometry face order: +X, -X, +Y, -Y, +Z (back), -Z (front)
+  const faces = [t.side || t.all, t.side || t.all, t.top || t.all, t.bottom || t.all, t.back || t.all, t.front || t.all];
+  const shade = [0.8, 0.8, 1.0, 0.55, 0.88, 0.92];
+  const uv = g.attributes.uv.array;
+  const uvl = new Float32Array(24 * 3), vd = new Uint8Array(24 * 4);
+  for (let v = 0; v < 24; v++) {
+    const f = Math.floor(v / 4);
+    uvl[v * 3] = uv[v * 2]; uvl[v * 3 + 1] = uv[v * 2 + 1]; uvl[v * 3 + 2] = layerOf(faces[f]);
+    vd[v * 4] = Math.round(shade[f] * 255); vd[v * 4 + 1] = 255; vd[v * 4 + 2] = 0; vd[v * 4 + 3] = part.emissive ? 255 : 0;
+  }
+  g.setAttribute('uvl', new THREE.BufferAttribute(uvl, 3));
+  g.setAttribute('vdat', new THREE.BufferAttribute(vd, 4, true));
+  g.deleteAttribute('uv'); g.deleteAttribute('normal');
+  g.translate(part.off[0], part.off[1], part.off[2]);
+  PART_GEOS.set(key, g);
+  return g;
+}
+function buildCreatureModel(T, owner) {
+  const root = new THREE.Group();
+  const pivots = {}, anim = [];
+  for (const part of T.parts) {
+    const pivot = new THREE.Group();
+    pivot.position.set(part.at[0], part.at[1], part.at[2]);
+    if (part.rot) pivot.rotation.x = part.rot;
+    pivot.add(entityMesh(partGeometry(T.key, part), owner));
+    (part.parent ? pivots[part.parent] : root).add(pivot);
+    pivots[part.id] = pivot;
+    if (part.role) anim.push({ part, pivot, base: part.rot || 0 });
+  }
+  return { root, pivots, anim };
+}
+
+function rayBox(o, d, mn, mx, maxT) {
+  let t0 = 0, t1 = maxT;
+  for (let a = 0; a < 3; a++) {
+    const k = a === 0 ? 'x' : a === 1 ? 'y' : 'z';
+    if (Math.abs(d[k]) < 1e-9) { if (o[k] < mn[a] || o[k] > mx[a]) return -1; continue; }
+    let ta = (mn[a] - o[k]) / d[k], tb = (mx[a] - o[k]) / d[k];
+    if (ta > tb) { const s = ta; ta = tb; tb = s; }
+    t0 = Math.max(t0, ta); t1 = Math.min(t1, tb);
+    if (t0 > t1) return -1;
+  }
+  return t0;
+}
+// Line of sight between two points: no opaque block on the segment.
+function lineOfSight(ax, ay, az, bx, by, bz) {
+  const dx = bx - ax, dy = by - ay, dz = bz - az, len = Math.hypot(dx, dy, dz);
+  const n = Math.ceil(len / 0.3);
+  for (let i = 1; i < n; i++) {
+    const t = i / n;
+    const id = world.getBlock(Math.floor(ax + dx * t), Math.floor(ay + dy * t), Math.floor(az + dz * t));
+    if (id < 0 || B_OPAQUE[id]) return false;
+  }
+  return true;
+}
+// Light level used for spawning: block light or sky light dimmed by the time of day.
+function effectiveLight(x, y, z) {
+  const l = world.getLight(x, y, z);
+  if (l < 0) return 15;
+  return Math.max(l & 15, Math.round((l >> 4) * U.uDaylight.value));
+}
+
+class Creature extends Body {
+  constructor(typeKey, x, y, z) {
+    const T = CREATURE_TYPES[typeKey];
+    super(T.hw, T.h);
+    this.T = T;
+    this.health = T.health;
+    this.pos.set(x, y, z); this.prev.copy(this.pos);
+    this.yaw = Math.random() * Math.PI * 2; this.prevYaw = this.yaw;
+    this.headYaw = 0; this.headTarget = 0;
+    this.walk = 0; this.walkAmp = 0;
+    this.state = 'idle'; this.stateT = 1 + Math.random() * 3; this.goal = null;
+    this.thinkT = Math.random() * 0.25;
+    this.invuln = 0; this.hurtT = 0; this.attackT = 0; this.fleeT = 0; this.lungeT = 0; this.swing = 0;
+    this.dying = 0; this.crumbleT = -1;
+    this.stuckT = 0; this.lastPos = new THREE.Vector3(x, y, z);
+    this.soundT = 4 + Math.random() * 10;
+    this.light = sampleLight(x, y + T.h * 0.6, z); this.lightT = 0; this.tint = null;
+    this.model = buildCreatureModel(T, this);
+    this.model.root.position.copy(this.pos);
+    scene.add(this.model.root);
+  }
+  get eyeY() { return this.pos.y + this.T.h * 0.85; }
+  distToPlayer() { return Math.hypot(player.pos.x - this.pos.x, player.pos.y + 0.9 - (this.pos.y + this.T.h * 0.5), player.pos.z - this.pos.z); }
+  canTarget() { return this.T.hostile && isSurvival() && !surv.dead; }
+
+  think() {
+    const C = CONFIG.creatures, T = this.T;
+    const d = this.distToPlayer();
+    if (T.hostile) {
+      if (this.canTarget() && d < C.chaseRange && lineOfSight(this.pos.x, this.eyeY, this.pos.z, player.pos.x, player.pos.y + player.eye, player.pos.z)) {
+        this.state = 'chase'; this.stateT = 2;
+      } else if (this.state === 'chase' && (!this.canTarget() || d > C.chaseRange * 1.5 || this.stateT <= 0)) {
+        this.state = 'idle'; this.stateT = 1 + Math.random() * 2;
+      }
+    } else if (this.fleeT > 0) this.state = 'flee';
+    else if (this.state === 'flee') { this.state = 'idle'; this.stateT = 1; }
+    if (this.state === 'idle' && this.stateT <= 0) {
+      const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * C.wanderRadius;
+      this.goal = { x: this.pos.x + Math.cos(a) * r, z: this.pos.z + Math.sin(a) * r };
+      this.state = 'wander'; this.stateT = 4 + Math.random() * 6;
+    } else if (this.state === 'wander' && this.stateT <= 0) { this.state = 'idle'; this.stateT = 2 + Math.random() * 4; }
+    // head turning: watch the player when close, otherwise glance around
+    if (d < C.lookRange) {
+      const want = Math.atan2(-(player.pos.x - this.pos.x), -(player.pos.z - this.pos.z));
+      this.headTarget = Math.max(-0.9, Math.min(0.9, wrapAngle(want - this.yaw)));
+    } else if (Math.random() < 0.08) this.headTarget = (Math.random() - 0.5) * 1.4;
+  }
+
+  // Is it safe to step toward (dx, dz)? Avoid drops of more than 3 blocks and deep water.
+  safeStep(dx, dz) {
+    const l = Math.hypot(dx, dz) || 1;
+    const px = Math.floor(this.pos.x + (dx / l) * (this.hw + 0.45)), pz = Math.floor(this.pos.z + (dz / l) * (this.hw + 0.45));
+    const fy = Math.floor(this.pos.y + 0.01);
+    if (this.inWater) return true;
+    const ahead = world.getBlock(px, fy, pz);
+    if (ahead < 0) return false;
+    if (B_SOLID[ahead]) return true;                           // a wall or a step: handled by jumping
+    for (let d = 1; d <= CONFIG.creatures.maxDrop + 1; d++) {
+      const id = world.getBlock(px, fy - d, pz);
+      if (id < 0) return false;
+      if (B_LIQUID[id]) return !(B_LIQUID[world.getBlock(px, fy - d - 1, pz)]);   // deep water: no
+      if (B_SOLID[id]) return true;
+    }
+    return false;
+  }
+
+  update(dt) {
+    const C = CONFIG.creatures, T = this.T, p = this.pos;
+    if (!world.isMeshed(Math.floor(p.x), Math.floor(p.z))) return true;      // frozen until terrain exists
+    this.prev.copy(p); this.prevYaw = this.yaw;
+    if (this.dying > 0) {
+      this.dying -= dt;
+      if (this.dying <= 0) { this.finishDeath(); return false; }
+      this.vel.y -= CONFIG.player.gravity * dt;
+      this.vel.x *= Math.max(0, 1 - 4 * dt); this.vel.z *= Math.max(0, 1 - 4 * dt);
+      this.move(this.vel.x * dt, this.vel.y * dt, this.vel.z * dt);
+      return true;
+    }
+    for (const k of ['invuln', 'hurtT', 'attackT', 'fleeT', 'lungeT', 'stateT']) if (this[k] > 0) this[k] -= dt;
+    this.swing = Math.max(0, this.swing - dt * 3);
+    this.thinkT -= dt;
+    if (this.thinkT <= 0) { this.thinkT = 0.25; this.think(); }
+
+    // daylight: Hollows crumble to dust under open sky
+    if (T.burnsInDaylight && U.uDaylight.value > C.crumbleDaylight) {
+      const l = world.getLight(Math.floor(p.x), Math.floor(this.eyeY), Math.floor(p.z));
+      if (l >= 0 && (l >> 4) >= 14) {
+        if (this.crumbleT < 0) this.crumbleT = 0.4 + Math.random() * 1.6;
+        this.crumbleT -= dt;
+        if (Math.random() < 0.3) Particles.burst(p.x, p.y + T.h * Math.random(), p.z, [90, 86, 90], 1, 1.5, 0.5);
+        if (this.crumbleT <= 0) { this.crumble(); return false; }
+      } else this.crumbleT = -1;
+    }
+
+    // steering
+    let dx = 0, dz = 0, speed = 0;
+    if (this.state === 'wander' && this.goal) {
+      dx = this.goal.x - p.x; dz = this.goal.z - p.z;
+      if (Math.hypot(dx, dz) < 0.6) { this.state = 'idle'; this.stateT = 1 + Math.random() * 3; dx = dz = 0; }
+      else speed = T.speed;
+    } else if (this.state === 'chase') {
+      dx = player.pos.x - p.x; dz = player.pos.z - p.z;
+      speed = Math.hypot(dx, dz) > T.reach * 0.6 ? T.chaseSpeed : 0;
+    } else if (this.state === 'flee') {
+      dx = p.x - player.pos.x; dz = p.z - player.pos.z;
+      speed = T.fleeSpeed;
+    }
+    if (speed > 0 && !this.safeStep(dx, dz)) {
+      speed = 0;
+      if (this.state === 'wander') { this.state = 'idle'; this.stateT = 0.5 + Math.random(); }
+    }
+    if (speed > 0) {
+      const want = Math.atan2(-dx, -dz);
+      this.yaw += Math.max(-T.turn * dt, Math.min(T.turn * dt, wrapAngle(want - this.yaw)));
+    }
+    const l = Math.hypot(dx, dz) || 1;
+    const tx = speed ? (dx / l) * speed : 0, tz = speed ? (dz / l) * speed : 0;
+    const accel = this.onGround ? C.groundAccel : C.airAccel;
+    this.vel.x += (tx - this.vel.x) * Math.min(1, accel * dt);
+    this.vel.z += (tz - this.vel.z) * Math.min(1, accel * dt);
+
+    // vertical: gravity, swimming, stepping up 1-block ledges, hopping, lunging
+    const inLiquid = this.liquidAt(p.x, p.y + T.h * 0.4, p.z);
+    this.inWater = inLiquid;
+    if (inLiquid) this.vel.y = Math.min(this.vel.y + C.swimUp * dt, 2.5);
+    else this.vel.y = Math.max(this.vel.y - CONFIG.player.gravity * dt, -CONFIG.player.terminalVelocity);
+    if (this.onGround && speed > 0) {
+      if (this.hitH) this.vel.y = Math.sqrt(2 * CONFIG.player.gravity * C.stepJump);
+      else if (T.hops) this.vel.y = C.hopSpeed;
+    }
+    if (T.lunge && this.state === 'chase' && this.onGround && this.lungeT <= 0) {
+      const d = this.distToPlayer();
+      if (d < C.lungeRange && d > T.reach * 0.8) {
+        const k = C.lungeSpeed / (Math.hypot(player.pos.x - p.x, player.pos.z - p.z) || 1);
+        this.vel.x = (player.pos.x - p.x) * k; this.vel.z = (player.pos.z - p.z) * k; this.vel.y = C.lungeUp;
+        this.lungeT = C.lungeCooldown;
+        Sound.creature(T.sound, 'idle', this.soundVolume());
+      }
+    }
+    // keep a little space from other creatures and the player
+    for (const o of creatures) {
+      if (o === this) continue;
+      const ox = p.x - o.pos.x, oz = p.z - o.pos.z, md = this.hw + o.hw;
+      if (Math.abs(ox) < md && Math.abs(oz) < md && Math.abs(p.y - o.pos.y) < 1) { const q = Math.hypot(ox, oz) || 0.01; this.vel.x += (ox / q) * 3 * dt; this.vel.z += (oz / q) * 3 * dt; }
+    }
+    if (player) {
+      const ox = p.x - player.pos.x, oz = p.z - player.pos.z, md = this.hw + player.hw;
+      if (Math.abs(ox) < md && Math.abs(oz) < md && Math.abs(p.y - player.pos.y) < 1.5) { const q = Math.hypot(ox, oz) || 0.01; this.vel.x += (ox / q) * 6 * dt; this.vel.z += (oz / q) * 6 * dt; }
+    }
+
+    this.move(this.vel.x * dt, this.vel.y * dt, this.vel.z * dt);
+    this.onGround = this.vel.y <= 0 && this.sweep(1, -0.02).hit;
+    this.unstick();
+    if (p.y < -16) return false;
+
+    // melee
+    if (this.state === 'chase' && this.canTarget() && this.attackT <= 0) {
+      const hx = player.pos.x - p.x, hz = player.pos.z - p.z;
+      if (Math.hypot(hx, hz) < T.reach + player.hw && player.pos.y < p.y + T.h && player.pos.y + player.h > p.y - 0.5) {
+        this.attackT = T.attackCooldown;
+        this.swing = 1;
+        hurt(T.damage, 'Slain by a ' + T.name, p);
+      }
+    }
+    // stuck while wandering: pick something else to do
+    this.stuckT += dt;
+    if (this.stuckT > 2) {
+      if (this.state === 'wander' && this.lastPos.distanceTo(p) < 0.5) { this.state = 'idle'; this.stateT = 0.5; }
+      this.lastPos.copy(p); this.stuckT = 0;
+    }
+    const hs = Math.hypot(this.vel.x, this.vel.z);
+    this.walk += hs * dt * (T.hops ? 4 : 5.5);
+    this.walkAmp += ((hs > 0.2 ? 1 : 0) - this.walkAmp) * Math.min(1, 8 * dt);
+    this.headYaw += (this.headTarget - this.headYaw) * Math.min(1, 6 * dt);
+    this.lightT -= dt;
+    if (this.lightT <= 0) { this.light = sampleLight(p.x, this.eyeY, p.z); this.lightT = 0.25; }
+    this.tint = this.hurtT > 0 ? [1, 0.1, 0.1, 0.55] : null;
+    this.soundT -= dt;
+    if (this.soundT <= 0) { this.soundT = 6 + Math.random() * 12; Sound.creature(T.sound, 'idle', this.soundVolume()); }
+    return true;
+  }
+  soundVolume() { return player ? Math.max(0, 1 - this.distToPlayer() / CONFIG.creatures.hearRange) : 0; }
+
+  // A hit from the player: damage, knockback, brief invulnerability, red flash.
+  damage(amount, src) {
+    if (this.invuln > 0 || this.dying > 0) return false;
+    this.health -= amount;
+    this.invuln = CONFIG.creatures.invulnSec;
+    this.hurtT = 0.3;
+    const dx = this.pos.x - src.x, dz = this.pos.z - src.z, d = Math.hypot(dx, dz) || 1;
+    this.vel.x = (dx / d) * CONFIG.creatures.knockback; this.vel.z = (dz / d) * CONFIG.creatures.knockback; this.vel.y = CONFIG.creatures.knockbackUp;
+    Particles.burst(this.pos.x, this.pos.y + this.T.h * 0.6, this.pos.z, this.T.particle, 6, 2, 0.3);
+    Sound.creature(this.T.sound, 'hurt', 1);
+    if (this.T.hostile) { this.state = 'chase'; this.stateT = 4; }
+    else { this.fleeT = CONFIG.creatures.fleeSec; this.state = 'flee'; }
+    if (this.health <= 0) { this.dying = 0.6; this.tint = [1, 0.1, 0.1, 0.55]; Sound.creature(this.T.sound, 'death', 1); }
+    return true;
+  }
+  finishDeath() {
+    const p = this.pos;
+    Particles.burst(p.x, p.y + this.T.h * 0.5, p.z, [235, 235, 235], 14, 2.5, this.T.h * 0.6);
+    for (const [key, a, b] of this.T.drops) {
+      const n = a + Math.floor(Math.random() * (b - a + 1));
+      if (n > 0) spawnItem(newStack(ITEM[key], n), p.x, p.y + 0.4, p.z);
+    }
+  }
+  crumble() {
+    const p = this.pos;
+    Particles.burst(p.x, p.y + this.T.h * 0.5, p.z, [84, 80, 86], 30, 2.2, this.T.h * 0.8);
+    Sound.creature(this.T.sound, 'crumble', this.soundVolume());
+  }
+  render(alpha) {
+    const p = this.pos, q = this.prev, M = this.model, T = this.T;
+    M.root.position.set(q.x + (p.x - q.x) * alpha, q.y + (p.y - q.y) * alpha, q.z + (p.z - q.z) * alpha);
+    M.root.rotation.y = this.prevYaw + wrapAngle(this.yaw - this.prevYaw) * alpha;
+    M.root.rotation.z = this.dying > 0 ? Math.min(1, (0.6 - this.dying) / 0.35) * Math.PI / 2 : 0;
+    const t = performance.now() / 1000;
+    for (const a of M.anim) {
+      const part = a.part, sw = Math.sin(this.walk + (part.phase || 0)) * this.walkAmp;
+      if (part.role === 'leg') a.pivot.rotation.x = a.base + sw * (T.hops ? 0.5 : 0.7);
+      else if (part.role === 'sleg') { a.pivot.rotation.y = sw * 0.45; a.pivot.rotation.z = part.side * (0.35 + Math.max(0, sw) * 0.3); }
+      else if (part.role === 'arm') a.pivot.rotation.x = a.base + sw * 0.35 - this.swing * 1.5 - (this.state === 'chase' ? 0.5 : 0);
+      else if (part.role === 'head') { a.pivot.rotation.y = this.headYaw; a.pivot.rotation.x = Math.sin(t * 1.3 + p.x) * 0.05; }
+      else if (part.role === 'ear') { a.pivot.rotation.z = -part.side * (0.55 + (this.onGround ? 0 : 0.35)); a.pivot.rotation.x = Math.sin(t * 3 + (part.phase || 0)) * 0.12; }
+      else if (part.role === 'body' && T.hops) a.pivot.scale.y = this.onGround ? 1 : 1.12;
+    }
+  }
+  dispose() { scene.remove(this.model.root); }
+}
+function wrapAngle(a) { a = (a + Math.PI) % (Math.PI * 2); if (a < 0) a += Math.PI * 2; return a - Math.PI; }
+
+let creatures = [];
+let hostileSpawnT = 0;
+const creatureCount = (hostile) => creatures.reduce((n, c) => n + (c.T.hostile === hostile && c.dying <= 0 ? 1 : 0), 0);
+function spawnCreature(typeKey, x, y, z) {
+  const c = new Creature(typeKey, x, y, z);
+  if (c.boxOverlapsBlocks(y)) { c.dispose(); return null; }
+  creatures.push(c);
+  return c;
+}
+function clearCreatures() { for (const c of creatures) c.dispose(); creatures = []; }
+// Room for a creature of this type standing on (x, y-1, z)?
+function standable(T, x, y, z) {
+  const below = world.getBlock(x, y - 1, z);
+  if (below <= 0 || !B_SOLID[below] || below === BLOCK.leaves || below === BLOCK.pine_leaves) return false;
+  for (let k = 0; k < Math.ceil(T.h); k++) { const id = world.getBlock(x, y + k, z); if (id !== 0 && (B_SOLID[id] || B_LIQUID[id] || id < 0)) return false; }
+  return true;
+}
+// Passive creatures appear in small groups on grass in daylight as chunks finish loading.
+function spawnPassiveInChunk(c) {
+  const C = CONFIG.creatures;
+  if (!player || creatureCount(false) >= C.maxPassive || U.uDaylight.value < 0.5 || Math.random() > C.passiveChunkChance) return;
+  const type = Math.random() < 0.5 ? 'mossback' : 'puffhop';
+  const T = CREATURE_TYPES[type];
+  const group = 1 + Math.floor(Math.random() * 3);
+  let made = 0;
+  for (let attempt = 0; attempt < 12 && made < group && creatureCount(false) < C.maxPassive; attempt++) {
+    const x = c.cx * CS + Math.floor(Math.random() * CS), z = c.cz * CS + Math.floor(Math.random() * CS);
+    let y = H - 2;
+    while (y > 1 && world.getBlock(x, y, z) === 0) y--;
+    if (world.getBlock(x, y, z) !== BLOCK.grass || !standable(T, x, y + 1, z)) continue;
+    const l = world.getLight(x, y + 1, z);
+    if (l < 0 || (l >> 4) < 12) continue;
+    if (spawnCreature(type, x + 0.5, y + 1, z + 0.5)) made++;
+  }
+}
+// Hostile creatures spawn in darkness (light <= 7), 24-64 blocks from the player.
+function spawnHostiles() {
+  const C = CONFIG.creatures;
+  if (!player || creatureCount(true) >= C.maxHostile) return;
+  for (let attempt = 0; attempt < C.hostileAttempts; attempt++) {
+    const a = Math.random() * Math.PI * 2, r = C.hostileMin + Math.random() * (C.hostileMax - C.hostileMin);
+    const x = Math.floor(player.pos.x + Math.cos(a) * r), z = Math.floor(player.pos.z + Math.sin(a) * r);
+    if (!world.isMeshed(x, z)) continue;
+    const spots = [];
+    for (let y = 2; y < H - 3; y++) {
+      if (!standable(CREATURE_TYPES.skitter, x, y, z)) continue;
+      if (effectiveLight(x, y, z) > C.darkLevel) continue;
+      spots.push(y);
+    }
+    if (!spots.length) continue;
+    const y = spots[Math.floor(Math.random() * spots.length)];
+    const sky = world.getLight(x, y, z) >> 4;
+    const underground = sky < 6;
+    let type = Math.random() < (underground ? 0.5 : 0.25) ? 'skitter' : 'hollow';
+    if (type === 'hollow' && !standable(CREATURE_TYPES.hollow, x, y, z)) type = 'skitter';
+    if (spawnCreature(type, x + 0.5, y, z + 0.5)) return;
+  }
+}
+function updateCreatures(dt) {
+  const C = CONFIG.creatures;
+  for (let i = creatures.length - 1; i >= 0; i--) {
+    const c = creatures[i];
+    const d = player ? Math.hypot(c.pos.x - player.pos.x, c.pos.z - player.pos.z) : 0;
+    const tooFar = d > (c.T.hostile ? C.hostileDespawn : C.passiveDespawn);
+    if (tooFar || !c.update(dt)) { c.dispose(); creatures.splice(i, 1); }
+  }
+  hostileSpawnT -= dt;
+  if (hostileSpawnT <= 0) { hostileSpawnT = C.hostileSpawnInterval; spawnHostiles(); }
+}
+// The player's melee hit: nearest creature along the view ray within reach (and in front of any block).
+function hitEntity() {
+  if (!player || surv.dead) return false;
+  _eye.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
+  player.lookDir(_dir);
+  let maxT = CONFIG.creatures.attackReach;
+  if (target) maxT = Math.min(maxT, target.t + 0.01);
+  let best = null, bestT = maxT;
+  for (const c of creatures) {
+    if (c.dying > 0) continue;
+    const m = 0.1;
+    const t = rayBox(_eye, _dir, [c.pos.x - c.hw - m, c.pos.y - m, c.pos.z - c.hw - m], [c.pos.x + c.hw + m, c.pos.y + c.T.h + m, c.pos.z + c.hw + m], bestT);
+    if (t >= 0 && t < bestT) { bestT = t; best = c; }
+  }
+  if (!best) return false;
+  const stack = heldStack(), tool = toolOf(stack);
+  if (best.damage(tool ? tool.damage : CONFIG.creatures.handDamage, player.pos)) {
+    surv.exh += CONFIG.survival.exhaustHurt;
+    if (tool) wearTool(selected, tool.type === 'sword' ? 1 : 2);
+  }
+  return true;
+}
+// Blocks can't be placed inside a creature either.
+function entitiesBlock(x, y, z) {
+  for (const c of creatures) if (c.dying <= 0 && c.intersectsBlock(x, y, z)) return true;
+  return false;
+}
 
 /* =====================================================================
    SURVIVAL — health, hunger, air, damage, death and respawn, furnaces.
@@ -4318,9 +4956,9 @@ function pressButton(b) {
   if (surv.dead) return;
   if (b === 1) { doPick(); return; }
   if (b === 0) {
+    if (hitEntity()) { held[0] = false; return; }       // creatures in reach take the hit instead of blocks
     held[0] = true;
     if (!isSurvival()) { doBreak(); nextRepeat[0] = performance.now() + CONFIG.player.actionRepeatMs; }
-    hitEntity();
     return;
   }
   if (b === 2) {
@@ -4331,8 +4969,6 @@ function pressButton(b) {
     nextRepeat[2] = performance.now() + CONFIG.player.actionRepeatMs;
   }
 }
-// Hook for Milestone 4: melee hits on creatures.
-function hitEntity() { return false; }
 
 canvas.addEventListener('mousedown', (e) => {
   if (state !== 'playing') return;
@@ -4350,7 +4986,7 @@ window.addEventListener('mouseup', (e) => {
   if (e.button === 0 || e.button === 2) held[e.button] = false;
   if (dragMode && drag && state === 'playing') {
     if (drag.moved < CONFIG.input.dragClickPx) {
-      if (drag.button === 0 && !isSurvival()) doBreak();
+      if (drag.button === 0) { if (!hitEntity() && !isSurvival()) doBreak(); }
       else if (drag.button === 1) doPick();
       else if (drag.button === 2) { if (!tryUse() && !canEat()) doPlace(); }
     }
@@ -4530,6 +5166,17 @@ const Sound = (() => {
     hurt() { if (!ok()) return; tone({ freq: 240, sweep: 110, dur: 0.18, gain: 0.22 }); noise({ type: 'lowpass', freq: 900, dur: 0.12, gain: 0.22 }); },
     eat() { if (!ok()) return; noise({ freq: jit(1500, 0.2), q: 1.6, dur: 0.06, gain: 0.16 }); noise({ freq: jit(700, 0.2), q: 1, dur: 0.05, gain: 0.12, delay: 0.05 }); },
     pickup() { if (!ok()) return; tone({ wave: 'sine', freq: jit(820, 0.12), sweep: 1300, dur: 0.07, gain: 0.07 }); },
+    // Creature voices, scaled by distance (v = 0..1).
+    creature(type, kind, v) {
+      if (!ok() || v <= 0.02) return;
+      const g = v;
+      if (kind === 'death') { noise({ type: 'lowpass', freq: 1400, sweep: 200, dur: 0.35, gain: 0.25 * g }); }
+      if (kind === 'crumble') { noise({ type: 'lowpass', freq: 900, sweep: 140, dur: 0.9, gain: 0.3 * g, attack: 0.05 }); for (let i = 0; i < 5; i++) noise({ freq: 600 + Math.random() * 900, q: 2, dur: 0.05, gain: 0.12 * g, delay: Math.random() * 0.6 }); return; }
+      if (type === 'mossback') tone({ freq: kind === 'hurt' ? 170 : jit(115, 0.1), sweep: 85, dur: kind === 'hurt' ? 0.18 : 0.32, gain: 0.2 * g });
+      else if (type === 'puffhop') { tone({ wave: 'sine', freq: kind === 'hurt' ? 1500 : jit(1000, 0.1), sweep: 1600, dur: 0.08, gain: 0.08 * g }); tone({ wave: 'sine', freq: 1200, sweep: 1800, dur: 0.06, gain: 0.06 * g, delay: 0.1 }); }
+      else if (type === 'hollow') { tone({ freq: kind === 'hurt' ? 140 : jit(72, 0.1), sweep: 55, dur: kind === 'hurt' ? 0.25 : 0.7, gain: 0.22 * g, attack: 0.06 }); noise({ type: 'lowpass', freq: kind === 'hurt' ? 2400 : 320, dur: 0.4, gain: 0.12 * g }); }
+      else if (type === 'skitter') for (let i = 0; i < (kind === 'hurt' ? 3 : 5); i++) noise({ freq: jit(3600, 0.2), q: 5, dur: 0.03, gain: 0.12 * g, delay: i * 0.045 });
+    },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
     death() { if (!ok()) return; tone({ freq: 330, sweep: 70, dur: 0.9, gain: 0.25 }); noise({ type: 'lowpass', freq: 500, dur: 0.5, gain: 0.15 }); },
     silenceWind() { if (wind && ctx) wind.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); },
@@ -4735,6 +5382,8 @@ async function quitToTitle() {
   if (state === 'craft') closeCraft(true);
   if (world) await saveNow();
   clearItems();
+  clearCreatures();
+  Particles.clear();
   furnaces = new Map();
   if (world) { world.dispose(); world = null; }
   if (clouds) { clouds.dispose(); clouds = null; }
@@ -5245,6 +5894,9 @@ function beginLoading(meta, edits, fresh) {
     else if (type === 'land') Sound.place(BLOCKS[id].sound);
   };
   world.onEdit = () => { lastEditAt = performance.now(); };
+  world.onChunkReady = spawnPassiveInChunk;
+  clearCreatures();
+  Particles.clear();
   clouds = new Clouds(meta.seed);
   player = new Player();
   player.mode = meta.mode === 'survival' ? 'survival' : 'creative';
@@ -5438,6 +6090,7 @@ function updateDebug() {
     'Jobs: ' + st.pending + ' in flight, ' + st.queued + ' awaiting upload, ' + st.remesh + ' relight  [' + (pool.mode === 'main' ? 'main-thread fallback' : pool.workerCount + ' workers') + ']\n' +
     'Mode: ' + player.mode + '  flying: ' + (player.flying ? 'yes' : 'no') + '  ground: ' + (player.onGround ? 'yes' : 'no') + '  water: ' + (player.inWater ? 'yes' : 'no') + '\n' +
     (isSurvival() ? 'Health ' + surv.health.toFixed(1) + '  hunger ' + surv.hunger.toFixed(1) + '  saturation ' + surv.sat.toFixed(1) + '  air ' + surv.air.toFixed(1) + '\n' : '') +
+    'Creatures: ' + creatureCount(false) + ' passive, ' + creatureCount(true) + ' hostile  (' + creatures.map(c => c.T.name[0] + ':' + c.state[0]).join(' ') + ')\n' +
     'Items on ground: ' + items.length + '  furnaces: ' + furnaces.size + (mining ? '  mining ' + Math.round(mining.t / mining.total * 100) + '%' : '') + '\n' +
     'Target: ' + t;
 }
@@ -5452,6 +6105,7 @@ function tick(dt) {
   world.updateFalling(dt);
   tickFurnaces(dt);
   updateItems(dt);
+  if (player) updateCreatures(dt);
   if (surv.dead) return;
   // freeze physics until the player's own chunk exists (never fall into unloaded terrain)
   if (!world.isMeshed(Math.floor(player.pos.x), Math.floor(player.pos.z))) { player.prev.copy(player.pos); player.vel.set(0, 0, 0); return; }
@@ -5504,6 +6158,8 @@ function frame(now) {
   const alpha = running ? acc / STEP : 1;
   updateCamera(alpha, dt);
   for (const e of items) e.render(alpha);
+  for (const c of creatures) c.render(alpha);
+  Particles.update(running ? dt : 0);
   updateEnvironment(running ? dt : 0);
   updateTarget();
   if (!mining) crackMesh.visible = false;
@@ -5551,7 +6207,7 @@ window.__BLOCKWILD_READY = true;
 window.__BLOCKWILD = {
   CONFIG, SH, pool, renderer, scene, camera, U, ATLAS, Store, Sky, Sound, ITEMS, ITEM, RECIPES, SMELT, matchRecipe, inv, surv, craftUI,
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
-  get items() { return items; }, get furnaces() { return furnaces; }, get selected() { return selected; },
+  get items() { return items; }, get creatures() { return creatures; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
