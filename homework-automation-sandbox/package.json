@@ -8,7 +8,9 @@
     "start:mathdrill": "node platforms/mathdrill/server.js",
     "start:quizzone": "node platforms/quizzone/server.js",
     "start:writewell": "node platforms/writewell/server.js",
+    "start:mathdrill-chaos": "node platforms/mathdrill/server.js --chaos",
     "start-all": "concurrently --names MathDrill,QuizZone,WriteWell --prefix-colors blue,magenta,green \"npm:start:mathdrill\" \"npm:start:quizzone\" \"npm:start:writewell\"",
+    "start-chaos": "concurrently --names MathDrill,QuizZone,WriteWell --prefix-colors blue,magenta,green \"npm:start:mathdrill-chaos\" \"npm:start:quizzone\" \"npm:start:writewell\"",
     "test": "node --test platforms/test/*.test.js"
   },
   "engines": {

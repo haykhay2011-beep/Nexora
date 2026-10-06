@@ -16,7 +16,7 @@
 const path = require('node:path');
 const express = require('express');
 const { createSessions } = require('../shared/session');
-const { createStore } = require('../shared/store');
+const { createStore, sleep } = require('../shared/store');
 const { page, escapeHtml } = require('../shared/html');
 const config = require('./config.json');
 const { DEFAULT_DB } = require('./seed');
@@ -25,7 +25,7 @@ const { DEFAULT_DB } = require('./seed');
  * Build the Express app. Exported (instead of starting immediately) so the
  * Node tests can start it on a random port with a temporary database.
  */
-function createApp({ dbPath = DEFAULT_DB } = {}) {
+function createApp({ dbPath = DEFAULT_DB, chaos = false } = {}) {
   const app = express();
   const store = createStore(dbPath);
   const sessions = createSessions(config.cookieName, '/login');
@@ -163,7 +163,15 @@ function createApp({ dbPath = DEFAULT_DB } = {}) {
 
   // The current problem (or the results, if the drill is finished).
   // The answer is never sent to the browser.
-  app.get('/api/assignments/:id/current', sessions.requireApi, (req, res) => {
+  app.get('/api/assignments/:id/current', sessions.requireApi, async (req, res) => {
+    // CHAOS MODE (opt-in, for demonstrating the bot's error handling):
+    // start the server with --chaos (`npm run start-chaos`) and this
+    // assignment's problems take 15 s to load, longer than the bot's 10 s wait
+    // timeout. The bot should time out, take a screenshot, mark it FAILED,
+    // and carry on with the other assignments.
+    if (chaos && req.params.id === config.chaosAssignmentId) {
+      await sleep(15000);
+    }
     const a = store.load().assignments.find((x) => x.id === req.params.id);
     if (!a) return res.status(404).json({ error: 'No such assignment' });
     if (a.status === 'done') return res.json(results(a));
@@ -210,7 +218,9 @@ function createApp({ dbPath = DEFAULT_DB } = {}) {
 }
 
 if (require.main === module) {
-  createApp().listen(config.port, () => {
+  const chaos = process.argv.includes('--chaos');
+  createApp({ chaos }).listen(config.port, () => {
+    if (chaos) console.log(`MathDrill CHAOS MODE: assignment ${config.chaosAssignmentId} will load too slowly on purpose`);
     console.log(`MathDrill running at http://localhost:${config.port}  (login: ${config.demoUser.username} / ${config.demoUser.password})`);
   });
 }

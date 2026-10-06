@@ -54,7 +54,7 @@ function buildDb() {
         q('q2', 'Which molecule carries genetic information?', ['ATP', 'Glucose', 'DNA', 'Water'], 2),
         q('q3', 'How do plants make their own food?', ['Photosynthesis', 'Respiration', 'Digestion', 'Fermentation'], 0),
         q('q4', 'Which structure controls what enters and leaves a cell?', ['Chloroplast', 'Vacuole', 'Golgi apparatus', 'Cell membrane'], 3),
-        q('q5', 'Approximately how many cells are in the human body?', ['About 1 million', 'About 500 billion', 'About 37 trillion', 'About 10 thousand'], 2, true),
+        q('q5', 'Approximately how many cells are in the human body?', ['About 1 million', 'About 5 billion', 'About 37 trillion', 'About 900'], 2, true),
       ],
     },
     {
