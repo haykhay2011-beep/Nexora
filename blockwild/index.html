@@ -30,7 +30,8 @@
   /* ---------- Screens ---------- */
   .screen {
     position: fixed; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 14px; z-index: 20;
+    align-items: center; justify-content: center; justify-content: safe center; gap: 14px; z-index: 20;
+    overflow-y: auto; padding: 12px 0;
   }
   .screen.dim { background: rgba(6, 8, 12, 0.55); }
   #screen-title, #screen-loading {
@@ -74,7 +75,7 @@
     background: #050505; border: 3px solid #8a8a8a; outline: none; user-select: text; -webkit-user-select: text;
   }
   input[type=text]:focus { border-color: #e8e8e8; }
-  .footer { position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-family: var(--px-font); font-size: 12px; color: rgba(255,255,255,0.45); }
+  .footer { position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; pointer-events: none; font-family: var(--px-font); font-size: 12px; color: rgba(255,255,255,0.45); }
 
   .panel {
     background: var(--panel); border: 3px solid var(--panel-edge);
@@ -197,6 +198,17 @@
   #deathCause { font: 18px var(--px-font); color: #ffdede; margin-bottom: 10px; text-shadow: 2px 2px 0 #000; }
   .mode-btn.sel { outline: 3px solid #e8e8e8; outline-offset: -3px; background-color: #4c7d32; }
   .mode-hint { font: 12px var(--px-font); color: var(--muted); min-height: 16px; }
+  /* short windows: compact title and panels so every button stays reachable */
+  @media (max-height: 760px) {
+    .logo { font-size: clamp(34px, 8vh, 72px); margin-bottom: 0; }
+    .tagline { margin-bottom: 4px; }
+    .panel { padding: 14px 18px; gap: 8px; }
+    .btn { padding: 8px 14px; font-size: 16px; }
+    #worldList { max-height: 24vh; }
+    .footer { display: none; }
+    .craft-top { min-height: 0; }
+    .death-title { font-size: 40px; }
+  }
   #fatal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: #10131a; font: 16px var(--px-font); color: #ffb4a0; padding: 20px; text-align: center; line-height: 1.6; }
 </style>
 </head>
@@ -3191,23 +3203,15 @@ class World {
       const x = this.changes[i], y = this.changes[i + 1], z = this.changes[i + 2], old = this.changes[i + 3], id = this.changes[i + 4];
       i += 5;
       this.updateLight(x, y, z, old, id);
-      // neighbours that were attached to this cell lose their support
-      if (!this.canSupport(id)) {
-        for (const d of DIRS6) {
-          const nx = x + d[0], ny = y + d[1], nz = z + d[2];
-          const nid = this.getBlock(nx, ny, nz);
-          if (nid <= 0) continue;
-          const a = BLOCKS[nid].attach;
-          if (a && nx + a[0] === x && ny + a[1] === y && nz + a[2] === z && !this.supports(nid, id)) {
-            if (this.rawSet(nx, ny, nz, 0) >= 0 && this.onBlockEvent) this.onBlockEvent('pop', nx, ny, nz, nid);
-          }
-        }
-      } else {
-        // a plant whose soil changed (e.g. grass -> stone) also pops
-        const above = this.getBlock(x, y + 1, z);
-        if (above > 0) {
-          const a = BLOCKS[above].attach;
-          if (a && a[1] === -1 && !this.supports(above, id) && this.rawSet(x, y + 1, z, 0) >= 0 && this.onBlockEvent) this.onBlockEvent('pop', x, y + 1, z, above);
+      // neighbours attached to this cell pop off if the new block can't hold them
+      // (torches need an opaque block, plants need their soil: grass -> stone pops a flower too)
+      for (const d of DIRS6) {
+        const nx = x + d[0], ny = y + d[1], nz = z + d[2];
+        const nid = this.getBlock(nx, ny, nz);
+        if (nid <= 0) continue;
+        const a = BLOCKS[nid].attach;
+        if (a && nx + a[0] === x && ny + a[1] === y && nz + a[2] === z && !this.supports(nid, id)) {
+          if (this.rawSet(nx, ny, nz, 0) >= 0 && this.onBlockEvent) this.onBlockEvent('pop', nx, ny, nz, nid);
         }
       }
       // sand / gravel fall
@@ -3222,7 +3226,6 @@ class World {
     }
     this.changes.length = 0;
   }
-  canSupport(id) { return id > 0 && (B_OPAQUE[id] || B_SOLID[id]); }
   supports(dependent, holder) {
     const d = BLOCKS[dependent];
     if (d.soil) return d.soil.includes(BLOCKS[holder].key);
@@ -4575,7 +4578,8 @@ class Creature extends Body {
     // melee
     if (this.state === 'chase' && this.canTarget() && this.attackT <= 0) {
       const hx = player.pos.x - p.x, hz = player.pos.z - p.z;
-      if (Math.hypot(hx, hz) < T.reach + player.hw && player.pos.y < p.y + T.h && player.pos.y + player.h > p.y - 0.5) {
+      if (Math.hypot(hx, hz) < T.reach + player.hw && player.pos.y < p.y + T.h && player.pos.y + player.h > p.y - 0.5 &&
+          lineOfSight(p.x, this.eyeY, p.z, player.pos.x, player.pos.y + player.eye * 0.6, player.pos.z)) {   // no hitting through walls
         this.attackT = T.attackCooldown;
         this.swing = 1;
         hurt(T.damage, 'Slain by a ' + T.name, p);
@@ -5986,10 +5990,12 @@ function saveNow() {
   meta.mode = player.mode;
   meta.version = 3;
   meta.player = { x: player.pos.x, y: player.pos.y, z: player.pos.z, yaw: player.yaw, pitch: player.pitch, flying: player.flying };
+  if (surv.dead && meta.spawn) meta.player = { x: meta.spawn.x, y: meta.spawn.y, z: meta.spawn.z, yaw: player.yaw, pitch: 0, flying: false };
   meta.inventory = inv.toJSON();
   delete meta.hotbar;
   meta.selected = selected;
-  meta.surv = { health: surv.health, hunger: surv.hunger, sat: surv.sat, air: surv.air };
+  // saved while dead: come back as if respawned (the dropped items stay where you died)
+  meta.surv = surv.dead ? null : { health: surv.health, hunger: surv.hunger, sat: surv.sat, air: surv.air };
   meta.furnaces = [...furnaces].map(([k, f]) => [k, { input: stackToJSON(f.input), fuel: stackToJSON(f.fuel), output: stackToJSON(f.output), burn: f.burn, burnMax: f.burnMax, cook: f.cook }]);
   meta.items = items.slice(-CONFIG.survival.maxSavedItems).map(e => [e.stack.id, e.stack.count, e.stack.dur || 0, e.pos.x, e.pos.y, e.pos.z, e.age]);
   const dirty = [...w.dirtyEdits];
