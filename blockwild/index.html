@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>BLOCKWILD</title>
 <style>
   :root {
@@ -211,6 +211,36 @@
     .craft-top { min-height: 0; }
     .death-title { font-size: 40px; }
   }
+  /* ---------- Touch controls ---------- */
+  #touchUI { position: fixed; inset: 0; z-index: 15; touch-action: none; display: none; }
+  body.touch #touchUI.on { display: block; }
+  body.touch #game { touch-action: none; }
+  .tbtn {
+    position: absolute; width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font: 700 14px var(--px-font); color: #fff; text-shadow: 1px 1px 0 #000; letter-spacing: 0.04em;
+    background: rgba(30, 32, 40, 0.42); border: 3px solid rgba(255, 255, 255, 0.45); user-select: none; -webkit-user-select: none;
+  }
+  .tbtn.small { width: 50px; height: 50px; border-radius: 10px; font-size: 12px; }
+  .tbtn.down, .tbtn.on { background: rgba(140, 220, 100, 0.45); border-color: #fff; }
+  #tJump { right: 22px; bottom: 26px; width: 84px; height: 84px; }
+  #tSneak { right: 120px; bottom: 18px; }
+  #tHit { right: 128px; bottom: 104px; }
+  #tUse { right: 30px; bottom: 128px; }
+  #tPause { right: 14px; top: 14px; }
+  #tInv { right: 74px; top: 14px; }
+  #tDrop { right: 134px; top: 14px; }
+  #tFull { right: 194px; top: 14px; }
+  #tStickBase { position: absolute; width: 130px; height: 130px; margin: -65px 0 0 -65px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.35); background: rgba(20,20,26,0.25); display: none; pointer-events: none; }
+  #tStickKnob { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(255,255,255,0.45); border: 3px solid rgba(255,255,255,0.7); display: none; pointer-events: none; }
+  #tHint { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); font: 700 14px var(--px-font); color: #fff; text-shadow: 2px 2px 0 #000; text-align: center; line-height: 1.6; pointer-events: none; transition: opacity 1s; max-width: 90vw; }
+  body.touch #hud { z-index: 16; }
+  body.touch #hotbar { pointer-events: auto; }
+  body.touch .slot { width: 44px; height: 44px; }
+  body.touch .slot img { width: 34px; height: 34px; }
+  body.touch #survHud { width: 414px; bottom: 66px; }
+  body.touch #modeTag { display: none; }
+  .close-btn { display: none; align-self: center; padding: 6px 22px; font-size: 15px; }
+  body.touch .close-btn { display: block; }
   #fatal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: #10131a; font: 16px var(--px-font); color: #ffb4a0; padding: 20px; text-align: center; line-height: 1.6; }
 </style>
 </head>
@@ -227,6 +257,19 @@
   <div id="hotbar"></div>
   <div id="modeTag"></div>
   <div id="debug" class="hidden"></div>
+</div>
+
+<div id="touchUI">
+  <div id="tStickBase"></div><div id="tStickKnob"></div>
+  <div class="tbtn" id="tJump">JUMP</div>
+  <div class="tbtn" id="tSneak">SNEAK</div>
+  <div class="tbtn" id="tHit">HIT</div>
+  <div class="tbtn" id="tUse">USE</div>
+  <div class="tbtn small" id="tPause">II</div>
+  <div class="tbtn small" id="tInv">BAG</div>
+  <div class="tbtn small" id="tDrop">DROP</div>
+  <div class="tbtn small" id="tFull">FULL</div>
+  <div id="tHint">Left side: move &middot; Right side: drag to look<br>Tap to place or use &middot; Touch and hold to break</div>
 </div>
 
 <div id="screen-title" class="screen hidden">
@@ -317,6 +360,7 @@
     <div class="inv-title">Hotbar</div>
     <div id="invHotbar"></div>
     <p class="inv-hint">Creative: click a block or item to put it in the selected slot, or drag it onto any hotbar slot. Press E or Esc to close.</p>
+    <button class="btn close-btn" id="btnInvClose">Close</button>
   </div>
 </div>
 <div id="screen-craft" class="screen dim hidden">
@@ -334,6 +378,7 @@
     <div id="mainGrid" class="slotgrid"></div>
     <div id="hotGrid" class="slotgrid hot"></div>
     <p class="inv-hint">Click: take / place a stack &middot; Right click: split / place one &middot; Shift+click: quick move &middot; Click outside: throw &middot; E or Esc to close</p>
+    <button class="btn close-btn" id="btnCraftClose">Close</button>
   </div>
 </div>
 <div id="screen-death" class="screen hidden">
@@ -680,6 +725,15 @@ const CONFIG = {
     maxSubstep: 0.35,     // collision substep length in blocks (prevents tunnelling)
     eyeLerp: 14,
     spawnSearchRadius: 256,
+  },
+
+  touch: {
+    lookScale: 2.4,           // look speed per pixel dragged, relative to the mouse
+    stickRadius: 55,          // joystick travel in pixels
+    sprintAt: 0.92,           // push the stick this far forward to sprint
+    tapMs: 300, tapPx: 12,    // a tap places / uses
+    holdMs: 380,              // touch and hold this long to break or hit
+    slotHoldMs: 450,          // hold an inventory slot to quick-move it
   },
 
   input: {
@@ -4485,8 +4539,13 @@ class Player extends Body {
   update(dt) {
     const P = CONFIG.player;
     this.prev.copy(this.pos);
-    const fwd = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0);
-    const str = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+    let fwd = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0);
+    let str = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+    let analog = 1;
+    if (touchMove.active && !fwd && !str) {               // touch joystick: analog speed, dead zone in the middle
+      const m = Math.hypot(touchMove.fwd, touchMove.str);
+      if (m > 0.18) { fwd = touchMove.fwd; str = touchMove.str; analog = Math.min(1, (m - 0.18) / 0.6); }
+    }
     const jump = !!keys.Space;
     const shift = !!(keys.ShiftLeft || keys.ShiftRight);
     if (this.mode !== 'creative') this.flying = false;
@@ -4499,6 +4558,7 @@ class Player extends Body {
     let speed = this.flying ? (this.sprinting ? P.flySprintSpeed : P.flySpeed)
       : this.sneaking ? P.sneakSpeed : this.sprinting ? P.sprintSpeed : P.walkSpeed;
     if (swimming) speed *= P.waterSpeedMul;
+    speed *= analog;
     let wx = 0, wz = 0;
     if (fwd || str) {
       const s = Math.sin(this.yaw), c = Math.cos(this.yaw);
@@ -6104,13 +6164,13 @@ window.addEventListener('wheel', (e) => {
 canvas.addEventListener('auxclick', (e) => e.preventDefault());
 
 function handleHeldButtons(now) {
-  if (!locked || surv.dead) return;
+  if ((!locked && !touchMode) || surv.dead) return;
   if (held[0] && !isSurvival() && now >= nextRepeat[0]) { doBreak(); nextRepeat[0] = now + CONFIG.player.actionRepeatMs; }
   if (held[2] && !canEat() && now >= nextRepeat[2]) { doPlace(); nextRepeat[2] = now + CONFIG.player.actionRepeatMs; }
 }
 
 function requestLock() {
-  if (dragMode || locked) return;
+  if (dragMode || locked || touchMode) return;
   if (!canvas.requestPointerLock) { enableDragMode(); return; }
   try {
     const p = canvas.requestPointerLock();
@@ -6458,12 +6518,13 @@ function refreshOverlays() {
   SCREENS.inventory.classList.toggle('hidden', state !== 'inventory');
   SCREENS.craft.classList.toggle('hidden', state !== 'craft');
   SCREENS.dead.classList.toggle('hidden', state !== 'dead');
-  SCREENS.click.classList.toggle('hidden', !(state === 'playing' && !locked && !dragMode));
+  SCREENS.click.classList.toggle('hidden', !(state === 'playing' && !locked && !dragMode && !touchMode));
+  $('touchUI').classList.toggle('on', state === 'playing' && inGame);
   canvas.style.cursor = state === 'playing' && dragMode ? 'grab' : 'default';
 }
 function setState(s) {
   state = s;
-  if (s !== 'playing') { clearInput(); drag = null; }
+  if (s !== 'playing') { clearInput(); drag = null; Touch.release(); }
   refreshOverlays();
 }
 // The world keeps running behind the inventory screens (only the pause menu stops time).
@@ -6477,7 +6538,7 @@ function openPause() {
 }
 function resume() {
   Sound.ensure();
-  if (dragMode) { setState('playing'); return; }
+  if (dragMode || touchMode) { setState('playing'); return; }
   if (locked) { setState('playing'); return; }
   requestLock();          // pointerlockchange switches to 'playing' when granted
 }
@@ -6567,6 +6628,7 @@ function renderHotbar() {
 function updateModeTag() {
   if (!player) return;
   $('modeTag').textContent = (isSurvival() ? 'Survival' : 'Creative') + (player.flying ? ' · Flying' : '') + (dragMode ? ' · drag to look' : '');
+  if (touchMode) $('tSneak').classList.toggle('on', !!keys.ShiftLeft);
 }
 
 // ---- survival HUD: 10 hearts, 10 loaves, air bubbles (original pixel icons) ----
@@ -6920,6 +6982,8 @@ $('setVol').addEventListener('input', (e) => { SETTINGS.volume = +e.target.value
 $('setInvert').addEventListener('change', (e) => { SETTINGS.invertY = e.target.checked; });
 $('setBob').addEventListener('change', (e) => { SETTINGS.viewBob = e.target.checked; });
 $('btnSettingsDone').addEventListener('click', closeSettings);
+$('btnInvClose').addEventListener('click', () => closeInventory());
+$('btnCraftClose').addEventListener('click', () => closeCraft());
 
 // ---- title screen: world list, create (with game mode), delete ----
 let worldList = [], selectedWorld = null, pendingDelete = null, createMode = 'survival';
@@ -7361,6 +7425,156 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
 });
 
+/* ---------------- touch controls ----------------
+   Left side of the screen: a floating joystick (push to the rim to sprint).
+   Right side: drag to look; a quick tap places or uses; touch and hold breaks
+   blocks (or hits a creature). Buttons: jump (double-tap to fly in creative),
+   sneak (toggle), hit, use (hold to eat), bag, drop, pause, fullscreen.
+   A real mouse click on the overlay switches back to mouse controls. */
+let touchMode = false;
+const touchMove = { active: false, fwd: 0, str: 0 };
+const Touch = (() => {
+  const T = CONFIG.touch, ui = $('touchUI'), base = $('tStickBase'), knob = $('tStickKnob');
+  let stick = null, lookT = null, holdTimer = 0, lastJump = -1e9;
+  function enable() {
+    if (touchMode) return;
+    touchMode = true;
+    document.body.classList.add('touch');
+    if (locked) { expectUnlock = true; document.exitPointerLock(); }
+    setTimeout(() => { $('tHint').style.opacity = '0'; }, 7000);
+    refreshOverlays();
+    updateModeTag();
+  }
+  function disable() {
+    if (!touchMode) return;
+    touchMode = false;
+    document.body.classList.remove('touch');
+    release();
+    refreshOverlays();
+  }
+  function release() {
+    stick = null; lookT = null; clearTimeout(holdTimer);
+    touchMove.active = false; touchMove.fwd = touchMove.str = 0;
+    base.style.display = knob.style.display = 'none';
+    keys.Space = false; held[0] = held[2] = false;
+    for (const b of ui.querySelectorAll('.tbtn.down')) b.classList.remove('down');
+  }
+  const btn = (id, down, up) => {
+    const el = $(id);
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); el.classList.add('down'); Sound.ensure(); if (state === 'playing') down(); }, { passive: false });
+    const end = (e) => { e.preventDefault(); e.stopPropagation(); el.classList.remove('down'); if (up) up(); };
+    el.addEventListener('touchend', end, { passive: false });
+    el.addEventListener('touchcancel', end, { passive: false });
+  };
+  btn('tJump', () => {
+    keys.Space = true;
+    const now = performance.now();
+    if (now - lastJump < CONFIG.player.doubleTapMs && player.mode === 'creative') {
+      player.flying = !player.flying;
+      player.vel.y = player.flying ? CONFIG.player.flyTakeoff : 0;
+      player.flyGrace = CONFIG.player.flyGraceSec;
+      lastJump = -1e9;
+    } else lastJump = now;
+  }, () => { keys.Space = false; });
+  btn('tSneak', () => { keys.ShiftLeft = !keys.ShiftLeft; $('tSneak').classList.toggle('on', !!keys.ShiftLeft); });
+  btn('tHit', () => pressButton(0), () => { held[0] = false; });
+  btn('tUse', () => pressButton(2), () => { held[2] = false; });
+  btn('tInv', () => { release(); openInventory(); });
+  btn('tDrop', () => dropHeld());
+  btn('tPause', () => { release(); openPause(); });
+  btn('tFull', () => {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    } catch (err) { /* not supported */ }
+  });
+  function setStick(t) {
+    let dx = t.clientX - stick.x, dy = t.clientY - stick.y;
+    const d = Math.hypot(dx, dy), R = T.stickRadius;
+    if (d > R) { dx *= R / d; dy *= R / d; }
+    knob.style.left = (stick.x + dx) + 'px'; knob.style.top = (stick.y + dy) + 'px';
+    touchMove.active = true;
+    touchMove.str = dx / R; touchMove.fwd = -dy / R;
+    if (player) player.sprintLatch = touchMove.fwd > T.sprintAt;
+  }
+  ui.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    Sound.ensure();
+    if (state !== 'playing') return;
+    for (const t of e.changedTouches) {
+      if (!stick && t.clientX < window.innerWidth * 0.4) {
+        stick = { id: t.identifier, x: t.clientX, y: t.clientY };
+        base.style.left = knob.style.left = t.clientX + 'px'; base.style.top = knob.style.top = t.clientY + 'px';
+        base.style.display = knob.style.display = 'block';
+        setStick(t);
+      } else if (!lookT) {
+        lookT = { id: t.identifier, x: t.clientX, y: t.clientY, t0: e.timeStamp, moved: 0, holding: false };   // event time: immune to a slow frame
+        clearTimeout(holdTimer);
+        const lt = lookT;
+        holdTimer = setTimeout(() => {
+          if (lookT === lt && lt.moved < T.tapPx && state === 'playing') { lt.holding = true; pressButton(0); }
+        }, T.holdMs);
+      }
+    }
+  }, { passive: false });
+  ui.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (state !== 'playing') return;
+    for (const t of e.changedTouches) {
+      if (stick && t.identifier === stick.id) setStick(t);
+      else if (lookT && t.identifier === lookT.id) {
+        const dx = t.clientX - lookT.x, dy = t.clientY - lookT.y;
+        lookT.x = t.clientX; lookT.y = t.clientY;
+        lookT.moved += Math.abs(dx) + Math.abs(dy);
+        look(dx * T.lookScale, dy * T.lookScale);
+      }
+    }
+  }, { passive: false });
+  const end = (e) => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (stick && t.identifier === stick.id) {
+        stick = null; touchMove.active = false; touchMove.fwd = touchMove.str = 0;
+        if (player) player.sprintLatch = false;
+        base.style.display = knob.style.display = 'none';
+      } else if (lookT && t.identifier === lookT.id) {
+        clearTimeout(holdTimer);
+        const lt = lookT;
+        lookT = null;
+        if (lt.holding) held[0] = false;
+        else if (state === 'playing' && e.timeStamp - lt.t0 < T.tapMs && lt.moved < T.tapPx) { pressButton(2); held[2] = false; }
+      }
+    }
+  };
+  ui.addEventListener('touchend', end, { passive: false });
+  ui.addEventListener('touchcancel', end, { passive: false });
+  // a real mouse on the overlay means a mouse is in use: switch back
+  ui.addEventListener('mousedown', (e) => { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; disable(); requestLock(); });
+  // hotbar: tap to select
+  hotbarEl.addEventListener('touchstart', (e) => {
+    const el = e.target.closest('.slot');
+    if (!el || state !== 'playing') return;
+    e.preventDefault(); e.stopPropagation();
+    selectSlot(+el.dataset.slot);
+  }, { passive: false });
+  // inventory screens: touch and hold a slot to quick-move it (like shift-click)
+  let slotHold = null;
+  SCREENS.craft.addEventListener('touchstart', (e) => {
+    const el = e.target.closest('[data-ref]');
+    slotHold = el ? { ref: el.dataset.ref, t0: performance.now() } : null;
+  }, { passive: true });
+  SCREENS.craft.addEventListener('touchend', (e) => {
+    if (slotHold && performance.now() - slotHold.t0 >= T.slotHoldMs && !craftUI.cursor) {
+      e.preventDefault();                                   // no synthesized click
+      clickSlot(slotHold.ref, 0, true);
+    }
+    slotHold = null;
+  }, { passive: false });
+  window.addEventListener('touchstart', () => enable(), { capture: true, passive: true });
+  if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(pointer: fine)').matches) enable();
+  return { enable, disable, release };
+})();
+
 /* =====================================================================
    BOOT
    ===================================================================== */
@@ -7391,7 +7605,7 @@ window.__BLOCKWILD = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   get items() { return items; }, get creatures() { return creatures; }, get projectiles() { return projectiles; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
-  Hand, Weather, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
+  Hand, Weather, Touch, get touchMode() { return touchMode; }, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
 requestAnimationFrame(frame);
