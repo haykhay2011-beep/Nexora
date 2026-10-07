@@ -482,6 +482,7 @@ const CONFIG = {
     waterRipple: 0.035,
     waterRippleSpeed: 1.6,
     anisotropy: 4,
+    occlusionCulling: true, // skip sections that no see-through path from the camera can reach
     outlineOpacity: 0.55,
     viewBobAmount: 0.055,
     reprioritizeAngle: 0.5, // radians of yaw change before the load order is re-sorted
@@ -640,7 +641,7 @@ const CONFIG = {
   },
 
   workers: {
-    max: 4,
+    max: 6,
     jobsPerWorker: 2,
     fallbackSliceMs: 4,
     dispatchBudgetMs: 1.5, // main-thread time per frame for preparing job inputs
@@ -1529,6 +1530,39 @@ function BlockwildShared(C) {
     else if (shape === SHAPE_CACTUS) emitCactus(B, pad, lpad, pi, x, y, z, id);
   }
 
+  /* Section visibility: which pairs of the 6 section faces are joined by a path of
+     see-through cells. 6 masks of 6 bits packed as mask[f] * 64^f (faces +X -X +Y -Y +Z -Z).
+     The main thread walks these graphs from the camera to skip sections hidden behind rock. */
+  const VIS_ALL = 68719476735;                // every face reaches every face (2^36 - 1)
+  const VQ = new Int16Array(4096), VSEEN = new Uint8Array(4096);
+  function sectionVis(pad, rowBase) {
+    // see-through flags for the section's cells first, then flood fill components
+    for (let y = 0, c = 0; y < 16; y++) for (let z = 0; z < 16; z++) {
+      const r = rowBase + y * PA + (z + 1) * PW + 1;
+      for (let x = 0; x < 16; x++, c++) VSEEN[c] = B_OPAQUE[pad[r + x]];
+    }
+    const reach = [0, 0, 0, 0, 0, 0];
+    for (let start = 0; start < 4096; start++) {
+      if (VSEEN[start]) continue;
+      let qh = 0, qt = 0, faces = 0;
+      VQ[qt++] = start; VSEEN[start] = 1;
+      while (qh < qt) {
+        const c = VQ[qh++], x = c & 15, z = (c >> 4) & 15, y = c >> 8;
+        if (x === 15) faces |= 1; else if (!VSEEN[c + 1]) { VSEEN[c + 1] = 1; VQ[qt++] = c + 1; }
+        if (x === 0) faces |= 2; else if (!VSEEN[c - 1]) { VSEEN[c - 1] = 1; VQ[qt++] = c - 1; }
+        if (y === 15) faces |= 4; else if (!VSEEN[c + 256]) { VSEEN[c + 256] = 1; VQ[qt++] = c + 256; }
+        if (y === 0) faces |= 8; else if (!VSEEN[c - 256]) { VSEEN[c - 256] = 1; VQ[qt++] = c - 256; }
+        if (z === 15) faces |= 16; else if (!VSEEN[c + 16]) { VSEEN[c + 16] = 1; VQ[qt++] = c + 16; }
+        if (z === 0) faces |= 32; else if (!VSEEN[c - 16]) { VSEEN[c - 16] = 1; VQ[qt++] = c - 16; }
+      }
+      for (let f = 0; f < 6; f++) if (faces & (1 << f)) reach[f] |= faces;
+      if (reach[0] === 63 && reach[1] === 63 && reach[2] === 63 && reach[3] === 63 && reach[4] === 63 && reach[5] === 63) break;
+    }
+    let v = 0;
+    for (let f = 0; f < 6; f++) v += reach[f] * Math.pow(64, f);
+    return v;
+  }
+
   function meshRange(pad, lpad, yBase, ny, only) {
     const out = [];
     const s0 = Math.floor(yBase / SECTION), s1 = Math.floor((yBase + ny) / SECTION);
@@ -1543,7 +1577,7 @@ function BlockwildShared(C) {
           for (let x = 0; x < CS; x++) if (pad[r + x] !== 0) { any = true; break; }
         }
       }
-      if (!any) { out.push({ sy, o: null, c: null, w: null }); continue; }
+      if (!any) { out.push({ sy, o: null, c: null, w: null, vis: VIS_ALL }); continue; }
       BUILDERS[0].reset(); BUILDERS[1].reset(); BUILDERS[2].reset();
       for (let y = y0; y < y0 + SECTION; y++) {
         const rb = (y - yBase + 1) * PA;
@@ -1555,7 +1589,7 @@ function BlockwildShared(C) {
           }
         }
       }
-      out.push({ sy, o: BUILDERS[0].out(), c: BUILDERS[1].out(), w: BUILDERS[2].out() });
+      out.push({ sy, o: BUILDERS[0].out(), c: BUILDERS[1].out(), w: BUILDERS[2].out(), vis: sectionVis(pad, (y0 - yBase + 1) * PA) });
     }
     return out;
   }
@@ -1627,7 +1661,7 @@ function BlockwildShared(C) {
     B_SOLID, B_OPAQUE, B_LIQUID, B_TRANSPARENT, B_SHAPE, B_PASS, B_TEX, B_TARGET, B_LIGHT, B_OCC,
     B_FILTER, B_FALLS, B_TORCH, B_REPLACEABLE,
     SHAPE_CUBE, SHAPE_LIQUID, SHAPE_CROSS, SHAPE_TORCH, SHAPE_CACTUS, PASS_OPAQUE, PASS_CUTOUT, PASS_WATER,
-    hash2, hash3, mulberry32, makeNoise, makeGenerator, meshRange, blockModel, computeLight, handleJob, jobSteps, idx,
+    VIS_ALL, hash2, hash3, mulberry32, makeNoise, makeGenerator, meshRange, blockModel, computeLight, handleJob, jobSteps, idx,
   };
 }
 
@@ -3080,6 +3114,7 @@ class Chunk {
     this.version = 0;         // bumps whenever anything visible in the chunk changes
     this.blockVersion = 0;    // bumps whenever a block id in the chunk changes
     this.sections = new Array(SH.SECTIONS).fill(null);   // [opaque, cutout, water] meshes per section
+    this.vis = new Uint8Array(SH.SECTIONS * 6).fill(63);  // per section, per face: faces reachable through it
     this.disposed = false;
   }
 }
@@ -3428,6 +3463,55 @@ class World {
     let any = false;
     const arr = parts.map((g, pass) => { if (!g) return null; any = true; return this.makeMesh(g, pass, c, s.sy); });
     c.sections[s.sy] = any ? arr : null;
+    const v = s.vis === undefined ? SH.VIS_ALL : s.vis;
+    for (let f = 0; f < 6; f++) c.vis[s.sy * 6 + f] = Math.floor(v / Math.pow(64, f)) % 64;
+  }
+
+  /* Occlusion culling: breadth-first walk over sections from the camera. A section is
+     drawn only if some path of see-through cells can lead to it from the camera,
+     never doubling back (no direction and its opposite on one path) and staying
+     inside the view frustum. Hides caves under your feet and terrain behind hills. */
+  cullSections(cam) {
+    if (!this.cullFrustum) {
+      this.cullFrustum = new THREE.Frustum(); this.cullMat = new THREE.Matrix4(); this.cullBox = new THREE.Box3();
+      this.cullQ = new Int32Array(0); this.cullSeen = new Uint32Array(0); this.cullStamp = 0;
+    }
+    const R = this.rd + 3, W = 2 * R + 1, NS = SH.SECTIONS, N = W * W * NS;
+    if (this.cullSeen.length < N) { this.cullSeen = new Uint32Array(N); this.cullQ = new Int32Array(N * 3); this.cullStamp = 0; }
+    const stamp = ++this.cullStamp;
+    for (const c of this.chunks.values()) for (const sec of c.sections) if (sec) for (const m of sec) if (m) m.visible = false;
+    this.cullMat.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    this.cullFrustum.setFromProjectionMatrix(this.cullMat);
+    const ccx = Math.floor(cam.position.x / CS), ccz = Math.floor(cam.position.z / CS);
+    const csy = Math.max(0, Math.min(NS - 1, Math.floor(cam.position.y / SH.SECTION)));
+    const Q = this.cullQ, seen = this.cullSeen, box = this.cullBox, fr = this.cullFrustum;
+    // queue entry: packed section index, entry face (-1 = start), directions used so far
+    let qh = 0, qt = 0, visible = 0;
+    const idxOf = (dx, sy, dz) => ((dz + R) * W + (dx + R)) * NS + sy;
+    seen[idxOf(0, csy, 0)] = stamp;
+    Q[qt++] = idxOf(0, csy, 0); Q[qt++] = -1; Q[qt++] = 0;
+    const DX = [1, -1, 0, 0, 0, 0], DY = [0, 0, 1, -1, 0, 0], DZ = [0, 0, 0, 0, 1, -1], OPP = [1, 0, 3, 2, 5, 4];
+    while (qh < qt) {
+      const si = Q[qh++], inF = Q[qh++], dirs = Q[qh++];
+      const sy = si % NS, col = (si - sy) / NS, dx = col % W - R, dz = Math.floor(col / W) - R;
+      const c = this.chunks.get(chunkKey(ccx + dx, ccz + dz));
+      const sec = c && c.sections[sy];
+      if (sec) { for (const m of sec) if (m) m.visible = true; visible++; }
+      for (let d = 0; d < 6; d++) {
+        if (dirs & (1 << OPP[d])) continue;
+        if (inF >= 0 && c && c.meshed && !(c.vis[sy * 6 + inF] & (1 << d))) continue;
+        const nx = dx + DX[d], ny = sy + DY[d], nz = dz + DZ[d];
+        if (ny < 0 || ny >= NS || nx < -R || nx > R || nz < -R || nz > R) continue;
+        const ni = idxOf(nx, ny, nz);
+        if (seen[ni] === stamp) continue;
+        const bx = (ccx + nx) * CS, by = ny * SH.SECTION, bz = (ccz + nz) * CS;
+        box.min.set(bx, by, bz); box.max.set(bx + CS, by + SH.SECTION, bz + CS);
+        if (!fr.intersectsBox(box)) continue;
+        seen[ni] = stamp;
+        Q[qt++] = ni; Q[qt++] = OPP[d]; Q[qt++] = dirs | (1 << d);
+      }
+    }
+    this.visibleSections = visible;
   }
 
   clearMeshes(c) {
@@ -3436,6 +3520,7 @@ class World {
       if (sec) for (const m of sec) if (m) { scene.remove(m); m.geometry.dispose(); this.meshCount--; }
       c.sections[i] = null;
     }
+    c.vis.fill(63);
     c.meshed = false;
   }
 
@@ -4258,8 +4343,9 @@ const Particles = (() => {
     },
     update(dt) {
       const d = U.uDaylight.value;
-      let n = 0;
-      list = list.filter(p => (p.life -= dt) > 0);
+      let n = 0, live = 0;
+      for (const p of list) if ((p.life -= dt) > 0) list[live++] = p;   // compact in place (no per-frame garbage)
+      list.length = live;
       for (const p of list) {
         p.vy -= 14 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
         pos[n * 3] = p.x; pos[n * 3 + 1] = p.y; pos[n * 3 + 2] = p.z;
@@ -6092,7 +6178,7 @@ function updateDebug() {
     'Time: ' + clockString(worldTime) + '  daylight ' + U.uDaylight.value.toFixed(2) + '\n' +
     'Seed: ' + seedLabel + '   World: ' + (worldMeta ? worldMeta.name : '') + '\n' +
     'Chunks: ' + st.data + ' loaded, ' + st.lit + ' lit, ' + st.meshed + ' meshed  (render distance ' + SETTINGS.renderDistance + ')\n' +
-    'Meshes: ' + st.meshes + '  draw calls: ' + renderer.info.render.calls + '  tris: ' + renderer.info.render.triangles + '\n' +
+    'Meshes: ' + st.meshes + '  sections drawn: ' + (world.visibleSections || 0) + '  draw calls: ' + renderer.info.render.calls + '  tris: ' + renderer.info.render.triangles + '\n' +
     'Jobs: ' + st.pending + ' in flight, ' + st.queued + ' awaiting upload, ' + st.remesh + ' relight  [' + (pool.mode === 'main' ? 'main-thread fallback' : pool.workerCount + ' workers') + ']\n' +
     'Mode: ' + player.mode + '  flying: ' + (player.flying ? 'yes' : 'no') + '  ground: ' + (player.onGround ? 'yes' : 'no') + '  water: ' + (player.inWater ? 'yes' : 'no') + '\n' +
     (isSurvival() ? 'Health ' + surv.health.toFixed(1) + '  hunger ' + surv.hunger.toFixed(1) + '  saturation ' + surv.sat.toFixed(1) + '  air ' + surv.air.toFixed(1) + '\n' : '') +
@@ -6173,6 +6259,8 @@ function frame(now) {
   renderer.clear();
   if (Sky.group.visible) renderer.render(Sky.scene, camera);
   renderer.clearDepth();
+  camera.updateMatrixWorld();
+  if (CONFIG.render.occlusionCulling) world.cullSections(camera);
   renderer.render(scene, camera);
   debugTimer += dt;
   if (debugTimer * 1000 >= CONFIG.ui.debugRefreshMs) { debugTimer = 0; updateDebug(); }
