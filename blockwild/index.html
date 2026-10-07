@@ -418,7 +418,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    ===================================================================== */
 const CONFIG = {
   title: 'BLOCKWILD',
-  version: 'Milestone 4',
+  version: 'Milestone 5',
   storageKey: 'blockwild',
 
   world: {
@@ -4801,7 +4801,7 @@ function doPick() {
   updateTarget();
   if (!target) return;
   const def = BLOCKS[target.id];
-  const id = def.pickAs ? BLOCK[def.pickAs] : target.id;
+  const id = def.pickAs ? ITEM[def.pickAs] : target.id;            // crops pick their seeds (an item)
   for (let i = 0; i < 9; i++) if (inv.slots[i] && inv.slots[i].id === id) { selectSlot(i); return; }
   if (isSurvival()) {
     for (let i = 9; i < 36; i++) if (inv.slots[i] && inv.slots[i].id === id) {
@@ -5150,7 +5150,7 @@ const CREATURE_TYPES = {
   },
   thornling: {
     name: 'Thornling', hostile: true, hw: 0.32, h: 1.15, health: 14, speed: 0.8, chaseSpeed: 1.6, turn: 4,
-    ranged: { range: 14, keep: 5, speed: 15, damage: 2, cooldown: 2.4 }, burnsInDaylight: true, surfaceOnly: true,
+    ranged: { range: 14, keep: 5, speed: 15, damage: 2, cooldown: 2.4 }, burnsInDaylight: true,
     drops: [['seeds', 0, 2], ['stick', 1, 2]], sound: 'thornling', particle: [70, 110, 50],
     parts: [
       { id: 'body', role: 'body', box: [0.56, 0.62, 0.56], at: [0, 0.24, 0], off: [0, 0.31, 0], tex: { all: 'th_bark', front: 'th_face' } },
