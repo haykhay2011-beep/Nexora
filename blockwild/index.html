@@ -521,6 +521,20 @@ const CONFIG = {
     dbName: 'blockwild',
   },
 
+  hand: {
+    fov: 70,                  // the hand has its own camera, so it keeps its shape at any field of view
+    x: 0.56, y: -0.6, z: -0.6,          // elbow position in front of the eye
+    pitch: -1.0, yaw: 0.15, roll: 0.38,  // forearm angle (radians)
+    pose: {                             // held item offsets from the fist, in view space
+      block: { scale: 0.23, rot: [0.25, 0.7, 0], pos: [-0.03, 0.09, -0.05] },
+      tool:  { scale: 0.42, mirror: true, rot: [0, 0.55, 0.05], pos: [-0.13, 0.16, -0.02] },
+      item:  { scale: 0.34, rot: [0, 0.5, 0], pos: [-0.06, 0.12, -0.04] },
+    },
+    swingSec: 0.3,
+    equipSec: 0.3,
+    sway: 0.9,
+  },
+
   survival: {
     maxHealth: 20,
     maxHunger: 20,
@@ -2796,6 +2810,16 @@ Object.assign(PAINTERS, {
       return edge ? [214 * v, 206 * v, 190 * v] : [246 * v, 242 * v, 232 * v];
     });
   },
+  arm_skin(P) {
+    P.each((x, y) => { const v = 0.94 + P.rnd() * 0.08 - (x === 0 || x === 15 ? 0.08 : 0); return [222 * v, 170 * v, 132 * v]; });
+  },
+  arm_sleeve(P) {
+    P.each((x, y) => {
+      const v = 0.9 + P.rnd() * 0.12;
+      if (y < 3) return [52 * v, 104 * v, 96 * v];                         // cuff
+      return ((x + y) % 4 === 0 ? [62, 124, 116] : [72 * v, 142 * v, 132 * v]);
+    });
+  },
   bedroll_icon(P) {
     plantClear(P, [222, 176, 92]);
     P.each((x, y) => {
@@ -2857,7 +2881,7 @@ const ALL_TEXTURES = SH.TEXTURES.concat(
   [...new Set(ITEMS.filter(it => it && it.id >= 256).map(it => it.tex))],
   Array.from({ length: 10 }, (_, i) => 'crack' + i),
   CREATURE_TEXTURES,
-  ['bedroll_icon']);
+  ['bedroll_icon', 'arm_skin', 'arm_sleeve']);
 const TEXL = {};
 ALL_TEXTURES.forEach((n, i) => { TEXL[n] = i; });
 
@@ -4259,7 +4283,7 @@ function wearTool(slot, amount) {
 }
 function doBreak() {                                     // creative: instant
   updateTarget();
-  if (target) breakBlock(target.x, target.y, target.z);
+  if (target) { breakBlock(target.x, target.y, target.z); Hand.swing(); }
 }
 
 // ---- survival mining: hold to dig, 10-stage crack overlay ----
@@ -4267,6 +4291,7 @@ let mining = null, mineCooldown = 0;
 function updateMining(dt) {
   if (mineCooldown > 0) mineCooldown -= dt;
   const active = isSurvival() && held[0] && target && !surv.dead && state === 'playing';
+  Hand.mining = !!active;
   if (!active) { mining = null; crackMesh.visible = false; return; }
   if (!mining || mining.x !== target.x || mining.y !== target.y || mining.z !== target.z || mining.id !== target.id || mining.slot !== selected) {
     mining = { x: target.x, y: target.y, z: target.z, id: target.id, slot: selected, t: 0, total: breakTime(target.id, heldStack()), snd: 0 };
@@ -4326,6 +4351,7 @@ function doPlace() {
   }
   if (B_SOLID[id] && (player.intersectsBlock(x, y, z) || entitiesBlock(x, y, z))) return false;
   if (!world.setBlock(x, y, z, id)) return false;
+  Hand.swing();
   Sound.place(BLOCKS[id].sound);
   if (BLOCKS[id].use === 'furnace') furnaces.set(furnaceKey(x, y, z), newFurnace());
   if (BLOCKS[id].use === 'chest') chests.set(furnaceKey(x, y, z), newChest());
@@ -4355,6 +4381,7 @@ function tryUse() {
   updateTarget();
   if (!target) return false;
   const use = player.sneaking ? null : BLOCKS[target.id].use;
+  if (use) Hand.swing();
   if (use === 'bench') { openCraft('bench'); return true; }
   if (use === 'furnace') {
     const k = furnaceKey(target.x, target.y, target.z);
@@ -4375,6 +4402,7 @@ function tryTill() {
   if (above !== 0 && above !== BLOCK.tall_grass) return false;
   if (above === BLOCK.tall_grass) world.setBlock(target.x, target.y + 1, target.z, 0);
   if (!world.setBlock(target.x, target.y, target.z, BLOCK.farmland)) return false;
+  Hand.swing();
   Sound.dig('gravel');
   wearTool(selected, 1);
   updateTarget();
@@ -5072,6 +5100,154 @@ function entitiesBlock(x, y, z) {
 }
 
 /* =====================================================================
+   FIRST-PERSON HAND — the arm and the held item, drawn in their own small
+   scene after the world (so they never clip into blocks). Blocks are held
+   as small cubes; flat items are extruded into 3D from their pixel art.
+   Lit by the light at the player's eyes, animated for swinging, mining,
+   eating and switching items.
+   ===================================================================== */
+function entityGeometry(pos, uvl, vd, idx) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uvl', new THREE.Float32BufferAttribute(uvl, 3));
+  g.setAttribute('vdat', new THREE.BufferAttribute(new Uint8Array(vd), 4, true));
+  g.setIndex(idx);
+  return g;
+}
+// Extrude a 16x16 item texture: front and back quads plus a 1-pixel side wall wherever
+// an opaque pixel meets a transparent one. Centred on the origin, 1 unit wide.
+const EXTRUDED = new Map();
+function extrudedItemGeometry(layer) {
+  if (EXTRUDED.has(layer)) return EXTRUDED.get(layer);
+  const data = ATLAS.tex.image.data, base = layer * TILE * TILE * 4;
+  const solid = (c, r) => c >= 0 && r >= 0 && c < TILE && r < TILE && data[base + (r * TILE + c) * 4 + 3] > 90;
+  const pos = [], uvl = [], vd = [], idx = [];
+  const t = 1 / 16;
+  const quad = (pts, uvs, shade) => {
+    const b = pos.length / 3;
+    for (let k = 0; k < 4; k++) { pos.push(...pts[k]); uvl.push(uvs[k][0], uvs[k][1], layer); vd.push(Math.round(shade * 255), 255, 0, 0); }
+    idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+  };
+  quad([[-0.5, -0.5, t / 2], [0.5, -0.5, t / 2], [0.5, 0.5, t / 2], [-0.5, 0.5, t / 2]], [[0, 0], [1, 0], [1, 1], [0, 1]], 1);
+  quad([[0.5, -0.5, -t / 2], [-0.5, -0.5, -t / 2], [-0.5, 0.5, -t / 2], [0.5, 0.5, -t / 2]], [[1, 0], [0, 0], [0, 1], [1, 1]], 0.8);
+  for (let r = 0; r < TILE; r++) for (let c = 0; c < TILE; c++) {
+    if (!solid(c, r)) continue;
+    const x0 = c / 16 - 0.5, x1 = x0 + t, y0 = r / 16 - 0.5, y1 = y0 + t, z0 = -t / 2, z1 = t / 2;
+    const uv = [(c + 0.5) / 16, (r + 0.5) / 16], u4 = [uv, uv, uv, uv];
+    if (!solid(c + 1, r)) quad([[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]], u4, 0.7);
+    if (!solid(c - 1, r)) quad([[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]], u4, 0.7);
+    if (!solid(c, r + 1)) quad([[x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0]], u4, 0.9);
+    if (!solid(c, r - 1)) quad([[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], u4, 0.6);
+  }
+  const g = entityGeometry(pos, uvl, vd, idx);
+  EXTRUDED.set(layer, g);
+  return g;
+}
+const HELD_GEOS = new Map();
+function heldGeometry(id) {
+  if (HELD_GEOS.has(id)) return HELD_GEOS.get(id);
+  let g, kind;
+  const shape = id < 256 ? SH.B_SHAPE[id] : -1;
+  if (shape === SH.SHAPE_CUBE || shape === SH.SHAPE_CACTUS || shape === SH.SHAPE_LIQUID) {
+    const m = SH.blockModel(id);
+    g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(m.pos, 3));
+    g.setAttribute('uvl', new THREE.BufferAttribute(m.uvl, 3));
+    g.setAttribute('vdat', new THREE.BufferAttribute(m.vdat, 4, true));
+    g.setIndex(new THREE.BufferAttribute(m.idx, 1));
+    g.translate(-0.5, -0.5, -0.5);
+    kind = 'block';
+  } else {
+    const layer = id >= 256 ? TEXL[ITEMS[id].tex] : BLOCKS[id].icon ? TEXL[BLOCKS[id].icon] : SH.B_TEX[id * 6 + 4];
+    g = extrudedItemGeometry(layer);
+    kind = toolOf({ id }) ? 'tool' : 'item';
+  }
+  const r = { g, kind };
+  HELD_GEOS.set(id, r);
+  return r;
+}
+
+const Hand = (() => {
+  const H_ = CONFIG.hand;
+  const scene2 = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(H_.fov, window.innerWidth / window.innerHeight, 0.01, 10);
+  const owner = { light: [1, 0], tint: null };
+  const root = new THREE.Group();            // follows sway / bob / swing
+  scene2.add(root);
+  const armPivot = new THREE.Group();        // the elbow, off-screen at the bottom right
+  root.add(armPivot);
+  const sleeve = entityMesh(partGeometry('hand', { id: 'sleeve', box: [0.15, 0.4, 0.15], off: [0, 0.2, 0], tex: { all: 'arm_sleeve' } }), owner);
+  const fist = entityMesh(partGeometry('hand', { id: 'fist', box: [0.145, 0.24, 0.145], off: [0, 0.52, 0], tex: { all: 'arm_skin' } }), owner);
+  armPivot.add(sleeve); armPivot.add(fist);
+  // held item at the fist, counter-rotated so item poses are written in view space
+  const itemPivot = new THREE.Group();
+  itemPivot.position.set(0, 0.6, 0);
+  itemPivot.quaternion.setFromEuler(new THREE.Euler(H_.pitch, H_.yaw, H_.roll)).invert();
+  armPivot.add(itemPivot);
+  let itemMesh = null, itemId = 0;
+  let swingT = 1, equipT = 1, lastSel = -1, lastId = -2, swayX = 0, swayY = 0, lastYaw = 0, lastPitch = 0, lightT = 0;
+  let mining = false;
+
+  function setItem(id) {
+    if (itemMesh) { itemPivot.remove(itemMesh); itemMesh = null; }
+    itemId = id;
+    if (!id) return;
+    const h = heldGeometry(id);
+    itemMesh = entityMesh(h.g, owner);
+    const P = H_.pose[h.kind];
+    itemMesh.scale.set(P.scale * (P.mirror ? -1 : 1), P.scale, P.scale);
+    itemMesh.rotation.set(P.rot[0], P.rot[1], P.rot[2]);
+    itemMesh.position.set(P.pos[0], P.pos[1], P.pos[2]);
+    itemPivot.add(itemMesh);
+  }
+  return {
+    swing() { if (swingT > 0.35) swingT = 0; },
+    set mining(v) { mining = v; },
+    update(dt, visible) {
+      root.visible = visible;
+      if (!visible) return;
+      const s = inv.slots[selected], id = s ? s.id : 0;
+      if (selected !== lastSel || id !== lastId) {
+        if (lastId !== -2) equipT = 0;            // dip out of view and come back with the new item
+        lastSel = selected; lastId = id;
+      }
+      // the item swaps at the bottom of the equip dip
+      if (equipT >= 0.5 && itemId !== id) setItem(id);
+      if (equipT < 1) equipT = Math.min(1, equipT + dt / H_.equipSec);
+      if (equipT < 0.5 && itemId === id) equipT = Math.max(equipT, 0.5);
+      if (mining && swingT >= 1) swingT = 0;
+      if (swingT < 1) swingT = Math.min(1, swingT + dt / H_.swingSec);
+      // sway: the arm lags a little behind view rotation
+      const dyaw = wrapAngle(player.yaw - lastYaw), dpitch = player.pitch - lastPitch;
+      lastYaw = player.yaw; lastPitch = player.pitch;
+      swayX += (-dyaw * H_.sway - swayX) * Math.min(1, 10 * dt); swayY += (dpitch * H_.sway - swayY) * Math.min(1, 10 * dt);
+      swayX = Math.max(-0.12, Math.min(0.12, swayX)); swayY = Math.max(-0.12, Math.min(0.12, swayY));
+      lightT -= dt;
+      if (lightT <= 0) { lightT = 0.15; const l = sampleLight(player.pos.x, player.pos.y + player.eye, player.pos.z); owner.light[0] = l[0]; owner.light[1] = l[1]; }
+      owner.tint = surv.invuln > CONFIG.survival.invulnSec * 0.5 ? [1, 0.1, 0.1, 0.35] : null;
+      // walking bob (matches the camera bob)
+      const ph = player.walkDist * 1.9, bob = SETTINGS.viewBob ? player.bob : 0;
+      const bx = Math.sin(ph) * 0.028 * bob, by = -Math.abs(Math.cos(ph)) * 0.03 * bob;
+      // swing: a quick arc toward the centre and back
+      const sw = Math.sin(swingT * Math.PI), sw2 = Math.sin(Math.sqrt(swingT) * Math.PI);
+      const eq = equipT < 1 ? Math.sin(equipT * Math.PI) : 0;
+      let ex = 0, ey = 0, er = 0;
+      if (eatT > 0) { ex = -0.22; ey = 0.12 + Math.abs(Math.sin(eatT * 18)) * 0.03; er = 0.6; }
+      root.position.set(H_.x + bx + swayX - sw2 * 0.18 + ex, H_.y + by + swayY + sw * 0.06 - eq * 0.5 + ey, H_.z - sw * 0.12);
+      armPivot.rotation.set(H_.pitch - sw * 1.1 + er * 0.5, H_.yaw + sw2 * 0.35 + er, H_.roll - sw * 0.25);
+    },
+    render() {
+      if (!root.visible) return;
+      if (cam.aspect !== camera.aspect) { cam.aspect = camera.aspect; cam.updateProjectionMatrix(); }
+      renderer.clearDepth();
+      renderer.render(scene2, cam);
+    },
+    reset() { lastId = -2; lastSel = -1; swingT = 1; equipT = 1; setItem(0); },
+    get root() { return root; },
+  };
+})();
+
+/* =====================================================================
    SURVIVAL — health, hunger, air, damage, death and respawn, furnaces.
    ===================================================================== */
 const surv = { health: 20, hunger: 20, sat: 5, exh: 0, air: 10, regenT: 0, starveT: 0, drownT: 0, invuln: 0, dead: false, cause: '' };
@@ -5398,6 +5574,7 @@ function pressButton(b) {
   if (surv.dead || sleep) return;
   if (b === 1) { doPick(); return; }
   if (b === 0) {
+    Hand.swing();
     if (hitEntity()) { held[0] = false; return; }       // creatures in reach take the hit instead of blocks
     held[0] = true;
     if (!isSurvival()) { doBreak(); nextRepeat[0] = performance.now() + CONFIG.player.actionRepeatMs; }
@@ -6372,6 +6549,7 @@ function beginLoading(meta, edits, fresh) {
   world.onChunkReady = spawnPassiveInChunk;
   clearCreatures();
   Particles.clear();
+  Hand.reset();
   clouds = new Clouds(meta.seed);
   player = new Player();
   player.mode = meta.mode === 'survival' ? 'survival' : 'creative';
@@ -6663,6 +6841,8 @@ function frame(now) {
   camera.updateMatrixWorld();
   if (CONFIG.render.occlusionCulling) world.cullSections(camera);
   renderer.render(scene, camera);
+  Hand.update(running ? dt : 0, !surv.dead && !sleep && state !== 'dead');
+  Hand.render();
   debugTimer += dt;
   if (debugTimer * 1000 >= CONFIG.ui.debugRefreshMs) { debugTimer = 0; updateDebug(); }
 }
@@ -6704,7 +6884,7 @@ window.__BLOCKWILD = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   get items() { return items; }, get creatures() { return creatures; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
-  get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
+  Hand, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
 requestAnimationFrame(frame);
