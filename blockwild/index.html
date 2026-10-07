@@ -180,6 +180,8 @@
   #screen-craft .slot.sel { border-color: #f4f4f4; }
   .craft-top { display: flex; justify-content: center; min-height: 160px; align-items: center; }
   #craftBox, #furnaceBox { display: flex; align-items: center; gap: 18px; }
+  #chestGrid { padding: 6px; background: rgba(60, 40, 20, 0.35); border: 2px solid #000; }
+  #sleepFade { position: absolute; inset: 0; background: #05060a; opacity: 0; pointer-events: none; }
   #craftGrid { display: grid; gap: 3px; }
   #craftGrid.grid2 { grid-template-columns: repeat(2, 46px); }
   #craftGrid.grid3 { grid-template-columns: repeat(3, 46px); }
@@ -218,6 +220,7 @@
 <div id="hud" class="hidden">
   <div id="waterTint"></div>
   <div id="hurtFlash"></div>
+  <div id="sleepFade"></div>
   <div id="crosshair"></div>
   <div id="blockname"></div>
   <div id="survHud" class="hidden"><div id="bubbles"></div><div id="hearts"></div><div id="food"></div></div>
@@ -326,6 +329,7 @@
         <div class="fprog"><div id="fProg"></div></div>
         <div id="fOut"></div>
       </div>
+      <div id="chestBox" class="hidden"><div id="chestGrid" class="slotgrid"></div></div>
     </div>
     <div id="mainGrid" class="slotgrid"></div>
     <div id="hotGrid" class="slotgrid hot"></div>
@@ -587,6 +591,17 @@ const CONFIG = {
     maxParticles: 600,
   },
 
+  homestead: {
+    sleepFadeSec: 1.2,        // fade to black, hold, fade back when sleeping through the night
+    sleepHoldSec: 1.0,
+    sleepSafeRadius: 8,       // no sleeping with a hostile creature this close (survival)
+    randomTickSec: 0.05,      // random block ticks: crops grow, grass spreads, buried farmland turns to dirt
+    randomTickRadius: 4,      // chunks around the player that get random ticks
+    randomTicksPerSection: 6,
+    cropLight: 9,             // crops need this much light to grow
+    cropGrowChance: 0.5,      // per random tick (~70 s per stage in daylight)
+  },
+
   audio: {
     volume: 0.7,
     stepStride: 1.7,        // blocks walked per footstep
@@ -784,12 +799,13 @@ function BlockwildShared(C) {
     'pine_log_side', 'pine_log_top', 'pine_leaves', 'torch',
     'coal_ore', 'iron_ore', 'gold_ore', 'gem_ore', 'tall_grass', 'flower_red', 'flower_blue', 'berry_bush',
     'workbench_top', 'workbench_side', 'furnace_top', 'furnace_front', 'furnace_front_lit',
+    'chest_top', 'chest_side', 'farmland', 'crop_0', 'crop_1', 'crop_2', 'crop_3', 'quilt', 'quilt_side', 'pillow',
   ];
   const TEX = {};
   TEXTURES.forEach((n, i) => { TEX[n] = i; });
 
-  const SHAPE_NONE = 0, SHAPE_CUBE = 1, SHAPE_LIQUID = 2, SHAPE_CROSS = 3, SHAPE_TORCH = 4, SHAPE_CACTUS = 5;
-  const SHAPE_IDS = { none: SHAPE_NONE, cube: SHAPE_CUBE, liquid: SHAPE_LIQUID, cross: SHAPE_CROSS, torch: SHAPE_TORCH, cactus: SHAPE_CACTUS };
+  const SHAPE_NONE = 0, SHAPE_CUBE = 1, SHAPE_LIQUID = 2, SHAPE_CROSS = 3, SHAPE_TORCH = 4, SHAPE_CACTUS = 5, SHAPE_BEDROLL = 6;
+  const SHAPE_IDS = { none: SHAPE_NONE, cube: SHAPE_CUBE, liquid: SHAPE_LIQUID, cross: SHAPE_CROSS, torch: SHAPE_TORCH, cactus: SHAPE_CACTUS, bedroll: SHAPE_BEDROLL };
   const PASS_OPAQUE = 0, PASS_CUTOUT = 1, PASS_WATER = 2;
 
   // tex: one name for all faces, or [top, side, bottom].
@@ -799,14 +815,18 @@ function BlockwildShared(C) {
   // falls: drops when unsupported · soil: blocks it may stand on · attach: offset to the block holding it up
   // torch: torch orientation (1 floor, 2-5 wall) · replaceable: placing a block overwrites it · pickAs
   // minTier: lowest pickaxe tier that gets a drop (0 = by hand) · dropCount [min,max] · dropChance
+  // extra: a second drop [key, min, max] · facing: 0-3 (N E S W) for oriented shapes · icon: flat item texture
+  // grows: the block a random tick turns it into (crops)
   const D = (id, key, name, tex, props) => Object.assign({
     id, key, name, tex,
     solid: true, transparent: false, liquid: false, light: 0, filter: 0,
     hardness: 1, tool: null, drop: key, shape: 'cube', sound: 'stone',
     cullSame: false, ao: null, creative: true, falls: false, color: null,
     soil: null, attach: null, torch: 0, replaceable: false, pickAs: null,
-    minTier: 0, dropCount: null, dropChance: 1, use: null,
+    minTier: 0, dropCount: null, dropChance: 1, use: null, extra: null, facing: 0, icon: null, grows: null,
   }, props || {});
+  const CROP = { solid: false, transparent: true, shape: 'cross', hardness: 0, sound: 'grass', attach: [0, -1, 0], soil: ['farmland'], drop: 'seeds', creative: false, pickAs: 'seeds' };
+  const BEDROLL = { solid: false, transparent: true, shape: 'bedroll', hardness: 0.2, sound: 'cloth', attach: [0, -1, 0], drop: 'bedroll', use: 'bed', icon: 'bedroll_icon' };
   const PLANT = { solid: false, transparent: true, shape: 'cross', hardness: 0, sound: 'grass', attach: [0, -1, 0], soil: ['grass', 'dirt', 'snow'] };
   const TORCH = { solid: false, transparent: true, shape: 'torch', light: 14, hardness: 0, sound: 'wood', drop: 'torch' };
 
@@ -844,7 +864,7 @@ function BlockwildShared(C) {
     D(30, 'iron_ore',    'Iron Ore',     'iron_ore',    { hardness: 3.0, tool: 'pickaxe', minTier: 2 }),
     D(31, 'gold_ore',    'Gold Ore',     'gold_ore',    { hardness: 3.0, tool: 'pickaxe', minTier: 3 }),
     D(32, 'gem_ore',     'Gem Ore',      'gem_ore',     { hardness: 3.0, tool: 'pickaxe', drop: 'gem', minTier: 3 }),
-    D(33, 'tall_grass',  'Tall Grass',   'tall_grass',  Object.assign({}, PLANT, { drop: null, replaceable: true })),
+    D(33, 'tall_grass',  'Tall Grass',   'tall_grass',  Object.assign({}, PLANT, { drop: 'seeds', dropChance: 0.15, replaceable: true })),
     D(34, 'flower_red',  'Emberbloom',   'flower_red',  Object.assign({}, PLANT)),
     D(35, 'flower_blue', 'Frostbell',    'flower_blue', Object.assign({}, PLANT)),
     D(36, 'berry_bush',  'Berry Bush',   'berry_bush',  Object.assign({}, PLANT, { drop: 'berries', dropCount: [1, 3] })),
@@ -855,6 +875,16 @@ function BlockwildShared(C) {
     D(41, 'workbench',   'Workbench',    ['workbench_top', 'workbench_side', 'planks'], { hardness: 2.5, tool: 'axe', sound: 'wood', use: 'bench' }),
     D(42, 'furnace',     'Furnace',      ['furnace_top', 'furnace_front', 'furnace_top'], { hardness: 3.5, tool: 'pickaxe', minTier: 1, use: 'furnace' }),
     D(43, 'furnace_lit', 'Furnace',      ['furnace_top', 'furnace_front_lit', 'furnace_top'], { hardness: 3.5, tool: 'pickaxe', minTier: 1, light: 13, drop: 'furnace', creative: false, pickAs: 'furnace', use: 'furnace' }),
+    D(44, 'chest',       'Chest',        ['chest_top', 'chest_side', 'chest_top'], { hardness: 2.5, tool: 'axe', sound: 'wood', use: 'chest' }),
+    D(45, 'farmland',    'Farmland',     ['farmland', 'dirt', 'dirt'], { hardness: 0.6, tool: 'shovel', drop: 'dirt', sound: 'gravel' }),
+    D(46, 'crop_0',      'Wheat Sprouts', 'crop_0',     Object.assign({}, CROP, { grows: 'crop_1' })),
+    D(47, 'crop_1',      'Young Wheat',  'crop_1',      Object.assign({}, CROP, { grows: 'crop_2' })),
+    D(48, 'crop_2',      'Green Wheat',  'crop_2',      Object.assign({}, CROP, { grows: 'crop_3' })),
+    D(49, 'crop_3',      'Ripe Wheat',   'crop_3',      Object.assign({}, CROP, { drop: 'wheat', extra: ['seeds', 1, 3] })),
+    D(50, 'bedroll',     'Bedroll',      ['quilt', 'quilt_side', 'quilt_side'], Object.assign({}, BEDROLL, { facing: 0 })),
+    D(51, 'bedroll_e',   'Bedroll',      ['quilt', 'quilt_side', 'quilt_side'], Object.assign({}, BEDROLL, { facing: 1, creative: false, pickAs: 'bedroll' })),
+    D(52, 'bedroll_s',   'Bedroll',      ['quilt', 'quilt_side', 'quilt_side'], Object.assign({}, BEDROLL, { facing: 2, creative: false, pickAs: 'bedroll' })),
+    D(53, 'bedroll_w',   'Bedroll',      ['quilt', 'quilt_side', 'quilt_side'], Object.assign({}, BEDROLL, { facing: 3, creative: false, pickAs: 'bedroll' })),
   ];
   const BLOCK = {};
   BLOCKS.forEach(b => { BLOCK[b.key] = b.id; });
@@ -864,7 +894,7 @@ function BlockwildShared(C) {
   const B_TRANSPARENT = new Uint8Array(256), B_CULLSAME = new Uint8Array(256), B_OCC = new Uint8Array(256);
   const B_SHAPE = new Uint8Array(256), B_PASS = new Uint8Array(256), B_LIGHT = new Uint8Array(256);
   const B_FILTER = new Uint8Array(256), B_FALLS = new Uint8Array(256), B_TORCH = new Uint8Array(256);
-  const B_REPLACEABLE = new Uint8Array(256);
+  const B_REPLACEABLE = new Uint8Array(256), B_FACING = new Uint8Array(256);
   const B_TEX = new Uint16Array(256 * 6);
   const B_TARGET = new Uint8Array(256);   // can the crosshair ray stop on it?
   for (const b of BLOCKS) {
@@ -883,6 +913,7 @@ function BlockwildShared(C) {
     B_FALLS[i] = b.falls ? 1 : 0;
     B_TORCH[i] = b.torch;
     B_REPLACEABLE[i] = b.replaceable ? 1 : 0;
+    B_FACING[i] = b.facing;
     B_TARGET[i] = (shape !== SHAPE_NONE && !b.liquid) ? 1 : 0;
     if (b.tex) {
       const t = Array.isArray(b.tex) ? b.tex : [b.tex, b.tex, b.tex];
@@ -1520,6 +1551,41 @@ function BlockwildShared(C) {
     }
   }
 
+  // An axis-aligned box inside the cell (local coords 0..1), lit by the cell's own light.
+  // UVs follow the cube face convention, so textures line up with full blocks.
+  function emitBox(B, l, x, y, z, b0, b1, texTop, texSide, texBot, skipBottom) {
+    const sky = (l >> 4) * 17, blk = (l & 15) * 17;
+    for (let f = 0; f < 6; f++) {
+      if (f === 3 && skipBottom) continue;
+      const layer = f === 2 ? texTop : f === 3 ? texBot : texSide;
+      B.room();
+      for (let k = 0; k < 4; k++) {
+        const b = f * 4 + k;
+        const cx = b0[0] + F_PX[b] * (b1[0] - b0[0]), cy = b0[1] + F_PY[b] * (b1[1] - b0[1]), cz = b0[2] + F_PZ[b] * (b1[2] - b0[2]);
+        let u, v;
+        if (f === 0) { u = 1 - cz; v = cy; } else if (f === 1) { u = cz; v = cy; }
+        else if (f === 2) { u = cx; v = 1 - cz; } else if (f === 3) { u = cx; v = cz; }
+        else if (f === 4) { u = cx; v = cy; } else { u = 1 - cx; v = cy; }
+        B.vert(x + cx, y + cy, z + cz, u, v, layer, Math.round(F_SHADE[f] * 255), sky, blk, 0);
+      }
+      B.quadIdx(false);
+    }
+  }
+  // Bedroll: a thin quilted mat with a pillow at the head end (facing 0-3 = head toward -Z, +X, +Z, -X).
+  function emitBedroll(B, pad, lpad, pi, x, y, z, id) {
+    const l = cellLight(lpad, pi);
+    const top = B_TEX[id * 6 + 2], side = B_TEX[id * 6 + 4], pillow = TEX.pillow;
+    const e = 1 / 16, h = 2 / 16;
+    emitBox(B, l, x, y, z, [e, 0, e], [1 - e, h, 1 - e], top, side, side, true);
+    const fc = B_FACING[id];
+    let p0, p1;
+    if (fc === 0) { p0 = [3 / 16, h, 2 / 16]; p1 = [13 / 16, 4 / 16, 6 / 16]; }
+    else if (fc === 1) { p0 = [10 / 16, h, 3 / 16]; p1 = [14 / 16, 4 / 16, 13 / 16]; }
+    else if (fc === 2) { p0 = [3 / 16, h, 10 / 16]; p1 = [13 / 16, 4 / 16, 14 / 16]; }
+    else { p0 = [2 / 16, h, 3 / 16]; p1 = [6 / 16, 4 / 16, 13 / 16]; }
+    emitBox(B, l, x, y, z, p0, p1, pillow, pillow, pillow, true);
+  }
+
   function emitBlock(pad, lpad, pi, x, y, z, id) {
     const shape = B_SHAPE[id];
     const B = BUILDERS[B_PASS[id]];
@@ -1528,6 +1594,7 @@ function BlockwildShared(C) {
     else if (shape === SHAPE_CROSS) emitCross(B, pad, lpad, pi, x, y, z, id);
     else if (shape === SHAPE_TORCH) emitTorch(B, pad, lpad, pi, x, y, z, id);
     else if (shape === SHAPE_CACTUS) emitCactus(B, pad, lpad, pi, x, y, z, id);
+    else if (shape === SHAPE_BEDROLL) emitBedroll(B, pad, lpad, pi, x, y, z, id);
   }
 
   /* Section visibility: which pairs of the 6 section faces are joined by a path of
@@ -1659,8 +1726,8 @@ function BlockwildShared(C) {
     CS, H, SEA, SECTION, SECTIONS, PW, PA, CHUNK_VOL,
     TEXTURES, TEX, BLOCKS, BLOCK, BIOME_NAMES,
     B_SOLID, B_OPAQUE, B_LIQUID, B_TRANSPARENT, B_SHAPE, B_PASS, B_TEX, B_TARGET, B_LIGHT, B_OCC,
-    B_FILTER, B_FALLS, B_TORCH, B_REPLACEABLE,
-    SHAPE_CUBE, SHAPE_LIQUID, SHAPE_CROSS, SHAPE_TORCH, SHAPE_CACTUS, PASS_OPAQUE, PASS_CUTOUT, PASS_WATER,
+    B_FILTER, B_FALLS, B_TORCH, B_REPLACEABLE, B_FACING,
+    SHAPE_CUBE, SHAPE_LIQUID, SHAPE_CROSS, SHAPE_TORCH, SHAPE_CACTUS, SHAPE_BEDROLL, PASS_OPAQUE, PASS_CUTOUT, PASS_WATER,
     VIS_ALL, hash2, hash3, mulberry32, makeNoise, makeGenerator, meshRange, blockModel, computeLight, handleJob, jobSteps, idx,
   };
 }
@@ -1690,10 +1757,11 @@ const TOOL_TYPES = {
   axe:     { name: 'Axe',     damage: 3 },
   shovel:  { name: 'Shovel',  damage: 1.5 },
   sword:   { name: 'Sword',   damage: 4 },
+  hoe:     { name: 'Hoe',     damage: 1 },
 };
 let nextItemId = 256;
 function defItem(key, name, props) {
-  const it = Object.assign({ id: nextItemId++, key, name, block: 0, maxStack: 64, tex: key, fuel: 0, food: 0, sat: 0, tool: null }, props || {});
+  const it = Object.assign({ id: nextItemId++, key, name, block: 0, maxStack: 64, tex: key, fuel: 0, food: 0, sat: 0, tool: null, places: null }, props || {});
   ITEMS[it.id] = it;
   ITEM[key] = it.id;
   return it;
@@ -1706,6 +1774,9 @@ defItem('gem', 'Gem');
 defItem('berries', 'Berries', { food: 2, sat: 1.2 });
 defItem('raw_meat', 'Raw Meat', { food: 3, sat: 1.8 });
 defItem('cooked_meat', 'Cooked Meat', { food: 8, sat: 12.8 });
+defItem('seeds', 'Seeds', { places: 'crop_0' });
+defItem('wheat', 'Wheat');
+defItem('bread', 'Bread', { food: 5, sat: 6 });
 for (const [mk, m] of Object.entries(TOOL_MATERIALS)) for (const [tk, t] of Object.entries(TOOL_TYPES)) {
   defItem(mk + '_' + tk, m.name + ' ' + t.name, {
     maxStack: 1, fuel: mk === 'wood' ? 10 : 0,
@@ -1713,7 +1784,7 @@ for (const [mk, m] of Object.entries(TOOL_MATERIALS)) for (const [tk, t] of Obje
   });
 }
 // burn time in seconds for block items
-for (const [k, v] of Object.entries({ log: 15, pine_log: 15, planks: 15, workbench: 15 })) ITEMS[ITEM[k]].fuel = v;
+for (const [k, v] of Object.entries({ log: 15, pine_log: 15, planks: 15, workbench: 15, chest: 15 })) ITEMS[ITEM[k]].fuel = v;
 
 const SMELTING = { iron_ore: 'iron_ingot', gold_ore: 'gold_ingot', sand: 'glass', cobblestone: 'stone', raw_meat: 'cooked_meat' };
 const SMELT = {};
@@ -1721,7 +1792,9 @@ for (const [a, b] of Object.entries(SMELTING)) SMELT[ITEM[a]] = ITEM[b];
 
 const itemName = (id) => (ITEMS[id] ? ITEMS[id].name : '?');
 const maxStack = (id) => (ITEMS[id] ? ITEMS[id].maxStack : 64);
-const isPlaceable = (id) => id > 0 && id < 256 && !!BLOCKS[id];
+// Block id an item places (seeds plant sprouts), 0 if it places nothing.
+const placesBlock = (id) => (id > 0 && id < 256 && BLOCKS[id] ? id : (ITEMS[id] && ITEMS[id].places ? BLOCK[ITEMS[id].places] : 0));
+const isPlaceable = (id) => placesBlock(id) > 0;
 const toolOf = (stack) => (stack && ITEMS[stack.id] ? ITEMS[stack.id].tool : null);
 const newStack = (id, count, dur) => {
   const t = ITEMS[id].tool;
@@ -1740,6 +1813,9 @@ const RECIPES = [
   { out: ['sandstone', 1], shape: ['SS', 'SS'], key: { S: 'sand' } },
   { out: ['tile_red', 2], shapeless: ['stone', 'stone', 'flower_red'] },
   { out: ['tile_blue', 2], shapeless: ['stone', 'stone', 'flower_blue'] },
+  { out: ['chest', 1], shape: ['PPP', 'P P', 'PPP'], key: { P: 'planks' } },
+  { out: ['bread', 1], shape: ['WWW'], key: { W: 'wheat' } },
+  { out: ['bedroll', 1], shape: ['WWW', 'PPP'], key: { W: 'wheat', P: 'planks' } },
 ];
 for (const mk of Object.keys(TOOL_MATERIALS)) {
   const key = { M: TOOL_MATERIALS[mk].mat, S: 'stick' };
@@ -1748,6 +1824,7 @@ for (const mk of Object.keys(TOOL_MATERIALS)) {
     { out: [mk + '_axe', 1], shape: ['MM', 'MS', ' S'], key },
     { out: [mk + '_shovel', 1], shape: ['M', 'S', 'S'], key },
     { out: [mk + '_sword', 1], shape: ['M', 'M', 'S'], key },
+    { out: [mk + '_hoe', 1], shape: ['MM', ' S', ' S'], key },
   );
 }
 // Returns { id, count } for the items in a w x w grid (array of item ids, 0 = empty), or null.
@@ -2422,6 +2499,20 @@ const TOOL_PATTERNS = {
     '...sk...........',
     '..kk............',
   ],
+  hoe: [
+    '.......hhhhh....',
+    '......hddddh....',
+    '.....hd..skh....',
+    '.........sk.....',
+    '........sk......',
+    '.......sk.......',
+    '......sk........',
+    '.....sk.........',
+    '....sk..........',
+    '...sk...........',
+    '..sk............',
+    '.kk.............',
+  ],
 };
 for (const [mk, m] of Object.entries(TOOL_MATERIALS)) for (const tk of Object.keys(TOOL_TYPES)) {
   PAINTERS[mk + '_' + tk] = (P) => {
@@ -2647,11 +2738,126 @@ Object.assign(PAINTERS, {
   },
 });
 
+// ---- Milestone 5 textures: chest, farmland, wheat, bedroll ----
+Object.assign(PAINTERS, {
+  chest_top(P) {
+    PAINTERS.planks(P);
+    P.each((x, y) => {
+      const c = P.get(x, y);
+      if (x === 0 || y === 0 || x === 15 || y === 15) return [c[0] * 0.55, c[1] * 0.5, c[2] * 0.45];
+      if (x === 3 || x === 12) return [96, 96, 104];                       // iron straps
+      return null;
+    });
+  },
+  chest_side(P) {
+    PAINTERS.planks(P);
+    P.each((x, y) => {
+      const c = P.get(x, y);
+      if (x === 0 || x === 15 || y === 15) return [c[0] * 0.55, c[1] * 0.5, c[2] * 0.45];
+      if (y === 5) return [70, 50, 32];                                     // lid seam
+      if (y === 4 || y === 6) return [c[0] * 0.8, c[1] * 0.76, c[2] * 0.72];
+      if (x === 3 || x === 12) return [96, 96, 104];
+      if (x >= 6 && x <= 9 && y >= 4 && y <= 8) return (x === 6 || x === 9 || y === 4 || y === 8) ? [70, 70, 76] : [196, 190, 150];   // latch
+      return null;
+    });
+  },
+  farmland(P) {
+    PAINTERS.dirt(P);
+    P.each((x, y) => {
+      const c = P.get(x, y);
+      const row = y % 4;
+      if (row === 0) return [c[0] * 0.58, c[1] * 0.55, c[2] * 0.52];         // furrow
+      if (row === 1) return [c[0] * 0.8, c[1] * 0.76, c[2] * 0.72];
+      if (row === 3) return [c[0] * 1.08, c[1] * 1.05, c[2] * 1.02];         // ridge
+      return [c[0] * 0.92, c[1] * 0.88, c[2] * 0.85];
+    });
+  },
+  quilt(P) {
+    const cols = [[184, 64, 58], [222, 176, 92], [86, 120, 170], [236, 226, 204]];
+    P.each((x, y) => {
+      const patch = ((x >> 2) + (y >> 2) * 3) % 4;
+      const c = cols[patch];
+      const stitch = (x & 3) === 0 || (y & 3) === 0;
+      const k = (stitch ? 0.82 : 1) * (0.94 + P.rnd() * 0.1);
+      return [c[0] * k, c[1] * k, c[2] * k];
+    });
+  },
+  quilt_side(P) {
+    P.each((x, y) => {
+      const k = 0.92 + P.rnd() * 0.1;
+      if (y >= 13) return y === 13 ? [140 * k, 60 * k, 50 * k] : [184 * k, 64 * k, 58 * k];
+      return [222 * k, 176 * k, 92 * k];
+    });
+  },
+  pillow(P) {
+    P.each((x, y) => {
+      const edge = x === 0 || y === 0 || x === 15 || y === 15;
+      const v = 0.94 + P.rnd() * 0.08;
+      return edge ? [214 * v, 206 * v, 190 * v] : [246 * v, 242 * v, 232 * v];
+    });
+  },
+  bedroll_icon(P) {
+    plantClear(P, [222, 176, 92]);
+    P.each((x, y) => {
+      if (y < 5 || y > 12 || x < 1 || x > 14) return null;
+      if (x <= 4) { const d = (x - 2.5) ** 2 + (y - 8.5) ** 2; return d < 13 ? (d < 3 ? [150, 60, 50] : [236, 226, 204]) : null; }   // pillow end
+      const patch = ((x >> 2) + (y >> 2)) % 3;
+      const c = [[184, 64, 58], [222, 176, 92], [86, 120, 170]][patch];
+      return (y === 5 || y === 12) ? [c[0] * 0.7, c[1] * 0.7, c[2] * 0.7] : c;
+    });
+  },
+  seeds(P) {
+    plantClear(P, [190, 170, 90]);
+    for (const [x, y] of [[5, 6], [9, 5], [7, 9], [11, 9], [4, 11], [8, 12], [12, 12], [6, 4]]) {
+      P.set(x, y, 206, 186, 104); P.set(x + 1, y, 160, 138, 70); P.set(x, y + 1, 150, 126, 62);
+    }
+  },
+  wheat(P) {
+    plantClear(P, [220, 190, 90]);
+    for (let s = 0; s < 3; s++) {
+      const bx = 4 + s * 3;
+      for (let y = 6; y < 16; y++) P.set(bx + (y > 12 ? 1 : 0), y, 176, 150, 70);
+      for (let y = 1; y < 7; y++) { P.set(bx - 1, y, 232, 200, 100); P.set(bx + 1, y, 214, 180, 84); P.set(bx, y, 244, 214, 120); }
+    }
+  },
+  bread(P) {
+    plantClear(P, [200, 140, 70]);
+    P.each((x, y) => {
+      const dx = (x - 7.5) / 7, dy = (y - 9) / 4.2;
+      const d = dx * dx + dy * dy;
+      if (d > 1) return null;
+      if (d > 0.75 || y > 11) return [150, 92, 40];
+      if ((x + 2) % 4 === 0 && y < 9) return [246, 214, 150];                // score marks
+      return [206 + P.rnd() * 14, 146 + P.rnd() * 10, 72];
+    });
+  },
+});
+// Four wheat stages: sprouts, young, green, ripe golden ears.
+for (let st = 0; st < 4; st++) {
+  PAINTERS['crop_' + st] = (P) => {
+    plantClear(P, [100, 150, 60]);
+    const hgt = [5, 9, 12, 14][st];
+    for (let b = 0; b < 6; b++) {
+      const x = 1 + b * 3 - (b > 2 ? 1 : 0);
+      const hh = hgt - ((b * 7) % 3);
+      for (let k = 0; k < hh; k++) {
+        const y = 15 - k;
+        const ear = st === 3 && k >= hh - 4;
+        const c = ear ? [226, 190, 82] : st === 3 ? [170, 160, 70] : [70 + st * 14, 140 - st * 4, 52];
+        const v = 0.85 + P.rnd() * 0.2;
+        P.set(x, y, c[0] * v, c[1] * v, c[2] * v);
+        if (ear && (k & 1)) P.set(x + 1, y, c[0] * 0.85, c[1] * 0.85, c[2] * 0.8);
+      }
+    }
+  };
+}
+
 // Block textures first (shared with the workers), then item, crack and creature textures (main thread only).
 const ALL_TEXTURES = SH.TEXTURES.concat(
   [...new Set(ITEMS.filter(it => it && it.id >= 256).map(it => it.tex))],
   Array.from({ length: 10 }, (_, i) => 'crack' + i),
-  CREATURE_TEXTURES);
+  CREATURE_TEXTURES,
+  ['bedroll_icon']);
 const TEXL = {};
 ALL_TEXTURES.forEach((n, i) => { TEXL[n] = i; });
 
@@ -2687,6 +2893,7 @@ function buildAtlas() {
 const ICON_CACHE = new Map();
 function blockIcon(id) {
   if (ICON_CACHE.has(id)) return ICON_CACHE.get(id);
+  if (BLOCKS[id].icon) { const u = tileDataURL(BLOCKS[id].icon, 4); ICON_CACHE.set(id, u); return u; }
   const S = 64, sc = S / 32;
   const c = document.createElement('canvas');
   c.width = c.height = S;
@@ -4008,6 +4215,10 @@ function spawnDrops(id, x, y, z, harvest) {
   const r = d.dropCount;
   const n = r ? r[0] + Math.floor(Math.random() * (r[1] - r[0] + 1)) : 1;
   if (n > 0) spawnItem(newStack(itemId, n), x + 0.5, y + 0.3, z + 0.5);
+  if (d.extra) {
+    const m = d.extra[1] + Math.floor(Math.random() * (d.extra[2] - d.extra[1] + 1));
+    if (m > 0) spawnItem(newStack(ITEM[d.extra[0]], m), x + 0.5, y + 0.3, z + 0.5);
+  }
 }
 function furnaceKey(x, y, z) { return x + ',' + y + ',' + z; }
 function dropFurnaceContents(x, y, z) {
@@ -4029,6 +4240,7 @@ function breakBlock(x, y, z) {
   Sound.dig(d.sound);
   Particles.burst(x + 0.5, y + 0.5, z + 0.5, TEX_AVG[SH.B_TEX[id * 6 + 4]], 10, 2.5, 0.6);
   if (d.use === 'furnace') dropFurnaceContents(x, y, z);
+  if (d.use === 'chest') dropChestContents(x, y, z);
   if (isSurvival()) {
     spawnDrops(id, x, y, z, harvest);
     surv.exh += CONFIG.survival.exhaustMine;
@@ -4084,7 +4296,7 @@ function doPlace() {
   if (!target) return false;
   const stack = heldStack();
   if (!stack || !isPlaceable(stack.id)) return false;
-  let id = stack.id;
+  let id = placesBlock(stack.id);
   // clicking a replaceable block (tall grass) places into that cell
   const intoTarget = SH.B_REPLACEABLE[target.id] && target.id !== id;
   const x = intoTarget ? target.x : target.x + target.nx;
@@ -4104,11 +4316,19 @@ function doPlace() {
   } else if (def.soil) {                                           // plants need the right ground
     const below = world.getBlock(x, y - 1, z);
     if (below <= 0 || !def.soil.includes(BLOCKS[below].key)) return false;
+  } else if (def.attach) {                                         // bedrolls lie on solid ground
+    if (!B_OPAQUE[world.getBlock(x, y - 1, z)]) return false;
+  }
+  if (def.shape === 'bedroll') {                                   // head end points away from the player
+    const dx = -Math.sin(player.yaw), dz = -Math.cos(player.yaw);
+    const fc = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 0 : 2) : (dx > 0 ? 1 : 3);
+    id = BLOCK[['bedroll', 'bedroll_e', 'bedroll_s', 'bedroll_w'][fc]];
   }
   if (B_SOLID[id] && (player.intersectsBlock(x, y, z) || entitiesBlock(x, y, z))) return false;
   if (!world.setBlock(x, y, z, id)) return false;
   Sound.place(BLOCKS[id].sound);
   if (BLOCKS[id].use === 'furnace') furnaces.set(furnaceKey(x, y, z), newFurnace());
+  if (BLOCKS[id].use === 'chest') chests.set(furnaceKey(x, y, z), newChest());
   if (isSurvival()) { inv.take(selected, 1); renderHotbar(); }
   updateTarget();
   return true;
@@ -4133,8 +4353,8 @@ function doPick() {
 // Right click on a workbench or furnace opens it (sneak to place against it instead).
 function tryUse() {
   updateTarget();
-  if (!target || player.sneaking) return false;
-  const use = BLOCKS[target.id].use;
+  if (!target) return false;
+  const use = player.sneaking ? null : BLOCKS[target.id].use;
   if (use === 'bench') { openCraft('bench'); return true; }
   if (use === 'furnace') {
     const k = furnaceKey(target.x, target.y, target.z);
@@ -4142,7 +4362,23 @@ function tryUse() {
     openCraft('furnace', k);
     return true;
   }
-  return false;
+  if (use === 'chest') { openCraft('chest', ensureChest(target.x, target.y, target.z)); return true; }
+  if (use === 'bed') { useBed(target.x, target.y, target.z); return true; }
+  return tryTill();
+}
+// Hoe: grass or dirt with open air above becomes farmland.
+function tryTill() {
+  const t = toolOf(heldStack());
+  if (!t || t.type !== 'hoe' || !target) return false;
+  if (target.id !== BLOCK.grass && target.id !== BLOCK.dirt) return false;
+  const above = world.getBlock(target.x, target.y + 1, target.z);
+  if (above !== 0 && above !== BLOCK.tall_grass) return false;
+  if (above === BLOCK.tall_grass) world.setBlock(target.x, target.y + 1, target.z, 0);
+  if (!world.setBlock(target.x, target.y, target.z, BLOCK.farmland)) return false;
+  Sound.dig('gravel');
+  wearTool(selected, 1);
+  updateTarget();
+  return true;
 }
 function canEat() {
   const s = heldStack();
@@ -4227,7 +4463,7 @@ function itemGeometry(id) {
     g.translate(-0.5, 0, -0.5);
     g.scale(0.26, 0.26, 0.26);
   } else {
-    const layer = id >= 256 ? TEXL[ITEMS[id].tex] : SH.B_TEX[id * 6 + 4];
+    const layer = id >= 256 ? TEXL[ITEMS[id].tex] : BLOCKS[id].icon ? TEXL[BLOCKS[id].icon] : SH.B_TEX[id * 6 + 4];
     g = quadGeometry(layer, 0.42);
   }
   ITEM_GEOS.set(id, g);
@@ -4850,6 +5086,7 @@ function hurt(amount, cause, src) {
   if (!isSurvival() || surv.dead || surv.invuln > 0 || amount <= 0) return false;
   surv.health = Math.max(0, surv.health - amount);
   surv.invuln = CONFIG.survival.invulnSec;
+  sleep = null;
   surv.exh += CONFIG.survival.exhaustHurt;
   flashHurt();
   Sound.hurt();
@@ -4885,7 +5122,7 @@ function die(cause) {
 }
 function respawn() {
   resetSurvival(null);
-  const s = worldMeta && worldMeta.spawn;
+  const s = respawnPoint();
   if (s) player.reset(s.x, s.y, s.z); else player.reset(player.pos.x, player.pos.y, player.pos.z);
   player.vel.set(0, 0, 0);
   player.pitch = 0;
@@ -4924,6 +5161,121 @@ function tickSurvival(dt) {
     if (surv.air <= 0) { surv.drownT += dt; if (surv.drownT >= 1) { surv.drownT = 0; surv.invuln = 0; hurt(S.drownDamage, 'Drowned'); } }
   } else { surv.air = Math.min(S.airSec, surv.air + dt * S.airRefill); surv.drownT = 0; }
   renderSurvHud();
+}
+
+// ---- chests: 27 slots each, keyed by position. Chests from ruins and dungeons have no
+// record until first opened (or broken); their loot is then rolled from the position. ----
+const CHEST_SLOTS = 27;
+let chests = new Map();
+function newChest() { return { slots: new Array(CHEST_SLOTS).fill(null) }; }
+const LOOT = [
+  // [item, min, max, weight]
+  ['torch', 2, 8, 10], ['coal', 2, 7, 10], ['bread', 1, 3, 8], ['seeds', 2, 6, 7], ['wheat', 2, 5, 5],
+  ['iron_ingot', 1, 4, 7], ['gold_ingot', 1, 3, 4], ['gem', 1, 2, 2], ['stick', 2, 6, 5], ['cooked_meat', 1, 3, 5],
+  ['berries', 2, 6, 5], ['iron_pickaxe', 1, 1, 2], ['stone_sword', 1, 1, 3], ['iron_hoe', 1, 1, 2], ['bedroll', 1, 1, 2],
+  ['chest', 1, 1, 1], ['glass', 2, 8, 3],
+];
+function fillLoot(chest, x, y, z) {
+  const rnd = SH.mulberry32(SH.hash3((world.seed ^ 0x10075eed) >>> 0, x, y, z));
+  const total = LOOT.reduce((n, l) => n + l[3], 0);
+  const rolls = 4 + Math.floor(rnd() * 5);
+  for (let r = 0; r < rolls; r++) {
+    let pick = rnd() * total, entry = LOOT[0];
+    for (const l of LOOT) { pick -= l[3]; if (pick <= 0) { entry = l; break; } }
+    const id = ITEM[entry[0]];
+    const n = entry[1] + Math.floor(rnd() * (entry[2] - entry[1] + 1));
+    for (let tries = 0; tries < 10; tries++) {
+      const slot = Math.floor(rnd() * CHEST_SLOTS);
+      if (!chest.slots[slot]) { chest.slots[slot] = newStack(id, Math.min(n, maxStack(id))); break; }
+    }
+  }
+  return chest;
+}
+function ensureChest(x, y, z) {
+  const k = furnaceKey(x, y, z);
+  if (!chests.has(k)) chests.set(k, fillLoot(newChest(), x, y, z));
+  return k;
+}
+function dropChestContents(x, y, z) {
+  const k = ensureChest(x, y, z);
+  for (const st of chests.get(k).slots) if (st) spawnItem(st, x + 0.5, y + 0.5, z + 0.5);
+  chests.delete(k);
+  if (craftUI.chest === k) closeCraft();
+}
+
+// ---- sleeping: a bedroll sets your respawn point and lets you sleep through the night ----
+let sleep = null;
+const isNight = () => worldTime > 0.52 && worldTime < 0.98;
+function useBed(x, y, z) {
+  if (!worldMeta) return;
+  worldMeta.bed = { x, y, z };
+  if (!isNight()) { showBlockName('Spawn point set \u00b7 you can only sleep at night'); return; }
+  const near = creatures.some(c => c.T.hostile && c.dying <= 0 && c.pos.distanceTo(player.pos) < CONFIG.homestead.sleepSafeRadius);
+  if (isSurvival() && near) { showBlockName('You may not rest now: something lurks nearby'); return; }
+  sleep = { t: 0, skipped: false };
+  held[0] = held[2] = false;
+  showBlockName('Spawn point set \u00b7 good night');
+}
+function updateSleep(dt) {
+  const el = $('sleepFade');
+  if (!sleep) { if (el.style.opacity !== '0') el.style.opacity = '0'; return; }
+  const H_ = CONFIG.homestead, fade = H_.sleepFadeSec, hold = H_.sleepHoldSec;
+  sleep.t += dt;
+  if (!sleep.skipped && sleep.t >= fade + hold * 0.5) {
+    worldTime = CONFIG.sky.startTime;                 // morning
+    sleep.skipped = true;
+    saveNow();
+  }
+  const t = sleep.t;
+  const o = t < fade ? t / fade : t < fade + hold ? 1 : Math.max(0, 1 - (t - fade - hold) / fade);
+  el.style.opacity = o.toFixed(3);
+  if (t >= fade * 2 + hold) sleep = null;
+}
+// Where you come back after dying: your bedroll if it still exists, else the world spawn.
+function respawnPoint() {
+  const b = worldMeta && worldMeta.bed;
+  if (b) {
+    const id = world.getBlock(b.x, b.y, b.z);
+    if (id < 0 || BLOCKS[id].use === 'bed') return { x: b.x + 0.5, y: b.y, z: b.z + 0.5 };
+    delete worldMeta.bed;
+    setTimeout(() => showBlockName('Your bedroll was missing'), 300);
+  }
+  return worldMeta && worldMeta.spawn;
+}
+
+// ---- random ticks: a few random blocks per section near the player may change ----
+let randomTickAcc = 0;
+function randomTicks(dt) {
+  const RT = CONFIG.homestead;
+  randomTickAcc = Math.min(randomTickAcc + dt, RT.randomTickSec * 4);
+  if (randomTickAcc < RT.randomTickSec) return;
+  randomTickAcc -= RT.randomTickSec;
+  const pcx = Math.floor(player.pos.x / CS), pcz = Math.floor(player.pos.z / CS), R = RT.randomTickRadius;
+  for (let dz = -R; dz <= R; dz++) for (let dx = -R; dx <= R; dx++) {
+    const c = world.getChunk(pcx + dx, pcz + dz);
+    if (!c || !c.blocks || !c.light) continue;
+    for (let sy = 0; sy < SH.SECTIONS; sy++) for (let k = 0; k < RT.randomTicksPerSection; k++) {
+      const i = (sy << 12) | Math.floor(Math.random() * 4096);
+      const id = c.blocks[i];
+      if (id === BLOCK.dirt || id === BLOCK.farmland || BLOCKS[id].grows) randomTick(c.cx * CS + (i & 15), i >> 8, c.cz * CS + ((i >> 4) & 15), id);
+    }
+  }
+}
+function randomTick(x, y, z, id) {
+  const RT = CONFIG.homestead;
+  const grows = BLOCKS[id].grows;
+  if (grows) {
+    if (effectiveLight(x, y, z) >= RT.cropLight && Math.random() < RT.cropGrowChance) world.setBlock(x, y, z, BLOCK[grows]);
+    return;
+  }
+  const above = world.getBlock(x, y + 1, z);
+  if (id === BLOCK.farmland) { if (above > 0 && B_OPAQUE[above]) world.setBlock(x, y, z, BLOCK.dirt); return; }
+  // dirt next to grass, open to light, turns green
+  if (above < 0 || B_OPAQUE[above] || B_LIQUID[above] || effectiveLight(x, y + 1, z) < 9) return;
+  for (let k = 0; k < 4; k++) {
+    const nx = x + Math.floor(Math.random() * 3) - 1, ny = y + Math.floor(Math.random() * 3) - 1, nz = z + Math.floor(Math.random() * 3) - 1;
+    if (world.getBlock(nx, ny, nz) === BLOCK.grass) { world.setBlock(x, y, z, BLOCK.grass); return; }
+  }
 }
 
 // ---- furnaces: input + fuel -> output, ticking wherever their chunk is loaded ----
@@ -5043,7 +5395,7 @@ function look(dx, dy) {
 // Button actions. Left: creative breaks instantly (repeating), survival digs while held.
 // Right: use a workbench/furnace, else eat (held) or place. Middle: pick block.
 function pressButton(b) {
-  if (surv.dead) return;
+  if (surv.dead || sleep) return;
   if (b === 1) { doPick(); return; }
   if (b === 0) {
     if (hitEntity()) { held[0] = false; return; }       // creatures in reach take the hit instead of blocks
@@ -5221,6 +5573,7 @@ const Sound = (() => {
       noise({ type: 'highpass', freq: 3800, q: 0.7, dur: 0.18 * k, gain: 0.1 * k });
     },
     water(k) { noise({ type: 'lowpass', freq: 1800, sweep: 300, q: 1, dur: 0.2 * k, gain: 0.18 * k }); },
+    cloth(k) { noise({ type: 'lowpass', freq: jit(700, 0.2), q: 0.6, dur: 0.1 * k, gain: 0.16 * k, attack: 0.02 }); },
   };
   const recipe = (m) => RECIPES[m] || RECIPES.stone;
   let lastStep = 0;
@@ -5266,6 +5619,12 @@ const Sound = (() => {
       else if (type === 'puffhop') { tone({ wave: 'sine', freq: kind === 'hurt' ? 1500 : jit(1000, 0.1), sweep: 1600, dur: 0.08, gain: 0.08 * g }); tone({ wave: 'sine', freq: 1200, sweep: 1800, dur: 0.06, gain: 0.06 * g, delay: 0.1 }); }
       else if (type === 'hollow') { tone({ freq: kind === 'hurt' ? 140 : jit(72, 0.1), sweep: 55, dur: kind === 'hurt' ? 0.25 : 0.7, gain: 0.22 * g, attack: 0.06 }); noise({ type: 'lowpass', freq: kind === 'hurt' ? 2400 : 320, dur: 0.4, gain: 0.12 * g }); }
       else if (type === 'skitter') for (let i = 0; i < (kind === 'hurt' ? 3 : 5); i++) noise({ freq: jit(3600, 0.2), q: 5, dur: 0.03, gain: 0.12 * g, delay: i * 0.045 });
+    },
+    chest(open) {
+      if (!ok()) return;
+      tone({ freq: open ? 180 : 240, sweep: open ? 260 : 150, dur: 0.22, gain: 0.12, attack: 0.03 });
+      noise({ freq: 900, q: 3, dur: 0.12, gain: 0.08, delay: open ? 0.08 : 0 });
+      if (!open) tone({ freq: 120, sweep: 80, dur: 0.08, gain: 0.18, delay: 0.16 });
     },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
     death() { if (!ok()) return; tone({ freq: 330, sweep: 70, dur: 0.9, gain: 0.25 }); noise({ type: 'lowpass', freq: 500, dur: 0.5, gain: 0.15 }); },
@@ -5475,6 +5834,8 @@ async function quitToTitle() {
   clearCreatures();
   Particles.clear();
   furnaces = new Map();
+  chests = new Map();
+  sleep = null;
   if (world) { world.dispose(); world = null; }
   if (clouds) { clouds.dispose(); clouds = null; }
   Sound.silenceWind();
@@ -5495,7 +5856,7 @@ function itemIcon(id) {
 // One slot's contents: icon, stack count (survival) and a durability bar for worn tools.
 function stackInner(s) {
   if (!s) return '';
-  let h = '<img alt="" src="' + itemIcon(s.id) + '"' + (s.id >= 256 ? ' class="pix"' : '') + '>';
+  let h = '<img alt="" src="' + itemIcon(s.id) + '"' + (s.id >= 256 || BLOCKS[s.id].icon ? ' class="pix"' : '') + '>';
   if (s.count > 1 && (isSurvival() || state === 'craft')) h += '<span class="cnt">' + s.count + '</span>';
   const t = ITEMS[s.id].tool;
   if (t && s.dur < t.dur) {
@@ -5651,13 +6012,15 @@ window.addEventListener('mouseup', (e) => {
 
 /* ---------------- survival inventory, workbench and furnace screens ---------------- */
 // Slot refs: 'i:N' inventory, 'c:N' crafting grid, 'o' crafting output, 'f:input' / 'f:fuel' / 'f:output'.
-const craftUI = { mode: 'inv', size: 2, grid: [], cursor: null, furnace: null, result: null };
+const craftUI = { mode: 'inv', size: 2, grid: [], cursor: null, furnace: null, chest: null, result: null };
 function openCraft(mode, fk) {
   craftUI.mode = mode;
   craftUI.size = mode === 'bench' ? 3 : 2;
-  craftUI.grid = new Array(craftUI.size * craftUI.size).fill(null);
-  craftUI.furnace = fk || null;
+  craftUI.grid = mode === 'chest' || mode === 'furnace' ? [] : new Array(craftUI.size * craftUI.size).fill(null);
+  craftUI.furnace = mode === 'furnace' ? fk : null;
+  craftUI.chest = mode === 'chest' ? fk : null;
   craftUI.result = null;
+  if (mode === 'chest') Sound.chest(true);
   setState('craft');
   if (locked) { expectUnlock = true; document.exitPointerLock(); }
   renderCraft();
@@ -5667,7 +6030,8 @@ function closeCraft(silent) {
   const back = craftUI.grid.filter(Boolean);
   if (craftUI.cursor) back.push(craftUI.cursor);
   for (const s of back) { const left = inv.add(s.id, s.count, s.dur); if (left > 0) throwStack(newStack(s.id, left, s.dur)); }
-  craftUI.grid = []; craftUI.cursor = null; craftUI.furnace = null; craftUI.result = null;
+  if (craftUI.chest) Sound.chest(false);
+  craftUI.grid = []; craftUI.cursor = null; craftUI.furnace = null; craftUI.chest = null; craftUI.result = null;
   $('cursorStack').classList.add('hidden');
   hideTooltip();
   renderHotbar();
@@ -5684,6 +6048,7 @@ function slotGet(ref) {
   if (k === 'i') return inv.slots[+v];
   if (k === 'c') return craftUI.grid[+v];
   if (k === 'f') { const f = furnaces.get(craftUI.furnace); return f ? f[v] : null; }
+  if (k === 'k') { const c = chests.get(craftUI.chest); return c ? c.slots[+v] : null; }
   return null;
 }
 function slotSet(ref, s) {
@@ -5691,6 +6056,7 @@ function slotSet(ref, s) {
   if (k === 'i') inv.slots[+v] = s;
   else if (k === 'c') craftUI.grid[+v] = s;
   else if (k === 'f') { const f = furnaces.get(craftUI.furnace); if (f) f[v] = s; }
+  else if (k === 'k') { const c = chests.get(craftUI.chest); if (c) c.slots[+v] = s; }
 }
 function accepts(ref, s) {
   if (ref === 'f:output') return false;
@@ -5698,7 +6064,7 @@ function accepts(ref, s) {
   return true;
 }
 function updateCraftResult() {
-  craftUI.result = craftUI.mode === 'furnace' ? null : matchRecipe(craftUI.grid.map(s => (s ? s.id : 0)), craftUI.size);
+  craftUI.result = craftUI.mode === 'furnace' || craftUI.mode === 'chest' ? null : matchRecipe(craftUI.grid.map(s => (s ? s.id : 0)), craftUI.size);
 }
 function afterSlotChange() { updateCraftResult(); renderCraft(); renderHotbar(); }
 function clickSlot(ref, button, shift) {
@@ -5723,6 +6089,13 @@ function clickSlot(ref, button, shift) {
   }
   afterSlotChange();
 }
+// Merge into matching stacks, then fill empty slots; returns what did not fit.
+function addToSlots(slots, id, count, dur) {
+  const max = maxStack(id);
+  if (max > 1) for (const t of slots) if (t && t.id === id && t.count < max && count > 0) { const n = Math.min(count, max - t.count); t.count += n; count -= n; }
+  for (let j = 0; j < slots.length && count > 0; j++) if (!slots[j]) { const n = Math.min(count, max); slots[j] = newStack(id, n, dur); count -= n; }
+  return count;
+}
 // Move stack from inventory slot i into slots [a, b).
 function moveRange(i, a, b) {
   const s = inv.slots[i];
@@ -5746,6 +6119,13 @@ function quickMove(ref) {
   const [k, v] = ref.split(':');
   if (k === 'i') {
     const i = +v;
+    if (craftUI.mode === 'chest') {
+      const c = chests.get(craftUI.chest);
+      if (!c) return;
+      const left = addToSlots(c.slots, s.id, s.count, s.dur);
+      if (left === 0) inv.slots[i] = null; else s.count = left;
+      return;
+    }
     if (craftUI.mode === 'furnace' && SMELT[s.id] !== undefined) moveToRef(i, 'f:input');
     else if (craftUI.mode === 'furnace' && ITEMS[s.id].fuel > 0) moveToRef(i, 'f:fuel');
     else if (i < 9) moveRange(i, 9, 36); else moveRange(i, 0, 9);
@@ -5783,10 +6163,15 @@ function slotDiv(ref, s, cls) { return '<div class="slot ' + (cls || '') + '" da
 function renderCraft() {
   if (state !== 'craft') return;
   const C = craftUI;
-  $('craftTitle').textContent = C.mode === 'bench' ? 'Workbench' : C.mode === 'furnace' ? 'Furnace' : 'Inventory';
-  $('craftBox').classList.toggle('hidden', C.mode === 'furnace');
+  $('craftTitle').textContent = C.mode === 'bench' ? 'Workbench' : C.mode === 'furnace' ? 'Furnace' : C.mode === 'chest' ? 'Chest' : 'Inventory';
+  $('craftBox').classList.toggle('hidden', C.mode === 'furnace' || C.mode === 'chest');
   $('furnaceBox').classList.toggle('hidden', C.mode !== 'furnace');
-  if (C.mode === 'furnace') {
+  $('chestBox').classList.toggle('hidden', C.mode !== 'chest');
+  if (C.mode === 'chest') {
+    const ch = chests.get(C.chest);
+    if (!ch) { closeCraft(); return; }
+    $('chestGrid').innerHTML = ch.slots.map((st, i) => slotDiv('k:' + i, st)).join('');
+  } else if (C.mode === 'furnace') {
     const f = furnaces.get(C.furnace);
     if (!f) { closeCraft(); return; }
     furnaceSig = '';
@@ -6015,6 +6400,13 @@ function beginLoading(meta, edits, fresh) {
   for (const [k, f] of meta.furnaces || []) {
     furnaces.set(k, { input: stackFromJSON(f.input), fuel: stackFromJSON(f.fuel), output: stackFromJSON(f.output), burn: f.burn || 0, burnMax: f.burnMax || 0, cook: f.cook || 0 });
   }
+  chests = new Map();
+  for (const [k, slots] of meta.chests || []) {
+    const c = newChest();
+    if (Array.isArray(slots)) slots.forEach((a, i) => { if (i < CHEST_SLOTS) c.slots[i] = stackFromJSON(a); });
+    chests.set(k, c);
+  }
+  sleep = null;
   clearItems();
   for (const it of meta.items || []) {
     const s = stackFromJSON(it);
@@ -6076,13 +6468,19 @@ function saveNow() {
   meta.mode = player.mode;
   meta.version = 3;
   meta.player = { x: player.pos.x, y: player.pos.y, z: player.pos.z, yaw: player.yaw, pitch: player.pitch, flying: player.flying };
-  if (surv.dead && meta.spawn) meta.player = { x: meta.spawn.x, y: meta.spawn.y, z: meta.spawn.z, yaw: player.yaw, pitch: 0, flying: false };
+  const rp = surv.dead ? respawnPoint() : null;
+  if (rp) meta.player = { x: rp.x, y: rp.y, z: rp.z, yaw: player.yaw, pitch: 0, flying: false };
   meta.inventory = inv.toJSON();
   delete meta.hotbar;
   meta.selected = selected;
   // saved while dead: come back as if respawned (the dropped items stay where you died)
   meta.surv = surv.dead ? null : { health: surv.health, hunger: surv.hunger, sat: surv.sat, air: surv.air };
   meta.furnaces = [...furnaces].map(([k, f]) => [k, { input: stackToJSON(f.input), fuel: stackToJSON(f.fuel), output: stackToJSON(f.output), burn: f.burn, burnMax: f.burnMax, cook: f.cook }]);
+  for (const k of [...chests.keys()]) {                // forget chests whose block is gone
+    const [cx, cy, cz] = k.split(',').map(Number), id = w.getBlock(cx, cy, cz);
+    if (id >= 0 && id !== BLOCK.chest) chests.delete(k);
+  }
+  meta.chests = [...chests].map(([k, c]) => [k, c.slots.map(stackToJSON)]);
   meta.items = items.slice(-CONFIG.survival.maxSavedItems).map(e => [e.stack.id, e.stack.count, e.stack.dur || 0, e.pos.x, e.pos.y, e.pos.z, e.age]);
   const dirty = [...w.dirtyEdits];
   w.dirtyEdits.clear();
@@ -6201,7 +6599,9 @@ function tick(dt) {
   if (surv.dead) return;
   // freeze physics until the player's own chunk exists (never fall into unloaded terrain)
   if (!world.isMeshed(Math.floor(player.pos.x), Math.floor(player.pos.z))) { player.prev.copy(player.pos); player.vel.set(0, 0, 0); return; }
+  randomTicks(dt);
   const vyBefore = player.vel.y;
+  if (sleep) { player.prev.copy(player.pos); player.vel.set(0, 0, 0); updateSleep(dt); return; }
   player.update(dt);
   tickSurvival(dt);
   updateMining(dt);
@@ -6246,6 +6646,7 @@ function frame(now) {
     if (saveTimer >= CONFIG.save.autosaveSec || (lastEditAt && now - lastEditAt > CONFIG.save.editDebounceMs)) saveNow();
     if (state === 'craft' && craftUI.mode === 'furnace') { craftRefresh -= dt; if (craftRefresh <= 0) { craftRefresh = 0.1; renderFurnaceLive(); } }
   } else acc = 0;
+  if (!sleep) updateSleep(0);
   world.update(player.pos.x, player.pos.z, player.yaw, SETTINGS.renderDistance);
   const alpha = running ? acc / STEP : 1;
   updateCamera(alpha, dt);
@@ -6303,6 +6704,7 @@ window.__BLOCKWILD = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   get items() { return items; }, get creatures() { return creatures; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
+  get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
 requestAnimationFrame(frame);
