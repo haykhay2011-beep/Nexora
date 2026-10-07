@@ -408,7 +408,7 @@ const CONFIG = {
     dirtMax: 4,
     bedrockMax: 2,        // jagged bedrock occupies y 0..bedrockMax
     treeCell: 5,          // one possible tree per cell (keeps trees spaced)
-    treeMargin: 3,        // columns checked beyond the chunk edge so canopies are complete
+    treeMargin: 4,        // columns checked beyond the chunk edge so canopies are complete
     treeChancePlains: 0.06,
     treeChanceForest: 0.72,
     forestFreq: 0.0065,
@@ -418,6 +418,17 @@ const CONFIG = {
     pineMax: 9,
     treeChanceTundra: 0.22,
     treeChanceMountain: 0.18,
+    treeChanceMarsh: 0.3,       // willows
+    treeChanceAmber: 0.42,      // amberwood trees
+    marshWet: 0.42,             // moisture where marshes begin
+    marshWarm: -0.15,           // ...and the temperature above which they form
+    amberTemp: -0.05,           // wet forests cooler than this turn amber
+    grassMarsh: 0.22, reedsMarsh: 0.16,
+    grassAmber: 0.12, flowerAmber: 0.03, bushAmber: 0.02,
+    // structures: one candidate of each kind per structCell x structCell area
+    structCell: 64,
+    ruinChance: 0.5,
+    dungeonChance: 0.6,
     // biomes (temperature / moisture / mountain noise)
     tempFreq: 0.0011,
     moistFreq: 0.0013,
@@ -814,6 +825,7 @@ function BlockwildShared(C) {
     'coal_ore', 'iron_ore', 'gold_ore', 'gem_ore', 'tall_grass', 'flower_red', 'flower_blue', 'berry_bush',
     'workbench_top', 'workbench_side', 'furnace_top', 'furnace_front', 'furnace_front_lit',
     'chest_top', 'chest_side', 'farmland', 'crop_0', 'crop_1', 'crop_2', 'crop_3', 'quilt', 'quilt_side', 'pillow',
+    'mud', 'reeds', 'willow_leaves', 'amber_log_side', 'amber_log_top', 'amber_leaves', 'mossy_cobble',
   ];
   const TEX = {};
   TEXTURES.forEach((n, i) => { TEX[n] = i; });
@@ -899,6 +911,12 @@ function BlockwildShared(C) {
     D(51, 'bedroll_e',   'Bedroll',      ['quilt', 'quilt_side', 'quilt_side'], Object.assign({}, BEDROLL, { facing: 1, creative: false, pickAs: 'bedroll' })),
     D(52, 'bedroll_s',   'Bedroll',      ['quilt', 'quilt_side', 'quilt_side'], Object.assign({}, BEDROLL, { facing: 2, creative: false, pickAs: 'bedroll' })),
     D(53, 'bedroll_w',   'Bedroll',      ['quilt', 'quilt_side', 'quilt_side'], Object.assign({}, BEDROLL, { facing: 3, creative: false, pickAs: 'bedroll' })),
+    D(54, 'mud',         'Mud',          'mud',         { hardness: 0.5, tool: 'shovel', sound: 'mud' }),
+    D(55, 'reeds',       'Reeds',        'reeds',       Object.assign({}, PLANT, { soil: ['grass', 'dirt', 'mud', 'sand'] })),
+    D(56, 'willow_leaves', 'Willow Leaves', 'willow_leaves', { transparent: true, filter: 1, hardness: 0.2, drop: 'stick', dropChance: 0.08, sound: 'grass', ao: true }),
+    D(57, 'amber_log',   'Amberwood Log', ['amber_log_top', 'amber_log_side', 'amber_log_top'], { hardness: 2.0, tool: 'axe', sound: 'wood' }),
+    D(58, 'amber_leaves', 'Amber Leaves', 'amber_leaves', { transparent: true, filter: 1, hardness: 0.2, drop: 'stick', dropChance: 0.08, sound: 'grass', ao: true }),
+    D(59, 'mossy_cobble', 'Mossy Cobblestone', 'mossy_cobble', { hardness: 2.0, tool: 'pickaxe', minTier: 1 }),
   ];
   const BLOCK = {};
   BLOCKS.forEach(b => { BLOCK[b.key] = b.id; });
@@ -946,7 +964,8 @@ function BlockwildShared(C) {
      identical no matter what order they are generated in.
      ================================================================= */
   const BIOME_OCEAN = 0, BIOME_BEACH = 1, BIOME_PLAINS = 2, BIOME_FOREST = 3, BIOME_DESERT = 4, BIOME_TUNDRA = 5, BIOME_MOUNTAINS = 6;
-  const BIOME_NAMES = ['Ocean', 'Beach', 'Plains', 'Forest', 'Desert', 'Snowy Tundra', 'Mountains'];
+  const BIOME_MARSH = 7, BIOME_AMBERWOOD = 8;
+  const BIOME_NAMES = ['Ocean', 'Beach', 'Plains', 'Forest', 'Desert', 'Snowy Tundra', 'Mountains', 'Marsh', 'Amberwood'];
 
   function makeGenerator(seed) {
     const G = C.gen;
@@ -970,6 +989,7 @@ function BlockwildShared(C) {
     const dirtSeed = mix32(seed ^ 0x12345678);
     const oreSeed = mix32(seed ^ 0x0de5ca1e);
     const decoSeed = mix32(seed ^ 0x00f10e75);
+    const structSeed = mix32(seed ^ 0x5717c7ed);
 
     // Climate + unfiltered height for one column. Every term is a smooth function of
     // the coordinates, so biome borders blend without cliffs or seams.
@@ -995,6 +1015,12 @@ function BlockwildShared(C) {
         const r = 1 - Math.abs(fbm2(nRidge, x * G.ridgeFreq, z * G.ridgeFreq, 4, 2, 0.5));
         h += cl.mount * (r * r * G.mountAmp + G.mountLift);
       }
+      // marshes: warm, very wet lowlands are pressed flat around sea level (pools and islets)
+      const marsh = smooth((cl.M - G.marshWet) / 0.2) * smooth((cl.T - G.marshWarm) / 0.25) * (1 - cl.mount);
+      if (marsh > 0) {
+        const k = marsh * smooth((SEA + 18 - h) / 14);
+        h += (SEA + 0.6 + d * 2.2 - h) * k;
+      }
       if (h > G.softCap) h = G.softCap + (h - G.softCap) * 0.45;   // round off peaks below the height limit
       h = Math.floor(h);
       return h < G.minHeight ? G.minHeight : h > G.maxHeight ? G.maxHeight : h;
@@ -1007,10 +1033,11 @@ function BlockwildShared(C) {
     function classify(h, T, M, mount, bonus) {
       if (h < SEA - 1) return BIOME_OCEAN;
       if (mount > 0.5 && h > SEA + 10) return BIOME_MOUNTAINS;
+      if (M > G.marshWet + 0.08 && T > G.marshWarm + 0.05 && h <= SEA + 4) return BIOME_MARSH;
       if (h <= SEA + G.beachHeight + bonus) return BIOME_BEACH;
       if (T < -0.3) return BIOME_TUNDRA;
       if (T > 0.3 && M < 0.05) return BIOME_DESERT;
-      if (M > 0.12) return BIOME_FOREST;
+      if (M > 0.12) return T < G.amberTemp ? BIOME_AMBERWOOD : BIOME_FOREST;
       return BIOME_PLAINS;
     }
     function heightAt(x, z) {
@@ -1045,7 +1072,7 @@ function BlockwildShared(C) {
         hm[i] = h; tm[i] = rT[r];
         const b = classify(h, rT[r], rM[r], rMount[r], beachBonusAt(wx, wz));
         bm[i] = b;
-        ent[i] = (b !== BIOME_DESERT && b !== BIOME_BEACH && b !== BIOME_OCEAN && entranceAt(wx, wz)) ? 1 : 0;
+        ent[i] = (b !== BIOME_DESERT && b !== BIOME_BEACH && b !== BIOME_OCEAN && b !== BIOME_MARSH && entranceAt(wx, wz)) ? 1 : 0;
       }
       const hi = (lx, lz) => (lz + M) * HW + (lx + M);
       const hAt = (lx, lz) => hm[hi(lx, lz)];
@@ -1069,6 +1096,7 @@ function BlockwildShared(C) {
           case BIOME_BEACH: top = B.sand; filler = B.sand; fillDepth = 3; break;
           case BIOME_DESERT: top = B.sand; filler = B.sand; fillDepth = 3; under = B.sandstone; underDepth = 3; break;
           case BIOME_TUNDRA: top = B.snow; filler = B.dirt; break;
+          case BIOME_MARSH: top = h < SEA ? B.mud : B.grass; filler = B.mud; fillDepth = 2; break;
           case BIOME_MOUNTAINS:
             if (h >= G.snowLine) { top = B.snow; filler = B.stone; fillDepth = 0; }
             else if (h >= G.stoneLine || steep >= 3) { top = B.stone; filler = B.stone; fillDepth = 0; }
@@ -1182,12 +1210,14 @@ function BlockwildShared(C) {
         if (lx < -M + 1 || lx >= CS + M - 1 || lz < -M + 1 || lz >= CS + M - 1) continue;
         const i = hi(lx, lz), h = hm[i], biome = bm[i];
         if (ent[i]) continue;                                    // surface may be carved here
-        let chance = 0, pine = false;
+        let chance = 0, pine = false, kind = 'oak';
         if (biome === BIOME_FOREST || biome === BIOME_PLAINS) {
           const forest = smooth((nForest.noise2(tx * G.forestFreq, tz * G.forestFreq) + 0.15) / 0.6);
           chance = biome === BIOME_FOREST ? G.treeChanceForest * (0.55 + 0.45 * forest) : G.treeChancePlains + (G.treeChanceForest - G.treeChancePlains) * forest * 0.35;
         } else if (biome === BIOME_TUNDRA) { chance = G.treeChanceTundra; pine = true; }
         else if (biome === BIOME_MOUNTAINS && h < G.stoneLine - 2) { chance = G.treeChanceMountain; pine = true; }
+        else if (biome === BIOME_MARSH && h >= SEA) { chance = G.treeChanceMarsh; kind = 'willow'; }
+        else if (biome === BIOME_AMBERWOOD) { chance = G.treeChanceAmber; kind = 'amber'; }
         if ((th & 0xffff) / 65536 >= chance) continue;
         let steep = false;
         for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (Math.abs(hAt(lx + ax, lz + az) - h) > 1) steep = true;
@@ -1207,6 +1237,44 @@ function BlockwildShared(C) {
             }
           }
           for (let y = h + 1; y <= top; y++) putLog(lx, y, lz, PG, PL);
+        } else if (kind === 'willow') {
+          // willow: short trunk, wide flat crown, curtains of leaves hanging from the rim
+          const trunk = 4 + ((th >>> 24) % 3);
+          const top = h + trunk;
+          if (top + 2 >= H) continue;
+          const WL = B.willow_leaves;
+          for (let dy = 0; dy <= 1; dy++) {
+            const r = 3 - dy;
+            for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) {
+              if (dx * dx + dz * dz > r * r + 1) continue;
+              putLeaf(lx + dx, top + dy, lz + dz, WL);
+            }
+          }
+          for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
+            const d2 = dx * dx + dz * dz;
+            if (d2 < 5 || d2 > 10) continue;
+            const ch = hash3(treeSeed, tx + dx, 7, tz + dz);
+            if ((ch & 3) === 0) continue;
+            const len = 1 + ((ch >>> 4) % 3);
+            for (let k = 1; k <= len && top - k > h + 1; k++) putLeaf(lx + dx, top - k, lz + dz, WL);
+          }
+          for (let y = h + 1; y <= top; y++) putLog(lx, y, lz, B.log, WL);
+        } else if (kind === 'amber') {
+          // amberwood: tall pale trunk under a round crown of orange leaves
+          const trunk = 5 + ((th >>> 24) % 3);
+          const top = h + trunk;
+          if (top + 2 >= H) continue;
+          const AL = B.amber_leaves;
+          for (let dy = -2; dy <= 2; dy++) {
+            const r = dy === 2 ? 1 : dy === -2 ? 2 : 3 - (dy === 1 ? 1 : 0);
+            for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) {
+              const d2 = dx * dx + dz * dz;
+              if (d2 > r * r + 1) continue;
+              if (d2 >= r * r && (hash3(treeSeed, tx + dx, top + dy, tz + dz) & 1)) continue;
+              putLeaf(lx + dx, top + dy, lz + dz, AL);
+            }
+          }
+          for (let y = h + 1; y <= top; y++) putLog(lx, y, lz, B.amber_log, AL);
         } else {
           const trunk = G.trunkMin + ((th >>> 24) % (G.trunkMax - G.trunkMin + 1));
           const top = h + trunk;
@@ -1243,11 +1311,79 @@ function BlockwildShared(C) {
           if (biome === BIOME_PLAINS) deco = r < G.grassPlains ? B.tall_grass : r < G.grassPlains + G.flowerPlains ? ((dh >>> 12) & 1 ? B.flower_red : B.flower_blue) : 0;
           else if (biome === BIOME_FOREST) deco = r < G.grassForest ? B.tall_grass : r < G.grassForest + G.flowerForest ? ((dh >>> 12) & 1 ? B.flower_red : B.flower_blue) : r < G.grassForest + G.flowerForest + G.bushForest ? B.berry_bush : 0;
           else if (biome === BIOME_MOUNTAINS) deco = r < G.grassMountain ? B.tall_grass : 0;
+          else if (biome === BIOME_MARSH) deco = r < G.reedsMarsh ? B.reeds : r < G.reedsMarsh + G.grassMarsh ? B.tall_grass : 0;
+          else if (biome === BIOME_AMBERWOOD) deco = r < G.grassAmber ? B.tall_grass : r < G.grassAmber + G.flowerAmber ? ((dh >>> 12) & 1 ? B.flower_red : B.flower_blue) : r < G.grassAmber + G.flowerAmber + G.bushAmber ? B.berry_bush : 0;
+        } else if (topId === B.mud && biome === BIOME_MARSH && r < G.reedsMarsh * 1.5) {
+          deco = B.reeds;
         } else if (topId === B.sand && biome === BIOME_DESERT && r < G.cactusChance) {
           const hgt = 1 + ((dh >>> 12) % 3);
           for (let k = 1; k <= hgt; k++) blocks[idx(x, h + k, z)] = B.cactus;
         }
         if (deco) blocks[idx(x, h + 1, z)] = deco;
+      }
+
+      // ---- structures: weathered ruins on the surface, dungeon rooms deep underground ----
+      // Each structure is a pure function of its cell, and every chunk it overlaps draws
+      // its own part, so pieces line up across chunk borders in any generation order.
+      const put = (wx, y, wz, id) => {
+        const lx = wx - x0, lz = wz - z0;
+        if (lx >= 0 && lx < CS && lz >= 0 && lz < CS && y > 0 && y < H) blocks[idx(lx, y, lz)] = id;
+      };
+      const inside = (wx, wz) => wx >= x0 && wx < x0 + CS && wz >= z0 && wz < z0 + CS;
+      const SC = G.structCell, REACH = 8;
+      for (let gz = Math.floor((z0 - REACH) / SC); gz <= Math.floor((z0 + CS - 1 + REACH) / SC); gz++) {
+        for (let gx = Math.floor((x0 - REACH) / SC); gx <= Math.floor((x0 + CS - 1 + REACH) / SC); gx++) {
+          const rnd = mulberry32(hash2(structSeed, gx, gz));
+          // ruin: 5x5 to 9x9 broken walls around a floor, sometimes a chest in a corner
+          const hasRuin = rnd() < G.ruinChance;
+          const rx = gx * SC + 10 + Math.floor(rnd() * (SC - 20)), rz = gz * SC + 10 + Math.floor(rnd() * (SC - 20));
+          const half = 2 + Math.floor(rnd() * 3), door = Math.floor(rnd() * 4), chestCorner = rnd() < 0.7 ? Math.floor(rnd() * 4) : -1;
+          // dungeon: a 9x9x6 stone room with one or two chests
+          const hasDungeon = rnd() < G.dungeonChance;
+          const dx0 = gx * SC + 8 + Math.floor(rnd() * (SC - 16)), dz0 = gz * SC + 8 + Math.floor(rnd() * (SC - 16));
+          const dy0 = 10 + Math.floor(rnd() * 26), chests2 = rnd() < 0.4;
+          if (hasRuin && rx + half + 1 >= x0 && rx - half - 1 < x0 + CS && rz + half + 1 >= z0 && rz - half - 1 < z0 + CS) {
+            const base = heightAt(rx, rz);
+            rawHeight(rx, rz, CL);
+            const biome = classify(base, CL.T, CL.M, CL.mount, beachBonusAt(rx, rz));
+            const sandy = biome === BIOME_DESERT;
+            if (biome !== BIOME_OCEAN && biome !== BIOME_BEACH && biome !== BIOME_MARSH && biome !== BIOME_MOUNTAINS && base > SEA && base + 8 < H) {
+              const wallA = sandy ? B.sandstone : B.cobblestone, wallB = sandy ? B.sandstone : B.mossy_cobble, floorId = sandy ? B.sandstone : B.cobblestone;
+              for (let wz = rz - half; wz <= rz + half; wz++) for (let wx = rx - half; wx <= rx + half; wx++) {
+                if (!inside(wx, wz)) continue;
+                const colH = hm[hi(wx - x0, wz - z0)];
+                for (let y = colH + 1; y < base; y++) put(wx, y, wz, wallA);                // foundation under the floor
+                const hv = hash3(structSeed, wx, base, wz);
+                put(wx, base, wz, (hv & 3) === 0 ? wallB : floorId);
+                for (let y = base + 1; y <= base + 6; y++) put(wx, y, wz, 0);
+                const edge = Math.abs(wx - rx) === half || Math.abs(wz - rz) === half;
+                if (!edge) continue;
+                const doorway = (door === 0 && wz === rz - half && wx === rx) || (door === 1 && wz === rz + half && wx === rx) ||
+                  (door === 2 && wx === rx - half && wz === rz) || (door === 3 && wx === rx + half && wz === rz);
+                if (doorway) continue;
+                const corner = Math.abs(wx - rx) === half && Math.abs(wz - rz) === half;
+                const wh = corner ? 3 + (hv >>> 8) % 2 : (hv >>> 8) % 4;                  // crumbled to 0-3 high, corners stand taller
+                for (let y = base + 1; y <= base + wh; y++) put(wx, y, wz, ((hv >>> (12 + y - base)) & 1) ? wallB : wallA);
+              }
+              if (chestCorner >= 0) {
+                const cxs = chestCorner & 1 ? rx + half - 1 : rx - half + 1, czs = chestCorner & 2 ? rz + half - 1 : rz - half + 1;
+                put(cxs, base + 1, czs, B.chest);
+              }
+            }
+          }
+          if (hasDungeon && dx0 + 4 >= x0 && dx0 - 4 < x0 + CS && dz0 + 4 >= z0 && dz0 - 4 < z0 + CS && dy0 + 12 < heightAt(dx0, dz0)) {
+            for (let wz = dz0 - 4; wz <= dz0 + 4; wz++) for (let wx = dx0 - 4; wx <= dx0 + 4; wx++) {
+              if (!inside(wx, wz)) continue;
+              for (let y = dy0; y <= dy0 + 5; y++) {
+                const shell = Math.abs(wx - dx0) === 4 || Math.abs(wz - dz0) === 4 || y === dy0 || y === dy0 + 5;
+                const hv = hash3(structSeed, wx, y, wz);
+                put(wx, y, wz, shell ? ((hv & 1) ? B.cobblestone : B.mossy_cobble) : 0);
+              }
+            }
+            put(dx0, dy0 + 1, dz0 - 3, B.chest);
+            if (chests2) put(dx0, dy0 + 1, dz0 + 3, B.chest);
+          }
+        }
       }
       return blocks;
     }
@@ -1798,9 +1934,9 @@ for (const [mk, m] of Object.entries(TOOL_MATERIALS)) for (const [tk, t] of Obje
   });
 }
 // burn time in seconds for block items
-for (const [k, v] of Object.entries({ log: 15, pine_log: 15, planks: 15, workbench: 15, chest: 15 })) ITEMS[ITEM[k]].fuel = v;
+for (const [k, v] of Object.entries({ log: 15, pine_log: 15, amber_log: 15, planks: 15, workbench: 15, chest: 15 })) ITEMS[ITEM[k]].fuel = v;
 
-const SMELTING = { iron_ore: 'iron_ingot', gold_ore: 'gold_ingot', sand: 'glass', cobblestone: 'stone', raw_meat: 'cooked_meat' };
+const SMELTING = { iron_ore: 'iron_ingot', gold_ore: 'gold_ingot', sand: 'glass', cobblestone: 'stone', raw_meat: 'cooked_meat', mud: 'bricks' };
 const SMELT = {};
 for (const [a, b] of Object.entries(SMELTING)) SMELT[ITEM[a]] = ITEM[b];
 
@@ -1820,6 +1956,8 @@ const newStack = (id, count, dur) => {
 const RECIPES = [
   { out: ['planks', 4], shapeless: ['log'] },
   { out: ['planks', 4], shapeless: ['pine_log'] },
+  { out: ['planks', 4], shapeless: ['amber_log'] },
+  { out: ['mossy_cobble', 1], shapeless: ['cobblestone', 'reeds'] },
   { out: ['stick', 4], shape: ['P', 'P'], key: { P: 'planks' } },
   { out: ['workbench', 1], shape: ['PP', 'PP'], key: { P: 'planks' } },
   { out: ['torch', 4], shape: ['C', 'S'], key: { C: 'coal', S: 'stick' } },
@@ -2855,6 +2993,117 @@ Object.assign(PAINTERS, {
       return [206 + P.rnd() * 14, 146 + P.rnd() * 10, 72];
     });
   },
+});
+// ---- Milestone 5 textures: marsh, amberwood, ruins ----
+Object.assign(PAINTERS, {
+  mud(P) {
+    const n = P.vnoise(4);
+    P.each((x, y) => {
+      const v = n(x, y) * 0.5 + P.rnd() * 0.3;
+      if (P.rnd() < 0.05) return [96, 86, 66];                                // wet glints
+      return [62 + v * 26, 48 + v * 20, 36 + v * 14];
+    });
+  },
+  reeds(P) {
+    plantClear(P, [96, 130, 60]);
+    for (let b = 0; b < 5; b++) {
+      const x = 2 + b * 3;
+      const top = 1 + Math.floor(P.rnd() * 4);
+      for (let y = top; y < 16; y++) { const v = 0.85 + P.rnd() * 0.2; P.set(x, y, 104 * v, 140 * v, 62 * v); }
+      if (P.rnd() < 0.7) for (let y = top; y < top + 4; y++) { P.set(x, y, 118, 78, 44); P.set(x + 1, y, 96, 62, 36); }   // brown seed heads
+    }
+  },
+  willow_leaves(P) {
+    P.each((x, y) => {
+      if (P.rnd() < 0.24 || (x + y * 7) % 11 === 0) return [70, 110, 60, 0];
+      const streak = (x % 3 === 0) ? 0.82 : 1;
+      const v = (0.8 + P.rnd() * 0.3) * streak;
+      return [78 * v, 126 * v, 64 * v, 255];
+    });
+  },
+  amber_log_side(P) {
+    P.each((x, y) => {
+      const v = 0.9 + P.rnd() * 0.12;
+      if ((y * 3 + x * 7) % 13 === 0 && P.rnd() < 0.7) return [70, 62, 54];   // dark bark marks
+      return [212 * v, 204 * v, 186 * v];
+    });
+  },
+  amber_log_top(P) {
+    P.each((x, y) => {
+      const dx = x - 7.5, dy = y - 7.5, d = Math.sqrt(dx * dx + dy * dy);
+      if (Math.max(Math.abs(dx), Math.abs(dy)) > 6.6) return [200, 192, 176];
+      const ring = Math.floor(d * 1.1 + P.rnd() * 0.3) % 2, v = 1 - P.rnd() * 0.1;
+      return ring ? [226 * v, 196 * v, 140 * v] : [200 * v, 166 * v, 112 * v];
+    });
+  },
+  amber_leaves(P) {
+    const n = P.vnoise(4);
+    P.each((x, y) => {
+      if (P.rnd() < 0.2 + (1 - n(x, y)) * 0.1) return [200, 110, 40, 0];
+      const v = n(x, y) * 0.5 + P.rnd() * 0.5;
+      if (P.rnd() < 0.12) return [168 + v * 40, 54 + v * 20, 30, 255];      // red flecks
+      return [196 + v * 48, 104 + v * 52, 28 + v * 20, 255];
+    });
+  },
+  mossy_cobble(P) {
+    PAINTERS.cobblestone(P);
+    const n = P.vnoise(4);
+    P.each((x, y) => {
+      if (n(x, y) + P.rnd() * 0.3 < 0.74) return null;
+      const v = 0.8 + P.rnd() * 0.3;
+      return [70 * v, 112 * v, 52 * v];
+    });
+  },
+});
+// ---- Milestone 5 creature skins: Wadder (marsh bird) and Thornling (thorn-throwing plant) ----
+CREATURE_TEXTURES.push('wd_feather', 'wd_head', 'wd_face', 'wd_bill', 'wd_wing', 'th_bark', 'th_face', 'th_leaf', 'th_thorn');
+Object.assign(PAINTERS, {
+  wd_feather(P) {
+    P.each((x, y) => {
+      const v = 0.9 + P.rnd() * 0.12;
+      if ((x * 5 + y * 3) % 9 === 0) return [150 * v, 134 * v, 110 * v];   // speckles
+      return [206 * v, 196 * v, 176 * v];
+    });
+  },
+  wd_head(P) {
+    P.each((x, y) => { const v = 0.85 + P.rnd() * 0.2; const sheen = (x + y) % 6 === 0 ? 1.25 : 1; return [34 * v * sheen, 92 * v * sheen, 70 * v * sheen]; });
+    for (let x = 0; x < 16; x++) P.set(x, 14, 236, 236, 228);               // white collar
+  },
+  wd_face(P) {
+    PAINTERS.wd_head(P);
+    for (const ex of [3, 11]) { P.set(ex, 6, 16, 14, 12); P.set(ex + 1, 6, 16, 14, 12); P.set(ex, 7, 16, 14, 12); P.set(ex + 1, 7, 16, 14, 12); P.set(ex, 6, 240, 240, 230); }
+  },
+  wd_bill(P) { P.each((x, y) => { const v = 0.9 + P.rnd() * 0.12; return y > 11 ? [196 * v, 110 * v, 30 * v] : [244 * v, 150 * v, 40 * v]; }); },
+  wd_wing(P) {
+    P.each((x, y) => {
+      const v = 0.9 + P.rnd() * 0.12;
+      if (y > 10) return (x % 3 === 0) ? [60, 70, 92] : [88 * v, 110 * v, 150 * v];   // blue flight feathers
+      return [176 * v, 164 * v, 146 * v];
+    });
+  },
+  th_bark(P) {
+    P.each((x, y) => {
+      const v = 0.85 + P.rnd() * 0.2;
+      if ((x * 7 + y * 3) % 17 === 0) return [214, 206, 150];                  // pale thorn tips
+      if (x % 5 === 0) return [36 * v, 62 * v, 30 * v];
+      return [58 * v, 96 * v, 44 * v];
+    });
+  },
+  th_face(P) {
+    PAINTERS.th_bark(P);
+    for (let x = 3; x <= 6; x++) { P.set(x, 6, 255, 214, 60); P.set(x, 7, 200, 140, 30); }
+    for (let x = 9; x <= 12; x++) { P.set(x, 6, 255, 214, 60); P.set(x, 7, 200, 140, 30); }
+    for (let x = 4; x <= 11; x++) P.set(x, 11, 20, 26, 14);
+    for (const x of [5, 8, 10]) P.set(x, 12, 214, 206, 150);                 // little fangs
+  },
+  th_leaf(P) {
+    P.each((x, y) => {
+      const mid = Math.abs(x - 7.5) < 1;
+      const v = 0.85 + P.rnd() * 0.2;
+      return mid ? [120 * v, 150 * v, 60 * v] : [76 * v, 140 * v, 52 * v];
+    });
+  },
+  th_thorn(P) { P.each((x, y) => { const v = 0.85 + P.rnd() * 0.2; return y < 4 ? [236 * v, 226 * v, 170 * v] : [120 * v, 92 * v, 52 * v]; }); },
 });
 // Four wheat stages: sprouts, young, green, ripe golden ears.
 for (let st = 0; st < 4; st++) {
@@ -4697,6 +4946,32 @@ const CREATURE_TYPES = {
       ]),
     ],
   },
+  wadder: {
+    name: 'Wadder', hostile: false, hw: 0.25, h: 0.7, health: 4, speed: 1.2, fleeSpeed: 3.4, turn: 5,
+    drops: [['raw_meat', 1, 1]], sound: 'wadder', particle: [206, 196, 176],
+    parts: [
+      { id: 'body', box: [0.42, 0.3, 0.6], at: [0, 0.2, 0.04], off: [0, 0.15, 0], tex: { all: 'wd_feather' } },
+      { id: 'tail', box: [0.22, 0.1, 0.16], at: [0, 0.42, 0.32], off: [0, 0, 0.06], rot: -0.35, tex: { all: 'wd_feather' } },
+      { id: 'wingl', role: 'wing', side: -1, box: [0.05, 0.22, 0.42], at: [-0.235, 0.46, 0.04], off: [0, -0.1, 0], tex: { all: 'wd_wing' } },
+      { id: 'wingr', role: 'wing', side: 1, box: [0.05, 0.22, 0.42], at: [0.235, 0.46, 0.04], off: [0, -0.1, 0], tex: { all: 'wd_wing' } },
+      { id: 'head', role: 'head', box: [0.24, 0.26, 0.26], at: [0, 0.46, -0.24], off: [0, 0.13, -0.06], tex: { all: 'wd_head', front: 'wd_face' } },
+      { id: 'bill', parent: 'head', box: [0.16, 0.06, 0.16], at: [0, 0.1, -0.19], off: [0, 0, -0.07], tex: { all: 'wd_bill' } },
+      { id: 'legl', role: 'leg', phase: 0, box: [0.06, 0.2, 0.06], at: [-0.1, 0.2, 0.06], off: [0, -0.1, 0], tex: { all: 'wd_bill' } },
+      { id: 'legr', role: 'leg', phase: Math.PI, box: [0.06, 0.2, 0.06], at: [0.1, 0.2, 0.06], off: [0, -0.1, 0], tex: { all: 'wd_bill' } },
+    ],
+  },
+  thornling: {
+    name: 'Thornling', hostile: true, hw: 0.32, h: 1.15, health: 14, speed: 0.8, chaseSpeed: 1.6, turn: 4,
+    ranged: { range: 14, keep: 5, speed: 15, damage: 2, cooldown: 2.4 }, burnsInDaylight: true, surfaceOnly: true,
+    drops: [['seeds', 0, 2], ['stick', 1, 2]], sound: 'thornling', particle: [70, 110, 50],
+    parts: [
+      { id: 'body', role: 'body', box: [0.56, 0.62, 0.56], at: [0, 0.24, 0], off: [0, 0.31, 0], tex: { all: 'th_bark', front: 'th_face' } },
+      ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].flatMap(([sx, sz], i) => [
+        { id: 'leaf' + i, role: 'leaf', parent: 'body', side: sx, phase: i * 1.7, box: [0.1, 0.46, 0.24], at: [sx * 0.16, 0.6, sz * 0.16], off: [0, 0.2, 0], rot: sz * 0.5, tex: { all: 'th_leaf' } },
+        { id: 'root' + i, role: 'leg', phase: i * Math.PI / 2, box: [0.12, 0.28, 0.12], at: [sx * 0.2, 0.26, sz * 0.2], off: [0, -0.13, 0], tex: { all: 'th_bark' } },
+      ]),
+    ],
+  },
 };
 for (const [k, T] of Object.entries(CREATURE_TYPES)) T.key = k;
 
@@ -4799,7 +5074,8 @@ class Creature extends Body {
     const C = CONFIG.creatures, T = this.T;
     const d = this.distToPlayer();
     if (T.hostile) {
-      if (this.canTarget() && d < C.chaseRange && lineOfSight(this.pos.x, this.eyeY, this.pos.z, player.pos.x, player.pos.y + player.eye, player.pos.z)) {
+      this.sees = this.canTarget() && d < C.chaseRange && lineOfSight(this.pos.x, this.eyeY, this.pos.z, player.pos.x, player.pos.y + player.eye, player.pos.z);
+      if (this.sees) {
         this.state = 'chase'; this.stateT = 2;
       } else if (this.state === 'chase' && (!this.canTarget() || d > C.chaseRange * 1.5 || this.stateT <= 0)) {
         this.state = 'idle'; this.stateT = 1 + Math.random() * 2;
@@ -4859,17 +5135,24 @@ class Creature extends Body {
       if (l >= 0 && (l >> 4) >= 14) {
         if (this.crumbleT < 0) this.crumbleT = 0.4 + Math.random() * 1.6;
         this.crumbleT -= dt;
-        if (Math.random() < 0.3) Particles.burst(p.x, p.y + T.h * Math.random(), p.z, [90, 86, 90], 1, 1.5, 0.5);
+        if (Math.random() < 0.3) Particles.burst(p.x, p.y + T.h * Math.random(), p.z, T.particle, 1, 1.5, 0.5);
         if (this.crumbleT <= 0) { this.crumble(); return false; }
       } else this.crumbleT = -1;
     }
 
     // steering
-    let dx = 0, dz = 0, speed = 0;
+    let dx = 0, dz = 0, speed = 0, aimAt = false;
     if (this.state === 'wander' && this.goal) {
       dx = this.goal.x - p.x; dz = this.goal.z - p.z;
       if (Math.hypot(dx, dz) < 0.6) { this.state = 'idle'; this.stateT = 1 + Math.random() * 3; dx = dz = 0; }
       else speed = T.speed;
+    } else if (this.state === 'chase' && T.ranged) {
+      // ranged: back away when crowded, stand and shoot within range, else close in
+      dx = player.pos.x - p.x; dz = player.pos.z - p.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist < T.ranged.keep) { dx = -dx; dz = -dz; speed = T.chaseSpeed; }
+      else if (dist < T.ranged.range && this.sees) { speed = 0; aimAt = true; }
+      else speed = T.chaseSpeed;
     } else if (this.state === 'chase') {
       dx = player.pos.x - p.x; dz = player.pos.z - p.z;
       speed = Math.hypot(dx, dz) > T.reach * 0.6 ? T.chaseSpeed : 0;
@@ -4881,7 +5164,7 @@ class Creature extends Body {
       speed = 0;
       if (this.state === 'wander') { this.state = 'idle'; this.stateT = 0.5 + Math.random(); }
     }
-    if (speed > 0) {
+    if (speed > 0 || aimAt) {
       const want = Math.atan2(-dx, -dz);
       this.yaw += Math.max(-T.turn * dt, Math.min(T.turn * dt, wrapAngle(want - this.yaw)));
     }
@@ -4925,8 +5208,17 @@ class Creature extends Body {
     this.unstick();
     if (p.y < -16) return false;
 
+    // ranged attack: lob a thorn at the player (aimed for the arc and a little lead)
+    if (T.ranged && this.state === 'chase' && this.canTarget() && this.sees && this.attackT <= 0 && this.distToPlayer() < T.ranged.range) {
+      const want = Math.atan2(-(player.pos.x - p.x), -(player.pos.z - p.z));
+      if (Math.abs(wrapAngle(want - this.yaw)) < 0.5) {
+        this.attackT = T.ranged.cooldown * (0.8 + Math.random() * 0.4);
+        this.swing = 1;
+        fireThorn(this);
+      }
+    }
     // melee
-    if (this.state === 'chase' && this.canTarget() && this.attackT <= 0) {
+    if (!T.ranged && this.state === 'chase' && this.canTarget() && this.attackT <= 0) {
       const hx = player.pos.x - p.x, hz = player.pos.z - p.z;
       if (Math.hypot(hx, hz) < T.reach + player.hw && player.pos.y < p.y + T.h && player.pos.y + player.h > p.y - 0.5 &&
           lineOfSight(p.x, this.eyeY, p.z, player.pos.x, player.pos.y + player.eye * 0.6, player.pos.z)) {   // no hitting through walls
@@ -4979,7 +5271,7 @@ class Creature extends Body {
   }
   crumble() {
     const p = this.pos;
-    Particles.burst(p.x, p.y + this.T.h * 0.5, p.z, [84, 80, 86], 30, 2.2, this.T.h * 0.8);
+    Particles.burst(p.x, p.y + this.T.h * 0.5, p.z, this.T.particle, 30, 2.2, this.T.h * 0.8);
     Sound.creature(this.T.sound, 'crumble', this.soundVolume());
   }
   render(alpha) {
@@ -4996,6 +5288,9 @@ class Creature extends Body {
       else if (part.role === 'head') { a.pivot.rotation.y = this.headYaw; a.pivot.rotation.x = Math.sin(t * 1.3 + p.x) * 0.05; }
       else if (part.role === 'ear') { a.pivot.rotation.z = -part.side * (0.55 + (this.onGround ? 0 : 0.35)); a.pivot.rotation.x = Math.sin(t * 3 + (part.phase || 0)) * 0.12; }
       else if (part.role === 'body' && T.hops) a.pivot.scale.y = this.onGround ? 1 : 1.12;
+      else if (part.role === 'body' && T.ranged) { const k = 1 + this.swing * 0.12; a.pivot.scale.set(1 / Math.sqrt(k), k, 1 / Math.sqrt(k)); }
+      else if (part.role === 'wing') { const flap = !this.onGround || this.state === 'flee' ? Math.sin(t * 22) * 0.6 + 0.6 : 0.05; a.pivot.rotation.z = -part.side * flap; }
+      else if (part.role === 'leaf') { a.pivot.rotation.z = -part.side * (0.45 + this.swing * 0.5) + Math.sin(t * 2 + (part.phase || 0)) * 0.08; }
     }
   }
   dispose() { scene.remove(this.model.root); }
@@ -5011,11 +5306,12 @@ function spawnCreature(typeKey, x, y, z) {
   creatures.push(c);
   return c;
 }
-function clearCreatures() { for (const c of creatures) c.dispose(); creatures = []; }
+function clearCreatures() { for (const c of creatures) c.dispose(); creatures = []; clearProjectiles(); }
+const LEAFY = new Set([BLOCK.leaves, BLOCK.pine_leaves, BLOCK.willow_leaves, BLOCK.amber_leaves]);
 // Room for a creature of this type standing on (x, y-1, z)?
 function standable(T, x, y, z) {
   const below = world.getBlock(x, y - 1, z);
-  if (below <= 0 || !B_SOLID[below] || below === BLOCK.leaves || below === BLOCK.pine_leaves) return false;
+  if (below <= 0 || !B_SOLID[below] || LEAFY.has(below)) return false;
   for (let k = 0; k < Math.ceil(T.h); k++) { const id = world.getBlock(x, y + k, z); if (id !== 0 && (B_SOLID[id] || B_LIQUID[id] || id < 0)) return false; }
   return true;
 }
@@ -5023,7 +5319,9 @@ function standable(T, x, y, z) {
 function spawnPassiveInChunk(c) {
   const C = CONFIG.creatures;
   if (!player || creatureCount(false) >= C.maxPassive || U.uDaylight.value < 0.5 || Math.random() > C.passiveChunkChance) return;
-  const type = Math.random() < 0.5 ? 'mossback' : 'puffhop';
+  const biome = world.gen.biomeAt(c.cx * CS + 8, c.cz * CS + 8);
+  const wet = biome === 'Marsh' || biome === 'Beach';
+  const type = wet && Math.random() < 0.75 ? 'wadder' : Math.random() < 0.5 ? 'mossback' : 'puffhop';
   const T = CREATURE_TYPES[type];
   const group = 1 + Math.floor(Math.random() * 3);
   let made = 0;
@@ -5031,7 +5329,8 @@ function spawnPassiveInChunk(c) {
     const x = c.cx * CS + Math.floor(Math.random() * CS), z = c.cz * CS + Math.floor(Math.random() * CS);
     let y = H - 2;
     while (y > 1 && world.getBlock(x, y, z) === 0) y--;
-    if (world.getBlock(x, y, z) !== BLOCK.grass || !standable(T, x, y + 1, z)) continue;
+    const ground = world.getBlock(x, y, z);
+    if (!(ground === BLOCK.grass || (type === 'wadder' && (ground === BLOCK.sand || ground === BLOCK.mud))) || !standable(T, x, y + 1, z)) continue;
     const l = world.getLight(x, y + 1, z);
     if (l < 0 || (l >> 4) < 12) continue;
     if (spawnCreature(type, x + 0.5, y + 1, z + 0.5)) made++;
@@ -5055,8 +5354,9 @@ function spawnHostiles() {
     const y = spots[Math.floor(Math.random() * spots.length)];
     const sky = world.getLight(x, y, z) >> 4;
     const underground = sky < 6;
-    let type = Math.random() < (underground ? 0.5 : 0.25) ? 'skitter' : 'hollow';
-    if (type === 'hollow' && !standable(CREATURE_TYPES.hollow, x, y, z)) type = 'skitter';
+    const roll = Math.random();
+    let type = underground ? (roll < 0.5 ? 'skitter' : 'hollow') : (roll < 0.22 ? 'skitter' : roll < 0.62 ? 'hollow' : 'thornling');
+    if (type !== 'skitter' && !standable(CREATURE_TYPES[type], x, y, z)) type = 'skitter';
     if (spawnCreature(type, x + 0.5, y, z + 0.5)) return;
   }
 }
@@ -5071,6 +5371,51 @@ function updateCreatures(dt) {
   hostileSpawnT -= dt;
   if (hostileSpawnT <= 0) { hostileSpawnT = C.hostileSpawnInterval; spawnHostiles(); }
 }
+// ---- thorns: Thornling projectiles (gravity, stick in blocks, hurt the player) ----
+let projectiles = [];
+const THORN_GRAVITY = 10;
+function fireThorn(c) {
+  const R = c.T.ranged, p = c.pos;
+  const sx = p.x, sy = p.y + c.T.h * 0.75, sz = p.z;
+  let tx = player.pos.x, ty = player.pos.y + 1.1, tz = player.pos.z;
+  const t = Math.max(0.15, Math.hypot(tx - sx, tz - sz) / R.speed);
+  tx += player.vel.x * t * 0.7; tz += player.vel.z * t * 0.7;                 // lead a moving target a little
+  const hx = tx - sx, hz = tz - sz, hd = Math.hypot(hx, hz) || 1;
+  const spread = 0.04;
+  const vx = (hx / hd + (Math.random() - 0.5) * spread) * R.speed, vz = (hz / hd + (Math.random() - 0.5) * spread) * R.speed;
+  const vy = (ty - sy) / t + 0.5 * THORN_GRAVITY * t;
+  const owner = { light: sampleLight(sx, sy, sz), tint: null };
+  const mesh = entityMesh(partGeometry('thorn', { id: 'dart', box: [0.07, 0.07, 0.42], off: [0, 0, 0], tex: { all: 'th_thorn', front: 'th_thorn' } }), owner);
+  scene.add(mesh);
+  projectiles.push({ pos: new THREE.Vector3(sx, sy, sz), vel: new THREE.Vector3(vx, vy, vz), life: 5, mesh, owner, damage: R.damage, name: c.T.name });
+  Sound.thorn(c.soundVolume());
+}
+const _pdir = new THREE.Vector3();
+function updateProjectiles(dt) {
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const pr = projectiles[i];
+    pr.life -= dt;
+    let dead = pr.life <= 0;
+    pr.vel.y -= THORN_GRAVITY * dt;
+    const steps = Math.max(1, Math.ceil(pr.vel.length() * dt / 0.2));
+    for (let k = 0; k < steps && !dead; k++) {
+      pr.pos.addScaledVector(pr.vel, dt / steps);
+      const id = world.getBlock(Math.floor(pr.pos.x), Math.floor(pr.pos.y), Math.floor(pr.pos.z));
+      if (id < 0 || (id > 0 && B_SOLID[id])) { dead = true; Particles.burst(pr.pos.x, pr.pos.y, pr.pos.z, [180, 160, 110], 4, 1.5, 0.1); break; }
+      const pp = player.pos, m = 0.15;
+      if (!surv.dead && pr.pos.x > pp.x - player.hw - m && pr.pos.x < pp.x + player.hw + m && pr.pos.z > pp.z - player.hw - m && pr.pos.z < pp.z + player.hw + m &&
+          pr.pos.y > pp.y - m && pr.pos.y < pp.y + player.h + m) {
+        dead = true;
+        hurt(pr.damage, 'Pricked by a ' + pr.name, { x: pr.pos.x - pr.vel.x, z: pr.pos.z - pr.vel.z });
+      }
+    }
+    if (dead || pr.pos.y < -10) { scene.remove(pr.mesh); projectiles.splice(i, 1); continue; }
+    pr.mesh.position.copy(pr.pos);
+    pr.mesh.lookAt(_pdir.copy(pr.pos).add(pr.vel));
+  }
+}
+function clearProjectiles() { for (const pr of projectiles) scene.remove(pr.mesh); projectiles = []; }
+
 // The player's melee hit: nearest creature along the view ray within reach (and in front of any block).
 function hitEntity() {
   if (!player || surv.dead) return false;
@@ -5750,6 +6095,7 @@ const Sound = (() => {
       noise({ type: 'highpass', freq: 3800, q: 0.7, dur: 0.18 * k, gain: 0.1 * k });
     },
     water(k) { noise({ type: 'lowpass', freq: 1800, sweep: 300, q: 1, dur: 0.2 * k, gain: 0.18 * k }); },
+    mud(k) { noise({ type: 'lowpass', freq: jit(500, 0.2), q: 1.2, dur: 0.12 * k, gain: 0.22 * k, attack: 0.01 }); noise({ freq: jit(1400, 0.2), q: 3, dur: 0.05 * k, gain: 0.06 * k, delay: 0.04 }); },
     cloth(k) { noise({ type: 'lowpass', freq: jit(700, 0.2), q: 0.6, dur: 0.1 * k, gain: 0.16 * k, attack: 0.02 }); },
   };
   const recipe = (m) => RECIPES[m] || RECIPES.stone;
@@ -5795,6 +6141,8 @@ const Sound = (() => {
       if (type === 'mossback') tone({ freq: kind === 'hurt' ? 170 : jit(115, 0.1), sweep: 85, dur: kind === 'hurt' ? 0.18 : 0.32, gain: 0.2 * g });
       else if (type === 'puffhop') { tone({ wave: 'sine', freq: kind === 'hurt' ? 1500 : jit(1000, 0.1), sweep: 1600, dur: 0.08, gain: 0.08 * g }); tone({ wave: 'sine', freq: 1200, sweep: 1800, dur: 0.06, gain: 0.06 * g, delay: 0.1 }); }
       else if (type === 'hollow') { tone({ freq: kind === 'hurt' ? 140 : jit(72, 0.1), sweep: 55, dur: kind === 'hurt' ? 0.25 : 0.7, gain: 0.22 * g, attack: 0.06 }); noise({ type: 'lowpass', freq: kind === 'hurt' ? 2400 : 320, dur: 0.4, gain: 0.12 * g }); }
+      else if (type === 'wadder') { for (let i = 0; i < (kind === 'hurt' ? 1 : 2); i++) { tone({ wave: 'sawtooth', freq: jit(kind === 'hurt' ? 520 : 400, 0.08), sweep: 330, dur: 0.09, gain: 0.07 * g, delay: i * 0.14 }); noise({ freq: 900, q: 4, dur: 0.08, gain: 0.05 * g, delay: i * 0.14 }); } }
+      else if (type === 'thornling') { noise({ type: 'bandpass', freq: jit(kind === 'hurt' ? 1600 : 700, 0.15), q: 2, dur: kind === 'hurt' ? 0.15 : 0.4, gain: 0.16 * g, attack: 0.05 }); tone({ freq: jit(160, 0.1), sweep: 120, dur: 0.3, gain: 0.07 * g }); }
       else if (type === 'skitter') for (let i = 0; i < (kind === 'hurt' ? 3 : 5); i++) noise({ freq: jit(3600, 0.2), q: 5, dur: 0.03, gain: 0.12 * g, delay: i * 0.045 });
     },
     chest(open) {
@@ -5803,6 +6151,7 @@ const Sound = (() => {
       noise({ freq: 900, q: 3, dur: 0.12, gain: 0.08, delay: open ? 0.08 : 0 });
       if (!open) tone({ freq: 120, sweep: 80, dur: 0.08, gain: 0.18, delay: 0.16 });
     },
+    thorn(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 2400, sweep: 900, dur: 0.12, gain: 0.14 * v }); tone({ wave: 'sine', freq: 700, sweep: 300, dur: 0.08, gain: 0.05 * v }); },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
     death() { if (!ok()) return; tone({ freq: 330, sweep: 70, dur: 0.9, gain: 0.25 }); noise({ type: 'lowpass', freq: 500, dur: 0.5, gain: 0.15 }); },
     silenceWind() { if (wind && ctx) wind.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); },
@@ -6524,7 +6873,7 @@ function settleSpawn() {
     let y = H - 1;
     while (y > 0 && !B_SOLID[world.getBlock(x, y, z)]) y--;
     const top = world.getBlock(x, y, z);
-    if (top === BLOCK.leaves || top === BLOCK.log || top === BLOCK.pine_leaves || top === BLOCK.pine_log || top === BLOCK.cactus || B_LIQUID[top]) continue;
+    if (LEAFY.has(top) || top === BLOCK.log || top === BLOCK.pine_log || top === BLOCK.amber_log || top === BLOCK.cactus || B_LIQUID[top]) continue;
     player.reset(x + 0.5, y + 1, z + 0.5);
     player.unstick();
     return;
@@ -6773,7 +7122,7 @@ function tick(dt) {
   world.updateFalling(dt);
   tickFurnaces(dt);
   updateItems(dt);
-  if (player) updateCreatures(dt);
+  if (player) { updateCreatures(dt); updateProjectiles(dt); }
   if (surv.dead) return;
   // freeze physics until the player's own chunk exists (never fall into unloaded terrain)
   if (!world.isMeshed(Math.floor(player.pos.x), Math.floor(player.pos.z))) { player.prev.copy(player.pos); player.vel.set(0, 0, 0); return; }
@@ -6882,7 +7231,7 @@ window.__BLOCKWILD_READY = true;
 window.__BLOCKWILD = {
   CONFIG, SH, pool, renderer, scene, camera, U, ATLAS, Store, Sky, Sound, ITEMS, ITEM, RECIPES, SMELT, matchRecipe, inv, surv, craftUI,
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
-  get items() { return items; }, get creatures() { return creatures; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
+  get items() { return items; }, get creatures() { return creatures; }, get projectiles() { return projectiles; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
   Hand, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
