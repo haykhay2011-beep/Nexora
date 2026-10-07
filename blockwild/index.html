@@ -526,6 +526,22 @@ const CONFIG = {
     cloudAlpha: 0.82,
   },
 
+  weather: {
+    clearMinSec: 600, clearMaxSec: 1500,   // how long clear skies last
+    rainMinSec: 180, rainMaxSec: 420,      // how long rain lasts
+    stormChance: 0.35,        // share of rains that bring thunder
+    fadeSec: 12,              // rain eases in and out
+    drops: 1100,              // precipitation particles around the camera
+    radius: 16,
+    height: 24,
+    rainSpeed: 19,
+    snowSpeed: 2.4,
+    darken: 0.4,              // daylight lost under full overcast
+    fogMul: 0.62,             // fog pulls in to this fraction in heavy rain
+    thunderMinSec: 10, thunderMaxSec: 32,
+    rainVolume: 0.09,
+  },
+
   save: {
     autosaveSec: 30,
     editDebounceMs: 2500,
@@ -3457,7 +3473,9 @@ const Sky = (() => {
   const state = { daylight: 1, horizon: new THREE.Color(S.dayHorizon), sunDir, night: 0 };
   const smoothstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
-  function update(t, camPos) {
+  const GRAY = new THREE.Color();
+  function update(t, camPos, overcast) {
+    overcast = overcast || 0;
     group.position.copy(camPos);
     const a = t * Math.PI * 2;
     sunDir.set(Math.cos(a), Math.sin(a), 0.25).normalize();
@@ -3465,20 +3483,23 @@ const Sky = (() => {
     const day = smoothstep(-0.18, 0.22, sh);
     const sunset = Math.exp(-(sh / 0.2) * (sh / 0.2));
     cA.setHex(S.nightZenith).lerp(cB.setHex(S.dayZenith), day).lerp(cB.setHex(S.sunsetZenith), sunset * 0.35);
+    const gray = (c, k) => { const l = (c.r * 0.3 + c.g * 0.59 + c.b * 0.11) * 0.85; GRAY.setRGB(l, l, l * 1.04); c.lerp(GRAY, k); };
+    if (overcast > 0) gray(cA, overcast * 0.85);
     uniforms.uZenith.value.copy(cA);
     cA.setHex(S.nightHorizon).lerp(cB.setHex(S.dayHorizon), day).lerp(cB.setHex(S.sunsetHorizon), sunset * 0.7);
+    if (overcast > 0) gray(cA, overcast * 0.75);
     uniforms.uHorizon.value.copy(cA);
     state.horizon.copy(cA);
     uniforms.uSunDir.value.copy(sunDir);
-    uniforms.uGlowAmt.value = sunset;
+    uniforms.uGlowAmt.value = sunset * (1 - overcast);
     state.daylight = S.nightLight + (1 - S.nightLight) * day;
     state.night = 1 - day;
-    starMat.opacity = Math.pow(1 - day, 2);
+    starMat.opacity = Math.pow(1 - day, 2) * (1 - overcast);
     starPivot.rotation.z = a;
     const R = S.domeRadius - 8;
     sun.position.copy(sunDir).multiplyScalar(R); sun.lookAt(0, 0, 0);
     moon.position.copy(sunDir).multiplyScalar(-R); moon.lookAt(0, 0, 0);
-    sun.visible = sh > -0.25; moon.visible = sh < 0.25;
+    sun.visible = sh > -0.25 && overcast < 0.6; moon.visible = sh < 0.25 && overcast < 0.6;
     return state;
   }
   return { group, update, state, scene: skyScene };
@@ -3555,7 +3576,8 @@ class Clouds {
     }
     this.cx = cx; this.cz = cz; this.radius = radius;
   }
-  update(px, pz, dt, sky) {
+  update(px, pz, dt, sky, overcast) {
+    overcast = overcast || 0;
     const S = CONFIG.sky, C = S.cloudCell;
     this.offset += S.cloudSpeed * dt;
     const radius = Math.ceil((U.uFogFar.value * 1.6 + 40) / C);
@@ -3563,14 +3585,120 @@ class Clouds {
     if (this.cx === null || Math.abs(cx - this.cx) > 1 || Math.abs(cz - this.cz) > 1 || radius !== this.radius) this.rebuild(cx, cz, radius);
     if (this.mesh) this.mesh.position.x = this.offset;
     const d = sky.daylight;
-    this.uniforms.uCloudColor.value.setRGB(0.16 + 0.84 * d, 0.18 + 0.82 * d, 0.24 + 0.76 * d).lerp(sky.horizon, 0.25);
-    this.uniforms.uAlpha.value = S.cloudAlpha * (0.35 + 0.65 * (1 - sky.night));
+    this.uniforms.uCloudColor.value.setRGB(0.16 + 0.84 * d, 0.18 + 0.82 * d, 0.24 + 0.76 * d).lerp(sky.horizon, 0.25).multiplyScalar(1 - 0.45 * overcast);
+    this.uniforms.uAlpha.value = Math.min(1, S.cloudAlpha * (0.35 + 0.65 * (1 - sky.night)) + 0.18 * overcast);
   }
   dispose() {
     if (this.mesh) { scene.remove(this.mesh); this.mesh.geometry.dispose(); this.mesh = null; }
     this.material.dispose();
   }
 }
+
+/* =====================================================================
+   WEATHER — clear skies alternate with rain (snow in cold places, nothing
+   in deserts); some rains are thunderstorms. Rain darkens the day, greys
+   the sky and pulls the fog in. Drops only fall where the sky is open:
+   a drop that reaches a roof, the ground or water is recycled.
+   ===================================================================== */
+const Weather = (() => {
+  const W = CONFIG.weather, N = W.drops;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let kind = 'clear', timer = rnd(W.clearMinSec, W.clearMaxSec), storm = false;
+  let level = 0, precip = 'rain', precipT = 0, flash = 0, thunderT = rnd(W.thunderMinSec, W.thunderMaxSec), active = 0;
+  const px = new Float32Array(N), py = new Float32Array(N), pz = new Float32Array(N), spd = new Float32Array(N), ph = new Float32Array(N);
+  const rainPos = new Float32Array(N * 6), snowPos = new Float32Array(N * 3);
+  const rainGeo = new THREE.BufferGeometry();
+  rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+  const rainMat = new THREE.LineBasicMaterial({ color: 0xa9bbd6, transparent: true, opacity: 0.5, depthWrite: false });
+  const rain = new THREE.LineSegments(rainGeo, rainMat);
+  const snowGeo = new THREE.BufferGeometry();
+  snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+  const snowMat = new THREE.PointsMaterial({ color: 0xf4f8ff, size: 0.11, transparent: true, opacity: 0.9, depthWrite: false });
+  const snow = new THREE.Points(snowGeo, snowMat);
+  for (const o of [rain, snow]) { o.frustumCulled = false; o.renderOrder = 6; o.visible = false; scene.add(o); }
+  let seeded = false;
+  function place(i, cam, top) {
+    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * W.radius;
+    px[i] = cam.x + Math.cos(a) * r; pz[i] = cam.z + Math.sin(a) * r;
+    py[i] = top ? cam.y + W.height * 0.55 + Math.random() * W.height * 0.15 : cam.y - W.height * 0.4 + Math.random() * W.height;
+    spd[i] = 0.85 + Math.random() * 0.3; ph[i] = Math.random() * 6.28;
+  }
+  // A drop is alive while it is in open air under an open sky.
+  function blocked(i) {
+    const x = Math.floor(px[i]), y = Math.floor(py[i]), z = Math.floor(pz[i]);
+    if (y >= H) return false;
+    const id = world.getBlock(x, y, z);
+    if (id < 0 || (id > 0 && (B_SOLID[id] || B_LIQUID[id]))) return true;
+    const l = world.getLight(x, y, z);
+    return l >= 0 && (l >> 4) < 15;
+  }
+  function startThunder() {
+    flash = 1;
+    Sound.thunder(0.25 + Math.random() * 1.8);
+    thunderT = rnd(W.thunderMinSec, W.thunderMaxSec);
+  }
+  return {
+    get kind() { return kind; }, get level() { return level; }, get storm() { return storm; }, get precip() { return precip; }, get flash() { return flash; },
+    set(k, opts) {                                         // force weather (tests / debugging)
+      kind = k; storm = !!(opts && opts.storm); timer = k === 'rain' ? rnd(W.rainMinSec, W.rainMaxSec) : rnd(W.clearMinSec, W.clearMaxSec);
+      if (opts && opts.instant) level = k === 'rain' ? 1 : 0;
+    },
+    save() { return { kind, timer, storm, level }; },
+    load(d) {
+      if (d && (d.kind === 'rain' || d.kind === 'clear')) { kind = d.kind; timer = +d.timer || 60; storm = !!d.storm; level = Math.max(0, Math.min(1, +d.level || 0)); }
+      else { kind = 'clear'; timer = rnd(W.clearMinSec, W.clearMaxSec); storm = false; level = 0; }
+      seeded = false; flash = 0;
+    },
+    // Advance timers (sim time) and the particles (frame time). Returns how overcast it is (0..1).
+    update(dt, cam, hidden) {
+      if (dt > 0) {
+        timer -= dt;
+        if (timer <= 0) {
+          if (kind === 'clear') { kind = 'rain'; storm = Math.random() < W.stormChance; timer = rnd(W.rainMinSec, W.rainMaxSec); }
+          else { kind = 'clear'; storm = false; timer = rnd(W.clearMinSec, W.clearMaxSec); }
+        }
+        level = Math.max(0, Math.min(1, level + (kind === 'rain' ? 1 : -1) * dt / W.fadeSec));
+        precipT -= dt;
+        if (precipT <= 0) {
+          precipT = 1;
+          const b = world.gen.biomeAt(Math.floor(cam.x), Math.floor(cam.z));
+          precip = b === 'Desert' ? 'none' : (b === 'Snowy Tundra' || cam.y > CONFIG.gen.snowLine - 4) ? 'snow' : 'rain';
+        }
+        if (storm && level > 0.6) { thunderT -= dt; if (thunderT <= 0) startThunder(); }
+        flash = Math.max(0, flash - dt * 2.5);
+      }
+      const want = precip === 'none' || hidden ? 0 : Math.round(N * level);
+      if (!seeded && want > 0) { for (let i = 0; i < N; i++) place(i, cam, false); seeded = true; }
+      active = want;
+      const isSnow = precip === 'snow';
+      rain.visible = active > 0 && !isSnow; snow.visible = active > 0 && isSnow;
+      if (!active) return level;
+      const t = performance.now() / 1000, R2 = W.radius * W.radius * 1.4;
+      for (let i = 0; i < active; i++) {
+        if (isSnow) { py[i] -= W.snowSpeed * spd[i] * dt; px[i] += Math.sin(t * 0.9 + ph[i]) * 0.5 * dt; pz[i] += Math.cos(t * 0.7 + ph[i]) * 0.5 * dt; }
+        else { py[i] -= W.rainSpeed * spd[i] * dt; px[i] += 0.8 * dt; }
+        const ddx = px[i] - cam.x, ddz = pz[i] - cam.z;
+        if (ddx * ddx + ddz * ddz > R2) place(i, cam, false);                   // left the area: re-seed nearby
+        else if (py[i] < cam.y - W.height * 0.45 || blocked(i)) {
+          if (!isSnow && py[i] > cam.y - 6 && Math.random() < 0.04) Particles.burst(px[i], Math.floor(py[i]) + 1.02, pz[i], [170, 190, 220], 1, 1.2, 0);
+          place(i, cam, true);
+          if (blocked(i)) py[i] = -1000;                                      // under a roof: stays hidden this frame
+        }
+        if (isSnow) { snowPos[i * 3] = px[i]; snowPos[i * 3 + 1] = py[i]; snowPos[i * 3 + 2] = pz[i]; }
+        else {
+          const o = i * 6;
+          rainPos[o] = px[i]; rainPos[o + 1] = py[i]; rainPos[o + 2] = pz[i];
+          rainPos[o + 3] = px[i] - 0.04; rainPos[o + 4] = py[i] + 0.7; rainPos[o + 5] = pz[i];
+        }
+      }
+      if (isSnow) { snowGeo.setDrawRange(0, active); snowGeo.attributes.position.needsUpdate = true; }
+      else { rainGeo.setDrawRange(0, active * 2); rainGeo.attributes.position.needsUpdate = true; }
+      rainMat.opacity = 0.5 * Math.min(1, level * 1.5);
+      return level;
+    },
+    reset() { kind = 'clear'; level = 0; storm = false; flash = 0; seeded = false; rain.visible = snow.visible = false; },
+  };
+})();
 
 /* =====================================================================
    CHUNK STORAGE + WORLD — loading, unloading, edits, mesh management.
@@ -6031,7 +6159,7 @@ document.addEventListener('pointerlockerror', onLockError);
    ===================================================================== */
 const Sound = (() => {
   let ctx = null, master = null, noiseBuf = null;
-  let wind = null;
+  let wind = null, rainLoop = null;
   function ensure() {
     if (ctx) { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); return true; }
     try {
@@ -6129,6 +6257,27 @@ const Sound = (() => {
       wind.g.gain.setTargetAtTime(Math.max(0, lvl), ctx.currentTime, 0.6);
       wind.f.frequency.setTargetAtTime(330 + 140 * Math.sin(time * 0.17), ctx.currentTime, 0.8);
     },
+    updateRain(level) {
+      if (!ok()) return;
+      if (!rainLoop) {
+        if (level <= 0) return;
+        const src = ctx.createBufferSource();
+        src.buffer = noiseBuf; src.loop = true;
+        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 0.4;
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200;
+        const g = ctx.createGain(); g.gain.value = 0;
+        src.connect(f); f.connect(lp); lp.connect(g); g.connect(master);
+        src.start();
+        rainLoop = { src, g };
+      }
+      rainLoop.g.gain.setTargetAtTime(CONFIG.weather.rainVolume * level, ctx.currentTime, 0.5);
+    },
+    thunder(delay) {
+      if (!ok()) return;
+      noise({ type: 'lowpass', freq: 180, sweep: 60, q: 0.7, dur: 2.8, gain: 0.5, attack: 0.08, delay });
+      noise({ type: 'lowpass', freq: 420, sweep: 90, q: 0.5, dur: 1.4, gain: 0.25, attack: 0.02, delay: delay + 0.05 });
+      if (delay < 0.6) noise({ type: 'highpass', freq: 1800, dur: 0.25, gain: 0.22, delay });
+    },
     hurt() { if (!ok()) return; tone({ freq: 240, sweep: 110, dur: 0.18, gain: 0.22 }); noise({ type: 'lowpass', freq: 900, dur: 0.12, gain: 0.22 }); },
     eat() { if (!ok()) return; noise({ freq: jit(1500, 0.2), q: 1.6, dur: 0.06, gain: 0.16 }); noise({ freq: jit(700, 0.2), q: 1, dur: 0.05, gain: 0.12, delay: 0.05 }); },
     pickup() { if (!ok()) return; tone({ wave: 'sine', freq: jit(820, 0.12), sweep: 1300, dur: 0.07, gain: 0.07 }); },
@@ -6154,7 +6303,7 @@ const Sound = (() => {
     thorn(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 2400, sweep: 900, dur: 0.12, gain: 0.14 * v }); tone({ wave: 'sine', freq: 700, sweep: 300, dur: 0.08, gain: 0.05 * v }); },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
     death() { if (!ok()) return; tone({ freq: 330, sweep: 70, dur: 0.9, gain: 0.25 }); noise({ type: 'lowpass', freq: 500, dur: 0.5, gain: 0.15 }); },
-    silenceWind() { if (wind && ctx) wind.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); },
+    silenceWind() { if (wind && ctx) wind.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); if (rainLoop && ctx) rainLoop.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); },
   };
 })();
 
@@ -6362,6 +6511,7 @@ async function quitToTitle() {
   furnaces = new Map();
   chests = new Map();
   sleep = null;
+  Weather.reset();
   if (world) { world.dispose(); world = null; }
   if (clouds) { clouds.dispose(); clouds = null; }
   Sound.silenceWind();
@@ -6934,6 +7084,7 @@ function beginLoading(meta, edits, fresh) {
     chests.set(k, c);
   }
   sleep = null;
+  Weather.load(meta.weather);
   clearItems();
   for (const it of meta.items || []) {
     const s = stackFromJSON(it);
@@ -7008,6 +7159,7 @@ function saveNow() {
     if (id >= 0 && id !== BLOCK.chest) chests.delete(k);
   }
   meta.chests = [...chests].map(([k, c]) => [k, c.slots.map(stackToJSON)]);
+  meta.weather = Weather.save();
   meta.items = items.slice(-CONFIG.survival.maxSavedItems).map(e => [e.stack.id, e.stack.count, e.stack.dur || 0, e.pos.x, e.pos.y, e.pos.z, e.age]);
   const dirty = [...w.dirtyEdits];
   w.dirtyEdits.clear();
@@ -7051,8 +7203,9 @@ function updateCamera(alpha, dt) {
 let underwater = false;
 const _uw = new THREE.Color();
 function updateEnvironment(dt) {
-  const sky = Sky.update(worldTime, camera.position);
-  U.uDaylight.value = sky.daylight;
+  const overcast = Weather.level;
+  const sky = Sky.update(worldTime, camera.position, overcast);
+  U.uDaylight.value = sky.daylight * (1 - CONFIG.weather.darken * overcast) + Weather.flash * 0.7;
   const ex = camera.position.x, ey = camera.position.y, ez = camera.position.z;
   const id = world.getBlock(Math.floor(ex), Math.floor(ey), Math.floor(ez));
   const fy = ey - Math.floor(ey);
@@ -7068,14 +7221,19 @@ function updateEnvironment(dt) {
     U.uFogColor.value.copy(sky.horizon);
     renderer.setClearColor(sky.horizon, 1);
     applyRenderDistance(SETTINGS.renderDistance);
+    const fm = 1 - (1 - CONFIG.weather.fogMul) * overcast;
+    U.uFogNear.value *= fm * fm; U.uFogFar.value *= fm;
   }
-  clouds.update(player.pos.x, player.pos.z, dt, sky);
+  Weather.update(dt, camera.position, underwater);
+  clouds.update(player.pos.x, player.pos.z, dt, sky, overcast);
   if (clouds.mesh) clouds.mesh.visible = !underwater;
   // wind: stronger the more open sky there is around the player's head
   const l = world.getLight(Math.floor(ex), Math.floor(ey), Math.floor(ez));
   const skyL = l < 0 ? 0 : l >> 4;
   const exposure = underwater ? 0 : Math.max(0, (skyL - 11) / 4) * Math.min(1, 0.5 + Math.max(0, ey - SEA) / 40);
-  Sound.updateWind(exposure, performance.now() / 1000);
+  Sound.updateWind(exposure * (1 + overcast), performance.now() / 1000);
+  const shelter = underwater || skyL < 5 ? 0 : Math.max(0.3, (skyL - 7) / 8);      // muffled under a roof, silent deep inside
+  Sound.updateRain(Weather.precip === 'rain' ? Weather.level * shelter : 0);
 }
 
 // ---- debug overlay ----
@@ -7100,7 +7258,7 @@ function updateDebug() {
     'Block: ' + bx + ' ' + Math.floor(p.y) + ' ' + bz + '   Chunk: ' + Math.floor(p.x / CS) + ', ' + Math.floor(p.z / CS) + '\n' +
     'Facing: ' + f + '  yaw ' + deg(player.yaw) + '°  pitch ' + deg(player.pitch) + '°\n' +
     'Biome: ' + world.gen.biomeAt(bx, bz) + '   Light: sky ' + (l < 0 ? '?' : l >> 4) + ', block ' + (l < 0 ? '?' : l & 15) + '\n' +
-    'Time: ' + clockString(worldTime) + '  daylight ' + U.uDaylight.value.toFixed(2) + '\n' +
+    'Time: ' + clockString(worldTime) + '  daylight ' + U.uDaylight.value.toFixed(2) + '  weather: ' + Weather.kind + (Weather.storm ? ' (storm)' : '') + ' ' + Weather.level.toFixed(2) + ' ' + Weather.precip + '\n' +
     'Seed: ' + seedLabel + '   World: ' + (worldMeta ? worldMeta.name : '') + '\n' +
     'Chunks: ' + st.data + ' loaded, ' + st.lit + ' lit, ' + st.meshed + ' meshed  (render distance ' + SETTINGS.renderDistance + ')\n' +
     'Meshes: ' + st.meshes + '  sections drawn: ' + (world.visibleSections || 0) + '  draw calls: ' + renderer.info.render.calls + '  tris: ' + renderer.info.render.triangles + '\n' +
@@ -7233,7 +7391,7 @@ window.__BLOCKWILD = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   get items() { return items; }, get creatures() { return creatures; }, get projectiles() { return projectiles; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
-  Hand, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
+  Hand, Weather, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
 requestAnimationFrame(frame);
