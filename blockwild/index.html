@@ -690,6 +690,17 @@ const CONFIG = {
     maxSavedItems: 200,
   },
 
+  boats: {
+    maxSpeed: 8,              // on water
+    landSpeed: 1.2,           // dragged across land
+    thrust: 7,                // acceleration from rowing
+    turnRate: 2.2,            // radians per second
+    drag: 0.9,                // speed lost per second (fraction) when not rowing
+    draft: 0.06,              // how deep the hull sits below the water surface
+    hitsToBreak: 3,
+    max: 32,
+  },
+
   combat: {
     bowDrawSec: 1.0,          // full draw time
     arrowSpeedMin: 9, arrowSpeedMax: 34,
@@ -2103,6 +2114,7 @@ defItem('feather', 'Feather');
 defItem('flint', 'Flint');
 defItem('hide', 'Hide');
 defItem('arrow', 'Arrow');
+defItem('boat', 'Boat', { maxStack: 1, fuel: 20 });
 defItem('bow', 'Bow', { maxStack: 1, fuel: 10, tool: { type: 'bow', tier: 0, speed: 1, dur: 384, damage: 1, material: 'wood' } });
 for (const [mk, m] of Object.entries(TOOL_MATERIALS)) for (const [tk, t] of Object.entries(TOOL_TYPES)) {
   defItem(mk + '_' + tk, m.name + ' ' + t.name, {
@@ -2159,6 +2171,7 @@ const RECIPES = [
   { out: ['bedroll', 1], shape: ['WWW', 'PPP'], key: { W: 'wheat', P: 'planks' } },
   { out: ['arrow', 4], shape: ['F', 'S', 'E'], key: { F: 'flint', S: 'stick', E: 'feather' } },
   { out: ['ladder', 3], shape: ['S S', 'SSS', 'S S'], key: { S: 'stick' } },
+  { out: ['boat', 1], shape: ['P P', 'PPP'], key: { P: 'planks' } },
   { out: ['door', 1], shape: ['PP', 'PP', 'PP'], key: { P: 'planks' } },
   { out: ['bow', 1], shape: [' SR', 'S R', ' SR'], key: { S: 'stick', R: 'reeds' } },
 ];
@@ -3425,6 +3438,23 @@ Object.assign(PAINTERS, {
       P.set(x, y, 146, 104, 58); P.set(x + 1, y, 110, 76, 40);
     }
     for (let k = 1; k < 13; k++) P.set(13 - k, 1 + k + (k > 6 ? 0 : 0), 226, 226, 214);   // string
+  },
+  boat(P) {
+    plantClear(P, [150, 110, 64]);
+    P.each((x, y) => {
+      if (y >= 7 && y <= 12) {                                          // hull, wider at the top
+        const inset = (y - 7) * 0.6;
+        if (x < 1 + inset || x > 14 - inset) return null;
+        const v = 0.9 + P.rnd() * 0.1;
+        if (y === 7) return [196 * v, 150 * v, 92 * v];
+        if (y === 9) return [110 * v, 78 * v, 44 * v];
+        return [168 * v, 124 * v, 74 * v];
+      }
+      if ((x === 4 || x === 11) && y >= 3 && y < 7) return [124, 92, 54];   // oars
+      if ((x === 3 || x === 12) && y >= 2 && y <= 3) return [176, 136, 86];
+      if (y === 13 && x > 4 && x < 11) return [70, 110, 180];             // a hint of water
+      return null;
+    });
   },
   arrow_shaft(P) { P.each((x, y) => (y < 3 ? [70, 70, 76] : y > 12 ? [236, 232, 220] : [150 + P.rnd() * 14, 116, 70])); },
 });
@@ -6033,6 +6063,204 @@ function entitiesBlock(x, y, z) {
 }
 
 /* =====================================================================
+   BOATS — a rowboat entity that floats on water. Place one on water (or
+   land), use it to climb in, W/S to row, A/D to turn, sneak to step out;
+   three hits knock it loose as an item. Boats use the shared Body
+   collision, so they stop at shorelines.
+   ===================================================================== */
+const BOAT_PARTS = [
+  { id: 'bottom', box: [1.24, 0.1, 1.9], at: [0, 0.05, 0], off: [0, 0, 0], tex: { all: 'planks' } },
+  { id: 'left', box: [0.1, 0.42, 1.9], at: [-0.67, 0.25, 0], off: [0, 0, 0], tex: { all: 'planks' } },
+  { id: 'right', box: [0.1, 0.42, 1.9], at: [0.67, 0.25, 0], off: [0, 0, 0], tex: { all: 'planks' } },
+  { id: 'bow', box: [1.24, 0.42, 0.1], at: [0, 0.25, -0.95], off: [0, 0, 0], tex: { all: 'planks' } },
+  { id: 'stern', box: [1.24, 0.42, 0.1], at: [0, 0.25, 0.95], off: [0, 0, 0], tex: { all: 'planks' } },
+  { id: 'seat', box: [1.24, 0.07, 0.34], at: [0, 0.32, 0.2], off: [0, 0, 0], tex: { all: 'planks' } },
+  { id: 'oarl', role: 'oar', side: -1, box: [0.06, 0.06, 1.1], at: [-0.74, 0.42, 0.05], off: [0, 0, 0.1], tex: { all: 'log_side' } },
+  { id: 'oarr', role: 'oar', side: 1, box: [0.06, 0.06, 1.1], at: [0.74, 0.42, 0.05], off: [0, 0, 0.1], tex: { all: 'log_side' } },
+];
+class Boat extends Body {
+  constructor(x, y, z, yaw) {
+    super(0.66, 0.55);
+    this.pos.set(x, y, z); this.prev.copy(this.pos);
+    this.yaw = yaw || 0; this.prevYaw = this.yaw;
+    this.hits = 0; this.shake = 0; this.row = 0; this.rowAmp = 0; this.afloat = false; this.dist = 0;
+    this.light = sampleLight(x, y + 0.5, z); this.lightT = 0; this.tint = null;
+    this.root = new THREE.Group();
+    this.oars = [];
+    for (const part of BOAT_PARTS) {
+      const pivot = new THREE.Group();
+      pivot.position.set(part.at[0], part.at[1], part.at[2]);
+      pivot.add(entityMesh(partGeometry('boat', part), this));
+      if (part.role === 'oar') { pivot.rotation.z = -part.side * 0.5; this.oars.push({ pivot, part }); }
+      this.root.add(pivot);
+    }
+    scene.add(this.root);
+  }
+  // The water surface under the boat (y of the top of the highest water cell near the hull), or null.
+  surface() {
+    const x = Math.floor(this.pos.x), z = Math.floor(this.pos.z), y0 = Math.floor(this.pos.y + 0.3);
+    for (let y = y0; y >= y0 - 1; y--) {
+      const id = world.getBlock(x, y, z);
+      if (id === BLOCK.water || id === BLOCK.ice) return y + 1 - (id === BLOCK.water ? CONFIG.render.waterDrop : 0);
+    }
+    return null;
+  }
+  update(dt, ridden) {
+    const C = CONFIG.boats, p = this.pos;
+    if (!world.isMeshed(Math.floor(p.x), Math.floor(p.z))) return true;
+    this.prev.copy(p); this.prevYaw = this.yaw;
+    if (inLava(this)) { Particles.burst(p.x, p.y + 0.3, p.z, [255, 140, 40], 12, 2, 0.6); Sound.sizzle(1); return false; }
+    // rowing: forward / back along the bow, turning on the spot
+    let fwd = 0, turn = 0;
+    if (ridden) {
+      fwd = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0);
+      turn = (keys.KeyA ? 1 : 0) - (keys.KeyD ? 1 : 0);
+      if (touchMove.active && !fwd && !turn) { if (Math.abs(touchMove.fwd) > 0.25) fwd = touchMove.fwd; if (Math.abs(touchMove.str) > 0.25) turn = -touchMove.str; }
+    }
+    const surf = this.surface();
+    this.afloat = surf !== null && p.y < surf + 0.3;
+    this.yaw += turn * C.turnRate * dt;
+    const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw);
+    const top = this.afloat ? C.maxSpeed : C.landSpeed;
+    if (fwd) { this.vel.x += fx * fwd * C.thrust * dt; this.vel.z += fz * fwd * C.thrust * dt; }
+    // keep the motion mostly along the hull (boats don't slide sideways), then drag
+    const along = this.vel.x * fx + this.vel.z * fz, side = this.vel.x * fz - this.vel.z * fx;
+    const keepSide = Math.exp(-6 * dt), keep = Math.exp(-(fwd ? 0.2 : C.drag) * dt) * (this.afloat ? 1 : Math.exp(-4 * dt));
+    let a = along * keep;
+    if (Math.abs(a) > top) a = Math.sign(a) * top;
+    const sd = side * keepSide;
+    this.vel.x = fx * a + fz * sd; this.vel.z = fz * a - fx * sd;
+    if (this.afloat) {                                      // bob at the surface
+      const target = surf - C.draft + Math.sin(performance.now() / 700 + p.x) * 0.03;
+      this.vel.y += ((target - p.y) * 10 - this.vel.y) * Math.min(1, 6 * dt);
+    } else this.vel.y = Math.max(this.vel.y - CONFIG.player.gravity * dt, -CONFIG.player.terminalVelocity);
+    const before = p.clone();
+    this.move(this.vel.x * dt, this.vel.y * dt, this.vel.z * dt);
+    this.onGround = this.vel.y <= 0 && this.sweep(1, -0.02).hit;
+    this.unstick();
+    this.dist += Math.hypot(p.x - before.x, p.z - before.z);
+    this.row += Math.abs(a) * dt * 1.6 + (turn ? dt * 3 : 0);
+    this.rowAmp += (((fwd || turn) && ridden ? 1 : 0) - this.rowAmp) * Math.min(1, 6 * dt);
+    if (this.shake > 0) this.shake -= dt;
+    this.lightT -= dt;
+    if (this.lightT <= 0) { this.light = sampleLight(p.x, p.y + 0.6, p.z); this.lightT = 0.25; }
+    if (ridden && this.afloat && Math.abs(a) > 1.5 && Math.random() < dt * 2) Sound.paddle(Math.min(1, Math.abs(a) / C.maxSpeed));
+    if (p.y < -16) return false;
+    return true;
+  }
+  render(alpha) {
+    const p = this.pos, q = this.prev;
+    this.root.position.set(q.x + (p.x - q.x) * alpha, q.y + (p.y - q.y) * alpha, q.z + (p.z - q.z) * alpha);
+    this.root.rotation.y = this.prevYaw + wrapAngle(this.yaw - this.prevYaw) * alpha;
+    this.root.rotation.z = this.shake > 0 ? Math.sin(this.shake * 40) * 0.08 : 0;
+    for (const o of this.oars) {
+      const sw = Math.sin(this.row * 3) * this.rowAmp;
+      o.pivot.rotation.set(sw * 0.6, 0, -o.part.side * (0.5 + Math.max(0, Math.cos(this.row * 3)) * 0.25 * this.rowAmp));
+    }
+  }
+  dispose() { scene.remove(this.root); }
+}
+let boats = [], riding = null;
+function spawnBoat(x, y, z, yaw) {
+  if (boats.length >= CONFIG.boats.max) return null;
+  const b = new Boat(x, y, z, yaw);
+  boats.push(b);
+  return b;
+}
+function clearBoats() { for (const b of boats) b.dispose(); boats = []; riding = null; }
+function updateBoats(dt) {
+  for (let i = boats.length - 1; i >= 0; i--) {
+    const b = boats[i];
+    if (!b.update(dt, b === riding)) {
+      if (b === riding) dismount();
+      b.dispose(); boats.splice(i, 1);
+    }
+  }
+}
+// The boat under the crosshair within reach (and in front of any block), with its distance.
+function boatUnderCrosshair() {
+  _eye.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
+  player.lookDir(_dir);
+  let maxT = CONFIG.player.reach;
+  if (target) maxT = Math.min(maxT, target.t + 0.01);
+  let best = null, bestT = maxT;
+  for (const b of boats) {
+    if (b === riding) continue;
+    const t = rayBox(_eye, _dir, [b.pos.x - 0.75, b.pos.y - 0.05, b.pos.z - 0.75], [b.pos.x + 0.75, b.pos.y + 0.6, b.pos.z + 0.75], bestT);
+    if (t >= 0 && t < bestT) { bestT = t; best = b; }
+  }
+  return best ? { boat: best, t: bestT } : null;
+}
+// Put a boat down: on the first water surface along the view, else on top of the targeted block.
+function placeBoat() {
+  const s = heldStack();
+  if (!s || s.id !== ITEM.boat) return false;
+  _eye.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
+  player.lookDir(_dir);
+  let spot = null;
+  for (let t = 0.5; t <= CONFIG.player.reach; t += 0.1) {
+    const x = _eye.x + _dir.x * t, y = _eye.y + _dir.y * t, z = _eye.z + _dir.z * t;
+    const id = world.getBlock(Math.floor(x), Math.floor(y), Math.floor(z));
+    if (id === BLOCK.water || id === BLOCK.ice) { spot = [x, Math.floor(y) + 1 - CONFIG.boats.draft, z]; break; }
+    if (id > 0 && B_SOLID[id]) break;
+  }
+  if (!spot && target && target.ny === 1) spot = [target.x + 0.5, target.y + 1, target.z + 0.5];
+  if (!spot) return false;
+  const b = spawnBoat(spot[0], spot[1], spot[2], player.yaw);
+  if (!b) return false;
+  if (b.boxOverlapsBlocks(b.pos.y)) { b.dispose(); boats.pop(); return false; }
+  Sound.place('wood');
+  Hand.swing();
+  if (isSurvival()) { inv.take(selected, 1); renderHotbar(); }
+  return true;
+}
+function mount(b) {
+  riding = b;
+  player.flying = false; player.vel.set(0, 0, 0); player.fallPeak = null;
+  syncRider();
+  player.prev.copy(player.pos);
+  Sound.place('wood');
+  showBlockName('W/S row · A/D turn · Sneak to step out');
+}
+// Step out beside the boat (onto land if there is any), or on top of it.
+function dismount() {
+  const b = riding;
+  riding = null;
+  if (!b) return;
+  const tries = [[1.3, 0], [-1.3, 0], [0, 1.6], [0, -1.6]];
+  const sx = Math.cos(b.yaw), sz = -Math.sin(b.yaw), fx = -Math.sin(b.yaw), fz = -Math.cos(b.yaw);
+  for (const [side, fore] of tries) {
+    const x = b.pos.x + sx * side + fx * fore, z = b.pos.z + sz * side + fz * fore;
+    for (const dy of [0.6, 1.6]) {
+      player.pos.set(x, Math.floor(b.pos.y + dy), z);
+      if (!player.boxOverlapsBlocks(player.pos.y) && B_SOLID[world.getBlock(Math.floor(x), Math.floor(player.pos.y) - 1, Math.floor(z))]) { player.prev.copy(player.pos); player.vel.set(0, 0, 0); return; }
+    }
+  }
+  player.pos.set(b.pos.x, b.pos.y + 0.6, b.pos.z);
+  player.prev.copy(player.pos); player.vel.set(0, 0.5, 0);
+  player.unstick();
+}
+// The rider sits in the boat: feet low in the hull, moving with it.
+function syncRider() {
+  const b = riding;
+  player.pos.set(b.pos.x, b.pos.y - 0.25, b.pos.z);
+  player.vel.copy(b.vel);
+  player.onGround = true; player.inWater = false; player.eyeInWater = false; player.fallPeak = null;
+  player.sneaking = false; player.sprinting = false; player.bob = 0;
+}
+// A hit on a boat: three knock it loose (as an item in survival).
+function hitBoat(b) {
+  b.hits++; b.shake = 0.3;
+  Sound.dig('wood');
+  Particles.burst(b.pos.x, b.pos.y + 0.4, b.pos.z, TEX_AVG[TEXL.planks], 6, 2, 0.6);
+  if (b.hits < CONFIG.boats.hitsToBreak && isSurvival()) return;
+  if (b === riding) dismount();
+  boats.splice(boats.indexOf(b), 1);
+  b.dispose();
+  if (isSurvival()) spawnItem(newStack(ITEM.boat, 1), b.pos.x, b.pos.y + 0.5, b.pos.z);
+}
+
+/* =====================================================================
    FIRST-PERSON HAND — the arm and the held item, drawn in their own small
    scene after the world (so they never clip into blocks). Blocks are held
    as small cubes; flat items are extruded into 3D from their pixel art.
@@ -6225,6 +6453,7 @@ function hurt(amount, cause, src, armored) {
 }
 function die(cause) {
   if (state === 'craft') closeCraft(true);
+  if (riding) dismount();
   surv.dead = true;
   surv.cause = cause;
   Sound.death();
@@ -6493,6 +6722,7 @@ window.addEventListener('keydown', (e) => {
       }
     }
     keys[code] = true;
+    if ((code === 'ShiftLeft' || code === 'ShiftRight') && !e.repeat && riding) dismount();
     if (code.startsWith('Digit') && code !== 'Digit0') selectSlot(+code.slice(5) - 1);
     else if (code === 'KeyE' && !e.repeat) openInventory();
     else if (code === 'KeyQ' && !e.repeat) dropHeld();
@@ -6539,15 +6769,20 @@ function pressButton(b) {
   if (b === 0) {
     Hand.swing();
     if (hitEntity()) { held[0] = false; return; }       // creatures in reach take the hit instead of blocks
+    const bh = boatUnderCrosshair();
+    if (bh) { hitBoat(bh.boat); held[0] = false; return; }
     held[0] = true;
     if (!isSurvival()) { doBreak(); nextRepeat[0] = performance.now() + CONFIG.player.actionRepeatMs; }
     return;
   }
   if (b === 2) {
     held[2] = true;
+    const bh = riding ? null : boatUnderCrosshair();
+    if (bh) { mount(bh.boat); held[2] = false; return; }
     if (tryUse()) { held[2] = false; return; }
     if (canEat()) return;                              // eating happens while held (tick)
     if (equipHeld()) { held[2] = false; return; }
+    if (placeBoat()) { held[2] = false; return; }
     doPlace();
     nextRepeat[2] = performance.now() + CONFIG.player.actionRepeatMs;
   }
@@ -6569,9 +6804,9 @@ window.addEventListener('mouseup', (e) => {
   if (e.button === 0 || e.button === 2) held[e.button] = false;
   if (dragMode && drag && state === 'playing') {
     if (drag.moved < CONFIG.input.dragClickPx) {
-      if (drag.button === 0) { if (!hitEntity() && !isSurvival()) doBreak(); }
+      if (drag.button === 0) { if (!hitEntity()) { const bh = boatUnderCrosshair(); if (bh) hitBoat(bh.boat); else if (!isSurvival()) doBreak(); } }
       else if (drag.button === 1) doPick();
-      else if (drag.button === 2) { if (!tryUse() && !canEat()) doPlace(); }
+      else if (drag.button === 2) { pressButton(2); held[2] = false; }
     }
     drag = null;
   }
@@ -6842,6 +7077,7 @@ const Sound = (() => {
     arrowHit() { if (!ok()) return; tone({ wave: 'sine', freq: 980, sweep: 1400, dur: 0.06, gain: 0.08 }); },
     thorn(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 2400, sweep: 900, dur: 0.12, gain: 0.14 * v }); tone({ wave: 'sine', freq: 700, sweep: 300, dur: 0.08, gain: 0.05 * v }); },
     sizzle(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 3000, dur: 0.35, gain: 0.12 * v, attack: 0.01 }); },
+    paddle(v) { if (!ok()) return; noise({ type: 'lowpass', freq: 1400, sweep: 400, q: 0.8, dur: 0.25, gain: 0.08 + 0.08 * v, attack: 0.03 }); },
     door(open) { if (!ok()) return; tone({ wave: 'triangle', freq: open ? 160 : 200, sweep: open ? 230 : 110, dur: 0.25, gain: 0.12, attack: 0.02 }); noise({ type: 'lowpass', freq: 600, dur: 0.1, gain: 0.15, delay: open ? 0.15 : 0.02 }); },
     equip() { if (!ok()) return; noise({ freq: 1800, q: 2, dur: 0.08, gain: 0.12 }); tone({ wave: 'triangle', freq: 520, sweep: 700, dur: 0.1, gain: 0.08, delay: 0.04 }); },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
@@ -7057,6 +7293,7 @@ async function quitToTitle() {
   furnaces = new Map();
   chests = new Map();
   sleep = null;
+  clearBoats();
   Weather.reset();
   if (world) { world.dispose(); world = null; }
   if (clouds) { clouds.dispose(); clouds = null; }
@@ -7656,6 +7893,8 @@ function beginLoading(meta, edits, fresh) {
   }
   sleep = null;
   Weather.load(meta.weather);
+  clearBoats();
+  for (const b of meta.boats || []) if (Array.isArray(b) && b.every(Number.isFinite)) spawnBoat(b[0], b[1], b[2], b[3]);
   clearItems();
   for (const it of meta.items || []) {
     const s = stackFromJSON(it);
@@ -7732,6 +7971,7 @@ function saveNow() {
   }
   meta.chests = [...chests].map(([k, c]) => [k, c.slots.map(stackToJSON)]);
   meta.weather = Weather.save();
+  meta.boats = boats.map(b => [+b.pos.x.toFixed(3), +b.pos.y.toFixed(3), +b.pos.z.toFixed(3), +b.yaw.toFixed(3)]);
   meta.items = items.slice(-CONFIG.survival.maxSavedItems).map(e => [e.stack.id, e.stack.count, e.stack.dur || 0, e.pos.x, e.pos.y, e.pos.z, e.age]);
   const dirty = [...w.dirtyEdits];
   w.dirtyEdits.clear();
@@ -7845,7 +8085,7 @@ function updateDebug() {
     'Mode: ' + player.mode + '  flying: ' + (player.flying ? 'yes' : 'no') + '  ground: ' + (player.onGround ? 'yes' : 'no') + '  water: ' + (player.inWater ? 'yes' : 'no') + '\n' +
     (isSurvival() ? 'Health ' + surv.health.toFixed(1) + '  hunger ' + surv.hunger.toFixed(1) + '  saturation ' + surv.sat.toFixed(1) + '  air ' + surv.air.toFixed(1) + '\n' : '') +
     'Creatures: ' + creatureCount(false) + ' passive, ' + creatureCount(true) + ' hostile  (' + creatures.map(c => c.T.name[0] + ':' + c.state[0]).join(' ') + ')\n' +
-    'Items on ground: ' + items.length + '  furnaces: ' + furnaces.size + (mining ? '  mining ' + Math.round(mining.t / mining.total * 100) + '%' : '') + '\n' +
+    'Items on ground: ' + items.length + '  boats: ' + boats.length + (riding ? ' (riding)' : '') + '  furnaces: ' + furnaces.size + (mining ? '  mining ' + Math.round(mining.t / mining.total * 100) + '%' : '') + '\n' +
     'Target: ' + t;
 }
 
@@ -7860,14 +8100,18 @@ function tick(dt) {
   world.updateFalling(dt);
   tickFurnaces(dt);
   updateItems(dt);
-  if (player) { updateCreatures(dt); updateProjectiles(dt); }
+  if (player) { updateCreatures(dt); updateProjectiles(dt); updateBoats(dt); }
   if (surv.dead) return;
   // freeze physics until the player's own chunk exists (never fall into unloaded terrain)
   if (!world.isMeshed(Math.floor(player.pos.x), Math.floor(player.pos.z))) { player.prev.copy(player.pos); player.vel.set(0, 0, 0); return; }
   randomTicks(dt);
   const vyBefore = player.vel.y;
   if (sleep) { player.prev.copy(player.pos); player.vel.set(0, 0, 0); updateSleep(dt); return; }
-  player.update(dt);
+  if (riding) {
+    player.prev.copy(player.pos);
+    syncRider();
+    if (riding.dist > 50) Achieve.unlock('sail');
+  } else player.update(dt);
   tickSurvival(dt);
   updateMining(dt);
   updateEating(dt);
@@ -7918,6 +8162,7 @@ function frame(now) {
   updateCamera(alpha, dt);
   for (const e of items) e.render(alpha);
   for (const c of creatures) c.render(alpha);
+  for (const b of boats) b.render(alpha);
   Particles.update(running ? dt : 0);
   updateEnvironment(running ? dt : 0);
   updateTarget();
@@ -7999,7 +8244,10 @@ const Touch = (() => {
       lastJump = -1e9;
     } else lastJump = now;
   }, () => { keys.Space = false; });
-  btn('tSneak', () => { keys.ShiftLeft = !keys.ShiftLeft; $('tSneak').classList.toggle('on', !!keys.ShiftLeft); });
+  btn('tSneak', () => {
+    if (riding) { dismount(); return; }                   // in a boat, sneak steps out
+    keys.ShiftLeft = !keys.ShiftLeft; $('tSneak').classList.toggle('on', !!keys.ShiftLeft);
+  });
   btn('tHit', () => pressButton(0), () => { held[0] = false; });
   btn('tUse', () => pressButton(2), () => { held[2] = false; });
   btn('tInv', () => { release(); openInventory(); });
@@ -8153,6 +8401,7 @@ const ACHIEVEMENTS = [
   ['sniper', 'Sharpshooter', 'Hit a creature with an arrow from 20 blocks away', 'bow'],
   ['armored', 'Suited Up', 'Wear a full set of armor', 'iron_chestplate'],
   ['depths', 'Into the Depths', 'Descend below y = 16', 'lava'],
+  ['sail', 'Set Sail', 'Row a boat 50 blocks', 'boat'],
 ];
 const Achieve = (() => {
   const box = $('toasts');
@@ -8226,7 +8475,7 @@ window.__BLOCKWILD = {
   get items() { return items; }, get creatures() { return creatures; }, get projectiles() { return projectiles; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
   get bowCharge() { return bowCharge; }, fireArrow,
-  Achieve, ACHIEVEMENTS, Compass,
+  Achieve, ACHIEVEMENTS, Compass, get boats() { return boats; }, get riding() { return riding; }, spawnBoat, mount, dismount, placeBoat,
   Hand, Weather, Touch, get touchMode() { return touchMode; }, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
