@@ -733,6 +733,8 @@ const CONFIG = {
     swimAccel: 14,
     waterExitBoost: 6.2,
     reach: 5,
+    climbSpeed: 3.2,      // up a ladder
+    climbSlide: 2.0,      // down a ladder when not holding on
     actionRepeatMs: 250,
     doubleTapMs: 300,
     flyTakeoff: 4,        // upward kick when flight is toggled on
@@ -911,12 +913,13 @@ function BlockwildShared(C) {
     'workbench_top', 'workbench_side', 'furnace_top', 'furnace_front', 'furnace_front_lit',
     'chest_top', 'chest_side', 'farmland', 'crop_0', 'crop_1', 'crop_2', 'crop_3', 'quilt', 'quilt_side', 'pillow',
     'mud', 'reeds', 'willow_leaves', 'amber_log_side', 'amber_log_top', 'amber_leaves', 'mossy_cobble',
+    'ladder', 'door_lower', 'door_upper',
   ];
   const TEX = {};
   TEXTURES.forEach((n, i) => { TEX[n] = i; });
 
-  const SHAPE_NONE = 0, SHAPE_CUBE = 1, SHAPE_LIQUID = 2, SHAPE_CROSS = 3, SHAPE_TORCH = 4, SHAPE_CACTUS = 5, SHAPE_BEDROLL = 6;
-  const SHAPE_IDS = { none: SHAPE_NONE, cube: SHAPE_CUBE, liquid: SHAPE_LIQUID, cross: SHAPE_CROSS, torch: SHAPE_TORCH, cactus: SHAPE_CACTUS, bedroll: SHAPE_BEDROLL };
+  const SHAPE_NONE = 0, SHAPE_CUBE = 1, SHAPE_LIQUID = 2, SHAPE_CROSS = 3, SHAPE_TORCH = 4, SHAPE_CACTUS = 5, SHAPE_BEDROLL = 6, SHAPE_PANEL = 7;
+  const SHAPE_IDS = { none: SHAPE_NONE, cube: SHAPE_CUBE, liquid: SHAPE_LIQUID, cross: SHAPE_CROSS, torch: SHAPE_TORCH, cactus: SHAPE_CACTUS, bedroll: SHAPE_BEDROLL, panel: SHAPE_PANEL };
   const PASS_OPAQUE = 0, PASS_CUTOUT = 1, PASS_WATER = 2;
 
   // tex: one name for all faces, or [top, side, bottom].
@@ -936,6 +939,7 @@ function BlockwildShared(C) {
     cullSame: false, ao: null, creative: true, falls: false, color: null,
     soil: null, attach: null, torch: 0, replaceable: false, pickAs: null,
     minTier: 0, dropCount: null, dropChance: 1, use: null, extra: null, facing: 0, icon: null, grows: null, alt: null,
+    panel: 0, door: null, climb: false,
   }, props || {});
   const CROP = { solid: false, transparent: true, shape: 'cross', hardness: 0, sound: 'grass', attach: [0, -1, 0], soil: ['farmland'], drop: 'seeds', creative: false, pickAs: 'seeds' };
   const BEDROLL = { solid: false, transparent: true, shape: 'bedroll', hardness: 0.2, sound: 'cloth', attach: [0, -1, 0], drop: 'bedroll', use: 'bed', icon: 'bedroll_icon' };
@@ -1004,6 +1008,25 @@ function BlockwildShared(C) {
     D(58, 'amber_leaves', 'Amber Leaves', 'amber_leaves', { transparent: true, filter: 1, hardness: 0.2, drop: 'stick', dropChance: 0.08, sound: 'grass', ao: true }),
     D(59, 'mossy_cobble', 'Mossy Cobblestone', 'mossy_cobble', { hardness: 2.0, tool: 'pickaxe', minTier: 1 }),
   ];
+  // Ladders (60-63): a thin panel against the wall in direction `facing` (0 -Z, 1 +X, 2 +Z, 3 -X).
+  const WALL_OFF = [[0, 0, -1], [1, 0, 0], [0, 0, 1], [-1, 0, 0]];
+  ['ladder', 'ladder_e', 'ladder_s', 'ladder_w'].forEach((key, f) => BLOCKS.push(D(60 + f, key, 'Ladder', 'ladder', {
+    solid: false, transparent: true, shape: 'panel', panel: 1, facing: f, attach: WALL_OFF[f], hardness: 0.4, tool: 'axe', sound: 'wood',
+    drop: 'ladder', creative: f === 0, pickAs: f ? 'ladder' : null, icon: 'ladder', climb: true,
+  })));
+  // Doors (64-79): id = 64 + half * 8 + open * 4 + facing. Closed, the 3/16-thick panel lies on edge `facing`;
+  // open, it swings to the next edge. Closed doors are solid, open ones are not.
+  const DOOR_LOWERS = [];
+  for (let half = 0; half < 2; half++) for (let open = 0; open < 2; open++) for (let f = 0; f < 4; f++) {
+    const id = 64 + half * 8 + open * 4 + f;
+    const key = id === 64 ? 'door' : 'door_' + (half ? 'u' : 'l') + (open ? 'o' : 'c') + f;
+    if (!half) DOOR_LOWERS.push(key);
+    BLOCKS.push(D(id, key, 'Door', half ? 'door_upper' : 'door_lower', {
+      solid: !open, transparent: true, shape: 'panel', panel: 3, facing: open ? (f + 1) % 4 : f, door: { half, open, f },
+      attach: [0, -1, 0], soil: half ? DOOR_LOWERS : null, hardness: 2.0, tool: 'axe', sound: 'wood', use: 'door',
+      drop: half ? null : 'door', creative: id === 64, pickAs: id === 64 ? null : 'door', icon: 'door_icon',
+    }));
+  }
   const BLOCK = {};
   BLOCKS.forEach(b => { BLOCK[b.key] = b.id; });
 
@@ -1012,7 +1035,7 @@ function BlockwildShared(C) {
   const B_TRANSPARENT = new Uint8Array(256), B_CULLSAME = new Uint8Array(256), B_OCC = new Uint8Array(256);
   const B_SHAPE = new Uint8Array(256), B_PASS = new Uint8Array(256), B_LIGHT = new Uint8Array(256);
   const B_FILTER = new Uint8Array(256), B_FALLS = new Uint8Array(256), B_TORCH = new Uint8Array(256);
-  const B_REPLACEABLE = new Uint8Array(256), B_FACING = new Uint8Array(256);
+  const B_REPLACEABLE = new Uint8Array(256), B_FACING = new Uint8Array(256), B_PANEL = new Uint8Array(256);
   const B_TEX = new Uint16Array(256 * 6);
   const B_TARGET = new Uint8Array(256);   // can the crosshair ray stop on it?
   for (const b of BLOCKS) {
@@ -1032,6 +1055,7 @@ function BlockwildShared(C) {
     B_TORCH[i] = b.torch;
     B_REPLACEABLE[i] = b.replaceable ? 1 : 0;
     B_FACING[i] = b.facing;
+    B_PANEL[i] = b.panel;
     B_TARGET[i] = (shape !== SHAPE_NONE && !b.liquid) ? 1 : 0;
     if (b.tex) {
       const t = Array.isArray(b.tex) ? b.tex : [b.tex, b.tex, b.tex];
@@ -1822,6 +1846,14 @@ function BlockwildShared(C) {
     emitBox(B, l, x, y, z, p0, p1, pillow, pillow, pillow, true);
   }
 
+  // Panel: a slab of B_PANEL/16 thickness against edge `facing` (ladders, doors).
+  function emitPanel(B, pad, lpad, pi, x, y, z, id) {
+    const t = B_PANEL[id] / 16, f = B_FACING[id], tex = B_TEX[id * 6 + 4];
+    const b0 = [0, 0, 0], b1 = [1, 1, 1];
+    if (f === 0) b1[2] = t; else if (f === 1) b0[0] = 1 - t; else if (f === 2) b0[2] = 1 - t; else b1[0] = t;
+    emitBox(B, cellLight(lpad, pi), x, y, z, b0, b1, tex, tex, tex, false);
+  }
+
   function emitBlock(pad, lpad, pi, x, y, z, id) {
     const shape = B_SHAPE[id];
     const B = BUILDERS[B_PASS[id]];
@@ -1831,6 +1863,7 @@ function BlockwildShared(C) {
     else if (shape === SHAPE_TORCH) emitTorch(B, pad, lpad, pi, x, y, z, id);
     else if (shape === SHAPE_CACTUS) emitCactus(B, pad, lpad, pi, x, y, z, id);
     else if (shape === SHAPE_BEDROLL) emitBedroll(B, pad, lpad, pi, x, y, z, id);
+    else if (shape === SHAPE_PANEL) emitPanel(B, pad, lpad, pi, x, y, z, id);
   }
 
   /* Section visibility: which pairs of the 6 section faces are joined by a path of
@@ -2037,7 +2070,7 @@ for (const [mk, m] of Object.entries(ARMOR_MATERIALS)) ARMOR_PIECES.forEach((pk,
 });
 const durMax = (id) => { const it = ITEMS[id]; return it && (it.tool || it.armor) ? (it.tool || it.armor).dur : 0; };
 // burn time in seconds for block items
-for (const [k, v] of Object.entries({ log: 15, pine_log: 15, amber_log: 15, planks: 15, workbench: 15, chest: 15 })) ITEMS[ITEM[k]].fuel = v;
+for (const [k, v] of Object.entries({ log: 15, pine_log: 15, amber_log: 15, planks: 15, workbench: 15, chest: 15, ladder: 5, door: 10 })) ITEMS[ITEM[k]].fuel = v;
 
 const SMELTING = { iron_ore: 'iron_ingot', gold_ore: 'gold_ingot', sand: 'glass', cobblestone: 'stone', raw_meat: 'cooked_meat', mud: 'bricks' };
 const SMELT = {};
@@ -2072,6 +2105,8 @@ const RECIPES = [
   { out: ['bread', 1], shape: ['WWW'], key: { W: 'wheat' } },
   { out: ['bedroll', 1], shape: ['WWW', 'PPP'], key: { W: 'wheat', P: 'planks' } },
   { out: ['arrow', 4], shape: ['F', 'S', 'E'], key: { F: 'flint', S: 'stick', E: 'feather' } },
+  { out: ['ladder', 3], shape: ['S S', 'SSS', 'S S'], key: { S: 'stick' } },
+  { out: ['door', 1], shape: ['PP', 'PP', 'PP'], key: { P: 'planks' } },
   { out: ['bow', 1], shape: [' SR', 'S R', ' SR'], key: { S: 'stick', R: 'reeds' } },
 ];
 for (const [mk, m] of Object.entries(ARMOR_MATERIALS)) {
@@ -3234,6 +3269,54 @@ for (const [mk, m] of Object.entries(ARMOR_MATERIALS)) for (const pk of ARMOR_PI
     P.each((x, y) => { const c = P.get(x, y); return c[3] > 0 && (x + y) % 7 === 0 ? [Math.min(255, c[0] * 1.15), Math.min(255, c[1] * 1.15), Math.min(255, c[2] * 1.15), 255] : null; });   // glints
   };
 }
+// ---- Milestone 6 block textures: ladder and door ----
+Object.assign(PAINTERS, {
+  ladder(P) {
+    plantClear(P, [130, 94, 54]);
+    P.each((x, y) => {
+      const v = 0.88 + P.rnd() * 0.14;
+      if (x === 2 || x === 3 || x === 12 || x === 13) return [(x === 3 || x === 13 ? 112 : 140) * v, (x === 3 || x === 13 ? 80 : 102) * v, 52 * v, 255];   // rails
+      if (y % 4 === 1 && x > 3 && x < 12) return [150 * v, 112 * v, 62 * v, 255];                     // rungs
+      if (y % 4 === 2 && x > 3 && x < 12) return [96 * v, 68 * v, 38 * v, 255];
+      return null;
+    });
+  },
+  door_lower(P) {
+    PAINTERS.planks(P);
+    P.each((x, y) => {
+      const c = P.get(x, y);
+      if (x === 0 || x === 15 || y === 15) return [c[0] * 0.62, c[1] * 0.58, c[2] * 0.54];          // frame
+      if ((x === 3 || x === 12) && y > 1 && y < 13) return [c[0] * 0.8, c[1] * 0.76, c[2] * 0.72];   // inset panel
+      if (x === 12 && y === 2) return [196, 180, 120];                                               // handle
+      if (x === 11 && y === 2) return [120, 104, 70];
+      return null;
+    });
+  },
+  door_upper(P) {
+    PAINTERS.planks(P);
+    P.each((x, y) => {
+      const c = P.get(x, y);
+      if (x === 0 || x === 15 || y === 0) return [c[0] * 0.62, c[1] * 0.58, c[2] * 0.54];
+      if (x >= 3 && x <= 12 && y >= 3 && y <= 10) {                                                 // window with a cross bar
+        if (x === 7 || x === 8 || y === 6 || y === 7) return [c[0] * 0.7, c[1] * 0.66, c[2] * 0.6];
+        return [190, 220, 230, 0];
+      }
+      if (x === 2 || x === 13 || y === 2 || y === 11) return [c[0] * 0.75, c[1] * 0.7, c[2] * 0.66];
+      return null;
+    });
+  },
+  door_icon(P) {
+    plantClear(P, [176, 136, 86]);
+    P.each((x, y) => {
+      if (x < 4 || x > 11) return null;
+      const edge = x === 4 || x === 11 || y === 0 || y === 15;
+      if (y >= 2 && y <= 6 && x >= 6 && x <= 9) return (x === 7 || y === 4) ? [120, 88, 52] : [170, 210, 226];
+      if (x === 10 && y === 9) return [214, 196, 130];
+      const v = 0.9 + P.rnd() * 0.1;
+      return edge ? [110 * v, 80 * v, 48 * v] : [176 * v, 136 * v, 86 * v];
+    });
+  },
+});
 // ---- Milestone 6 item textures: feather, flint, hide, arrow, bow ----
 Object.assign(PAINTERS, {
   feather(P) {
@@ -3306,7 +3389,7 @@ const ALL_TEXTURES = SH.TEXTURES.concat(
   [...new Set(ITEMS.filter(it => it && it.id >= 256).map(it => it.tex))],
   Array.from({ length: 10 }, (_, i) => 'crack' + i),
   CREATURE_TEXTURES,
-  ['bedroll_icon', 'arm_skin', 'arm_sleeve', 'arrow_shaft']);
+  ['bedroll_icon', 'arm_skin', 'arm_sleeve', 'arrow_shaft', 'door_icon']);
 const TEXL = {};
 ALL_TEXTURES.forEach((n, i) => { TEXL[n] = i; });
 
@@ -4693,11 +4776,23 @@ class Player extends Body {
       if (jump && this.onGround) { this.vel.y = Math.sqrt(2 * P.gravity * P.jumpHeight); this.onGround = false; this.jumped = true; }
     }
 
+    // ladders: push toward it (or jump) to climb, sneak to hold on, otherwise slide down slowly
+    this.onLadder = false;
+    if (!this.flying) {
+      const lp = this.pos, lx = Math.floor(lp.x), lz = Math.floor(lp.z);
+      for (const ly of [Math.floor(lp.y + 0.05), Math.floor(lp.y + 1)]) { const id = world.getBlock(lx, ly, lz); if (id > 0 && BLOCKS[id].climb) this.onLadder = true; }
+    }
+    if (this.onLadder) {
+      if (fwd > 0 || jump) this.vel.y = P.climbSpeed;
+      else if (this.sneaking) this.vel.y = 0;
+      else this.vel.y = Math.max(this.vel.y, -P.climbSlide);
+      this.fallPeak = null;
+    }
     const wasGround = this.onGround;
     this.move(this.vel.x * dt, this.vel.y * dt, this.vel.z * dt);
     this.onGround = this.vel.y <= 0 && this.sweep(1, -0.02).hit;
     // fall tracking: highest point since leaving the ground; water and flight cancel the fall
-    if (this.inWater || this.flying || this.liquidAt(this.pos.x, this.pos.y + 0.1, this.pos.z)) this.fallPeak = null;
+    if (this.inWater || this.flying || this.onLadder || this.liquidAt(this.pos.x, this.pos.y + 0.1, this.pos.z)) this.fallPeak = null;
     else if (this.onGround) {
       if (!wasGround && this.fallPeak !== null && this.onLand) this.onLand(this.fallPeak - this.pos.y);
       this.fallPeak = null;
@@ -4797,8 +4892,12 @@ function dropFurnaceContents(x, y, z) {
 }
 // Break a block as the player: sound, drops (survival), tool wear.
 function breakBlock(x, y, z) {
-  const id = world.getBlock(x, y, z);
+  let id = world.getBlock(x, y, z);
   if (id <= 0) return false;
+  if (BLOCKS[id].door && BLOCKS[id].door.half === 1) {              // the top of a door breaks the whole door
+    const below = world.getBlock(x, y - 1, z);
+    if (below > 0 && BLOCKS[below].door) { y--; id = below; }
+  }
   const d = BLOCKS[id];
   if (d.hardness < 0) return false;                     // bedrock & co. are unbreakable
   const stack = heldStack();
@@ -4874,7 +4973,26 @@ function doPlace() {
   const cur = world.getBlock(x, y, z);
   if (cur < 0 || (cur !== 0 && !SH.B_REPLACEABLE[cur])) return false;   // only into air, liquid or tall grass
   const def = BLOCKS[id];
-  if (def.torch) {                                                 // torches: on tops and sides of solid blocks
+  if (def.climb) {                                                 // ladders: on the side of a solid block
+    if (intoTarget || target.ny !== 0) return false;
+    const f = target.nz === 1 ? 0 : target.nx === -1 ? 1 : target.nz === -1 ? 2 : 3;
+    id = BLOCK[['ladder', 'ladder_e', 'ladder_s', 'ladder_w'][f]];
+    const a = BLOCKS[id].attach;
+    if (!B_OPAQUE[world.getBlock(x + a[0], y + a[1], z + a[2])]) return false;
+  } else if (def.door) {                                           // doors: two cells tall on solid ground
+    const up = world.getBlock(x, y + 1, z);
+    if (y + 1 >= H || up < 0 || (up !== 0 && !SH.B_REPLACEABLE[up]) || !B_OPAQUE[world.getBlock(x, y - 1, z)]) return false;
+    if (player.intersectsBlock(x, y, z) || player.intersectsBlock(x, y + 1, z) || entitiesBlock(x, y, z) || entitiesBlock(x, y + 1, z)) return false;
+    const dx = -Math.sin(player.yaw), dz = -Math.cos(player.yaw);
+    const fc = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 0 : 2) : (dx > 0 ? 1 : 3);
+    if (!world.setBlock(x, y, z, 64 + fc)) return false;
+    world.setBlock(x, y + 1, z, 72 + fc);
+    Hand.swing();
+    Sound.place('wood');
+    if (isSurvival()) { inv.take(selected, 1); renderHotbar(); }
+    updateTarget();
+    return true;
+  } else if (def.torch) {                                          // torches: on tops and sides of solid blocks
     const key = intoTarget ? '0,1,0' : target.nx + ',' + target.ny + ',' + target.nz;
     const variant = TORCH_FOR_FACE[key];
     if (!variant) return false;
@@ -4934,7 +5052,24 @@ function tryUse() {
   }
   if (use === 'chest') { openCraft('chest', ensureChest(target.x, target.y, target.z)); return true; }
   if (use === 'bed') { useBed(target.x, target.y, target.z); return true; }
+  if (use === 'door') { toggleDoor(target.x, target.y, target.z); return true; }
   return tryTill();
+}
+// Doors swing open and shut (both halves); they won't close on someone standing in the doorway.
+function toggleDoor(x, y, z) {
+  let id = world.getBlock(x, y, z);
+  if (BLOCKS[id].door.half === 1) { y--; id = world.getBlock(x, y, z); }
+  if (id <= 0 || !BLOCKS[id].door) return false;
+  const upId = world.getBlock(x, y + 1, z);
+  const closing = BLOCKS[id].door.open === 1;
+  if (closing && (player.intersectsBlock(x, y, z) || player.intersectsBlock(x, y + 1, z) || entitiesBlock(x, y, z) || entitiesBlock(x, y + 1, z))) {
+    showBlockName('Something is in the doorway');
+    return false;
+  }
+  world.setBlock(x, y, z, id ^ 4);
+  if (upId > 0 && BLOCKS[upId].door) world.setBlock(x, y + 1, z, upId ^ 4);
+  Sound.door(!closing);
+  return true;
 }
 // Hoe: grass or dirt with open air above becomes farmland.
 function tryTill() {
@@ -6561,6 +6696,7 @@ const Sound = (() => {
     bow(charge) { if (!ok()) return; noise({ type: 'bandpass', freq: 1400 + charge * 900, q: 1.5, dur: 0.16, gain: 0.18 }); tone({ wave: 'triangle', freq: 220 + charge * 80, sweep: 120, dur: 0.12, gain: 0.08 }); },
     arrowHit() { if (!ok()) return; tone({ wave: 'sine', freq: 980, sweep: 1400, dur: 0.06, gain: 0.08 }); },
     thorn(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 2400, sweep: 900, dur: 0.12, gain: 0.14 * v }); tone({ wave: 'sine', freq: 700, sweep: 300, dur: 0.08, gain: 0.05 * v }); },
+    door(open) { if (!ok()) return; tone({ wave: 'triangle', freq: open ? 160 : 200, sweep: open ? 230 : 110, dur: 0.25, gain: 0.12, attack: 0.02 }); noise({ type: 'lowpass', freq: 600, dur: 0.1, gain: 0.15, delay: open ? 0.15 : 0.02 }); },
     equip() { if (!ok()) return; noise({ freq: 1800, q: 2, dur: 0.08, gain: 0.12 }); tone({ wave: 'triangle', freq: 520, sweep: 700, dur: 0.1, gain: 0.08, delay: 0.04 }); },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
     death() { if (!ok()) return; tone({ freq: 330, sweep: 70, dur: 0.9, gain: 0.25 }); noise({ type: 'lowpass', freq: 500, dur: 0.5, gain: 0.15 }); },
