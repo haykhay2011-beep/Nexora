@@ -247,6 +247,31 @@
   body.touch #modeTag { display: none; }
   .close-btn { display: none; align-self: center; padding: 6px 22px; font-size: 15px; }
   body.touch .close-btn { display: block; }
+  /* ---------- Compass, toasts, achievements ---------- */
+  #compass { position: absolute; left: 50%; top: 10px; width: 300px; height: 26px; transform: translateX(-50%); overflow: hidden;
+    background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.42) 20%, rgba(0,0,0,0.42) 80%, rgba(0,0,0,0)); }
+  #compassStrip { position: absolute; inset: 0; }
+  #compassStrip span { position: absolute; top: 4px; transform: translateX(-50%); font: 700 14px var(--px-font); color: #fff; text-shadow: 1px 1px 0 #000; }
+  #compassStrip span.minor { font-size: 10px; top: 7px; color: rgba(255,255,255,0.6); }
+  #compassStrip span.home { color: #ff6b5a; font-size: 13px; top: 5px; }
+  #compassNeedle { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(255,230,140,0.8); }
+  #toasts { position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .toast { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; min-width: 240px; background: rgba(16, 18, 24, 0.9);
+    border: 3px solid #0b0c10; box-shadow: inset 0 0 0 2px rgba(255, 215, 110, 0.5); animation: toastIn 0.35s ease-out; transition: opacity 0.6s, transform 0.6s; }
+  .toast.out { opacity: 0; transform: translateX(40px); }
+  .toast img { width: 32px; height: 32px; image-rendering: pixelated; }
+  .toast .t1 { font: 700 11px var(--px-font); color: #ffd76e; letter-spacing: 0.08em; }
+  .toast .t2 { font: 700 15px var(--px-font); color: #fff; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: none; } }
+  .ach-panel { width: min(560px, 94vw); }
+  #achList { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 56vh; overflow-y: auto; }
+  .ach { display: flex; align-items: center; gap: 10px; padding: 6px 8px; background: rgba(255,255,255,0.05); border: 2px solid rgba(0,0,0,0.6); }
+  .ach img { width: 28px; height: 28px; image-rendering: pixelated; }
+  .ach.locked img { filter: grayscale(1) brightness(0.45); }
+  .ach .an { font: 700 13px var(--px-font); color: #fff; }
+  .ach.locked .an { color: #8a8a8a; }
+  .ach .ad { font: 11px var(--px-font); color: var(--muted); }
+  body.touch #compass { top: 70px; }
   #fatal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: #10131a; font: 16px var(--px-font); color: #ffb4a0; padding: 20px; text-align: center; line-height: 1.6; }
 </style>
 </head>
@@ -263,6 +288,8 @@
   <div id="survHud" class="hidden"><div id="armorRow"></div><div id="bubbles"></div><div id="hearts"></div><div id="food"></div></div>
   <div id="hotbar"></div>
   <div id="modeTag"></div>
+  <div id="compass"><div id="compassStrip"></div><div id="compassNeedle"></div></div>
+  <div id="toasts"></div>
   <div id="debug" class="hidden"></div>
 </div>
 
@@ -341,6 +368,7 @@
     <h2>Game Paused</h2>
     <button class="btn primary" id="btnResume">Resume</button>
     <button class="btn" id="btnPauseSettings">Settings</button>
+    <button class="btn" id="btnAchievements">Achievements</button>
     <button class="btn" id="btnQuit">Quit to Title</button>
     <div id="lockNote"></div>
     <div id="saveNote"></div>
@@ -354,6 +382,8 @@
     <div class="setting"><span>Field of view</span><input type="range" id="setFOV" min="60" max="110" step="1"><span class="val" id="valFOV"></span></div>
     <div class="setting"><span>Mouse sensitivity</span><input type="range" id="setSens" min="10" max="300" step="5"><span class="val" id="valSens"></span></div>
     <div class="setting"><span>Master volume</span><input type="range" id="setVol" min="0" max="100" step="1"><span class="val" id="valVol"></span></div>
+    <div class="setting"><span>Music volume</span><input type="range" id="setMusic" min="0" max="100" step="1"><span class="val" id="valMusic"></span></div>
+    <div class="setting"><span>Show compass</span><input type="checkbox" id="setCompass"><span></span></div>
     <div class="setting"><span>Invert Y</span><input type="checkbox" id="setInvert"><span></span></div>
     <div class="setting"><span>View bobbing</span><input type="checkbox" id="setBob"><span></span></div>
     <button class="btn primary" id="btnSettingsDone">Done</button>
@@ -387,6 +417,13 @@
     <div id="hotGrid" class="slotgrid hot"></div>
     <p class="inv-hint">Click: take / place a stack &middot; Right click: split / place one &middot; Shift+click: quick move &middot; Click outside: throw &middot; E or Esc to close</p>
     <button class="btn close-btn" id="btnCraftClose">Close</button>
+  </div>
+</div>
+<div id="screen-achievements" class="screen dim hidden">
+  <div class="panel ach-panel">
+    <h2>Achievements</h2>
+    <div id="achList"></div>
+    <button class="btn primary" id="btnAchBack">Back</button>
   </div>
 </div>
 <div id="screen-death" class="screen hidden">
@@ -426,7 +463,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    ===================================================================== */
 const CONFIG = {
   title: 'BLOCKWILD',
-  version: 'Milestone 5',
+  version: 'Milestone 6',
   storageKey: 'blockwild',
 
   world: {
@@ -710,6 +747,9 @@ const CONFIG = {
 
   audio: {
     volume: 0.7,
+    music: 0.5,             // default music volume (0-1)
+    musicGapMinSec: 70,     // quiet time between musical phrases
+    musicGapMaxSec: 180,
     stepStride: 1.7,        // blocks walked per footstep
     windVolume: 0.06,
   },
@@ -4583,6 +4623,8 @@ const SETTINGS = {
   invertY: false,
   viewBob: true,
   volume: CONFIG.audio.volume,
+  music: CONFIG.audio.music,
+  compass: true,
 };
 function loadSettings() {
   try {
@@ -4593,6 +4635,8 @@ function loadSettings() {
   SETTINGS.fov = Math.max(CONFIG.render.minFov, Math.min(CONFIG.render.maxFov, +SETTINGS.fov || CONFIG.render.fov));
   SETTINGS.volume = Math.max(0, Math.min(1, +SETTINGS.volume));
   if (!Number.isFinite(SETTINGS.volume)) SETTINGS.volume = CONFIG.audio.volume;
+  SETTINGS.music = Number.isFinite(+SETTINGS.music) ? Math.max(0, Math.min(1, +SETTINGS.music)) : CONFIG.audio.music;
+  SETTINGS.compass = SETTINGS.compass !== false;
 }
 function saveSettings() {
   try { localStorage.setItem(CONFIG.storageKey + '.settings', JSON.stringify(SETTINGS)); } catch (e) { /* ignore */ }
@@ -4932,6 +4976,8 @@ function breakBlock(x, y, z) {
   if (d.use === 'furnace') dropFurnaceContents(x, y, z);
   if (d.use === 'chest') dropChestContents(x, y, z);
   if (isSurvival()) {
+    if (id === BLOCK.gem_ore && harvest) Achieve.unlock('gem');
+    if (id === BLOCK.crop_3) Achieve.unlock('harvest');
     spawnDrops(id, x, y, z, harvest);
     surv.exh += CONFIG.survival.exhaustMine;
     const t = toolOf(stack);
@@ -5011,6 +5057,7 @@ function doPlace() {
     const fc = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 0 : 2) : (dx > 0 ? 1 : 3);
     if (!world.setBlock(x, y, z, 64 + fc)) return false;
     world.setBlock(x, y + 1, z, 72 + fc);
+    Achieve.unlock('home');
     Hand.swing();
     Sound.place('wood');
     if (isSurvival()) { inv.take(selected, 1); renderHotbar(); }
@@ -5251,7 +5298,10 @@ class ItemEntity extends Body {
         if (d < S.collectRadius) {
           const s = this.stack;
           const left = inv.add(s.id, s.count, s.dur);
-          if (left < s.count) { Sound.pickup(); renderHotbar(); if (state === 'craft') renderCraft(); }
+          if (left < s.count) {
+            Sound.pickup(); renderHotbar(); if (state === 'craft') renderCraft();
+            if (s.id === BLOCK.log || s.id === BLOCK.pine_log || s.id === BLOCK.amber_log) Achieve.unlock('wood');
+          }
           if (left === 0) return false;
           s.count = left;
         } else if (inv.fits(this.stack.id, 1)) {
@@ -5930,6 +5980,7 @@ function updateProjectiles(dt) {
             dead = true;
             if (c.damage(pr.damage, { x: pr.pos.x - pr.vel.x, z: pr.pos.z - pr.vel.z })) {
               Sound.arrowHit();
+              if (c.health <= 0 && c.T.hostile) Achieve.unlock('slayer');
               if (onArrowHit) onArrowHit(c, pr.start.distanceTo(pr.pos));
             }
             break;
@@ -5969,6 +6020,7 @@ function hitEntity() {
   if (!best) return false;
   const stack = heldStack(), tool = toolOf(stack);
   if (best.damage(tool ? tool.damage : CONFIG.creatures.handDamage, player.pos)) {
+    if (best.health <= 0 && best.T.hostile) Achieve.unlock('slayer');
     surv.exh += CONFIG.survival.exhaustHurt;
     if (tool) wearTool(selected, tool.type === 'sword' ? 1 : 2);
   }
@@ -6277,7 +6329,7 @@ function fillLoot(chest, x, y, z) {
 }
 function ensureChest(x, y, z) {
   const k = furnaceKey(x, y, z);
-  if (!chests.has(k)) chests.set(k, fillLoot(newChest(), x, y, z));
+  if (!chests.has(k)) { chests.set(k, fillLoot(newChest(), x, y, z)); Achieve.unlock('loot'); }
   return k;
 }
 function dropChestContents(x, y, z) {
@@ -6308,6 +6360,7 @@ function updateSleep(dt) {
   if (!sleep.skipped && sleep.t >= fade + hold * 0.5) {
     worldTime = CONFIG.sky.startTime;                 // morning
     sleep.skipped = true;
+    Achieve.unlock('sleep');
     saveNow();
   }
   const t = sleep.t;
@@ -6450,6 +6503,8 @@ window.addEventListener('keydown', (e) => {
     if ((code === 'KeyE' || code === 'Escape') && !e.repeat) closeCraft();
   } else if (state === 'settings' && code === 'Escape') {
     closeSettings();
+  } else if (state === 'achievements' && code === 'Escape') {
+    setState('paused');
   }
 });
 window.addEventListener('keyup', (e) => {
@@ -6595,7 +6650,30 @@ document.addEventListener('pointerlockerror', onLockError);
    ===================================================================== */
 const Sound = (() => {
   let ctx = null, master = null, noiseBuf = null;
-  let wind = null, rainLoop = null;
+  let wind = null, rainLoop = null, music = null;
+  // Music bus: soft voices through a feedback delay, so phrases ring out in a gentle echo.
+  function musicBus() {
+    if (music) return music;
+    const g = ctx.createGain(); g.gain.value = SETTINGS.music;
+    const d = ctx.createDelay(1.5); d.delayTime.value = 0.42;
+    const fb = ctx.createGain(); fb.gain.value = 0.38;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+    g.connect(master); g.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(master);
+    music = { g, input: g };
+    return music;
+  }
+  function note(freq, when, dur, gain, wave) {
+    const bus = musicBus();
+    const o = ctx.createOscillator(); o.type = wave || 'triangle'; o.frequency.value = freq;
+    const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 2.003;     // a soft octave shimmer
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(gain, when + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    const g2 = ctx.createGain(); g2.gain.value = 0.18;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(bus.input);
+    o.start(when); o2.start(when); o.stop(when + dur + 0.05); o2.stop(when + dur + 0.05);
+  }
   function ensure() {
     if (ctx) { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); return true; }
     try {
@@ -6714,6 +6792,29 @@ const Sound = (() => {
       noise({ type: 'lowpass', freq: 180, sweep: 60, q: 0.7, dur: 2.8, gain: 0.5, attack: 0.08, delay });
       noise({ type: 'lowpass', freq: 420, sweep: 90, q: 0.5, dur: 1.4, gain: 0.25, attack: 0.02, delay: delay + 0.05 });
       if (delay < 0.6) noise({ type: 'highpass', freq: 1800, dur: 0.25, gain: 0.22, delay });
+    },
+    setMusicVolume(v) { if (music) music.g.gain.setTargetAtTime(v, ctx.currentTime, 0.2); },
+    // One short phrase: day = major pentatonic, night = minor, underground = low and slow over a drone.
+    phrase(mood) {
+      if (!ok() || SETTINGS.music <= 0) return;
+      const t0 = ctx.currentTime + 0.1;
+      const scales = { day: [0, 2, 4, 7, 9, 12, 14, 16], night: [0, 3, 5, 7, 10, 12, 15, 17], deep: [0, 1, 5, 7, 8, 12, 13] };
+      const base = mood === 'deep' ? 110 : mood === 'night' ? 196 : 262;
+      const sc = scales[mood] || scales.day;
+      const n = 6 + Math.floor(Math.random() * 6);
+      let t = t0, idx = Math.floor(Math.random() * 4);
+      for (let i = 0; i < n; i++) {
+        idx = Math.max(0, Math.min(sc.length - 1, idx + Math.floor(Math.random() * 5) - 2));
+        const len = (mood === 'deep' ? 1.1 : 0.55) * (Math.random() < 0.3 ? 2 : 1);
+        note(base * Math.pow(2, sc[idx] / 12), t, len * 1.8, mood === 'deep' ? 0.05 : 0.045, mood === 'night' ? 'sine' : 'triangle');
+        if (i % 3 === 0) note(base / 2 * Math.pow(2, sc[0] / 12), t, len * 2.6, 0.03, 'sine');   // quiet bass under the tune
+        t += len;
+      }
+      if (mood === 'deep') note(base / 2, t0, t - t0 + 2, 0.035, 'sine');                         // cave drone
+    },
+    chime() {
+      if (!ok()) return;
+      [523, 659, 784, 1047].forEach((f, i) => tone({ wave: 'triangle', freq: f, dur: 0.35, gain: 0.07, delay: i * 0.09 }));
     },
     hurt() { if (!ok()) return; tone({ freq: 240, sweep: 110, dur: 0.18, gain: 0.22 }); noise({ type: 'lowpass', freq: 900, dur: 0.12, gain: 0.22 }); },
     eat() { if (!ok()) return; noise({ freq: jit(1500, 0.2), q: 1.6, dur: 0.06, gain: 0.16 }); noise({ freq: jit(700, 0.2), q: 1, dur: 0.05, gain: 0.12, delay: 0.05 }); },
@@ -6876,7 +6977,7 @@ const $ = (id) => document.getElementById(id);
 const hudEl = $('hud'), debugEl = $('debug'), hotbarEl = $('hotbar'), blockNameEl = $('blockname');
 const SCREENS = {
   title: $('screen-title'), loading: $('screen-loading'), pause: $('screen-pause'), settings: $('screen-settings'),
-  inventory: $('screen-inventory'), click: $('screen-click'), craft: $('screen-craft'), dead: $('screen-death'),
+  inventory: $('screen-inventory'), click: $('screen-click'), craft: $('screen-craft'), dead: $('screen-death'), achievements: $('screen-achievements'),
 };
 let state = 'title', settingsReturn = 'title';
 let world = null, player = null, clouds = null, seedLabel = '', worldMeta = null;
@@ -6900,6 +7001,7 @@ function refreshOverlays() {
   SCREENS.inventory.classList.toggle('hidden', state !== 'inventory');
   SCREENS.craft.classList.toggle('hidden', state !== 'craft');
   SCREENS.dead.classList.toggle('hidden', state !== 'dead');
+  SCREENS.achievements.classList.toggle('hidden', state !== 'achievements');
   SCREENS.click.classList.toggle('hidden', !(state === 'playing' && !locked && !dragMode && !touchMode));
   $('touchUI').classList.toggle('on', state === 'playing' && inGame);
   canvas.style.cursor = state === 'playing' && dragMode ? 'grab' : 'default';
@@ -6914,6 +7016,7 @@ const worldRunning = () => state === 'playing' || state === 'craft' || state ===
 
 function openPause() {
   if (!world) return;
+  Achieve.render();
   setState('paused');
   if (locked) { expectUnlock = true; document.exitPointerLock(); }
   saveNow();
@@ -7200,6 +7303,7 @@ function clickSlot(ref, button, shift) {
   if (ref === 'o') { takeOutput(shift); return; }
   if (shift) { quickMove(ref); afterSlotChange(); return; }
   const s = slotGet(ref), c = craftUI.cursor;
+  if (ref === 'f:output' && s && s.id === ITEM.iron_ingot) Achieve.unlock('smelt');
   if (ref === 'f:output') {                                       // output slots can only be taken from
     if (s && (!c || (c.id === s.id && c.count + s.count <= maxStack(s.id)))) { if (c) c.count += s.count; else craftUI.cursor = s; slotSet(ref, null); }
     afterSlotChange(); return;
@@ -7262,6 +7366,7 @@ function quickMove(ref) {
     else if (i < 9) moveRange(i, 9, 36); else moveRange(i, 0, 9);
     return;
   }
+  if (ref === 'f:output' && s.id === ITEM.iron_ingot) Achieve.unlock('smelt');
   const left = inv.add(s.id, s.count, s.dur);
   if (left === 0) slotSet(ref, null); else s.count = left;
 }
@@ -7274,6 +7379,8 @@ function consumeGrid() {
 function takeOutput(shift) {
   let r = craftUI.result;
   if (!r) return;
+  if (r.id === BLOCK.workbench) Achieve.unlock('bench');
+  if (r.id === ITEM.stone_pickaxe) Achieve.unlock('stonepick');
   if (shift) {
     for (let n = 0; n < 64 && r && inv.fits(r.id, r.count); n++) {
       inv.add(r.id, r.count);
@@ -7365,6 +7472,8 @@ function syncSettingsUI() {
   $('setFOV').value = SETTINGS.fov; $('valFOV').textContent = SETTINGS.fov;
   $('setSens').value = Math.round(SETTINGS.sensitivity * 100); $('valSens').textContent = Math.round(SETTINGS.sensitivity * 100) + '%';
   $('setVol').value = Math.round(SETTINGS.volume * 100); $('valVol').textContent = Math.round(SETTINGS.volume * 100) + '%';
+  $('setMusic').value = Math.round(SETTINGS.music * 100); $('valMusic').textContent = Math.round(SETTINGS.music * 100) + '%';
+  $('setCompass').checked = SETTINGS.compass;
   $('setInvert').checked = SETTINGS.invertY;
   $('setBob').checked = SETTINGS.viewBob;
 }
@@ -7374,6 +7483,8 @@ $('setRD').addEventListener('input', (e) => { SETTINGS.renderDistance = +e.targe
 $('setFOV').addEventListener('input', (e) => { SETTINGS.fov = +e.target.value; syncSettingsUI(); });
 $('setSens').addEventListener('input', (e) => { SETTINGS.sensitivity = +e.target.value / 100; syncSettingsUI(); });
 $('setVol').addEventListener('input', (e) => { SETTINGS.volume = +e.target.value / 100; Sound.ensure(); Sound.setVolume(SETTINGS.volume); syncSettingsUI(); });
+$('setMusic').addEventListener('input', (e) => { SETTINGS.music = +e.target.value / 100; Sound.setMusicVolume(SETTINGS.music); syncSettingsUI(); });
+$('setCompass').addEventListener('change', (e) => { SETTINGS.compass = e.target.checked; });
 $('setInvert').addEventListener('change', (e) => { SETTINGS.invertY = e.target.checked; });
 $('setBob').addEventListener('change', (e) => { SETTINGS.viewBob = e.target.checked; });
 $('btnSettingsDone').addEventListener('click', closeSettings);
@@ -7742,6 +7853,7 @@ function updateDebug() {
    MAIN LOOP — fixed 60 Hz simulation, clamped frame delta, interpolated camera.
    ===================================================================== */
 const STEP = 1 / CONFIG.physics.tickRate;
+let achPollT = 0;
 let lastTime = performance.now(), acc = 0, stepDist = 0, wasInWater = false, craftRefresh = 0;
 function tick(dt) {
   worldTime = (worldTime + dt / CONFIG.sky.dayLengthSec) % 1;
@@ -7819,6 +7931,12 @@ function frame(now) {
   renderer.render(scene, camera);
   Hand.update(running ? dt : 0, !surv.dead && !sleep && state !== 'dead');
   Hand.render();
+  Compass.update(SETTINGS.compass && !surv.dead);
+  if (running) {
+    updateMusic(dt);
+    achPollT -= dt;
+    if (achPollT <= 0) { achPollT = 0.25; Achieve.poll(); }
+  }
   debugTimer += dt;
   if (debugTimer * 1000 >= CONFIG.ui.debugRefreshMs) { debugTimer = 0; updateDebug(); }
 }
@@ -7980,6 +8098,103 @@ const Touch = (() => {
   return { enable, disable, release };
 })();
 
+/* ---------------- compass: heading strip with a marker pointing home ---------------- */
+const Compass = (() => {
+  const el = $('compass'), strip = $('compassStrip');
+  const W = 300, SPAN = Math.PI * 0.75;                     // degrees of view across the strip
+  const MARKS = [['N', 0], ['NW', Math.PI / 4, 1], ['W', Math.PI / 2], ['SW', Math.PI * 0.75, 1], ['S', Math.PI], ['SE', -Math.PI * 0.75, 1], ['E', -Math.PI / 2], ['NE', -Math.PI / 4, 1]];
+  let last = '';
+  return {
+    update(visible) {
+      el.classList.toggle('hidden', !visible);
+      if (!visible) return;
+      const home = respawnPoint();
+      let hb = null;
+      if (home) { const dx = home.x - player.pos.x, dz = home.z - player.pos.z; if (Math.hypot(dx, dz) > 2) hb = Math.atan2(-dx, -dz); }
+      const key = player.yaw.toFixed(3) + '|' + (hb === null ? '' : hb.toFixed(2));
+      if (key === last) return;
+      last = key;
+      let h = '';
+      const put = (label, b, cls) => {
+        const rel = wrapAngle(b - player.yaw);
+        if (Math.abs(rel) > SPAN / 2) return;
+        h += '<span class="' + (cls || '') + '" style="left:' + (W / 2 - rel / SPAN * W).toFixed(1) + 'px">' + label + '</span>';
+      };
+      for (const [l, b, minor] of MARKS) put(l, b, minor ? 'minor' : '');
+      if (hb !== null) put('&#9670;', hb, 'home');
+      strip.innerHTML = h;
+    },
+  };
+})();
+
+/* ---------------- music: a short phrase now and then, coloured by time and place ---------------- */
+let musicT = 25;
+function updateMusic(dt) {
+  musicT -= dt;
+  if (musicT > 0) return;
+  musicT = CONFIG.audio.musicGapMinSec + Math.random() * (CONFIG.audio.musicGapMaxSec - CONFIG.audio.musicGapMinSec);
+  const l = world.getLight(Math.floor(player.pos.x), Math.floor(player.pos.y + 1), Math.floor(player.pos.z));
+  const deep = l >= 0 && (l >> 4) < 4 && player.pos.y < SEA;
+  Sound.phrase(deep ? 'deep' : isNight() ? 'night' : 'day');
+}
+
+/* ---------------- achievements: survival goals with toasts, saved per world ---------------- */
+const ACHIEVEMENTS = [
+  ['wood', 'Getting Wood', 'Pick up a log', 'log'],
+  ['bench', 'Benchmark', 'Craft a workbench', 'workbench'],
+  ['stonepick', 'Stone Age', 'Craft a stone pickaxe', 'stone_pickaxe'],
+  ['smelt', 'Hot Stuff', 'Take an iron ingot from a furnace', 'iron_ingot'],
+  ['gem', 'Shiny!', 'Mine gem ore', 'gem'],
+  ['harvest', 'Green Thumb', 'Harvest ripe wheat', 'wheat'],
+  ['home', 'Home Sweet Home', 'Hang a door', 'door'],
+  ['sleep', 'Sweet Dreams', 'Sleep through the night', 'bedroll'],
+  ['loot', 'Treasure Hunter', 'Open a ruin or dungeon chest', 'chest'],
+  ['slayer', 'Monster Slayer', 'Defeat a hostile creature', 'iron_sword'],
+  ['sniper', 'Sharpshooter', 'Hit a creature with an arrow from 20 blocks away', 'bow'],
+  ['armored', 'Suited Up', 'Wear a full set of armor', 'iron_chestplate'],
+  ['depths', 'Into the Depths', 'Descend below y = 16', 'lava'],
+];
+const Achieve = (() => {
+  const box = $('toasts');
+  const got = () => (worldMeta ? (worldMeta.achievements || (worldMeta.achievements = [])) : []);
+  function toast(a) {
+    const d = document.createElement('div');
+    d.className = 'toast';
+    d.innerHTML = '<img alt="" src="' + itemIcon(ITEM[a[3]]) + '"><div><div class="t1">ACHIEVEMENT</div><div class="t2">' + escapeHTML(a[1]) + '</div></div>';
+    box.appendChild(d);
+    setTimeout(() => d.classList.add('out'), 4200);
+    setTimeout(() => d.remove(), 5000);
+  }
+  return {
+    unlock(id) {
+      if (!worldMeta || !isSurvival() || got().includes(id)) return false;
+      const a = ACHIEVEMENTS.find(x => x[0] === id);
+      if (!a) return false;
+      got().push(id);
+      toast(a);
+      Sound.chime();
+      lastEditAt = performance.now();                       // save soon
+      return true;
+    },
+    has(id) { return got().includes(id); },
+    count() { return got().length; },
+    render() {
+      $('achList').innerHTML = ACHIEVEMENTS.map(a => '<div class="ach' + (got().includes(a[0]) ? '' : ' locked') + '"><img alt="" src="' + itemIcon(ITEM[a[3]]) + '"><div><div class="an">' +
+        escapeHTML(a[1]) + '</div><div class="ad">' + escapeHTML(a[2]) + '</div></div></div>').join('');
+      $('btnAchievements').textContent = 'Achievements (' + got().length + '/' + ACHIEVEMENTS.length + ')';
+    },
+    // goals that are states rather than events, checked a few times a second
+    poll() {
+      if (!isSurvival() || surv.dead) return;
+      if (inv.armor.every(Boolean)) this.unlock('armored');
+      if (player.pos.y < 16) this.unlock('depths');
+    },
+  };
+})();
+$('btnAchievements').addEventListener('click', () => { Achieve.render(); setState('achievements'); });
+$('btnAchBack').addEventListener('click', () => { Achieve.render(); setState('paused'); });
+onArrowHit = (c, dist) => { if (dist >= 20) Achieve.unlock('sniper'); };
+
 /* =====================================================================
    BOOT
    ===================================================================== */
@@ -8011,6 +8226,7 @@ window.__BLOCKWILD = {
   get items() { return items; }, get creatures() { return creatures; }, get projectiles() { return projectiles; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
   get bowCharge() { return bowCharge; }, fireArrow,
+  Achieve, ACHIEVEMENTS, Compass,
   Hand, Weather, Touch, get touchMode() { return touchMode; }, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
