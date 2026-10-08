@@ -642,6 +642,15 @@ const CONFIG = {
     maxSavedItems: 200,
   },
 
+  combat: {
+    bowDrawSec: 1.0,          // full draw time
+    arrowSpeedMin: 9, arrowSpeedMax: 34,
+    arrowDamageMin: 2, arrowDamageMax: 7,
+    arrowGravity: 14,
+    arrowRecover: 0.75,       // chance a missed arrow can be picked up again
+    bowZoom: 0.14,            // field of view tightens this much at full draw
+  },
+
   creatures: {
     maxPassive: 10,
     maxHostile: 15,
@@ -911,7 +920,8 @@ function BlockwildShared(C) {
   // falls: drops when unsupported · soil: blocks it may stand on · attach: offset to the block holding it up
   // torch: torch orientation (1 floor, 2-5 wall) · replaceable: placing a block overwrites it · pickAs
   // minTier: lowest pickaxe tier that gets a drop (0 = by hand) · dropCount [min,max] · dropChance
-  // extra: a second drop [key, min, max] · facing: 0-3 (N E S W) for oriented shapes · icon: flat item texture
+  // extra: a second drop [key, min, max] · alt: [key, chance] drops instead of the usual item
+  // facing: 0-3 (N E S W) for oriented shapes · icon: flat item texture
   // grows: the block a random tick turns it into (crops)
   const D = (id, key, name, tex, props) => Object.assign({
     id, key, name, tex,
@@ -919,7 +929,7 @@ function BlockwildShared(C) {
     hardness: 1, tool: null, drop: key, shape: 'cube', sound: 'stone',
     cullSame: false, ao: null, creative: true, falls: false, color: null,
     soil: null, attach: null, torch: 0, replaceable: false, pickAs: null,
-    minTier: 0, dropCount: null, dropChance: 1, use: null, extra: null, facing: 0, icon: null, grows: null,
+    minTier: 0, dropCount: null, dropChance: 1, use: null, extra: null, facing: 0, icon: null, grows: null, alt: null,
   }, props || {});
   const CROP = { solid: false, transparent: true, shape: 'cross', hardness: 0, sound: 'grass', attach: [0, -1, 0], soil: ['farmland'], drop: 'seeds', creative: false, pickAs: 'seeds' };
   const BEDROLL = { solid: false, transparent: true, shape: 'bedroll', hardness: 0.2, sound: 'cloth', attach: [0, -1, 0], drop: 'bedroll', use: 'bed', icon: 'bedroll_icon' };
@@ -934,7 +944,7 @@ function BlockwildShared(C) {
     D(4,  'cobblestone', 'Cobblestone',  'cobblestone', { hardness: 2.0, tool: 'pickaxe', minTier: 1 }),
     D(5,  'bedrock',     'Bedrock',      'bedrock',     { hardness: -1, drop: null }),
     D(6,  'sand',        'Sand',         'sand',        { hardness: 0.5, tool: 'shovel', sound: 'sand', falls: true }),
-    D(7,  'gravel',      'Gravel',       'gravel',      { hardness: 0.6, tool: 'shovel', sound: 'gravel', falls: true }),
+    D(7,  'gravel',      'Gravel',       'gravel',      { hardness: 0.6, tool: 'shovel', sound: 'gravel', falls: true, alt: ['flint', 0.14] }),
     D(8,  'log',         'Log',          ['log_top', 'log_side', 'log_top'], { hardness: 2.0, tool: 'axe', sound: 'wood' }),
     D(9,  'planks',      'Planks',       'planks',      { hardness: 2.0, tool: 'axe', sound: 'wood' }),
     D(10, 'leaves',      'Leaves',       'leaves',      { transparent: true, filter: 1, hardness: 0.2, drop: 'stick', dropChance: 0.08, sound: 'grass', ao: true }),
@@ -1997,6 +2007,11 @@ defItem('cooked_meat', 'Cooked Meat', { food: 8, sat: 12.8 });
 defItem('seeds', 'Seeds', { places: 'crop_0' });
 defItem('wheat', 'Wheat');
 defItem('bread', 'Bread', { food: 5, sat: 6 });
+defItem('feather', 'Feather');
+defItem('flint', 'Flint');
+defItem('hide', 'Hide');
+defItem('arrow', 'Arrow');
+defItem('bow', 'Bow', { maxStack: 1, fuel: 10, tool: { type: 'bow', tier: 0, speed: 1, dur: 384, damage: 1, material: 'wood' } });
 for (const [mk, m] of Object.entries(TOOL_MATERIALS)) for (const [tk, t] of Object.entries(TOOL_TYPES)) {
   defItem(mk + '_' + tk, m.name + ' ' + t.name, {
     maxStack: 1, fuel: mk === 'wood' ? 10 : 0,
@@ -2038,6 +2053,8 @@ const RECIPES = [
   { out: ['chest', 1], shape: ['PPP', 'P P', 'PPP'], key: { P: 'planks' } },
   { out: ['bread', 1], shape: ['WWW'], key: { W: 'wheat' } },
   { out: ['bedroll', 1], shape: ['WWW', 'PPP'], key: { W: 'wheat', P: 'planks' } },
+  { out: ['arrow', 4], shape: ['F', 'S', 'E'], key: { F: 'flint', S: 'stick', E: 'feather' } },
+  { out: ['bow', 1], shape: [' SR', 'S R', ' SR'], key: { S: 'stick', R: 'reeds' } },
 ];
 for (const mk of Object.keys(TOOL_MATERIALS)) {
   const key = { M: TOOL_MATERIALS[mk].mat, S: 'stick' };
@@ -3175,6 +3192,53 @@ Object.assign(PAINTERS, {
   },
   th_thorn(P) { P.each((x, y) => { const v = 0.85 + P.rnd() * 0.2; return y < 4 ? [236 * v, 226 * v, 170 * v] : [120 * v, 92 * v, 52 * v]; }); },
 });
+// ---- Milestone 6 item textures: feather, flint, hide, arrow, bow ----
+Object.assign(PAINTERS, {
+  feather(P) {
+    plantClear(P, [230, 226, 214]);
+    for (let k = 0; k < 13; k++) {
+      const x = 3 + k, y = 13 - k;                                     // quill along the diagonal
+      P.set(x - 1, y + 1, 150, 140, 120);
+      if (k > 2) for (let w = 1; w <= 3 - (k > 10 ? 2 : 0); w++) { const v = 0.9 + P.rnd() * 0.1; P.set(x - 1 - w, y + 1 - w, 236 * v, 232 * v, 220 * v); P.set(x - 1 + w, y + 1 + w, 214 * v, 208 * v, 196 * v); }
+    }
+  },
+  flint(P) {
+    plantClear(P, [60, 60, 66]);
+    P.each((x, y) => {
+      const dx = (x - 7.5) / 5.5, dy = (y - 8.5) / 6, d = dx * dx + dy * dy - (y < 6 ? (6 - y) * 0.08 : 0);
+      if (d > 1) return null;
+      const v = P.rnd();
+      if (x + y < 12 && d < 0.6) return [120 + v * 20, 120 + v * 20, 130 + v * 20];  // chipped facet
+      return [44 + v * 26, 44 + v * 26, 50 + v * 26];
+    });
+  },
+  hide(P) {
+    plantClear(P, [150, 104, 66]);
+    P.each((x, y) => {
+      const edge = Math.abs(x - 7.5) + Math.abs(y - 7.5) * 0.8;
+      if (edge > 8 || (x < 2 || x > 13) && (y < 3 || y > 12)) return null;
+      const v = 0.85 + P.rnd() * 0.2;
+      if ((x * 3 + y * 5) % 11 === 0) return [104 * v, 70 * v, 44 * v];
+      return [160 * v, 112 * v, 70 * v];
+    });
+  },
+  arrow(P) {
+    plantClear(P, [140, 110, 70]);
+    for (let k = 0; k < 11; k++) P.set(3 + k, 12 - k, 150, 116, 70);                // shaft
+    P.set(14, 1, 70, 70, 76); P.set(13, 1, 90, 90, 96); P.set(14, 2, 90, 90, 96); P.set(12, 2, 60, 60, 66); P.set(13, 3, 60, 60, 66);   // flint head
+    for (const [x, y] of [[2, 12], [3, 13], [1, 12], [3, 14], [2, 14], [4, 13]]) P.set(x, y, 236, 232, 220);   // fletching
+  },
+  bow(P) {
+    plantClear(P, [140, 100, 56]);
+    for (let k = 0; k <= 12; k++) {                                     // limb: a curve from top-right to bottom-left
+      const t = k / 12, bend = Math.sin(t * Math.PI) * 4;
+      const x = Math.round(13 - t * 11 - bend * 0.7), y = Math.round(1 + t * 13 - bend * 0.7);
+      P.set(x, y, 146, 104, 58); P.set(x + 1, y, 110, 76, 40);
+    }
+    for (let k = 1; k < 13; k++) P.set(13 - k, 1 + k + (k > 6 ? 0 : 0), 226, 226, 214);   // string
+  },
+  arrow_shaft(P) { P.each((x, y) => (y < 3 ? [70, 70, 76] : y > 12 ? [236, 232, 220] : [150 + P.rnd() * 14, 116, 70])); },
+});
 // Four wheat stages: sprouts, young, green, ripe golden ears.
 for (let st = 0; st < 4; st++) {
   PAINTERS['crop_' + st] = (P) => {
@@ -3200,7 +3264,7 @@ const ALL_TEXTURES = SH.TEXTURES.concat(
   [...new Set(ITEMS.filter(it => it && it.id >= 256).map(it => it.tex))],
   Array.from({ length: 10 }, (_, i) => 'crack' + i),
   CREATURE_TEXTURES,
-  ['bedroll_icon', 'arm_skin', 'arm_sleeve']);
+  ['bedroll_icon', 'arm_skin', 'arm_sleeve', 'arrow_shaft']);
 const TEXL = {};
 ALL_TEXTURES.forEach((n, i) => { TEXL[n] = i; });
 
@@ -4671,7 +4735,7 @@ function spawnDrops(id, x, y, z, harvest) {
   const d = BLOCKS[id];
   if (!harvest || !d.drop) return;
   if (d.dropChance < 1 && Math.random() >= d.dropChance) return;
-  const itemId = ITEM[d.drop];
+  const itemId = d.alt && Math.random() < d.alt[1] ? ITEM[d.alt[0]] : ITEM[d.drop];
   if (itemId === undefined || !itemId) return;
   const r = d.dropCount;
   const n = r ? r[0] + Math.floor(Math.random() * (r[1] - r[0] + 1)) : 1;
@@ -5082,7 +5146,7 @@ const TEX_AVG = (() => {
 const CREATURE_TYPES = {
   mossback: {
     name: 'Mossback', hostile: false, hw: 0.45, h: 0.8, health: 12, speed: 1.0, fleeSpeed: 2.8, turn: 3,
-    drops: [['raw_meat', 1, 3]], sound: 'mossback', particle: [96, 130, 64],
+    drops: [['raw_meat', 1, 3], ['hide', 0, 2]], sound: 'mossback', particle: [96, 130, 64],
     parts: [
       { id: 'belly', box: [0.8, 0.2, 0.95], at: [0, 0.25, 0.05], off: [0, 0.1, 0], tex: { all: 'mb_skin' } },
       { id: 'shell', box: [0.96, 0.42, 1.14], at: [0, 0.4, 0.05], off: [0, 0.2, 0], tex: { all: 'mb_shell_side', top: 'mb_shell_top', bottom: 'mb_skin' } },
@@ -5136,7 +5200,7 @@ const CREATURE_TYPES = {
   },
   wadder: {
     name: 'Wadder', hostile: false, hw: 0.25, h: 0.7, health: 4, speed: 1.2, fleeSpeed: 3.4, turn: 5,
-    drops: [['raw_meat', 1, 1]], sound: 'wadder', particle: [206, 196, 176],
+    drops: [['raw_meat', 1, 1], ['feather', 0, 2]], sound: 'wadder', particle: [206, 196, 176],
     parts: [
       { id: 'body', box: [0.42, 0.3, 0.6], at: [0, 0.2, 0.04], off: [0, 0.15, 0], tex: { all: 'wd_feather' } },
       { id: 'tail', box: [0.22, 0.1, 0.16], at: [0, 0.42, 0.32], off: [0, 0, 0.06], rot: -0.35, tex: { all: 'wd_feather' } },
@@ -5575,8 +5639,45 @@ function fireThorn(c) {
   const owner = { light: sampleLight(sx, sy, sz), tint: null };
   const mesh = entityMesh(partGeometry('thorn', { id: 'dart', box: [0.07, 0.07, 0.42], off: [0, 0, 0], tex: { all: 'th_thorn', front: 'th_thorn' } }), owner);
   scene.add(mesh);
-  projectiles.push({ pos: new THREE.Vector3(sx, sy, sz), vel: new THREE.Vector3(vx, vy, vz), life: 5, mesh, owner, damage: R.damage, name: c.T.name });
+  projectiles.push({ pos: new THREE.Vector3(sx, sy, sz), vel: new THREE.Vector3(vx, vy, vz), life: 5, mesh, owner, damage: R.damage, name: c.T.name, gravity: THORN_GRAVITY, fromPlayer: false });
   Sound.thorn(c.soundVolume());
+}
+// ---- the bow: hold use to draw (needs arrows in survival), release to shoot ----
+let bowCharge = 0;
+const holdingBow = () => { const st = heldStack(); return !!st && ITEMS[st.id].key === 'bow'; };
+function arrowSlot() {
+  for (let i = 0; i < 36; i++) if (inv.slots[i] && inv.slots[i].id === ITEM.arrow) return i;
+  return -1;
+}
+function updateBow(dt) {
+  const B_ = CONFIG.combat;
+  const can = holdingBow() && held[2] && state === 'playing' && !surv.dead && (!isSurvival() || arrowSlot() >= 0);
+  if (can) { bowCharge = Math.min(1, bowCharge + dt / B_.bowDrawSec); return; }
+  if (bowCharge > 0.15 && holdingBow() && !surv.dead && state === 'playing') fireArrow(bowCharge);
+  bowCharge = 0;
+}
+function fireArrow(charge) {
+  const B_ = CONFIG.combat;
+  if (isSurvival()) {
+    const a = arrowSlot();
+    if (a < 0) return;
+    inv.take(a, 1);
+    wearTool(selected, 1);
+  }
+  player.lookDir(_dir);
+  const speed = B_.arrowSpeedMin + (B_.arrowSpeedMax - B_.arrowSpeedMin) * charge;
+  const sx = player.pos.x + _dir.x * 0.4, sy = player.pos.y + player.eye - 0.1 + _dir.y * 0.4, sz = player.pos.z + _dir.z * 0.4;
+  const owner = { light: sampleLight(sx, sy, sz), tint: null };
+  const mesh = entityMesh(partGeometry('arrow', { id: 'shaft', box: [0.05, 0.05, 0.6], off: [0, 0, 0], tex: { all: 'arrow_shaft' } }), owner);
+  scene.add(mesh);
+  projectiles.push({
+    pos: new THREE.Vector3(sx, sy, sz), vel: new THREE.Vector3(_dir.x * speed, _dir.y * speed, _dir.z * speed), life: 8, mesh, owner,
+    damage: Math.round(B_.arrowDamageMin + (B_.arrowDamageMax - B_.arrowDamageMin) * charge * charge), gravity: B_.arrowGravity,
+    fromPlayer: true, start: new THREE.Vector3(sx, sy, sz),
+  });
+  Sound.bow(charge);
+  Hand.swing();
+  renderHotbar();
 }
 const _pdir = new THREE.Vector3();
 function updateProjectiles(dt) {
@@ -5584,12 +5685,38 @@ function updateProjectiles(dt) {
     const pr = projectiles[i];
     pr.life -= dt;
     let dead = pr.life <= 0;
-    pr.vel.y -= THORN_GRAVITY * dt;
+    pr.vel.y -= pr.gravity * dt;
     const steps = Math.max(1, Math.ceil(pr.vel.length() * dt / 0.2));
     for (let k = 0; k < steps && !dead; k++) {
       pr.pos.addScaledVector(pr.vel, dt / steps);
       const id = world.getBlock(Math.floor(pr.pos.x), Math.floor(pr.pos.y), Math.floor(pr.pos.z));
-      if (id < 0 || (id > 0 && B_SOLID[id])) { dead = true; Particles.burst(pr.pos.x, pr.pos.y, pr.pos.z, [180, 160, 110], 4, 1.5, 0.1); break; }
+      if (id < 0 || (id > 0 && B_SOLID[id])) {
+        dead = true;
+        Particles.burst(pr.pos.x, pr.pos.y, pr.pos.z, [180, 160, 110], 4, 1.5, 0.1);
+        if (pr.fromPlayer) {
+          Sound.step('wood');
+          if (isSurvival() && id >= 0 && Math.random() < CONFIG.combat.arrowRecover) {
+            const e = spawnItem(newStack(ITEM.arrow, 1), pr.pos.x - pr.vel.x * 0.01, pr.pos.y - pr.vel.y * 0.01, pr.pos.z - pr.vel.z * 0.01, 0, 0, 0);
+            if (e) e.pickupDelay = 0.3;
+          }
+        }
+        break;
+      }
+      if (pr.fromPlayer) {                                   // arrows hit creatures
+        for (const c of creatures) {
+          if (c.dying > 0) continue;
+          const m = 0.12, cp = c.pos;
+          if (pr.pos.x > cp.x - c.hw - m && pr.pos.x < cp.x + c.hw + m && pr.pos.z > cp.z - c.hw - m && pr.pos.z < cp.z + c.hw + m && pr.pos.y > cp.y - m && pr.pos.y < cp.y + c.T.h + m) {
+            dead = true;
+            if (c.damage(pr.damage, { x: pr.pos.x - pr.vel.x, z: pr.pos.z - pr.vel.z })) {
+              Sound.arrowHit();
+              if (onArrowHit) onArrowHit(c, pr.start.distanceTo(pr.pos));
+            }
+            break;
+          }
+        }
+        continue;
+      }
       const pp = player.pos, m = 0.15;
       if (!surv.dead && pr.pos.x > pp.x - player.hw - m && pr.pos.x < pp.x + player.hw + m && pr.pos.z > pp.z - player.hw - m && pr.pos.z < pp.z + player.hw + m &&
           pr.pos.y > pp.y - m && pr.pos.y < pp.y + player.h + m) {
@@ -5603,6 +5730,7 @@ function updateProjectiles(dt) {
   }
 }
 function clearProjectiles() { for (const pr of projectiles) scene.remove(pr.mesh); projectiles = []; }
+let onArrowHit = null;                                       // (creature, distance) — used by achievements
 
 // The player's melee hit: nearest creature along the view ray within reach (and in front of any block).
 function hitEntity() {
@@ -5766,6 +5894,7 @@ const Hand = (() => {
       const eq = equipT < 1 ? Math.sin(equipT * Math.PI) : 0;
       let ex = 0, ey = 0, er = 0;
       if (eatT > 0) { ex = -0.22; ey = 0.12 + Math.abs(Math.sin(eatT * 18)) * 0.03; er = 0.6; }
+      if (bowCharge > 0) { const q = bowCharge; ex = -0.2 * q; ey = 0.1 * q + (q >= 1 ? Math.sin(performance.now() / 40) * 0.004 : 0); er = 0.5 * q; }
       root.position.set(H_.x + bx + swayX - sw2 * 0.18 + ex, H_.y + by + swayY + sw * 0.06 - eq * 0.5 + ey, H_.z - sw * 0.12);
       armPivot.rotation.set(H_.pitch - sw * 1.1 + er * 0.5, H_.yaw + sw2 * 0.35 + er, H_.roll - sw * 0.25);
     },
@@ -6360,6 +6489,8 @@ const Sound = (() => {
       noise({ freq: 900, q: 3, dur: 0.12, gain: 0.08, delay: open ? 0.08 : 0 });
       if (!open) tone({ freq: 120, sweep: 80, dur: 0.08, gain: 0.18, delay: 0.16 });
     },
+    bow(charge) { if (!ok()) return; noise({ type: 'bandpass', freq: 1400 + charge * 900, q: 1.5, dur: 0.16, gain: 0.18 }); tone({ wave: 'triangle', freq: 220 + charge * 80, sweep: 120, dur: 0.12, gain: 0.08 }); },
+    arrowHit() { if (!ok()) return; tone({ wave: 'sine', freq: 980, sweep: 1400, dur: 0.06, gain: 0.08 }); },
     thorn(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 2400, sweep: 900, dur: 0.12, gain: 0.14 * v }); tone({ wave: 'sine', freq: 700, sweep: 300, dur: 0.08, gain: 0.05 * v }); },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
     death() { if (!ok()) return; tone({ freq: 330, sweep: 70, dur: 0.9, gain: 0.25 }); noise({ type: 'lowpass', freq: 500, dur: 0.5, gain: 0.15 }); },
@@ -7260,7 +7391,7 @@ function updateCamera(alpha, dt) {
   camera.position.set(x + Math.cos(p.yaw) * bx, y + p.eye + by, z - Math.sin(p.yaw) * bx);
   camera.rotation.set(p.pitch, p.yaw, roll);
   const moving = Math.hypot(p.vel.x, p.vel.z) > 1;
-  const targetFov = SETTINGS.fov * (p.sprinting && moving ? CONFIG.render.sprintFovMul : 1);
+  const targetFov = SETTINGS.fov * (p.sprinting && moving ? CONFIG.render.sprintFovMul : 1) * (1 - CONFIG.combat.bowZoom * bowCharge * bowCharge);
   const nf = camera.fov + (targetFov - camera.fov) * Math.min(1, CONFIG.render.fovLerp * dt);
   if (Math.abs(nf - camera.fov) > 1e-3) { camera.fov = nf; camera.updateProjectionMatrix(); }
 }
@@ -7355,6 +7486,7 @@ function tick(dt) {
   tickSurvival(dt);
   updateMining(dt);
   updateEating(dt);
+  updateBow(dt);
   // footsteps by the material underfoot
   if (player.onGround && !player.flying && !player.inWater) {
     stepDist += Math.hypot(player.pos.x - player.prev.x, player.pos.z - player.prev.z);
@@ -7605,6 +7737,7 @@ window.__BLOCKWILD = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   get items() { return items; }, get creatures() { return creatures; }, get projectiles() { return projectiles; }, spawnCreature, CREATURE_TYPES, Particles, get furnaces() { return furnaces; }, get selected() { return selected; },
   get time() { return worldTime; }, set time(v) { worldTime = ((v % 1) + 1) % 1; },
+  get bowCharge() { return bowCharge; }, fireArrow,
   Hand, Weather, Touch, get touchMode() { return touchMode; }, get chests() { return chests; }, get sleep() { return sleep; }, get meta() { return worldMeta; }, useBed, respawnPoint, randomTick, tryUse, doPlace, pressButton,
   setBlock: (x, y, z, id) => world && world.setBlock(x, y, z, id), saveNow, hurt, spawnItem, newStack, openCraft, clickSlot, selectSlot,
 };
