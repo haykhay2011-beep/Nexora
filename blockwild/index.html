@@ -133,6 +133,8 @@
   }
   #waterTint { position: absolute; inset: 0; background: rgba(28, 72, 168, 0.36); opacity: 0; transition: opacity 0.12s; }
   #waterTint.on { opacity: 1; }
+  #lavaTint { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(255, 140, 20, 0.35), rgba(200, 40, 0, 0.75)); opacity: 0; transition: opacity 0.12s; }
+  #lavaTint.on { opacity: 1; }
 
   /* ---------- Inventory ---------- */
   .inv-panel { min-width: 0; width: min(640px, 94vw); }
@@ -253,6 +255,7 @@
 
 <div id="hud" class="hidden">
   <div id="waterTint"></div>
+  <div id="lavaTint"></div>
   <div id="hurtFlash"></div>
   <div id="sleepFade"></div>
   <div id="crosshair"></div>
@@ -495,6 +498,7 @@ const CONFIG = {
     freezeTemp: -0.3,     // water surface freezes below this temperature
     // caves
     caveRoof: 5,          // caves stay this far below the surface except at entrances
+    lavaLevel: 10,        // cave space at or below this height fills with lava
     entranceFreq: 0.011,
     entranceThreshold: 0.5,
     cavFreqXZ: 0.028,
@@ -619,6 +623,7 @@ const CONFIG = {
     airSec: 10,             // seconds of air underwater before drowning
     airRefill: 5,           // air regained per second at the surface
     drownDamage: 2,         // per second without air
+    lavaDamage: 4,          // every half second in lava
     safeFall: 3,            // blocks you can fall without damage (1 point per block beyond)
     invulnSec: 0.5,         // after every hit
     knockback: 5,
@@ -913,7 +918,7 @@ function BlockwildShared(C) {
     'workbench_top', 'workbench_side', 'furnace_top', 'furnace_front', 'furnace_front_lit',
     'chest_top', 'chest_side', 'farmland', 'crop_0', 'crop_1', 'crop_2', 'crop_3', 'quilt', 'quilt_side', 'pillow',
     'mud', 'reeds', 'willow_leaves', 'amber_log_side', 'amber_log_top', 'amber_leaves', 'mossy_cobble',
-    'ladder', 'door_lower', 'door_upper',
+    'ladder', 'door_lower', 'door_upper', 'lava',
   ];
   const TEX = {};
   TEXTURES.forEach((n, i) => { TEX[n] = i; });
@@ -939,7 +944,7 @@ function BlockwildShared(C) {
     cullSame: false, ao: null, creative: true, falls: false, color: null,
     soil: null, attach: null, torch: 0, replaceable: false, pickAs: null,
     minTier: 0, dropCount: null, dropChance: 1, use: null, extra: null, facing: 0, icon: null, grows: null, alt: null,
-    panel: 0, door: null, climb: false,
+    panel: 0, door: null, climb: false, pass: null, burns: false,
   }, props || {});
   const CROP = { solid: false, transparent: true, shape: 'cross', hardness: 0, sound: 'grass', attach: [0, -1, 0], soil: ['farmland'], drop: 'seeds', creative: false, pickAs: 'seeds' };
   const BEDROLL = { solid: false, transparent: true, shape: 'bedroll', hardness: 0.2, sound: 'cloth', attach: [0, -1, 0], drop: 'bedroll', use: 'bed', icon: 'bedroll_icon' };
@@ -1027,6 +1032,11 @@ function BlockwildShared(C) {
       drop: half ? null : 'door', creative: id === 64, pickAs: id === 64 ? null : 'door', icon: 'door_icon',
     }));
   }
+  // Lava (80): a glowing liquid drawn in the opaque pass, filling deep caves.
+  BLOCKS.push(D(80, 'lava', 'Lava', 'lava', {
+    solid: false, transparent: true, liquid: true, filter: 1, light: 15, shape: 'liquid', pass: 'opaque',
+    hardness: -1, drop: null, sound: 'lava', cullSame: true, replaceable: true, burns: true,
+  }));
   const BLOCK = {};
   BLOCKS.forEach(b => { BLOCK[b.key] = b.id; });
 
@@ -1048,7 +1058,7 @@ function BlockwildShared(C) {
     B_OPAQUE[i] = (b.solid && !b.transparent && shape === SHAPE_CUBE) ? 1 : 0;
     B_CULLSAME[i] = b.cullSame ? 1 : 0;
     B_OCC[i] = (b.ao === null ? B_OPAQUE[i] : (b.ao ? 1 : 0));
-    B_PASS[i] = b.liquid ? PASS_WATER : (b.transparent ? PASS_CUTOUT : PASS_OPAQUE);
+    B_PASS[i] = b.pass === 'opaque' ? PASS_OPAQUE : b.liquid ? PASS_WATER : (b.transparent ? PASS_CUTOUT : PASS_OPAQUE);
     B_LIGHT[i] = b.light;
     B_FILTER[i] = b.filter;
     B_FALLS[i] = b.falls ? 1 : 0;
@@ -1293,7 +1303,7 @@ function BlockwildShared(C) {
             const a = lerp3(t1, x, y, z);
             if (a > -G.tunWidth && a < G.tunWidth) { const b = lerp3(t2, x, y, z); carve = b > -G.tunWidth && b < G.tunWidth; }
           }
-          if (carve) blocks[bi] = 0;
+          if (carve) blocks[bi] = y <= G.lavaLevel ? B.lava : 0;     // the deepest caves are flooded with lava
         }
         if (x === CS - 1 && (z & 3) === 3) yield;
       }
@@ -1301,8 +1311,10 @@ function BlockwildShared(C) {
       // remove lone blocks that cave carving left floating (interior cells only, so it is order-independent)
       for (let y = G.bedrockMax + 2; y < H - 1; y++) for (let z = 1; z < CS - 1; z++) for (let x = 1; x < CS - 1; x++) {
         const bi = idx(x, y, z);
-        if (blocks[bi] === 0 || blocks[bi] === B.water || blocks[bi] === B.ice) continue;
-        if (blocks[bi + 1] === 0 && blocks[bi - 1] === 0 && blocks[bi + 16] === 0 && blocks[bi - 16] === 0 && blocks[bi + 256] === 0 && blocks[bi - 256] === 0) blocks[bi] = 0;
+        const v = blocks[bi];
+        if (v === 0 || v === B.water || v === B.ice || v === B.lava) continue;
+        const e = (n) => n === 0 || n === B.lava;
+        if (e(blocks[bi + 1]) && e(blocks[bi - 1]) && e(blocks[bi + 16]) && e(blocks[bi - 16]) && e(blocks[bi + 256]) && e(blocks[bi - 256])) blocks[bi] = y <= G.lavaLevel ? B.lava : 0;
       }
       yield;
       // ---- trees: one possible tree per cell, canopies from neighbouring chunks included ----
@@ -1721,6 +1733,7 @@ function BlockwildShared(C) {
   }
 
   function emitLiquid(B, pad, lpad, pi, x, y, z, id) {
+    const glow = B_LIGHT[id] > 0;                       // lava: every face glows (emissive flag)
     const above = pad[pi + PA];
     const surface = !(B_LIQUID[above] || B_OPAQUE[above]);
     const top = surface ? 1 - C.render.waterDrop : 1;
@@ -1738,7 +1751,7 @@ function BlockwildShared(C) {
         const b = f * 4 + k;
         const py = F_PY[b] > 0 ? top : 0;
         const vv = f === 2 || f === 3 ? CV[k] : py;
-        B.vert(x + F_PX[b], y + py, z + F_PZ[b], CU[k], vv, layer, shade, sky, blk, (surface && F_PY[b] > 0) ? 255 : 0);
+        B.vert(x + F_PX[b], y + py, z + F_PZ[b], CU[k], vv, layer, shade, sky, blk, (glow || (surface && F_PY[b] > 0)) ? 255 : 0);
       }
       B.quadIdx(false);
     }
@@ -3317,6 +3330,17 @@ Object.assign(PAINTERS, {
     });
   },
 });
+// Lava: molten orange with a dark crust breaking up into bright cracks.
+PAINTERS.lava = (P) => {
+  const n = P.vnoise(4), m = P.vnoise(8);
+  P.each((x, y) => {
+    const v = n(x, y) * 0.6 + m(x, y) * 0.4;
+    if (v > 0.72) return [255, 236, 120];
+    if (v > 0.55) return [255, 160 + (v - 0.55) * 300, 40];
+    if (v > 0.3) return [230, 90 + v * 80, 20];
+    return [150 + v * 120, 40 + v * 60, 14];
+  });
+};
 // ---- Milestone 6 item textures: feather, flint, hide, arrow, bow ----
 Object.assign(PAINTERS, {
   feather(P) {
@@ -5209,6 +5233,11 @@ class ItemEntity extends Body {
     if (this.age > S.itemDespawnSec) return false;
     if (!world.isMeshed(Math.floor(p.x), Math.floor(p.z))) return true;      // wait for terrain
     this.prev.copy(p);
+    if (world.getBlock(Math.floor(p.x), Math.floor(p.y + 0.1), Math.floor(p.z)) === BLOCK.lava) {   // burns up
+      Particles.burst(p.x, p.y + 0.2, p.z, [255, 140, 40], 6, 2, 0.2);
+      Sound.sizzle(player ? Math.max(0, 1 - player.pos.distanceTo(p) / 16) : 0);
+      return false;
+    }
     if (this.liquidAt(p.x, p.y + 0.1, p.z)) {
       this.vel.y += (1.2 - this.vel.y) * Math.min(1, 3 * dt);
       this.vel.x *= Math.max(0, 1 - 2 * dt); this.vel.z *= Math.max(0, 1 - 2 * dt);
@@ -5544,9 +5573,10 @@ class Creature extends Body {
     const ahead = world.getBlock(px, fy, pz);
     if (ahead < 0) return false;
     if (B_SOLID[ahead]) return true;                           // a wall or a step: handled by jumping
+    if (world.getBlock(px, fy, pz) === BLOCK.lava) return false;
     for (let d = 1; d <= CONFIG.creatures.maxDrop + 1; d++) {
       const id = world.getBlock(px, fy - d, pz);
-      if (id < 0) return false;
+      if (id < 0 || id === BLOCK.lava) return false;
       if (B_LIQUID[id]) return !(B_LIQUID[world.getBlock(px, fy - d - 1, pz)]);   // deep water: no
       if (B_SOLID[id]) return true;
     }
@@ -5566,6 +5596,7 @@ class Creature extends Body {
       return true;
     }
     for (const k of ['invuln', 'hurtT', 'attackT', 'fleeT', 'lungeT', 'stateT']) if (this[k] > 0) this[k] -= dt;
+    if (inLava(this)) { this.damage(4, { x: p.x + (Math.random() - 0.5), z: p.z + (Math.random() - 0.5) }); if (this.dying > 0) return true; }
     this.swing = Math.max(0, this.swing - dt * 3);
     this.thinkT -= dt;
     if (this.thinkT <= 0) { this.thinkT = 0.25; this.think(); }
@@ -6176,6 +6207,12 @@ function onPlayerLand(dist) {
   const dmg = Math.floor(dist - CONFIG.survival.safeFall);
   if (dmg > 0) hurt(dmg, 'Fell from a high place');
 }
+// Is a body standing in lava (feet or middle; `eyes` checks the head instead)?
+function inLava(b, eyes) {
+  const x = Math.floor(b.pos.x), z = Math.floor(b.pos.z);
+  if (eyes) return world.getBlock(x, Math.floor(b.pos.y + (b.eye || b.h * 0.85)), z) === BLOCK.lava;
+  return world.getBlock(x, Math.floor(b.pos.y + 0.1), z) === BLOCK.lava || world.getBlock(x, Math.floor(b.pos.y + b.h * 0.5), z) === BLOCK.lava;
+}
 let lastSprintPos = null;
 function tickSurvival(dt) {
   const S = CONFIG.survival;
@@ -6196,8 +6233,14 @@ function tickSurvival(dt) {
     surv.starveT += dt;
     if (surv.starveT >= S.starveSec) { surv.starveT = 0; if (surv.health > 1) hurt(1, 'Starved'); }
   } else surv.starveT = 0;
+  // lava burns (armor helps)
+  if (inLava(player)) {
+    surv.lavaT = (surv.lavaT || 0) + dt;
+    if (surv.lavaT >= 0.5) { surv.lavaT = 0; surv.invuln = 0; hurt(S.lavaDamage, 'Tried to swim in lava', null, true); }
+    if (Math.random() < 0.3) Particles.burst(player.pos.x, player.pos.y + 0.5, player.pos.z, [255, 150, 40], 1, 2, 0.6);
+  } else surv.lavaT = 0;
   // drowning
-  if (player.eyeInWater) {
+  if (player.eyeInWater && !inLava(player, true)) {
     surv.air = Math.max(0, surv.air - dt);
     if (surv.air <= 0) { surv.drownT += dt; if (surv.drownT >= 1) { surv.drownT = 0; surv.invuln = 0; hurt(S.drownDamage, 'Drowned'); } }
   } else { surv.air = Math.min(S.airSec, surv.air + dt * S.airRefill); surv.drownT = 0; }
@@ -6617,6 +6660,7 @@ const Sound = (() => {
     },
     water(k) { noise({ type: 'lowpass', freq: 1800, sweep: 300, q: 1, dur: 0.2 * k, gain: 0.18 * k }); },
     mud(k) { noise({ type: 'lowpass', freq: jit(500, 0.2), q: 1.2, dur: 0.12 * k, gain: 0.22 * k, attack: 0.01 }); noise({ freq: jit(1400, 0.2), q: 3, dur: 0.05 * k, gain: 0.06 * k, delay: 0.04 }); },
+    lava(k) { noise({ type: 'lowpass', freq: jit(320, 0.2), q: 1.5, dur: 0.18 * k, gain: 0.2 * k }); },
     cloth(k) { noise({ type: 'lowpass', freq: jit(700, 0.2), q: 0.6, dur: 0.1 * k, gain: 0.16 * k, attack: 0.02 }); },
   };
   const recipe = (m) => RECIPES[m] || RECIPES.stone;
@@ -6696,6 +6740,7 @@ const Sound = (() => {
     bow(charge) { if (!ok()) return; noise({ type: 'bandpass', freq: 1400 + charge * 900, q: 1.5, dur: 0.16, gain: 0.18 }); tone({ wave: 'triangle', freq: 220 + charge * 80, sweep: 120, dur: 0.12, gain: 0.08 }); },
     arrowHit() { if (!ok()) return; tone({ wave: 'sine', freq: 980, sweep: 1400, dur: 0.06, gain: 0.08 }); },
     thorn(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 2400, sweep: 900, dur: 0.12, gain: 0.14 * v }); tone({ wave: 'sine', freq: 700, sweep: 300, dur: 0.08, gain: 0.05 * v }); },
+    sizzle(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 3000, dur: 0.35, gain: 0.12 * v, attack: 0.01 }); },
     door(open) { if (!ok()) return; tone({ wave: 'triangle', freq: open ? 160 : 200, sweep: open ? 230 : 110, dur: 0.25, gain: 0.12, attack: 0.02 }); noise({ type: 'lowpass', freq: 600, dur: 0.1, gain: 0.15, delay: open ? 0.15 : 0.02 }); },
     equip() { if (!ok()) return; noise({ freq: 1800, q: 2, dur: 0.08, gain: 0.12 }); tone({ wave: 'triangle', freq: 520, sweep: 700, dur: 0.1, gain: 0.08, delay: 0.04 }); },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
@@ -7625,10 +7670,17 @@ function updateEnvironment(dt) {
   const ex = camera.position.x, ey = camera.position.y, ez = camera.position.z;
   const id = world.getBlock(Math.floor(ex), Math.floor(ey), Math.floor(ez));
   const fy = ey - Math.floor(ey);
-  underwater = id > 0 && B_LIQUID[id] === 1 && (fy < 1 - CONFIG.render.waterDrop || B_LIQUID[world.getBlock(Math.floor(ex), Math.floor(ey) + 1, Math.floor(ez))] === 1);
+  const inLava = id === BLOCK.lava && fy < 1 - CONFIG.render.waterDrop;
+  underwater = !inLava && id > 0 && B_LIQUID[id] === 1 && id !== BLOCK.lava && (fy < 1 - CONFIG.render.waterDrop || B_LIQUID[world.getBlock(Math.floor(ex), Math.floor(ey) + 1, Math.floor(ez))] === 1);
   $('waterTint').classList.toggle('on', underwater);
-  Sky.group.visible = !underwater;
-  if (underwater) {
+  $('lavaTint').classList.toggle('on', inLava);
+  Sky.group.visible = !underwater && !inLava;
+  if (inLava) {
+    _uw.setRGB(0.9, 0.32, 0.04);
+    U.uFogColor.value.copy(_uw);
+    renderer.setClearColor(_uw, 1);
+    U.uFogNear.value = 0.1; U.uFogFar.value = 2.2;
+  } else if (underwater) {
     _uw.copy(UNDERWATER_COLOR).multiplyScalar(0.25 + 0.75 * sky.daylight);
     U.uFogColor.value.copy(_uw);
     renderer.setClearColor(_uw, 1);
