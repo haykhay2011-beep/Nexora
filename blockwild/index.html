@@ -158,7 +158,11 @@
   .btn.danger { background-color: #8a2a22; background-image: linear-gradient(rgba(255,120,100,0.25), rgba(0,0,0,0.25)), var(--tex-stone); }
   /* ---------- Survival HUD & screens ---------- */
   #survHud { position: absolute; left: 50%; bottom: 76px; width: 468px; transform: translateX(-50%); height: 44px; }
-  #hearts, #food, #bubbles { position: absolute; display: flex; gap: 1px; }
+  #hearts, #food, #bubbles, #armorRow { position: absolute; display: flex; gap: 1px; }
+  #armorRow { left: 2px; bottom: 22px; }
+  #armorBox { display: flex; flex-direction: column; gap: 3px; margin-right: 26px; }
+  #armorBox .slot { position: relative; }
+  #armorBox .slot .ghost { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 11px var(--px-font); color: rgba(255,255,255,0.28); pointer-events: none; }
   #hearts { left: 2px; bottom: 0; }
   #food { right: 2px; bottom: 0; flex-direction: row-reverse; }
   #bubbles { right: 2px; bottom: 22px; flex-direction: row-reverse; }
@@ -253,7 +257,7 @@
   <div id="sleepFade"></div>
   <div id="crosshair"></div>
   <div id="blockname"></div>
-  <div id="survHud" class="hidden"><div id="bubbles"></div><div id="hearts"></div><div id="food"></div></div>
+  <div id="survHud" class="hidden"><div id="armorRow"></div><div id="bubbles"></div><div id="hearts"></div><div id="food"></div></div>
   <div id="hotbar"></div>
   <div id="modeTag"></div>
   <div id="debug" class="hidden"></div>
@@ -367,6 +371,7 @@
   <div class="panel inv-panel" id="craftPanel">
     <h2 id="craftTitle">Inventory</h2>
     <div class="craft-top">
+      <div id="armorBox" class="hidden"></div>
       <div id="craftBox"><div id="craftGrid" class="grid2"></div><div class="craft-arrow">&#10148;</div><div id="craftOut"></div></div>
       <div id="furnaceBox" class="hidden">
         <div class="fcol"><div id="fIn"></div><div class="flame"><div id="fFlame"></div></div><div id="fFuel"></div></div>
@@ -621,6 +626,7 @@ const CONFIG = {
     regenHunger: 18,        // hunger needed to slowly regenerate health
     regenSec: 4,
     starveSec: 4,
+    armorPerPoint: 0.04,    // each armor point blocks 4% of a hit (at most 80%)
     exhaustBase: 0.012,     // exhaustion per second just by being alive (4 exhaustion = 1 hunger)
     exhaustSprintPerBlock: 0.1,
     exhaustJump: 0.05,
@@ -1991,7 +1997,7 @@ const TOOL_TYPES = {
 };
 let nextItemId = 256;
 function defItem(key, name, props) {
-  const it = Object.assign({ id: nextItemId++, key, name, block: 0, maxStack: 64, tex: key, fuel: 0, food: 0, sat: 0, tool: null, places: null }, props || {});
+  const it = Object.assign({ id: nextItemId++, key, name, block: 0, maxStack: 64, tex: key, fuel: 0, food: 0, sat: 0, tool: null, armor: null, places: null }, props || {});
   ITEMS[it.id] = it;
   ITEM[key] = it.id;
   return it;
@@ -2018,6 +2024,18 @@ for (const [mk, m] of Object.entries(TOOL_MATERIALS)) for (const [tk, t] of Obje
     tool: { type: tk, tier: m.tier, speed: m.speed, dur: m.dur, damage: t.damage + m.bonus, material: mk },
   });
 }
+// Armor: four pieces per material; each piece guards against a share of incoming hits.
+const ARMOR_MATERIALS = {
+  hide: { name: 'Hide', mat: 'hide', points: [1, 3, 2, 1], dur: 80, color: [166, 116, 72], dark: [106, 72, 44] },
+  iron: { name: 'Iron', mat: 'iron_ingot', points: [2, 6, 5, 2], dur: 200, color: [226, 226, 232], dark: [140, 140, 150] },
+  gem:  { name: 'Gem',  mat: 'gem', points: [3, 8, 6, 3], dur: 420, color: [104, 232, 220], dark: [36, 150, 150] },
+};
+const ARMOR_PIECES = ['helmet', 'chestplate', 'leggings', 'boots'];
+const ARMOR_PIECE_NAMES = ['Helmet', 'Chestplate', 'Leggings', 'Boots'];
+for (const [mk, m] of Object.entries(ARMOR_MATERIALS)) ARMOR_PIECES.forEach((pk, i) => {
+  defItem(mk + '_' + pk, m.name + ' ' + ARMOR_PIECE_NAMES[i], { maxStack: 1, armor: { slot: i, points: m.points[i], dur: m.dur + i * 10, material: mk } });
+});
+const durMax = (id) => { const it = ITEMS[id]; return it && (it.tool || it.armor) ? (it.tool || it.armor).dur : 0; };
 // burn time in seconds for block items
 for (const [k, v] of Object.entries({ log: 15, pine_log: 15, amber_log: 15, planks: 15, workbench: 15, chest: 15 })) ITEMS[ITEM[k]].fuel = v;
 
@@ -2032,8 +2050,8 @@ const placesBlock = (id) => (id > 0 && id < 256 && BLOCKS[id] ? id : (ITEMS[id] 
 const isPlaceable = (id) => placesBlock(id) > 0;
 const toolOf = (stack) => (stack && ITEMS[stack.id] ? ITEMS[stack.id].tool : null);
 const newStack = (id, count, dur) => {
-  const t = ITEMS[id].tool;
-  return { id, count: count || 1, dur: t ? (dur === undefined || dur === null ? t.dur : dur) : 0 };
+  const max = durMax(id);
+  return { id, count: count || 1, dur: max ? (dur === undefined || dur === null ? max : dur) : 0 };
 };
 
 // Shaped recipes: rows of characters mapped through `key`; ' ' is an empty cell.
@@ -2056,6 +2074,15 @@ const RECIPES = [
   { out: ['arrow', 4], shape: ['F', 'S', 'E'], key: { F: 'flint', S: 'stick', E: 'feather' } },
   { out: ['bow', 1], shape: [' SR', 'S R', ' SR'], key: { S: 'stick', R: 'reeds' } },
 ];
+for (const [mk, m] of Object.entries(ARMOR_MATERIALS)) {
+  const key = { M: m.mat };
+  RECIPES.push(
+    { out: [mk + '_helmet', 1], shape: ['MMM', 'M M'], key },
+    { out: [mk + '_chestplate', 1], shape: ['M M', 'MMM', 'MMM'], key },
+    { out: [mk + '_leggings', 1], shape: ['MMM', 'M M', 'M M'], key },
+    { out: [mk + '_boots', 1], shape: ['M M', 'M M'], key },
+  );
+}
 for (const mk of Object.keys(TOOL_MATERIALS)) {
   const key = { M: TOOL_MATERIALS[mk].mat, S: 'stick' };
   RECIPES.push(
@@ -2104,8 +2131,9 @@ function matchRecipe(grid, w) {
 
 /* ---------------- inventory: 9 hotbar slots + 27 main slots ---------------- */
 class Inventory {
-  constructor() { this.slots = new Array(36).fill(null); }
-  clear() { this.slots.fill(null); }
+  constructor() { this.slots = new Array(36).fill(null); this.armor = [null, null, null, null]; }
+  clear() { this.slots.fill(null); this.armor.fill(null); }
+  armorPoints() { return this.armor.reduce((n, s) => n + (s ? ITEMS[s.id].armor.points : 0), 0); }
   // Add items, merging into existing stacks first (hotbar before main). Returns the count that did not fit.
   add(id, count, dur) {
     const max = maxStack(id);
@@ -3192,6 +3220,20 @@ Object.assign(PAINTERS, {
   },
   th_thorn(P) { P.each((x, y) => { const v = 0.85 + P.rnd() * 0.2; return y < 4 ? [236 * v, 226 * v, 170 * v] : [120 * v, 92 * v, 52 * v]; }); },
 });
+// ---- Milestone 6 armor icons: one shape per piece, painted in the material's colours ----
+const ARMOR_PATTERNS = {
+  helmet: ['', '', '', '....hhhhhhhh....', '...hddddddddh...', '..hddddddddddh..', '..hdhhhhhhhhdh..', '..hdh......hdh..', '..hdh......hdh..', '..hhh......hhh..'],
+  chestplate: ['', '..hhh....hhh....', '.hdddh..hdddh...', '.hddddhhddddh...', '.hddddddddddh...', '..hdddddddddh...', '...hddddddddh...', '...hddddddddh...', '...hddddddddh...', '...hddddddddh...', '...hddddddddh...', '...hhhhhhhhhh...'].map(r => ' ' + r.slice(0, 15)),
+  leggings: ['', '', '...hhhhhhhhhh...', '...hddddddddh...', '...hddddddddh...', '...hdddhhdddh...', '...hdddhhdddh...', '...hdddhhdddh...', '...hdddhhdddh...', '...hdddhhdddh...', '...hdddhhdddh...', '...hhhhhhhhhh...'],
+  boots: ['', '', '', '', '', '', '...hhh....hhh...', '...hdh....hdh...', '...hdh....hdh...', '..hddh....hddh..', '.hdddh....hdddh.', '.hhhhh....hhhhh.'],
+};
+for (const [mk, m] of Object.entries(ARMOR_MATERIALS)) for (const pk of ARMOR_PIECES) {
+  PAINTERS[mk + '_' + pk] = (P) => {
+    plantClear(P, m.color);
+    paintPattern(P, ARMOR_PATTERNS[pk], { h: m.dark, d: m.color });
+    P.each((x, y) => { const c = P.get(x, y); return c[3] > 0 && (x + y) % 7 === 0 ? [Math.min(255, c[0] * 1.15), Math.min(255, c[1] * 1.15), Math.min(255, c[2] * 1.15), 255] : null; });   // glints
+  };
+}
 // ---- Milestone 6 item textures: feather, flint, hide, arrow, bow ----
 Object.assign(PAINTERS, {
   feather(P) {
@@ -4927,6 +4969,18 @@ function updateEating(dt) {
     eatT = 0;
   }
 }
+// Use with armor in hand: put it on (swapping with whatever was worn there).
+function equipHeld() {
+  const s = heldStack(), a = s && ITEMS[s.id].armor;
+  if (!a || !isSurvival()) return false;
+  inv.slots[selected] = inv.armor[a.slot];
+  inv.armor[a.slot] = s;
+  Sound.equip();
+  Hand.swing();
+  renderHotbar();
+  renderSurvHud(true);
+  return true;
+}
 // Q: throw one of the held item.
 function dropHeld() {
   const s = heldStack();
@@ -5920,8 +5974,21 @@ function resetSurvival(data) {
   if (surv.health <= 0) surv.health = S.maxHealth;
 }
 // Every hit: brief invulnerability, red flash, slight knockback away from the source.
-function hurt(amount, cause, src) {
+// Armor softens hits from creatures, projectiles and lava (never falls, drowning or hunger).
+function hurt(amount, cause, src, armored) {
   if (!isSurvival() || surv.dead || surv.invuln > 0 || amount <= 0) return false;
+  if (src || armored) {
+    const pts = inv.armorPoints();
+    if (pts > 0) {
+      amount *= 1 - Math.min(0.8, pts * CONFIG.survival.armorPerPoint);
+      for (let i = 0; i < 4; i++) {
+        const a = inv.armor[i];
+        if (!a) continue;
+        a.dur -= 1;
+        if (a.dur <= 0) { inv.armor[i] = null; Sound.toolBreak(); showBlockName(itemName(a.id) + ' broke!'); }
+      }
+    }
+  }
   surv.health = Math.max(0, surv.health - amount);
   surv.invuln = CONFIG.survival.invulnSec;
   sleep = null;
@@ -5950,6 +6017,7 @@ function die(cause) {
     if (s) spawnItem(s, p.x, p.y + 0.8, p.z, (Math.random() - 0.5) * 5, 2 + Math.random() * 3, (Math.random() - 0.5) * 5);
     inv.slots[i] = null;
   }
+  for (let i = 0; i < 4; i++) if (inv.armor[i]) { spawnItem(inv.armor[i], p.x, p.y + 0.8, p.z, (Math.random() - 0.5) * 5, 2 + Math.random() * 3, (Math.random() - 0.5) * 5); inv.armor[i] = null; }
   if (craftUI.cursor) { spawnItem(craftUI.cursor, p.x, p.y + 0.8, p.z); craftUI.cursor = null; }
   renderHotbar();
   held[0] = held[2] = false;
@@ -6246,6 +6314,7 @@ function pressButton(b) {
     held[2] = true;
     if (tryUse()) { held[2] = false; return; }
     if (canEat()) return;                              // eating happens while held (tick)
+    if (equipHeld()) { held[2] = false; return; }
     doPlace();
     nextRepeat[2] = performance.now() + CONFIG.player.actionRepeatMs;
   }
@@ -6492,6 +6561,7 @@ const Sound = (() => {
     bow(charge) { if (!ok()) return; noise({ type: 'bandpass', freq: 1400 + charge * 900, q: 1.5, dur: 0.16, gain: 0.18 }); tone({ wave: 'triangle', freq: 220 + charge * 80, sweep: 120, dur: 0.12, gain: 0.08 }); },
     arrowHit() { if (!ok()) return; tone({ wave: 'sine', freq: 980, sweep: 1400, dur: 0.06, gain: 0.08 }); },
     thorn(v) { if (!ok() || v <= 0.02) return; noise({ type: 'highpass', freq: 2400, sweep: 900, dur: 0.12, gain: 0.14 * v }); tone({ wave: 'sine', freq: 700, sweep: 300, dur: 0.08, gain: 0.05 * v }); },
+    equip() { if (!ok()) return; noise({ freq: 1800, q: 2, dur: 0.08, gain: 0.12 }); tone({ wave: 'triangle', freq: 520, sweep: 700, dur: 0.1, gain: 0.08, delay: 0.04 }); },
     toolBreak() { if (!ok()) return; noise({ type: 'highpass', freq: 2600, dur: 0.16, gain: 0.25 }); tone({ wave: 'square', freq: 320, sweep: 80, dur: 0.22, gain: 0.07 }); },
     death() { if (!ok()) return; tone({ freq: 330, sweep: 70, dur: 0.9, gain: 0.25 }); noise({ type: 'lowpass', freq: 500, dur: 0.5, gain: 0.15 }); },
     silenceWind() { if (wind && ctx) wind.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); if (rainLoop && ctx) rainLoop.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); },
@@ -6726,9 +6796,9 @@ function stackInner(s) {
   if (!s) return '';
   let h = '<img alt="" src="' + itemIcon(s.id) + '"' + (s.id >= 256 || BLOCKS[s.id].icon ? ' class="pix"' : '') + '>';
   if (s.count > 1 && (isSurvival() || state === 'craft')) h += '<span class="cnt">' + s.count + '</span>';
-  const t = ITEMS[s.id].tool;
-  if (t && s.dur < t.dur) {
-    const f = Math.max(0, s.dur / t.dur);
+  const dm = durMax(s.id);
+  if (dm && s.dur < dm) {
+    const f = Math.max(0, s.dur / dm);
     h += '<span class="dur"><i style="width:' + Math.round(f * 100) + '%;background:hsl(' + Math.round(f * 120) + ',80%,50%)"></i></span>';
   }
   return h;
@@ -6772,6 +6842,7 @@ function pixelIcon(rows, pal) {
 }
 const HEART = ['.XX...XX.', 'XhhX.XrrX', 'XhrrXrrrX', 'XrrrrrrrX', '.XrrrrrX.', '..XrrrX..', '...XrX...', '....X....'];
 const LOAF = ['.........', '..XXXXX..', '.XbbbbbX.', 'XbhbhbhbX', 'XbbbbbbbX', 'XcccccccX', '.XXXXXXX.'];
+const SHIELD = ['XXX.XXX..', 'XhsXssX..', 'XssssssX.', '.XssssX..', '.XssssX..', '.XssssX..', '.XXXXXX..'].map(r => '.' + r.slice(0, 8));
 const BUBBLE = ['.........', '...XXX...', '..X...X..', '.X.h...X.', '.X.....X.', '.X.....X.', '..X...X..', '...XXX...'];
 const halfRows = (rows) => rows.map(r => r.split('').map((ch, x) => (x >= 5 && ch !== 'X' && ch !== '.') ? 'e' : ch).join(''));
 const HUD_ICONS = {
@@ -6782,6 +6853,9 @@ const HUD_ICONS = {
   foodHalf: pixelIcon(halfRows(LOAF), { X: '#3a2008', b: '#d6964a', h: '#f6ce88', c: '#9c6028', e: '#4a3018' }),
   foodEmpty: pixelIcon(LOAF, { X: '#3a2008', b: '#4a3018', h: '#4a3018', c: '#4a3018' }),
   bubble: pixelIcon(BUBBLE, { X: '#bfe2ff', h: '#ffffff' }),
+  armor: pixelIcon(SHIELD, { X: '#1c1f26', s: '#d8dde6', h: '#ffffff' }),
+  armorHalf: pixelIcon(halfRows(SHIELD), { X: '#1c1f26', s: '#d8dde6', h: '#ffffff', e: '#3a3f4a' }),
+  armorEmpty: pixelIcon(SHIELD, { X: '#1c1f26', s: '#3a3f4a', h: '#3a3f4a' }),
 };
 let survHudKey = '';
 function iconRow(value, full, half, empty) {
@@ -6792,13 +6866,15 @@ function iconRow(value, full, half, empty) {
   }
   return h;
 }
-function renderSurvHud() {
+function renderSurvHud(force) {
   if (!player || !isSurvival()) return;
   const hp = Math.ceil(surv.health), food = Math.ceil(surv.hunger);
   const air = surv.air < CONFIG.survival.airSec ? Math.ceil(surv.air / CONFIG.survival.airSec * 10) : -1;
-  const key = hp + '|' + food + '|' + air;
-  if (key === survHudKey) return;
+  const ap = inv.armorPoints();
+  const key = hp + '|' + food + '|' + air + '|' + ap;
+  if (key === survHudKey && !force) return;
   survHudKey = key;
+  $('armorRow').innerHTML = ap > 0 ? iconRow(ap, HUD_ICONS.armor, HUD_ICONS.armorHalf, HUD_ICONS.armorEmpty) : '';
   $('hearts').innerHTML = iconRow(hp, HUD_ICONS.heart, HUD_ICONS.heartHalf, HUD_ICONS.heartEmpty);
   $('hearts').classList.toggle('low', hp <= 4);
   $('food').innerHTML = iconRow(food, HUD_ICONS.food, HUD_ICONS.foodHalf, HUD_ICONS.foodEmpty);
@@ -6827,8 +6903,8 @@ let invDrag = null;
 function hideTooltip() { tooltip.classList.add('hidden'); }
 function showTooltip(e, s) {
   if (!s) { hideTooltip(); return; }
-  const t = ITEMS[s.id].tool;
-  tooltip.textContent = itemName(s.id) + (t ? '  (' + s.dur + '/' + t.dur + ')' : '');
+  const dm = durMax(s.id), a = ITEMS[s.id].armor;
+  tooltip.textContent = itemName(s.id) + (a ? '  +' + a.points + ' armor' : '') + (dm ? '  (' + s.dur + '/' + dm + ')' : '');
   tooltip.style.left = (e.clientX + 14) + 'px'; tooltip.style.top = (e.clientY - 8) + 'px';
   tooltip.classList.remove('hidden');
 }
@@ -6918,6 +6994,7 @@ function slotGet(ref) {
   if (k === 'c') return craftUI.grid[+v];
   if (k === 'f') { const f = furnaces.get(craftUI.furnace); return f ? f[v] : null; }
   if (k === 'k') { const c = chests.get(craftUI.chest); return c ? c.slots[+v] : null; }
+  if (k === 'a') return inv.armor[+v];
   return null;
 }
 function slotSet(ref, s) {
@@ -6926,9 +7003,11 @@ function slotSet(ref, s) {
   else if (k === 'c') craftUI.grid[+v] = s;
   else if (k === 'f') { const f = furnaces.get(craftUI.furnace); if (f) f[v] = s; }
   else if (k === 'k') { const c = chests.get(craftUI.chest); if (c) c.slots[+v] = s; }
+  else if (k === 'a') inv.armor[+v] = s;
 }
 function accepts(ref, s) {
   if (ref === 'f:output') return false;
+  if (ref.startsWith('a:')) { const a = ITEMS[s.id].armor; return !!a && a.slot === +ref.slice(2) && s.count === 1; }
   if (ref === 'f:fuel') return ITEMS[s.id].fuel > 0;
   return true;
 }
@@ -6995,6 +7074,8 @@ function quickMove(ref) {
       if (left === 0) inv.slots[i] = null; else s.count = left;
       return;
     }
+    const ar = ITEMS[s.id].armor;
+    if (craftUI.mode === 'inv' && ar && !inv.armor[ar.slot]) { inv.armor[ar.slot] = s; inv.slots[i] = null; Sound.equip(); return; }
     if (craftUI.mode === 'furnace' && SMELT[s.id] !== undefined) moveToRef(i, 'f:input');
     else if (craftUI.mode === 'furnace' && ITEMS[s.id].fuel > 0) moveToRef(i, 'f:fuel');
     else if (i < 9) moveRange(i, 9, 36); else moveRange(i, 0, 9);
@@ -7036,6 +7117,8 @@ function renderCraft() {
   $('craftBox').classList.toggle('hidden', C.mode === 'furnace' || C.mode === 'chest');
   $('furnaceBox').classList.toggle('hidden', C.mode !== 'furnace');
   $('chestBox').classList.toggle('hidden', C.mode !== 'chest');
+  $('armorBox').classList.toggle('hidden', C.mode !== 'inv');
+  if (C.mode === 'inv') $('armorBox').innerHTML = inv.armor.map((st, i) => st ? slotDiv('a:' + i, st) : '<div class="slot" data-ref="a:' + i + '"><span class="ghost">' + ARMOR_PIECE_NAMES[i].slice(0, 4).toUpperCase() + '</span></div>').join('');
   if (C.mode === 'chest') {
     const ch = chests.get(C.chest);
     if (!ch) { closeCraft(); return; }
@@ -7265,6 +7348,7 @@ function beginLoading(meta, edits, fresh) {
     if (Array.isArray(meta.hotbar)) meta.hotbar.forEach((id, i) => { if (id && ITEMS[id] && i < 9) inv.slots[i] = newStack(id, 1); });
     else if (player.mode === 'creative') DEFAULT_HOTBAR.forEach((k, i) => { inv.slots[i] = newStack(ITEM[k], 1); });
   }
+  if (Array.isArray(meta.armor)) meta.armor.forEach((a, i) => { const st = i < 4 ? stackFromJSON(a) : null; if (st && ITEMS[st.id].armor && ITEMS[st.id].armor.slot === i) inv.armor[i] = st; });
   selected = Math.max(0, Math.min(8, meta.selected | 0));
   resetSurvival(meta.surv);
   survHudKey = '';
@@ -7344,6 +7428,7 @@ function saveNow() {
   const rp = surv.dead ? respawnPoint() : null;
   if (rp) meta.player = { x: rp.x, y: rp.y, z: rp.z, yaw: player.yaw, pitch: 0, flying: false };
   meta.inventory = inv.toJSON();
+  meta.armor = inv.armor.map(stackToJSON);
   delete meta.hotbar;
   meta.selected = selected;
   // saved while dead: come back as if respawned (the dropped items stay where you died)
