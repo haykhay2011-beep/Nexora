@@ -5,6 +5,7 @@ import { Flora, kelpGeometry, seagrassGeometry, tubeWormGeometry } from './Flora
 import { RNG, hashString } from '../core/math.js';
 import { AIR_VENTS, WORLD_SEED } from './config.js';
 import { ventList } from './Atmosphere.js';
+import { Hazards } from './Hazards.js';
 import { buildReef } from './zones/reef.js';
 import { buildKelp } from './zones/kelp.js';
 import { buildCity } from './zones/city.js';
@@ -38,6 +39,7 @@ export class World {
     }
     this.airVents = ventList(AIR_VENTS);
     this.airPockets = []; // {x,y,z,r} spheres of air
+    this.hazards = new Hazards(game);
   }
 
   build() {
@@ -56,6 +58,7 @@ export class World {
     }
     this.B.finalize();
     for (const f of Object.values(this.flora)) f.finalize();
+    this.hazards.finalize(this.scene);
     g.atmosphere.setVents(this.airVents);
   }
 
@@ -79,6 +82,7 @@ export class World {
     this.B.update(pos.x, pos.z, view);
     for (const f of Object.values(this.flora)) f.update(pos.x, pos.z, view);
     for (const u of this.updaters) u(dt, pos);
+    this.hazards.update(dt);
 
     // Assign the light pool to the closest active emitters.
     const cand = [];

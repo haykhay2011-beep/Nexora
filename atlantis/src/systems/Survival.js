@@ -34,17 +34,24 @@ export class Survival {
     if (this.oxygen <= 0) this.oxygen = this.max;
   }
 
-  damage(amount, source, from) {
-    if (this.game.mode !== 'playing') return;
-    if (this.hurtCooldown > 0 && source !== 'heat') return;
+  // continuous: small per-frame damage (no cooldown, no knockback, quiet).
+  damage(amount, source, from, continuous = false) {
+    if (this.game.mode !== 'playing') return false;
+    if (continuous) {
+      this.oxygen = Math.max(0, this.oxygen - amount);
+      if (this.hurtCooldown <= 0) { this.game.ui.hurt(source); this.hurtCooldown = 0.8; }
+      return true;
+    }
+    if (this.hurtCooldown > 0) return false;
     this.oxygen = Math.max(0, this.oxygen - amount);
-    if (source !== 'heat' && source !== 'pressure') this.hurtCooldown = 0.8;
+    this.hurtCooldown = 0.9;
     this.game.ui.hurt(source);
-    this.game.audio.play(source === 'zap' ? 'zap' : source === 'sting' ? 'sting' : 'hurt');
+    this.game.audio.play(source === 'zap' ? 'zap' : source === 'sting' ? 'sting' : source === 'heat' ? 'sizzle' : 'hurt');
     if (from) {
       push.subVectors(this.game.player.pos, from).normalize().multiplyScalar(9);
       this.game.player.vel.add(push);
     }
+    return true;
   }
 
   update(dt) {

@@ -76,7 +76,7 @@ The children used to play a game there, turning the statues to look at the signs
     kind: 'page', title: 'Keeper\'s Journal VI — The Market Weights',
     text: `Our merchants were honest because the scales were public. Three great weights, three great plates, in the middle of the square for all to see.
 
-I sealed the vault beneath the market with the same rule: the vault opens only when every plate carries a weight. If a stone sticks in a corner, the old reset lever still works.`,
+I sealed the vault beside the market with the same rule: the vault opens only when every plate carries a weight. The stones glide far on the polished tiles, so think before you push. If you go wrong, the old reset lever still works.`,
   },
   page7: {
     kind: 'page', title: 'Keeper\'s Journal VII — The Temple Seal',
@@ -124,7 +124,9 @@ STONE gazes upon the WAVE."`,
     kind: 'carving', title: 'Carving — The Fair Scales',
     text: `Merchants push square stones across a tiled square.
 
-"Three weights upon three plates, and the vault shall open. Push with care: a stone in a corner cannot be pulled out."`,
+"Three weights upon three plates, and the vault shall open."
+
+Below, smaller: "The square is polished smooth. A pushed stone glides until something stops it — a pillar, another stone, the wall. A plate catches a stone and never lets go."`,
   },
   c_mural: {
     kind: 'carving', title: 'Mural — The Shining City',

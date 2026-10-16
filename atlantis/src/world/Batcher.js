@@ -90,3 +90,49 @@ export class StaticBatcher {
     }
   }
 }
+
+// Builds a standalone (movable) group from primitive parts, one merged mesh per material.
+export class MeshBuilder {
+  constructor() {
+    this.parts = new Map();
+    this.rand = mulberry32(7);
+  }
+
+  add(geometry, matName, matrix, color = 0xffffff, jitter = 0.06) {
+    let g = geometry.index ? geometry.toNonIndexed() : geometry.clone();
+    for (const name of Object.keys(g.attributes)) if (name !== 'position') g.deleteAttribute(name);
+    if (matrix) g.applyMatrix4(matrix);
+    const col = color instanceof THREE.Color ? color : new THREE.Color(color);
+    const n = g.attributes.position.count;
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i += 3) {
+      const j = 1 + (this.rand() - 0.5) * 2 * jitter;
+      for (let k = 0; k < 3 && i + k < n; k++) {
+        arr[(i + k) * 3] = Math.min(1, col.r * j);
+        arr[(i + k) * 3 + 1] = Math.min(1, col.g * j);
+        arr[(i + k) * 3 + 2] = Math.min(1, col.b * j);
+      }
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+    if (!this.parts.has(matName)) this.parts.set(matName, []);
+    this.parts.get(matName).push(g);
+  }
+
+  build() {
+    const mats = getMaterials();
+    const group = new THREE.Group();
+    for (const [name, geos] of this.parts) {
+      const merged = mergeGeometries(geos, false);
+      geos.forEach((g) => g.dispose());
+      group.add(new THREE.Mesh(merged, mats[name]));
+    }
+    return group;
+  }
+}
+
+// Context for building a movable object with the same prop functions used for static scenery.
+export function builderCtx(rng) {
+  const builder = new MeshBuilder();
+  const noop = () => ({});
+  return { B: builder, C: { box: noop, cylinder: noop, sphere: noop }, rng, builder };
+}
