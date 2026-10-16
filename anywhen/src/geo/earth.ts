@@ -140,14 +140,10 @@ export class EarthData {
   }
 }
 
-/** Decompress gzip bytes in browsers (DecompressionStream) or Node (zlib). */
+/** Decompress gzip bytes with the browser's DecompressionStream (Node tests use zlib directly). */
 export async function gunzip(bytes: Uint8Array): Promise<Uint8Array> {
-  if (typeof DecompressionStream !== 'undefined') {
-    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-    return new Uint8Array(await new Response(stream).arrayBuffer());
-  }
-  const zlib = await import(/* @vite-ignore */ 'node:zlib');
-  return new Uint8Array(zlib.gunzipSync(bytes));
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
 let cached: Promise<EarthData> | null = null;

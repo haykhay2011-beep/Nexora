@@ -104,7 +104,9 @@ input[type=text], input[type=search], select { background: rgba(0,0,0,0.3); bord
 .modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(5,8,18,0.55); }
 .modal .sheet { width: min(980px, 94vw); height: min(680px, 90vh); display: flex; flex-direction: column; overflow: hidden; }
 .modal .sheet header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
-.modal .sheet header h2 { margin: 0; flex: 1; }
+.modal .sheet header h2 { margin: 0; flex: 0 0 auto; white-space: nowrap; }
+.modal .sheet header .tabs { flex: 1; }
+.modal .sheet header > .btn:last-child { margin-left: auto; white-space: nowrap; }
 .modal .sheet .body { flex: 1; overflow: auto; padding: 16px 18px; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .tab { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 13px; }

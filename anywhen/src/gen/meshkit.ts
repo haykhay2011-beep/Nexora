@@ -52,6 +52,7 @@ const _q = new Quaternion();
 const _e = new Euler();
 const _s = new Vector3();
 const _p = new Vector3();
+const _up = new Vector3(0, 1, 0);
 
 export class MeshKit {
   pos: number[] = [];
@@ -108,6 +109,15 @@ export class MeshKit {
   boxC(w: number, h: number, d: number, color: ColF, xf: Xf = {}): this {
     const g = cached('box', () => new BoxGeometry(1, 1, 1));
     return this.add(g, color, { ...xf, sx: w * (xf.sx ?? 1), sy: h * (xf.sy ?? 1), sz: d * (xf.sz ?? 1) });
+  }
+  /** Square-section beam of thickness t from point a to point b. */
+  beam(ax: number, ay: number, az: number, bx: number, by: number, bz: number, t: number, color: ColF): this {
+    _v.set(bx - ax, by - ay, bz - az);
+    const len = _v.length();
+    if (len < 1e-4) return this;
+    _q.setFromUnitVectors(_up, _v.divideScalar(len));
+    _e.setFromQuaternion(_q, 'YXZ');
+    return this.boxC(t, len, t, color, { x: (ax + bx) / 2, y: (ay + by) / 2, z: (az + bz) / 2, rx: _e.x, ry: _e.y, rz: _e.z });
   }
   cyl(rTop: number, rBot: number, h: number, seg: number, color: ColF, x = 0, y = 0, z = 0, extra: Xf = {}): this {
     const ratio = rBot === 0 ? 0 : rTop / rBot;

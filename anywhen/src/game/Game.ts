@@ -392,6 +392,7 @@ export class Game {
     if (!w || !w.structuresReady) return;
     const plan = w.plan;
     const sp = plan.spawn;
+    const region = REGION_BY_ID.get(plan.regionId) ?? REGION_BY_ID.get('europe')!;
     for (const n of this.story.npcsHere(plan)) {
       if (this.storyNpcs.has(n.id)) continue;
       const pos = this.findSpot(sp.x + Math.sin(sp.facing) * 14, sp.z + Math.cos(sp.facing) * 14, 6, rng);
@@ -399,7 +400,7 @@ export class Game {
         id: 'story-' + n.id, name: n.name, job: 'story', jobName: n.role, work: 'idle', fact: '', x: pos[0], z: pos[1], home: pos, workAt: pos, social: pos,
         outfit: n.outfit === 'hologram'
           ? { body: 'future', hat: 'none', colors: ['#a0e8ff', '#c8f0ff', '#7af0ff', '#e8f8ff', '#a0e8ff'], hair: 2, scale: 1, glow: true }
-          : makeOutfit(new Rng(hash32(n.id)), resolveProfile(plan.eraId, REGION_BY_ID.get(plan.regionId)!, REGION_BY_ID.get(plan.regionId)!.subzones?.find((z) => z.name === plan.subzone) ?? null, plan.biome), REGION_BY_ID.get(plan.regionId)!, 'adult'),
+          : makeOutfit(new Rng(hash32(n.id)), resolveProfile(plan.eraId, region, region.subzones?.find((z) => z.name === plan.subzone) ?? null, plan.biome), region, 'adult'),
         trader: false, questGiver: false, age: 'adult', seed: hash32(n.id), sleepsOutside: true,
       };
       const npc = w.npcs.add(spawn, { story: true, storyId: n.id });

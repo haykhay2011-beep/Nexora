@@ -819,7 +819,8 @@
     276
    ],
    "antenna": 24,
-   "clear": 200
+   "arches": true,
+   "clear": 130
   },
   "stages": [
    {

@@ -80,15 +80,20 @@ foot, returns anomalies home, and repairs 12 Major Rifts.
 ### eras.json
 ```jsonc
 { "id": "classical", "name": "Classical Antiquity", "start": -800, "end": 500, "bucketYears": 50,
-  "tech": 3, "settlementScale": 1.0, "unlock": { "energyCost": 1 },
-  "palette": { "tint": "#ffe2a8", "saturation": 1.1, "contrast": 1.05, "fog": "#e8d6b0", "skyTop": "#4a86d4", "skyHorizon": "#f3dcae" },
-  "climateOffset": 0, "seaLevel": 0, "ice": 0,
-  "buildingStyles": ["stone_columned", "mudbrick_flat"], "roads": "stone", "vehicles": ["cart"],
-  "currency": { "name": "silver coins", "symbol": "ⓢ", "rate": 1 },
-  "clothing": { "style": "tunic", "palette": ["#e9dcc0", "#b5523b"] },
-  "fauna": ["sheep", "goat", "horse"], "sounds": ["crowd", "hammer"], "music": { "instrument": "lyre", "scale": "dorian", "tempo": 84 },
-  "inventions": [{ "name": "Concrete dome", "fact": "…" }], "goods": ["olive oil", "amphora"] }
+  "tech": 3, "humans": true, "settlementScale": 1.0, "maxTier": "city", "energyTier": 1,
+  "palette": { "tint": "#ffe2a8", "saturation": 1.1, "contrast": 1.05, "fog": "#e8d6b0", "skyTop": "#4a86d4",
+               "skyHorizon": "#f3dcae", "sun": "#fff4e0", "ambient": "#b8b0a0", "ground": "#6a7a4a" },
+  "climateOffset": 0, "seaLevel": 0, "floraKit": "holocene",
+  "styles": ["stone_columned", "mudbrick_flat"], "roads": "stone", "layout": "grid",
+  "vehicles": ["cart"], "boats": ["galley"], "mounts": ["horse", "boat"],
+  "currency": { "name": "silver coins", "short": "ⓢ", "rate": 1 },
+  "clothing": { "styles": ["tunic"], "colors": ["#e9dcc0"], "accents": ["#b5523b"], "headwear": ["none"] },
+  "domestic": ["sheep", "goat", "horse"], "ambience": ["crowd", "hammer"],
+  "music": { "instrument": "lyre", "scale": "dorian", "tempo": 84 },
+  "inventions": [{ "id": "dome", "name": "Concrete dome", "fact": "…" }], "goods": ["olive oil", "amphora"],
+  "people": { … }, "sky": { … }, "lights": { … }, "description": "…" }
 ```
+The full type is `EraProfile` in `src/data/types.ts`.
 
 ### regions.json
 Each region has a coarse lon/lat polygon, a human-arrival year, optional sub-zones (islands
@@ -116,7 +121,7 @@ that the TerrainSampler applies.
 * **anomalies**: model key, home era (plus an optional region), challenge type
   (`catch | chase | puzzle | sneak`), and a fact.
 * **rifts**: 12 hand-written quest chains. Each step is one of the typed objectives `travel | talk |
-  find | capture | return | photograph | visit | puzzle | deliver`.
+  find | capture | return | photograph | visit | puzzle | deliver | moon`.
 * **dialogue**: per-era and per-region template lines with `{slots}`.
 * **cities**: historical names by year range and size tiers, used for place naming and
   settlement scale.

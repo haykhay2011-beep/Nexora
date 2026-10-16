@@ -30,11 +30,16 @@ export class Story {
   get rift(): RiftDef | null { return this.s.story.ended ? null : RIFTS[this.s.story.rift] ?? null; }
   get step(): RiftStep | null { const r = this.rift; return r ? r.steps[this.s.story.step] ?? null : null; }
 
-  /** The travel/moon step that sets where the current step takes place. */
+  /** Steps that move the story somewhere: travel, the Moon, or a return to a specific place. */
+  static isLocation(st: RiftStep): boolean {
+    return st.type === 'travel' || st.type === 'moon' || (st.type === 'return' && st.lat !== undefined);
+  }
+
+  /** The location step that sets where the current step takes place. */
   locationStep(stepIdx = this.s.story.step): RiftStep | null {
     const r = this.rift;
     if (!r) return null;
-    for (let i = stepIdx; i >= 0; i--) { const st = r.steps[i]; if (st.type === 'travel' || st.type === 'moon') return st; }
+    for (let i = stepIdx; i >= 0; i--) { const st = r.steps[i]; if (Story.isLocation(st)) return st; }
     return null;
   }
 
@@ -47,6 +52,7 @@ export class Story {
     if (km > (st.radiusKm ?? 30)) return false;
     if (st.yearMin !== undefined && plan.year < st.yearMin) return false;
     if (st.yearMax !== undefined && plan.year > st.yearMax) return false;
+    if (st.era !== undefined && plan.eraId !== st.era) return false;
     return true;
   }
 
@@ -75,7 +81,7 @@ export class Story {
     const out: RiftDef['npcs'] = [];
     for (let i = this.s.story.step; i < r.steps.length; i++) {
       const st = r.steps[i];
-      if (st.type === 'travel' && i > this.s.story.step) break;
+      if (i > this.s.story.step && Story.isLocation(st)) break;
       if (st.npc && Story.matches(loc, plan) && !out.some((n) => n.id === st.npc)) {
         const n = r.npcs.find((x) => x.id === st.npc);
         if (n) out.push(n);

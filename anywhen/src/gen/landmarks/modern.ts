@@ -8,29 +8,75 @@ export const lattice_tower: Builder = (k, c) => {
   const levels = (c.p.levels as number[]) ?? [57, 116, 276];
   const built = building(c) ? Math.max(0.25, Math.min(0.9, (c.year - 1887 + 0.5) / 2.2)) : 1;
   const Hb = H * built;
-  const half = (y: number) => (B / 2) * Math.pow(1 - y / H, 1.9) + 2;
-  const colAt = (y: number) => (white && Math.floor((y / H) * 7) % 2 === 1 ? white : col);
-  const seg = 28;
-  for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
-    for (let i = 0; i < seg; i++) {
-      const y0 = (i / seg) * Hb, y1 = ((i + 1) / seg) * Hb;
-      if (y0 > Hb) break;
-      const r0 = half(y0), r1 = half(y1);
-      const x0 = sx * r0 * 0.8, z0 = sz * r0 * 0.8, x1 = sx * r1 * 0.8, z1 = sz * r1 * 0.8;
-      const len = Math.hypot(x1 - x0, y1 - y0, z1 - z0);
-      const t = Math.max(0.6, 5 * (1 - y0 / H));
-      k.boxC(t, len, t, tone(c, colAt(y0)), { x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: (z0 + z1) / 2, rz: -Math.atan2(x1 - x0, y1 - y0) * (1), rx: Math.atan2(z1 - z0, y1 - y0) });
-      // cross bracing
-      if (i % 2 === 0) {
-        k.boxC(r0 * 1.6, 0.4, 0.4, tone(c, colAt(y0)), { x: 0, y: y0, z: sz * r0 * 0.8 });
-        k.boxC(0.4, 0.4, r0 * 1.6, tone(c, colAt(y0)), { x: sx * r0 * 0.8, y: y0, z: 0 });
+  // half-width of the outer edge at height y (concave taper), and the pier width below the leg junction
+  const half = (y: number) => (B / 2 - 2) * Math.pow(1 - y / H, 1.9) + 2;
+  const legTop = num(c, 'legTop', Math.min(levels[0], H * 0.2));
+  const legW = (y: number) => B * 0.17 * (1 - 0.45 * Math.min(1, y / legTop));
+  const colAt = (y: number) => tone(c, white && Math.floor((y / H) * 7) % 2 === 1 ? white : col);
+  // segment boundaries aligned with the leg junction
+  const ys: number[] = [];
+  const nLeg = 6, nTop = 24;
+  for (let i = 0; i <= nLeg; i++) ys.push((i / nLeg) * legTop);
+  for (let i = 1; i <= nTop; i++) ys.push(legTop + (i / nTop) * (H - legTop));
+  const CORNERS: [number, number][] = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  const thick = (y: number) => Math.max(0.5, 2.6 * (1 - y / H));
+  for (let i = 0; i < ys.length - 1; i++) {
+    const y0 = ys[i];
+    if (y0 >= Hb) break;
+    const y1 = Math.min(ys[i + 1], Hb);
+    const h0 = half(y0), h1 = half(y1), t = thick(y0), cc = colAt(y0);
+    const flip = i % 2 === 0;
+    if (y0 < legTop - 0.01) {
+      // four separate piers, each a small braced square shaft
+      const w0 = legW(y0), w1 = legW(y1);
+      for (const [sx, sz] of CORNERS) {
+        const pc = (h: number, w: number, a: number, b: number): [number, number] => [sx * (h - a * w), sz * (h - b * w)];
+        const q: [number, number][] = [[0, 0], [1, 0], [1, 1], [0, 1]];
+        for (let j = 0; j < 4; j++) {
+          const [a0, b0] = q[j], [a1, b1] = q[(j + 1) % 4];
+          const p0 = pc(h0, w0, a0, b0), p1 = pc(h1, w1, a0, b0);
+          k.beam(p0[0], y0, p0[1], p1[0], y1, p1[1], t, cc);
+          const d0 = pc(h0, w0, flip ? a0 : a1, flip ? b0 : b1), d1 = pc(h1, w1, flip ? a1 : a0, flip ? b1 : b0);
+          k.beam(d0[0], y0, d0[1], d1[0], y1, d1[1], t * 0.4, cc);
+        }
+      }
+    } else {
+      // single tapering shaft: corner chords, alternating diagonals and girts on each face
+      for (let j = 0; j < 4; j++) {
+        const [ax, az] = CORNERS[j], [bx, bz] = CORNERS[(j + 1) % 4];
+        k.beam(ax * h0, y0, az * h0, ax * h1, y1, az * h1, t, cc);
+        if (flip) k.beam(ax * h0, y0, az * h0, bx * h1, y1, bz * h1, t * 0.4, cc);
+        else k.beam(bx * h0, y0, bz * h0, ax * h1, y1, az * h1, t * 0.4, cc);
+        k.beam(ax * h1, y1, az * h1, bx * h1, y1, bz * h1, t * 0.5, cc);
       }
     }
-    c.colliders.push({ k: 'box', x: sx * half(0) * 0.8, z: sz * half(0) * 0.8, hw: 6, hd: 6, rot: 0, y0: 0, y1: 20 });
   }
-  // arches at the base and observation decks
-  if (H > 250) for (let i = 0; i < 4; i++) k.torus(B * 0.36, 1.2, 4, 16, tone(c, col), { y: 0, ry: (i * Math.PI) / 2, z: 0, x: 0, sz: 1, sy: 0.85 });
-  for (const ly of levels) if (ly < Hb) { const r = half(ly); k.box(r * 2 + 6, 3, r * 2 + 6, tone(c, white || shade(col, 1.15)), 0, ly, 0); boxCol(c, 0, 0, r * 2 + 6, r * 2 + 6, ly, ly + 3); }
+  for (const [sx, sz] of CORNERS) {
+    const r = half(0) - legW(0) / 2;
+    c.colliders.push({ k: 'box', x: sx * r, z: sz * r, hw: legW(0) / 2, hd: legW(0) / 2, rot: 0, y0: 0, y1: 20 });
+  }
+  // decorative arches spanning the piers on each face
+  if (bool(c, 'arches') && Hb > legTop) {
+    const apex = legTop * 0.82, foot = legTop * 0.12, n = 14;
+    for (let f = 0; f < 4; f++) {
+      const rot = (f * Math.PI) / 2, cs = Math.cos(rot), sn = Math.sin(rot);
+      let prev: [number, number, number] | null = null;
+      for (let j = 0; j <= n; j++) {
+        const u = -1 + (2 * j) / n;
+        const y = foot + (apex - foot) * Math.sqrt(Math.max(0, 1 - u * u));
+        const lx = u * (half(y) - legW(y)), lz = half(y) - 0.5;
+        const p: [number, number, number] = [lx * cs - lz * sn, y, lx * sn + lz * cs];
+        if (prev) k.beam(prev[0], prev[1], prev[2], p[0], p[1], p[2], 1.4, tone(c, col));
+        prev = p;
+      }
+    }
+  }
+  for (const ly of levels) if (ly < Hb) {
+    const r = half(ly), w = r * 2 + 6;
+    k.box(w, 3, w, tone(c, white || shade(col, 1.15)), 0, ly, 0);
+    k.box(w - 1, 2.4, w - 1, tone(c, shade(white || col, 0.8)), 0, ly + 3, 0);
+    boxCol(c, 0, 0, w, w, ly, ly + 3);
+  }
   if (!building(c)) {
     k.cyl(1.2, 2.5, H * 0.08, 8, tone(c, col), 0, H * 0.92, 0);
     k.cyl(0.4, 0.4, num(c, 'antenna', 20), 4, '#c8c8c8', 0, H, 0);
