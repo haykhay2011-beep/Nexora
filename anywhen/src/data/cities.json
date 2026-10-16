@@ -1,0 +1,5303 @@
+[
+ {
+  "name": "London",
+  "lat": 51.507,
+  "lon": -0.128,
+  "country": "United Kingdom",
+  "founded": 47,
+  "tiers": [
+   [
+    47,
+    "town"
+   ],
+   [
+    100,
+    "city"
+   ],
+   [
+    450,
+    "hamlet"
+   ],
+   [
+    900,
+    "town"
+   ],
+   [
+    1100,
+    "city"
+   ],
+   [
+    1880,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Londinium",
+    "from": 47,
+    "to": 500
+   },
+   {
+    "name": "Lundenwic",
+    "from": 500,
+    "to": 886
+   }
+  ]
+ },
+ {
+  "name": "Paris",
+  "lat": 48.857,
+  "lon": 2.352,
+  "country": "France",
+  "founded": -250,
+  "tiers": [
+   [
+    -250,
+    "village"
+   ],
+   [
+    0,
+    "town"
+   ],
+   [
+    1000,
+    "city"
+   ],
+   [
+    1880,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Lutetia",
+    "from": -250,
+    "to": 360
+   }
+  ]
+ },
+ {
+  "name": "Rome",
+  "lat": 41.893,
+  "lon": 12.483,
+  "country": "Italy",
+  "founded": -753,
+  "tiers": [
+   [
+    -753,
+    "village"
+   ],
+   [
+    -500,
+    "town"
+   ],
+   [
+    -300,
+    "city"
+   ],
+   [
+    600,
+    "town"
+   ],
+   [
+    1500,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Athens",
+  "lat": 37.984,
+  "lon": 23.728,
+  "country": "Greece",
+  "founded": -3000,
+  "tiers": [
+   [
+    -3000,
+    "village"
+   ],
+   [
+    -1400,
+    "town"
+   ],
+   [
+    -600,
+    "city"
+   ],
+   [
+    600,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Constantinople",
+  "lat": 41.008,
+  "lon": 28.978,
+  "country": "Turkey",
+  "founded": -657,
+  "tiers": [
+   [
+    -657,
+    "town"
+   ],
+   [
+    330,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Byzantium",
+    "from": -657,
+    "to": 330
+   },
+   {
+    "name": "Constantinople",
+    "from": 330,
+    "to": 1930
+   },
+   {
+    "name": "Istanbul",
+    "from": 1930,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Madrid",
+  "lat": 40.417,
+  "lon": -3.704,
+  "country": "Spain",
+  "founded": 865,
+  "tiers": [
+   [
+    865,
+    "town"
+   ],
+   [
+    1600,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Mayrit",
+    "from": 865,
+    "to": 1100
+   }
+  ]
+ },
+ {
+  "name": "Lisbon",
+  "lat": 38.722,
+  "lon": -9.139,
+  "country": "Portugal",
+  "founded": -1000,
+  "tiers": [
+   [
+    -1000,
+    "village"
+   ],
+   [
+    -200,
+    "town"
+   ],
+   [
+    1400,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Olisipo",
+    "from": -200,
+    "to": 700
+   }
+  ]
+ },
+ {
+  "name": "Barcelona",
+  "lat": 41.385,
+  "lon": 2.173,
+  "country": "Spain",
+  "founded": -15,
+  "tiers": [
+   [
+    -15,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Barcino",
+    "from": -15,
+    "to": 700
+   }
+  ]
+ },
+ {
+  "name": "Berlin",
+  "lat": 52.52,
+  "lon": 13.405,
+  "country": "Germany",
+  "founded": 1237,
+  "tiers": [
+   [
+    1237,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Vienna",
+  "lat": 48.208,
+  "lon": 16.373,
+  "country": "Austria",
+  "founded": -15,
+  "tiers": [
+   [
+    -15,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Vindobona",
+    "from": -15,
+    "to": 500
+   }
+  ]
+ },
+ {
+  "name": "Prague",
+  "lat": 50.075,
+  "lon": 14.438,
+  "country": "Czechia",
+  "founded": 880,
+  "tiers": [
+   [
+    880,
+    "town"
+   ],
+   [
+    1300,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Moscow",
+  "lat": 55.756,
+  "lon": 37.617,
+  "country": "Russia",
+  "founded": 1147,
+  "tiers": [
+   [
+    1147,
+    "town"
+   ],
+   [
+    1500,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "St Petersburg",
+  "lat": 59.934,
+  "lon": 30.335,
+  "country": "Russia",
+  "founded": 1703,
+  "tiers": [
+   [
+    1703,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Saint Petersburg",
+    "from": 1703,
+    "to": 1914
+   },
+   {
+    "name": "Petrograd",
+    "from": 1914,
+    "to": 1924
+   },
+   {
+    "name": "Leningrad",
+    "from": 1924,
+    "to": 1991
+   },
+   {
+    "name": "Saint Petersburg",
+    "from": 1991,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Amsterdam",
+  "lat": 52.368,
+  "lon": 4.904,
+  "country": "Netherlands",
+  "founded": 1275,
+  "tiers": [
+   [
+    1275,
+    "town"
+   ],
+   [
+    1600,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Venice",
+  "lat": 45.44,
+  "lon": 12.316,
+  "country": "Italy",
+  "founded": 421,
+  "tiers": [
+   [
+    421,
+    "village"
+   ],
+   [
+    800,
+    "town"
+   ],
+   [
+    1000,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Florence",
+  "lat": 43.77,
+  "lon": 11.256,
+  "country": "Italy",
+  "founded": -59,
+  "tiers": [
+   [
+    -59,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Florentia",
+    "from": -59,
+    "to": 500
+   }
+  ]
+ },
+ {
+  "name": "Naples",
+  "lat": 40.852,
+  "lon": 14.268,
+  "country": "Italy",
+  "founded": -600,
+  "tiers": [
+   [
+    -600,
+    "town"
+   ],
+   [
+    1300,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Neapolis",
+    "from": -600,
+    "to": 500
+   }
+  ]
+ },
+ {
+  "name": "Marseille",
+  "lat": 43.296,
+  "lon": 5.37,
+  "country": "France",
+  "founded": -600,
+  "tiers": [
+   [
+    -600,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Massalia",
+    "from": -600,
+    "to": -49
+   },
+   {
+    "name": "Massilia",
+    "from": -49,
+    "to": 500
+   }
+  ]
+ },
+ {
+  "name": "Edinburgh",
+  "lat": 55.953,
+  "lon": -3.188,
+  "country": "United Kingdom",
+  "founded": 600,
+  "tiers": [
+   [
+    600,
+    "hamlet"
+   ],
+   [
+    1100,
+    "town"
+   ],
+   [
+    1600,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Dublin",
+  "lat": 53.35,
+  "lon": -6.26,
+  "country": "Ireland",
+  "founded": 841,
+  "tiers": [
+   [
+    841,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Copenhagen",
+  "lat": 55.676,
+  "lon": 12.568,
+  "country": "Denmark",
+  "founded": 1167,
+  "tiers": [
+   [
+    1167,
+    "town"
+   ],
+   [
+    1600,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Stockholm",
+  "lat": 59.329,
+  "lon": 18.069,
+  "country": "Sweden",
+  "founded": 1252,
+  "tiers": [
+   [
+    1252,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Oslo",
+  "lat": 59.914,
+  "lon": 10.752,
+  "country": "Norway",
+  "founded": 1040,
+  "tiers": [
+   [
+    1040,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Christiania",
+    "from": 1624,
+    "to": 1925
+   }
+  ]
+ },
+ {
+  "name": "Warsaw",
+  "lat": 52.23,
+  "lon": 21.012,
+  "country": "Poland",
+  "founded": 1300,
+  "tiers": [
+   [
+    1300,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Budapest",
+  "lat": 47.498,
+  "lon": 19.04,
+  "country": "Hungary",
+  "founded": 89,
+  "tiers": [
+   [
+    89,
+    "town"
+   ],
+   [
+    500,
+    "village"
+   ],
+   [
+    1200,
+    "town"
+   ],
+   [
+    1873,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Aquincum",
+    "from": 89,
+    "to": 500
+   },
+   {
+    "name": "Buda",
+    "from": 1200,
+    "to": 1873
+   }
+  ]
+ },
+ {
+  "name": "Kraków",
+  "lat": 50.065,
+  "lon": 19.945,
+  "country": "Poland",
+  "founded": 1000,
+  "tiers": [
+   [
+    1000,
+    "town"
+   ],
+   [
+    1300,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Kyiv",
+  "lat": 50.45,
+  "lon": 30.523,
+  "country": "Ukraine",
+  "founded": 880,
+  "tiers": [
+   [
+    880,
+    "town"
+   ],
+   [
+    1000,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Reykjavík",
+  "lat": 64.147,
+  "lon": -21.942,
+  "country": "Iceland",
+  "founded": 874,
+  "tiers": [
+   [
+    874,
+    "hamlet"
+   ],
+   [
+    1786,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Helsinki",
+  "lat": 60.17,
+  "lon": 24.938,
+  "country": "Finland",
+  "founded": 1550,
+  "tiers": [
+   [
+    1550,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Brussels",
+  "lat": 50.85,
+  "lon": 4.352,
+  "country": "Belgium",
+  "founded": 979,
+  "tiers": [
+   [
+    979,
+    "town"
+   ],
+   [
+    1400,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Munich",
+  "lat": 48.137,
+  "lon": 11.576,
+  "country": "Germany",
+  "founded": 1158,
+  "tiers": [
+   [
+    1158,
+    "town"
+   ],
+   [
+    1800,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Hamburg",
+  "lat": 53.551,
+  "lon": 9.994,
+  "country": "Germany",
+  "founded": 810,
+  "tiers": [
+   [
+    810,
+    "town"
+   ],
+   [
+    1300,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Cologne",
+  "lat": 50.938,
+  "lon": 6.96,
+  "country": "Germany",
+  "founded": 50,
+  "tiers": [
+   [
+    50,
+    "town"
+   ],
+   [
+    1100,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Colonia Agrippina",
+    "from": 50,
+    "to": 500
+   }
+  ]
+ },
+ {
+  "name": "Seville",
+  "lat": 37.389,
+  "lon": -5.984,
+  "country": "Spain",
+  "founded": -800,
+  "tiers": [
+   [
+    -800,
+    "town"
+   ],
+   [
+    712,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Hispalis",
+    "from": -200,
+    "to": 712
+   },
+   {
+    "name": "Ishbiliya",
+    "from": 712,
+    "to": 1248
+   }
+  ]
+ },
+ {
+  "name": "Córdoba",
+  "lat": 37.888,
+  "lon": -4.779,
+  "country": "Spain",
+  "founded": -169,
+  "tiers": [
+   [
+    -169,
+    "town"
+   ],
+   [
+    750,
+    "city"
+   ],
+   [
+    1300,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Corduba",
+    "from": -169,
+    "to": 711
+   },
+   {
+    "name": "Qurtuba",
+    "from": 711,
+    "to": 1236
+   }
+  ]
+ },
+ {
+  "name": "Thessaloniki",
+  "lat": 40.64,
+  "lon": 22.944,
+  "country": "Greece",
+  "founded": -315,
+  "tiers": [
+   [
+    -315,
+    "town"
+   ],
+   [
+    400,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Syracuse",
+  "lat": 37.075,
+  "lon": 15.287,
+  "country": "Italy",
+  "founded": -734,
+  "tiers": [
+   [
+    -734,
+    "town"
+   ],
+   [
+    -400,
+    "city"
+   ],
+   [
+    600,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Bergen",
+  "lat": 60.39,
+  "lon": 5.32,
+  "country": "Norway",
+  "founded": 1070,
+  "tiers": [
+   [
+    1070,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Skara Brae",
+  "lat": 59.048,
+  "lon": -3.343,
+  "country": "United Kingdom",
+  "founded": -3180,
+  "tiers": [
+   [
+    -3180,
+    "hamlet"
+   ],
+   [
+    -2500,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Cairo",
+  "lat": 30.044,
+  "lon": 31.236,
+  "country": "Egypt",
+  "founded": 641,
+  "tiers": [
+   [
+    641,
+    "town"
+   ],
+   [
+    969,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Fustat",
+    "from": 641,
+    "to": 969
+   },
+   {
+    "name": "Cairo",
+    "from": 969,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Memphis",
+  "lat": 29.845,
+  "lon": 31.25,
+  "country": "Egypt",
+  "founded": -3100,
+  "tiers": [
+   [
+    -3100,
+    "town"
+   ],
+   [
+    -2700,
+    "city"
+   ],
+   [
+    400,
+    "town"
+   ],
+   [
+    700,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Thebes",
+  "lat": 25.7,
+  "lon": 32.64,
+  "country": "Egypt",
+  "founded": -3200,
+  "tiers": [
+   [
+    -3200,
+    "town"
+   ],
+   [
+    -2000,
+    "city"
+   ],
+   [
+    -100,
+    "town"
+   ],
+   [
+    1200,
+    "village"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Waset",
+    "from": -3200,
+    "to": -1000
+   },
+   {
+    "name": "Thebes",
+    "from": -1000,
+    "to": 700
+   },
+   {
+    "name": "Luxor",
+    "from": 700,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Alexandria",
+  "lat": 31.2,
+  "lon": 29.918,
+  "country": "Egypt",
+  "founded": -331,
+  "tiers": [
+   [
+    -331,
+    "city"
+   ],
+   [
+    700,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Babylon",
+  "lat": 32.536,
+  "lon": 44.421,
+  "country": "Iraq",
+  "founded": -2300,
+  "tiers": [
+   [
+    -2300,
+    "town"
+   ],
+   [
+    -1800,
+    "city"
+   ],
+   [
+    100,
+    "village"
+   ],
+   [
+    300,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Ur",
+  "lat": 30.963,
+  "lon": 46.103,
+  "country": "Iraq",
+  "founded": -3800,
+  "tiers": [
+   [
+    -3800,
+    "town"
+   ],
+   [
+    -2600,
+    "city"
+   ],
+   [
+    -1000,
+    "town"
+   ],
+   [
+    -450,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Uruk",
+  "lat": 31.322,
+  "lon": 45.636,
+  "country": "Iraq",
+  "founded": -4000,
+  "tiers": [
+   [
+    -4000,
+    "town"
+   ],
+   [
+    -3400,
+    "city"
+   ],
+   [
+    -500,
+    "town"
+   ],
+   [
+    400,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Nineveh",
+  "lat": 36.36,
+  "lon": 43.152,
+  "country": "Iraq",
+  "founded": -3000,
+  "tiers": [
+   [
+    -3000,
+    "town"
+   ],
+   [
+    -900,
+    "city"
+   ],
+   [
+    -612,
+    "village"
+   ],
+   [
+    700,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Nineveh",
+    "from": -3000,
+    "to": 700
+   },
+   {
+    "name": "Mosul",
+    "from": 700,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Baghdad",
+  "lat": 33.315,
+  "lon": 44.366,
+  "country": "Iraq",
+  "founded": 762,
+  "tiers": [
+   [
+    762,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Damascus",
+  "lat": 33.513,
+  "lon": 36.292,
+  "country": "Syria",
+  "founded": -2500,
+  "tiers": [
+   [
+    -2500,
+    "town"
+   ],
+   [
+    -1000,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Jerusalem",
+  "lat": 31.778,
+  "lon": 35.235,
+  "country": "Israel and Palestine",
+  "founded": -3000,
+  "tiers": [
+   [
+    -3000,
+    "village"
+   ],
+   [
+    -1000,
+    "town"
+   ],
+   [
+    -100,
+    "city"
+   ],
+   [
+    135,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Jericho",
+  "lat": 31.871,
+  "lon": 35.444,
+  "country": "Palestine",
+  "founded": -9000,
+  "tiers": [
+   [
+    -9000,
+    "village"
+   ],
+   [
+    -1500,
+    "hamlet"
+   ],
+   [
+    500,
+    "village"
+   ],
+   [
+    1950,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Çatalhöyük",
+  "lat": 37.667,
+  "lon": 32.828,
+  "country": "Turkey",
+  "founded": -7100,
+  "tiers": [
+   [
+    -7100,
+    "town"
+   ],
+   [
+    -5700,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Isfahan",
+  "lat": 32.653,
+  "lon": 51.666,
+  "country": "Iran",
+  "founded": -500,
+  "tiers": [
+   [
+    -500,
+    "town"
+   ],
+   [
+    1000,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Tehran",
+  "lat": 35.689,
+  "lon": 51.389,
+  "country": "Iran",
+  "founded": 1200,
+  "tiers": [
+   [
+    1200,
+    "village"
+   ],
+   [
+    1786,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Ankara",
+  "lat": 39.933,
+  "lon": 32.86,
+  "country": "Turkey",
+  "founded": -1200,
+  "tiers": [
+   [
+    -1200,
+    "town"
+   ],
+   [
+    1923,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Ancyra",
+    "from": -300,
+    "to": 1000
+   }
+  ]
+ },
+ {
+  "name": "Carthage",
+  "lat": 36.853,
+  "lon": 10.323,
+  "country": "Tunisia",
+  "founded": -814,
+  "tiers": [
+   [
+    -814,
+    "town"
+   ],
+   [
+    -500,
+    "city"
+   ],
+   [
+    -146,
+    "none"
+   ],
+   [
+    -44,
+    "city"
+   ],
+   [
+    700,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Tunis",
+  "lat": 36.806,
+  "lon": 10.181,
+  "country": "Tunisia",
+  "founded": -800,
+  "tiers": [
+   [
+    -800,
+    "village"
+   ],
+   [
+    700,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Fez",
+  "lat": 34.034,
+  "lon": -5.0,
+  "country": "Morocco",
+  "founded": 789,
+  "tiers": [
+   [
+    789,
+    "town"
+   ],
+   [
+    900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Marrakesh",
+  "lat": 31.63,
+  "lon": -7.99,
+  "country": "Morocco",
+  "founded": 1070,
+  "tiers": [
+   [
+    1070,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Algiers",
+  "lat": 36.754,
+  "lon": 3.06,
+  "country": "Algeria",
+  "founded": 944,
+  "tiers": [
+   [
+    944,
+    "town"
+   ],
+   [
+    1500,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Icosium",
+    "from": -200,
+    "to": 500
+   }
+  ]
+ },
+ {
+  "name": "Tripoli",
+  "lat": 32.887,
+  "lon": 13.191,
+  "country": "Libya",
+  "founded": -700,
+  "tiers": [
+   [
+    -700,
+    "town"
+   ],
+   [
+    1500,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Oea",
+    "from": -700,
+    "to": 700
+   }
+  ]
+ },
+ {
+  "name": "Dubai",
+  "lat": 25.205,
+  "lon": 55.271,
+  "country": "United Arab Emirates",
+  "founded": 1833,
+  "tiers": [
+   [
+    1833,
+    "village"
+   ],
+   [
+    1960,
+    "town"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Riyadh",
+  "lat": 24.713,
+  "lon": 46.675,
+  "country": "Saudi Arabia",
+  "founded": 1740,
+  "tiers": [
+   [
+    1740,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Muscat",
+  "lat": 23.588,
+  "lon": 58.383,
+  "country": "Oman",
+  "founded": 100,
+  "tiers": [
+   [
+    100,
+    "village"
+   ],
+   [
+    1500,
+    "town"
+   ],
+   [
+    1970,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Aden",
+  "lat": 12.79,
+  "lon": 45.03,
+  "country": "Yemen",
+  "founded": -500,
+  "tiers": [
+   [
+    -500,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Sanaa",
+  "lat": 15.37,
+  "lon": 44.19,
+  "country": "Yemen",
+  "founded": -500,
+  "tiers": [
+   [
+    -500,
+    "town"
+   ],
+   [
+    600,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Beirut",
+  "lat": 33.894,
+  "lon": 35.502,
+  "country": "Lebanon",
+  "founded": -3000,
+  "tiers": [
+   [
+    -3000,
+    "village"
+   ],
+   [
+    -100,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Berytus",
+    "from": -100,
+    "to": 600
+   }
+  ]
+ },
+ {
+  "name": "Aleppo",
+  "lat": 36.202,
+  "lon": 37.134,
+  "country": "Syria",
+  "founded": -3000,
+  "tiers": [
+   [
+    -3000,
+    "town"
+   ],
+   [
+    -1800,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Byblos",
+  "lat": 34.12,
+  "lon": 35.648,
+  "country": "Lebanon",
+  "founded": -5000,
+  "tiers": [
+   [
+    -5000,
+    "village"
+   ],
+   [
+    -3000,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Tyre",
+  "lat": 33.27,
+  "lon": 35.2,
+  "country": "Lebanon",
+  "founded": -2750,
+  "tiers": [
+   [
+    -2750,
+    "town"
+   ],
+   [
+    -1000,
+    "city"
+   ],
+   [
+    1300,
+    "village"
+   ],
+   [
+    1900,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Mecca",
+  "lat": 21.423,
+  "lon": 39.826,
+  "country": "Saudi Arabia",
+  "founded": 400,
+  "tiers": [
+   [
+    400,
+    "town"
+   ],
+   [
+    700,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Kerma",
+  "lat": 19.6,
+  "lon": 30.41,
+  "country": "Sudan",
+  "founded": -2500,
+  "tiers": [
+   [
+    -2500,
+    "town"
+   ],
+   [
+    -1500,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Siwa",
+  "lat": 29.2,
+  "lon": 25.52,
+  "country": "Egypt",
+  "founded": -700,
+  "tiers": [
+   [
+    -700,
+    "village"
+   ]
+  ]
+ },
+ {
+  "name": "Lagos",
+  "lat": 6.455,
+  "lon": 3.394,
+  "country": "Nigeria",
+  "founded": 1400,
+  "tiers": [
+   [
+    1400,
+    "village"
+   ],
+   [
+    1800,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1970,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Eko",
+    "from": 1400,
+    "to": 1800
+   }
+  ]
+ },
+ {
+  "name": "Accra",
+  "lat": 5.6037,
+  "lon": -0.187,
+  "country": "Ghana",
+  "founded": 1600,
+  "tiers": [
+   [
+    1600,
+    "village"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Dakar",
+  "lat": 14.716,
+  "lon": -17.467,
+  "country": "Senegal",
+  "founded": 1857,
+  "tiers": [
+   [
+    1857,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Timbuktu",
+  "lat": 16.773,
+  "lon": -3.007,
+  "country": "Mali",
+  "founded": 1100,
+  "tiers": [
+   [
+    1100,
+    "town"
+   ],
+   [
+    1300,
+    "city"
+   ],
+   [
+    1600,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Djenné",
+  "lat": 13.906,
+  "lon": -4.555,
+  "country": "Mali",
+  "founded": -250,
+  "tiers": [
+   [
+    -250,
+    "village"
+   ],
+   [
+    800,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ],
+   [
+    1600,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Djenné-Djenno",
+    "from": -250,
+    "to": 1400
+   }
+  ]
+ },
+ {
+  "name": "Gao",
+  "lat": 16.27,
+  "lon": -0.044,
+  "country": "Mali",
+  "founded": 700,
+  "tiers": [
+   [
+    700,
+    "town"
+   ],
+   [
+    1400,
+    "city"
+   ],
+   [
+    1600,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Kano",
+  "lat": 12.0,
+  "lon": 8.52,
+  "country": "Nigeria",
+  "founded": 999,
+  "tiers": [
+   [
+    999,
+    "town"
+   ],
+   [
+    1400,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Ile-Ife",
+  "lat": 7.48,
+  "lon": 4.56,
+  "country": "Nigeria",
+  "founded": 500,
+  "tiers": [
+   [
+    500,
+    "village"
+   ],
+   [
+    1100,
+    "city"
+   ],
+   [
+    1500,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Benin City",
+  "lat": 6.335,
+  "lon": 5.627,
+  "country": "Nigeria",
+  "founded": 1180,
+  "tiers": [
+   [
+    1180,
+    "town"
+   ],
+   [
+    1400,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Addis Ababa",
+  "lat": 9.03,
+  "lon": 38.74,
+  "country": "Ethiopia",
+  "founded": 1886,
+  "tiers": [
+   [
+    1886,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Aksum",
+  "lat": 14.13,
+  "lon": 38.72,
+  "country": "Ethiopia",
+  "founded": -100,
+  "tiers": [
+   [
+    -100,
+    "town"
+   ],
+   [
+    100,
+    "city"
+   ],
+   [
+    900,
+    "town"
+   ],
+   [
+    1100,
+    "village"
+   ]
+  ]
+ },
+ {
+  "name": "Lalibela",
+  "lat": 12.03,
+  "lon": 39.04,
+  "country": "Ethiopia",
+  "founded": 1150,
+  "tiers": [
+   [
+    1150,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Roha",
+    "from": 1150,
+    "to": 1250
+   }
+  ]
+ },
+ {
+  "name": "Gondar",
+  "lat": 12.6,
+  "lon": 37.47,
+  "country": "Ethiopia",
+  "founded": 1635,
+  "tiers": [
+   [
+    1635,
+    "city"
+   ],
+   [
+    1860,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Nairobi",
+  "lat": -1.286,
+  "lon": 36.817,
+  "country": "Kenya",
+  "founded": 1899,
+  "tiers": [
+   [
+    1899,
+    "town"
+   ],
+   [
+    1940,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Mombasa",
+  "lat": -4.043,
+  "lon": 39.668,
+  "country": "Kenya",
+  "founded": 900,
+  "tiers": [
+   [
+    900,
+    "town"
+   ],
+   [
+    1500,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Kilwa",
+  "lat": -8.957,
+  "lon": 39.512,
+  "country": "Tanzania",
+  "founded": 800,
+  "tiers": [
+   [
+    800,
+    "village"
+   ],
+   [
+    1100,
+    "town"
+   ],
+   [
+    1300,
+    "city"
+   ],
+   [
+    1520,
+    "town"
+   ],
+   [
+    1800,
+    "village"
+   ]
+  ]
+ },
+ {
+  "name": "Zanzibar",
+  "lat": -6.163,
+  "lon": 39.192,
+  "country": "Tanzania",
+  "founded": 1000,
+  "tiers": [
+   [
+    1000,
+    "village"
+   ],
+   [
+    1500,
+    "town"
+   ],
+   [
+    1830,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Great Zimbabwe",
+  "lat": -20.27,
+  "lon": 30.93,
+  "country": "Zimbabwe",
+  "founded": 1100,
+  "tiers": [
+   [
+    1100,
+    "town"
+   ],
+   [
+    1250,
+    "city"
+   ],
+   [
+    1450,
+    "village"
+   ],
+   [
+    1550,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Kinshasa",
+  "lat": -4.441,
+  "lon": 15.266,
+  "country": "DR Congo",
+  "founded": 1881,
+  "tiers": [
+   [
+    1881,
+    "town"
+   ],
+   [
+    1940,
+    "city"
+   ],
+   [
+    1970,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Léopoldville",
+    "from": 1881,
+    "to": 1966
+   },
+   {
+    "name": "Kinshasa",
+    "from": 1966,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Luanda",
+  "lat": -8.839,
+  "lon": 13.289,
+  "country": "Angola",
+  "founded": 1576,
+  "tiers": [
+   [
+    1576,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Johannesburg",
+  "lat": -26.204,
+  "lon": 28.047,
+  "country": "South Africa",
+  "founded": 1886,
+  "tiers": [
+   [
+    1886,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Cape Town",
+  "lat": -33.925,
+  "lon": 18.424,
+  "country": "South Africa",
+  "founded": 1652,
+  "tiers": [
+   [
+    1652,
+    "village"
+   ],
+   [
+    1750,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Mogadishu",
+  "lat": 2.046,
+  "lon": 45.318,
+  "country": "Somalia",
+  "founded": 900,
+  "tiers": [
+   [
+    900,
+    "town"
+   ],
+   [
+    1300,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Khartoum",
+  "lat": 15.5,
+  "lon": 32.56,
+  "country": "Sudan",
+  "founded": 1821,
+  "tiers": [
+   [
+    1821,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Meroë",
+  "lat": 16.94,
+  "lon": 33.75,
+  "country": "Sudan",
+  "founded": -800,
+  "tiers": [
+   [
+    -800,
+    "town"
+   ],
+   [
+    -300,
+    "city"
+   ],
+   [
+    350,
+    "village"
+   ],
+   [
+    500,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Antananarivo",
+  "lat": -18.88,
+  "lon": 47.51,
+  "country": "Madagascar",
+  "founded": 1610,
+  "tiers": [
+   [
+    1610,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Mapungubwe",
+  "lat": -22.19,
+  "lon": 29.24,
+  "country": "South Africa",
+  "founded": 1075,
+  "tiers": [
+   [
+    1075,
+    "town"
+   ],
+   [
+    1220,
+    "city"
+   ],
+   [
+    1300,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Abuja",
+  "lat": 9.07,
+  "lon": 7.49,
+  "country": "Nigeria",
+  "founded": 1976,
+  "tiers": [
+   [
+    1976,
+    "town"
+   ],
+   [
+    1995,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Delhi",
+  "lat": 28.614,
+  "lon": 77.209,
+  "country": "India",
+  "founded": 1052,
+  "tiers": [
+   [
+    1052,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Dhillika",
+    "from": 1052,
+    "to": 1200
+   }
+  ]
+ },
+ {
+  "name": "Mumbai",
+  "lat": 19.076,
+  "lon": 72.877,
+  "country": "India",
+  "founded": 1534,
+  "tiers": [
+   [
+    1534,
+    "village"
+   ],
+   [
+    1700,
+    "town"
+   ],
+   [
+    1800,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Bombay",
+    "from": 1534,
+    "to": 1995
+   },
+   {
+    "name": "Mumbai",
+    "from": 1995,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Kolkata",
+  "lat": 22.573,
+  "lon": 88.364,
+  "country": "India",
+  "founded": 1690,
+  "tiers": [
+   [
+    1690,
+    "town"
+   ],
+   [
+    1760,
+    "city"
+   ],
+   [
+    1880,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Calcutta",
+    "from": 1690,
+    "to": 2001
+   },
+   {
+    "name": "Kolkata",
+    "from": 2001,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Chennai",
+  "lat": 13.083,
+  "lon": 80.271,
+  "country": "India",
+  "founded": 1639,
+  "tiers": [
+   [
+    1639,
+    "town"
+   ],
+   [
+    1750,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Madras",
+    "from": 1639,
+    "to": 1996
+   },
+   {
+    "name": "Chennai",
+    "from": 1996,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Varanasi",
+  "lat": 25.318,
+  "lon": 82.974,
+  "country": "India",
+  "founded": -800,
+  "tiers": [
+   [
+    -800,
+    "town"
+   ],
+   [
+    -400,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Kashi",
+    "from": -800,
+    "to": 1200
+   }
+  ]
+ },
+ {
+  "name": "Pataliputra",
+  "lat": 25.594,
+  "lon": 85.138,
+  "country": "India",
+  "founded": -490,
+  "tiers": [
+   [
+    -490,
+    "town"
+   ],
+   [
+    -300,
+    "city"
+   ],
+   [
+    600,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Pataliputra",
+    "from": -490,
+    "to": 1540
+   },
+   {
+    "name": "Patna",
+    "from": 1540,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Mohenjo-daro",
+  "lat": 27.329,
+  "lon": 68.138,
+  "country": "Pakistan",
+  "founded": -2600,
+  "tiers": [
+   [
+    -2600,
+    "city"
+   ],
+   [
+    -1900,
+    "village"
+   ],
+   [
+    -1700,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Harappa",
+  "lat": 30.63,
+  "lon": 72.864,
+  "country": "Pakistan",
+  "founded": -2600,
+  "tiers": [
+   [
+    -2600,
+    "city"
+   ],
+   [
+    -1900,
+    "village"
+   ],
+   [
+    -1500,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Lahore",
+  "lat": 31.55,
+  "lon": 74.343,
+  "country": "Pakistan",
+  "founded": 1000,
+  "tiers": [
+   [
+    1000,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Karachi",
+  "lat": 24.861,
+  "lon": 67.01,
+  "country": "Pakistan",
+  "founded": 1729,
+  "tiers": [
+   [
+    1729,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Dhaka",
+  "lat": 23.81,
+  "lon": 90.412,
+  "country": "Bangladesh",
+  "founded": 1608,
+  "tiers": [
+   [
+    1608,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Kathmandu",
+  "lat": 27.717,
+  "lon": 85.324,
+  "country": "Nepal",
+  "founded": 700,
+  "tiers": [
+   [
+    700,
+    "town"
+   ],
+   [
+    1500,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Colombo",
+  "lat": 6.927,
+  "lon": 79.861,
+  "country": "Sri Lanka",
+  "founded": 1000,
+  "tiers": [
+   [
+    1000,
+    "town"
+   ],
+   [
+    1800,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Anuradhapura",
+  "lat": 8.311,
+  "lon": 80.403,
+  "country": "Sri Lanka",
+  "founded": -400,
+  "tiers": [
+   [
+    -400,
+    "city"
+   ],
+   [
+    1017,
+    "village"
+   ]
+  ]
+ },
+ {
+  "name": "Agra",
+  "lat": 27.177,
+  "lon": 78.008,
+  "country": "India",
+  "founded": 1504,
+  "tiers": [
+   [
+    1504,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Hyderabad",
+  "lat": 17.385,
+  "lon": 78.486,
+  "country": "India",
+  "founded": 1591,
+  "tiers": [
+   [
+    1591,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Bengaluru",
+  "lat": 12.971,
+  "lon": 77.594,
+  "country": "India",
+  "founded": 1537,
+  "tiers": [
+   [
+    1537,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1970,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Bangalore",
+    "from": 1537,
+    "to": 2014
+   }
+  ]
+ },
+ {
+  "name": "Mehrgarh",
+  "lat": 29.383,
+  "lon": 67.617,
+  "country": "Pakistan",
+  "founded": -7000,
+  "tiers": [
+   [
+    -7000,
+    "village"
+   ],
+   [
+    -2600,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Kabul",
+  "lat": 34.555,
+  "lon": 69.207,
+  "country": "Afghanistan",
+  "founded": -500,
+  "tiers": [
+   [
+    -500,
+    "town"
+   ],
+   [
+    1500,
+    "city"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Beijing",
+  "lat": 39.904,
+  "lon": 116.407,
+  "country": "China",
+  "founded": -1045,
+  "tiers": [
+   [
+    -1045,
+    "town"
+   ],
+   [
+    938,
+    "city"
+   ],
+   [
+    1500,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Ji",
+    "from": -1045,
+    "to": 938
+   },
+   {
+    "name": "Yanjing",
+    "from": 938,
+    "to": 1153
+   },
+   {
+    "name": "Zhongdu",
+    "from": 1153,
+    "to": 1267
+   },
+   {
+    "name": "Dadu",
+    "from": 1267,
+    "to": 1368
+   },
+   {
+    "name": "Beiping",
+    "from": 1368,
+    "to": 1403
+   },
+   {
+    "name": "Beijing",
+    "from": 1403,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Xi'an",
+  "lat": 34.341,
+  "lon": 108.94,
+  "country": "China",
+  "founded": -1100,
+  "tiers": [
+   [
+    -1100,
+    "town"
+   ],
+   [
+    -202,
+    "city"
+   ],
+   [
+    600,
+    "metropolis"
+   ],
+   [
+    904,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Hao",
+    "from": -1100,
+    "to": -202
+   },
+   {
+    "name": "Chang'an",
+    "from": -202,
+    "to": 1369
+   },
+   {
+    "name": "Xi'an",
+    "from": 1369,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Luoyang",
+  "lat": 34.62,
+  "lon": 112.45,
+  "country": "China",
+  "founded": -1600,
+  "tiers": [
+   [
+    -1600,
+    "town"
+   ],
+   [
+    -770,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Kaifeng",
+  "lat": 34.797,
+  "lon": 114.307,
+  "country": "China",
+  "founded": -364,
+  "tiers": [
+   [
+    -364,
+    "town"
+   ],
+   [
+    960,
+    "metropolis"
+   ],
+   [
+    1127,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Daliang",
+    "from": -364,
+    "to": 900
+   },
+   {
+    "name": "Bianjing",
+    "from": 900,
+    "to": 1127
+   },
+   {
+    "name": "Kaifeng",
+    "from": 1127,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Hangzhou",
+  "lat": 30.274,
+  "lon": 120.155,
+  "country": "China",
+  "founded": -221,
+  "tiers": [
+   [
+    -221,
+    "town"
+   ],
+   [
+    600,
+    "city"
+   ],
+   [
+    1138,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Lin'an",
+    "from": 1138,
+    "to": 1276
+   }
+  ]
+ },
+ {
+  "name": "Nanjing",
+  "lat": 32.06,
+  "lon": 118.797,
+  "country": "China",
+  "founded": -472,
+  "tiers": [
+   [
+    -472,
+    "town"
+   ],
+   [
+    229,
+    "city"
+   ],
+   [
+    1368,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Jinling",
+    "from": -472,
+    "to": 229
+   },
+   {
+    "name": "Jiankang",
+    "from": 229,
+    "to": 589
+   }
+  ]
+ },
+ {
+  "name": "Shanghai",
+  "lat": 31.23,
+  "lon": 121.474,
+  "country": "China",
+  "founded": 1291,
+  "tiers": [
+   [
+    1291,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Guangzhou",
+  "lat": 23.129,
+  "lon": 113.264,
+  "country": "China",
+  "founded": -214,
+  "tiers": [
+   [
+    -214,
+    "town"
+   ],
+   [
+    600,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Panyu",
+    "from": -214,
+    "to": 226
+   },
+   {
+    "name": "Canton",
+    "from": 1700,
+    "to": 1950
+   }
+  ]
+ },
+ {
+  "name": "Anyang",
+  "lat": 36.1,
+  "lon": 114.39,
+  "country": "China",
+  "founded": -1300,
+  "tiers": [
+   [
+    -1300,
+    "city"
+   ],
+   [
+    -1046,
+    "village"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Yin",
+    "from": -1300,
+    "to": -1046
+   }
+  ]
+ },
+ {
+  "name": "Erlitou",
+  "lat": 34.7,
+  "lon": 112.69,
+  "country": "China",
+  "founded": -1900,
+  "tiers": [
+   [
+    -1900,
+    "town"
+   ],
+   [
+    -1500,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Banpo",
+  "lat": 34.27,
+  "lon": 109.05,
+  "country": "China",
+  "founded": -4800,
+  "tiers": [
+   [
+    -4800,
+    "village"
+   ],
+   [
+    -3600,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Tokyo",
+  "lat": 35.676,
+  "lon": 139.65,
+  "country": "Japan",
+  "founded": 1457,
+  "tiers": [
+   [
+    1457,
+    "village"
+   ],
+   [
+    1600,
+    "town"
+   ],
+   [
+    1700,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Edo",
+    "from": 1457,
+    "to": 1868
+   },
+   {
+    "name": "Tokyo",
+    "from": 1868,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Kyoto",
+  "lat": 35.011,
+  "lon": 135.768,
+  "country": "Japan",
+  "founded": 794,
+  "tiers": [
+   [
+    794,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Heian-kyō",
+    "from": 794,
+    "to": 1200
+   }
+  ]
+ },
+ {
+  "name": "Nara",
+  "lat": 34.685,
+  "lon": 135.805,
+  "country": "Japan",
+  "founded": 710,
+  "tiers": [
+   [
+    710,
+    "city"
+   ],
+   [
+    784,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Heijō-kyō",
+    "from": 710,
+    "to": 784
+   }
+  ]
+ },
+ {
+  "name": "Osaka",
+  "lat": 34.693,
+  "lon": 135.502,
+  "country": "Japan",
+  "founded": 600,
+  "tiers": [
+   [
+    600,
+    "town"
+   ],
+   [
+    1600,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Naniwa",
+    "from": 600,
+    "to": 1500
+   }
+  ]
+ },
+ {
+  "name": "Seoul",
+  "lat": 37.566,
+  "lon": 126.978,
+  "country": "South Korea",
+  "founded": 1394,
+  "tiers": [
+   [
+    1394,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Hanseong",
+    "from": 1394,
+    "to": 1910
+   },
+   {
+    "name": "Gyeongseong",
+    "from": 1910,
+    "to": 1945
+   },
+   {
+    "name": "Seoul",
+    "from": 1945,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Gyeongju",
+  "lat": 35.856,
+  "lon": 129.225,
+  "country": "South Korea",
+  "founded": -57,
+  "tiers": [
+   [
+    -57,
+    "town"
+   ],
+   [
+    500,
+    "city"
+   ],
+   [
+    935,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Seorabeol",
+    "from": -57,
+    "to": 935
+   }
+  ]
+ },
+ {
+  "name": "Pyongyang",
+  "lat": 39.039,
+  "lon": 125.762,
+  "country": "North Korea",
+  "founded": -1000,
+  "tiers": [
+   [
+    -1000,
+    "town"
+   ],
+   [
+    400,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Hong Kong",
+  "lat": 22.32,
+  "lon": 114.17,
+  "country": "China",
+  "founded": 1841,
+  "tiers": [
+   [
+    1841,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Taipei",
+  "lat": 25.033,
+  "lon": 121.565,
+  "country": "Taiwan",
+  "founded": 1709,
+  "tiers": [
+   [
+    1709,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1970,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Lhasa",
+  "lat": 29.65,
+  "lon": 91.1,
+  "country": "China",
+  "founded": 633,
+  "tiers": [
+   [
+    633,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Ulaanbaatar",
+  "lat": 47.886,
+  "lon": 106.906,
+  "country": "Mongolia",
+  "founded": 1639,
+  "tiers": [
+   [
+    1639,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Urga",
+    "from": 1639,
+    "to": 1924
+   }
+  ]
+ },
+ {
+  "name": "Karakorum",
+  "lat": 47.2,
+  "lon": 102.82,
+  "country": "Mongolia",
+  "founded": 1220,
+  "tiers": [
+   [
+    1220,
+    "city"
+   ],
+   [
+    1388,
+    "village"
+   ],
+   [
+    1500,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Sanxingdui",
+  "lat": 30.99,
+  "lon": 104.2,
+  "country": "China",
+  "founded": -1700,
+  "tiers": [
+   [
+    -1700,
+    "town"
+   ],
+   [
+    -1150,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Samarkand",
+  "lat": 39.627,
+  "lon": 66.975,
+  "country": "Uzbekistan",
+  "founded": -700,
+  "tiers": [
+   [
+    -700,
+    "town"
+   ],
+   [
+    -300,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Maracanda",
+    "from": -330,
+    "to": 700
+   }
+  ]
+ },
+ {
+  "name": "Bukhara",
+  "lat": 39.767,
+  "lon": 64.423,
+  "country": "Uzbekistan",
+  "founded": -500,
+  "tiers": [
+   [
+    -500,
+    "town"
+   ],
+   [
+    800,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Merv",
+  "lat": 37.66,
+  "lon": 62.19,
+  "country": "Turkmenistan",
+  "founded": -500,
+  "tiers": [
+   [
+    -500,
+    "town"
+   ],
+   [
+    900,
+    "city"
+   ],
+   [
+    1221,
+    "village"
+   ]
+  ]
+ },
+ {
+  "name": "Almaty",
+  "lat": 43.238,
+  "lon": 76.946,
+  "country": "Kazakhstan",
+  "founded": 1854,
+  "tiers": [
+   [
+    1854,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Verny",
+    "from": 1854,
+    "to": 1921
+   },
+   {
+    "name": "Alma-Ata",
+    "from": 1921,
+    "to": 1993
+   }
+  ]
+ },
+ {
+  "name": "Tashkent",
+  "lat": 41.299,
+  "lon": 69.24,
+  "country": "Uzbekistan",
+  "founded": -200,
+  "tiers": [
+   [
+    -200,
+    "town"
+   ],
+   [
+    900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Chach",
+    "from": -200,
+    "to": 1000
+   }
+  ]
+ },
+ {
+  "name": "Novosibirsk",
+  "lat": 55.008,
+  "lon": 82.935,
+  "country": "Russia",
+  "founded": 1893,
+  "tiers": [
+   [
+    1893,
+    "town"
+   ],
+   [
+    1930,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Irkutsk",
+  "lat": 52.287,
+  "lon": 104.305,
+  "country": "Russia",
+  "founded": 1661,
+  "tiers": [
+   [
+    1661,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Yakutsk",
+  "lat": 62.035,
+  "lon": 129.675,
+  "country": "Russia",
+  "founded": 1632,
+  "tiers": [
+   [
+    1632,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Angkor",
+  "lat": 13.41,
+  "lon": 103.867,
+  "country": "Cambodia",
+  "founded": 889,
+  "tiers": [
+   [
+    889,
+    "city"
+   ],
+   [
+    1431,
+    "town"
+   ],
+   [
+    1600,
+    "village"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Yasodharapura",
+    "from": 889,
+    "to": 1431
+   },
+   {
+    "name": "Angkor",
+    "from": 1431,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Bangkok",
+  "lat": 13.756,
+  "lon": 100.502,
+  "country": "Thailand",
+  "founded": 1782,
+  "tiers": [
+   [
+    1782,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Krung Thep",
+    "from": 1782,
+    "to": 1800
+   }
+  ]
+ },
+ {
+  "name": "Ayutthaya",
+  "lat": 14.353,
+  "lon": 100.568,
+  "country": "Thailand",
+  "founded": 1351,
+  "tiers": [
+   [
+    1351,
+    "city"
+   ],
+   [
+    1767,
+    "village"
+   ]
+  ]
+ },
+ {
+  "name": "Hanoi",
+  "lat": 21.028,
+  "lon": 105.854,
+  "country": "Vietnam",
+  "founded": 1010,
+  "tiers": [
+   [
+    1010,
+    "city"
+   ],
+   [
+    1970,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Thăng Long",
+    "from": 1010,
+    "to": 1831
+   }
+  ]
+ },
+ {
+  "name": "Ho Chi Minh City",
+  "lat": 10.823,
+  "lon": 106.63,
+  "country": "Vietnam",
+  "founded": 1698,
+  "tiers": [
+   [
+    1698,
+    "town"
+   ],
+   [
+    1800,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Saigon",
+    "from": 1698,
+    "to": 1976
+   }
+  ]
+ },
+ {
+  "name": "Singapore",
+  "lat": 1.352,
+  "lon": 103.82,
+  "country": "Singapore",
+  "founded": 1300,
+  "tiers": [
+   [
+    1300,
+    "town"
+   ],
+   [
+    1400,
+    "village"
+   ],
+   [
+    1819,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Temasek",
+    "from": 1300,
+    "to": 1400
+   }
+  ]
+ },
+ {
+  "name": "Jakarta",
+  "lat": -6.208,
+  "lon": 106.846,
+  "country": "Indonesia",
+  "founded": 1527,
+  "tiers": [
+   [
+    1527,
+    "town"
+   ],
+   [
+    1619,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Jayakarta",
+    "from": 1527,
+    "to": 1619
+   },
+   {
+    "name": "Batavia",
+    "from": 1619,
+    "to": 1942
+   }
+  ]
+ },
+ {
+  "name": "Manila",
+  "lat": 14.599,
+  "lon": 120.984,
+  "country": "Philippines",
+  "founded": 1571,
+  "tiers": [
+   [
+    1571,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Malacca",
+  "lat": 2.19,
+  "lon": 102.25,
+  "country": "Malaysia",
+  "founded": 1400,
+  "tiers": [
+   [
+    1400,
+    "city"
+   ],
+   [
+    1700,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Yangon",
+  "lat": 16.866,
+  "lon": 96.195,
+  "country": "Myanmar",
+  "founded": 1755,
+  "tiers": [
+   [
+    1755,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Rangoon",
+    "from": 1755,
+    "to": 1989
+   }
+  ]
+ },
+ {
+  "name": "Bagan",
+  "lat": 21.172,
+  "lon": 94.86,
+  "country": "Myanmar",
+  "founded": 849,
+  "tiers": [
+   [
+    849,
+    "town"
+   ],
+   [
+    1050,
+    "city"
+   ],
+   [
+    1300,
+    "village"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Pagan",
+    "from": 849,
+    "to": 1300
+   }
+  ]
+ },
+ {
+  "name": "Kuala Lumpur",
+  "lat": 3.139,
+  "lon": 101.687,
+  "country": "Malaysia",
+  "founded": 1857,
+  "tiers": [
+   [
+    1857,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Yogyakarta",
+  "lat": -7.795,
+  "lon": 110.369,
+  "country": "Indonesia",
+  "founded": 1755,
+  "tiers": [
+   [
+    1755,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Sydney",
+  "lat": -33.869,
+  "lon": 151.209,
+  "country": "Australia",
+  "founded": 1788,
+  "tiers": [
+   [
+    1788,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ],
+   [
+    1930,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Melbourne",
+  "lat": -37.814,
+  "lon": 144.963,
+  "country": "Australia",
+  "founded": 1835,
+  "tiers": [
+   [
+    1835,
+    "town"
+   ],
+   [
+    1855,
+    "city"
+   ],
+   [
+    1930,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Auckland",
+  "lat": -36.848,
+  "lon": 174.763,
+  "country": "New Zealand",
+  "founded": 1840,
+  "tiers": [
+   [
+    1840,
+    "town"
+   ],
+   [
+    1920,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Tāmaki Makaurau",
+    "from": 1300,
+    "to": 1840
+   }
+  ]
+ },
+ {
+  "name": "Wellington",
+  "lat": -41.287,
+  "lon": 174.776,
+  "country": "New Zealand",
+  "founded": 1840,
+  "tiers": [
+   [
+    1840,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Honolulu",
+  "lat": 21.307,
+  "lon": -157.858,
+  "country": "United States",
+  "founded": 1800,
+  "tiers": [
+   [
+    1800,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Perth",
+  "lat": -31.953,
+  "lon": 115.857,
+  "country": "Australia",
+  "founded": 1829,
+  "tiers": [
+   [
+    1829,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Brisbane",
+  "lat": -27.47,
+  "lon": 153.026,
+  "country": "Australia",
+  "founded": 1825,
+  "tiers": [
+   [
+    1825,
+    "town"
+   ],
+   [
+    1920,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Port Moresby",
+  "lat": -9.443,
+  "lon": 147.18,
+  "country": "Papua New Guinea",
+  "founded": 1873,
+  "tiers": [
+   [
+    1873,
+    "town"
+   ],
+   [
+    1970,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "New York",
+  "lat": 40.713,
+  "lon": -74.006,
+  "country": "United States",
+  "founded": 1625,
+  "tiers": [
+   [
+    1625,
+    "village"
+   ],
+   [
+    1700,
+    "town"
+   ],
+   [
+    1800,
+    "city"
+   ],
+   [
+    1880,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "New Amsterdam",
+    "from": 1625,
+    "to": 1664
+   },
+   {
+    "name": "New York",
+    "from": 1664,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Boston",
+  "lat": 42.36,
+  "lon": -71.059,
+  "country": "United States",
+  "founded": 1630,
+  "tiers": [
+   [
+    1630,
+    "town"
+   ],
+   [
+    1800,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Philadelphia",
+  "lat": 39.953,
+  "lon": -75.165,
+  "country": "United States",
+  "founded": 1682,
+  "tiers": [
+   [
+    1682,
+    "town"
+   ],
+   [
+    1750,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Washington",
+  "lat": 38.907,
+  "lon": -77.037,
+  "country": "United States",
+  "founded": 1790,
+  "tiers": [
+   [
+    1790,
+    "town"
+   ],
+   [
+    1870,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Chicago",
+  "lat": 41.878,
+  "lon": -87.63,
+  "country": "United States",
+  "founded": 1833,
+  "tiers": [
+   [
+    1833,
+    "town"
+   ],
+   [
+    1860,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Los Angeles",
+  "lat": 34.052,
+  "lon": -118.244,
+  "country": "United States",
+  "founded": 1781,
+  "tiers": [
+   [
+    1781,
+    "village"
+   ],
+   [
+    1880,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1930,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "San Francisco",
+  "lat": 37.775,
+  "lon": -122.419,
+  "country": "United States",
+  "founded": 1776,
+  "tiers": [
+   [
+    1776,
+    "village"
+   ],
+   [
+    1849,
+    "city"
+   ],
+   [
+    1940,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Yerba Buena",
+    "from": 1776,
+    "to": 1847
+   }
+  ]
+ },
+ {
+  "name": "Toronto",
+  "lat": 43.653,
+  "lon": -79.383,
+  "country": "Canada",
+  "founded": 1793,
+  "tiers": [
+   [
+    1793,
+    "town"
+   ],
+   [
+    1880,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "York",
+    "from": 1793,
+    "to": 1834
+   }
+  ]
+ },
+ {
+  "name": "Montreal",
+  "lat": 45.502,
+  "lon": -73.567,
+  "country": "Canada",
+  "founded": 1642,
+  "tiers": [
+   [
+    1642,
+    "village"
+   ],
+   [
+    1750,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ],
+   [
+    1940,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Ville-Marie",
+    "from": 1642,
+    "to": 1705
+   }
+  ]
+ },
+ {
+  "name": "Quebec City",
+  "lat": 46.813,
+  "lon": -71.208,
+  "country": "Canada",
+  "founded": 1608,
+  "tiers": [
+   [
+    1608,
+    "village"
+   ],
+   [
+    1700,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Vancouver",
+  "lat": 49.283,
+  "lon": -123.121,
+  "country": "Canada",
+  "founded": 1886,
+  "tiers": [
+   [
+    1886,
+    "town"
+   ],
+   [
+    1920,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Seattle",
+  "lat": 47.606,
+  "lon": -122.332,
+  "country": "United States",
+  "founded": 1851,
+  "tiers": [
+   [
+    1851,
+    "village"
+   ],
+   [
+    1890,
+    "town"
+   ],
+   [
+    1910,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "New Orleans",
+  "lat": 29.951,
+  "lon": -90.072,
+  "country": "United States",
+  "founded": 1718,
+  "tiers": [
+   [
+    1718,
+    "town"
+   ],
+   [
+    1830,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Houston",
+  "lat": 29.76,
+  "lon": -95.369,
+  "country": "United States",
+  "founded": 1836,
+  "tiers": [
+   [
+    1836,
+    "town"
+   ],
+   [
+    1920,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Denver",
+  "lat": 39.739,
+  "lon": -104.99,
+  "country": "United States",
+  "founded": 1858,
+  "tiers": [
+   [
+    1858,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1980,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "St. Louis",
+  "lat": 38.627,
+  "lon": -90.199,
+  "country": "United States",
+  "founded": 1764,
+  "tiers": [
+   [
+    1764,
+    "village"
+   ],
+   [
+    1830,
+    "town"
+   ],
+   [
+    1870,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Cahokia",
+  "lat": 38.655,
+  "lon": -90.062,
+  "country": "United States",
+  "founded": 900,
+  "tiers": [
+   [
+    900,
+    "town"
+   ],
+   [
+    1050,
+    "city"
+   ],
+   [
+    1250,
+    "town"
+   ],
+   [
+    1350,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Anchorage",
+  "lat": 61.218,
+  "lon": -149.9,
+  "country": "United States",
+  "founded": 1914,
+  "tiers": [
+   [
+    1914,
+    "town"
+   ],
+   [
+    1970,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Las Vegas",
+  "lat": 36.17,
+  "lon": -115.14,
+  "country": "United States",
+  "founded": 1905,
+  "tiers": [
+   [
+    1905,
+    "town"
+   ],
+   [
+    1960,
+    "city"
+   ],
+   [
+    1990,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Miami",
+  "lat": 25.762,
+  "lon": -80.192,
+  "country": "United States",
+  "founded": 1896,
+  "tiers": [
+   [
+    1896,
+    "town"
+   ],
+   [
+    1930,
+    "city"
+   ],
+   [
+    1970,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Mexico City",
+  "lat": 19.433,
+  "lon": -99.133,
+  "country": "Mexico",
+  "founded": 1325,
+  "tiers": [
+   [
+    1325,
+    "town"
+   ],
+   [
+    1400,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Tenochtitlan",
+    "from": 1325,
+    "to": 1521
+   },
+   {
+    "name": "Mexico City",
+    "from": 1521,
+    "to": 4000
+   }
+  ]
+ },
+ {
+  "name": "Teotihuacan",
+  "lat": 19.692,
+  "lon": -98.844,
+  "country": "Mexico",
+  "founded": -100,
+  "tiers": [
+   [
+    -100,
+    "town"
+   ],
+   [
+    100,
+    "city"
+   ],
+   [
+    550,
+    "town"
+   ],
+   [
+    700,
+    "village"
+   ],
+   [
+    900,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Tikal",
+  "lat": 17.222,
+  "lon": -89.623,
+  "country": "Guatemala",
+  "founded": -400,
+  "tiers": [
+   [
+    -400,
+    "town"
+   ],
+   [
+    200,
+    "city"
+   ],
+   [
+    850,
+    "town"
+   ],
+   [
+    950,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Monte Albán",
+  "lat": 17.044,
+  "lon": -96.768,
+  "country": "Mexico",
+  "founded": -500,
+  "tiers": [
+   [
+    -500,
+    "town"
+   ],
+   [
+    -100,
+    "city"
+   ],
+   [
+    800,
+    "village"
+   ],
+   [
+    950,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Palenque",
+  "lat": 17.484,
+  "lon": -92.046,
+  "country": "Mexico",
+  "founded": 226,
+  "tiers": [
+   [
+    226,
+    "town"
+   ],
+   [
+    600,
+    "city"
+   ],
+   [
+    800,
+    "village"
+   ],
+   [
+    900,
+    "none"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Lakamha",
+    "from": 226,
+    "to": 900
+   }
+  ]
+ },
+ {
+  "name": "Copán",
+  "lat": 14.84,
+  "lon": -89.14,
+  "country": "Honduras",
+  "founded": 400,
+  "tiers": [
+   [
+    400,
+    "town"
+   ],
+   [
+    600,
+    "city"
+   ],
+   [
+    900,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Havana",
+  "lat": 23.113,
+  "lon": -82.366,
+  "country": "Cuba",
+  "founded": 1519,
+  "tiers": [
+   [
+    1519,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Panama City",
+  "lat": 8.983,
+  "lon": -79.517,
+  "country": "Panama",
+  "founded": 1519,
+  "tiers": [
+   [
+    1519,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Guatemala City",
+  "lat": 14.634,
+  "lon": -90.506,
+  "country": "Guatemala",
+  "founded": 1776,
+  "tiers": [
+   [
+    1776,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "San Juan",
+  "lat": 18.466,
+  "lon": -66.106,
+  "country": "Puerto Rico",
+  "founded": 1521,
+  "tiers": [
+   [
+    1521,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Kingston",
+  "lat": 17.971,
+  "lon": -76.793,
+  "country": "Jamaica",
+  "founded": 1692,
+  "tiers": [
+   [
+    1692,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Oaxaca",
+  "lat": 17.06,
+  "lon": -96.725,
+  "country": "Mexico",
+  "founded": 1529,
+  "tiers": [
+   [
+    1529,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Mérida",
+  "lat": 20.967,
+  "lon": -89.623,
+  "country": "Mexico",
+  "founded": 1542,
+  "tiers": [
+   [
+    1542,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Tʼhó",
+    "from": 800,
+    "to": 1542
+   }
+  ]
+ },
+ {
+  "name": "La Venta",
+  "lat": 18.1,
+  "lon": -94.04,
+  "country": "Mexico",
+  "founded": -1200,
+  "tiers": [
+   [
+    -1200,
+    "town"
+   ],
+   [
+    -400,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Cusco",
+  "lat": -13.532,
+  "lon": -71.967,
+  "country": "Peru",
+  "founded": 1100,
+  "tiers": [
+   [
+    1100,
+    "town"
+   ],
+   [
+    1438,
+    "city"
+   ],
+   [
+    1540,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Qosqo",
+    "from": 1100,
+    "to": 1534
+   }
+  ]
+ },
+ {
+  "name": "Lima",
+  "lat": -12.046,
+  "lon": -77.043,
+  "country": "Peru",
+  "founded": 1535,
+  "tiers": [
+   [
+    1535,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Bogotá",
+  "lat": 4.711,
+  "lon": -74.072,
+  "country": "Colombia",
+  "founded": 1538,
+  "tiers": [
+   [
+    1538,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Quito",
+  "lat": -0.181,
+  "lon": -78.468,
+  "country": "Ecuador",
+  "founded": 1534,
+  "tiers": [
+   [
+    1534,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Buenos Aires",
+  "lat": -34.604,
+  "lon": -58.382,
+  "country": "Argentina",
+  "founded": 1580,
+  "tiers": [
+   [
+    1580,
+    "village"
+   ],
+   [
+    1750,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Rio de Janeiro",
+  "lat": -22.907,
+  "lon": -43.173,
+  "country": "Brazil",
+  "founded": 1565,
+  "tiers": [
+   [
+    1565,
+    "town"
+   ],
+   [
+    1750,
+    "city"
+   ],
+   [
+    1900,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "São Paulo",
+  "lat": -23.551,
+  "lon": -46.633,
+  "country": "Brazil",
+  "founded": 1554,
+  "tiers": [
+   [
+    1554,
+    "village"
+   ],
+   [
+    1850,
+    "town"
+   ],
+   [
+    1890,
+    "city"
+   ],
+   [
+    1930,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Santiago",
+  "lat": -33.449,
+  "lon": -70.669,
+  "country": "Chile",
+  "founded": 1541,
+  "tiers": [
+   [
+    1541,
+    "town"
+   ],
+   [
+    1850,
+    "city"
+   ],
+   [
+    1950,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Caracas",
+  "lat": 10.48,
+  "lon": -66.904,
+  "country": "Venezuela",
+  "founded": 1567,
+  "tiers": [
+   [
+    1567,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "La Paz",
+  "lat": -16.49,
+  "lon": -68.119,
+  "country": "Bolivia",
+  "founded": 1548,
+  "tiers": [
+   [
+    1548,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Tiwanaku",
+  "lat": -16.555,
+  "lon": -68.673,
+  "country": "Bolivia",
+  "founded": 500,
+  "tiers": [
+   [
+    500,
+    "town"
+   ],
+   [
+    700,
+    "city"
+   ],
+   [
+    1000,
+    "village"
+   ],
+   [
+    1100,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Chan Chan",
+  "lat": -8.106,
+  "lon": -79.075,
+  "country": "Peru",
+  "founded": 900,
+  "tiers": [
+   [
+    900,
+    "town"
+   ],
+   [
+    1200,
+    "city"
+   ],
+   [
+    1470,
+    "village"
+   ],
+   [
+    1550,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Caral",
+  "lat": -10.893,
+  "lon": -77.52,
+  "country": "Peru",
+  "founded": -2600,
+  "tiers": [
+   [
+    -2600,
+    "town"
+   ],
+   [
+    -1800,
+    "none"
+   ]
+  ]
+ },
+ {
+  "name": "Salvador",
+  "lat": -12.977,
+  "lon": -38.501,
+  "country": "Brazil",
+  "founded": 1549,
+  "tiers": [
+   [
+    1549,
+    "town"
+   ],
+   [
+    1700,
+    "city"
+   ],
+   [
+    1960,
+    "metropolis"
+   ]
+  ]
+ },
+ {
+  "name": "Manaus",
+  "lat": -3.119,
+  "lon": -60.022,
+  "country": "Brazil",
+  "founded": 1669,
+  "tiers": [
+   [
+    1669,
+    "village"
+   ],
+   [
+    1890,
+    "town"
+   ],
+   [
+    1970,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Montevideo",
+  "lat": -34.901,
+  "lon": -56.164,
+  "country": "Uruguay",
+  "founded": 1724,
+  "tiers": [
+   [
+    1724,
+    "town"
+   ],
+   [
+    1900,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Potosí",
+  "lat": -19.589,
+  "lon": -65.753,
+  "country": "Bolivia",
+  "founded": 1545,
+  "tiers": [
+   [
+    1545,
+    "city"
+   ],
+   [
+    1800,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Murmansk",
+  "lat": 68.97,
+  "lon": 33.075,
+  "country": "Russia",
+  "founded": 1916,
+  "tiers": [
+   [
+    1916,
+    "town"
+   ],
+   [
+    1950,
+    "city"
+   ]
+  ]
+ },
+ {
+  "name": "Nuuk",
+  "lat": 64.181,
+  "lon": -51.694,
+  "country": "Greenland",
+  "founded": 1728,
+  "tiers": [
+   [
+    1728,
+    "hamlet"
+   ],
+   [
+    1950,
+    "town"
+   ]
+  ],
+  "names": [
+   {
+    "name": "Godthåb",
+    "from": 1728,
+    "to": 1979
+   }
+  ]
+ },
+ {
+  "name": "Tromsø",
+  "lat": 69.649,
+  "lon": 18.955,
+  "country": "Norway",
+  "founded": 1794,
+  "tiers": [
+   [
+    1794,
+    "town"
+   ]
+  ]
+ },
+ {
+  "name": "Norilsk",
+  "lat": 69.349,
+  "lon": 88.2,
+  "country": "Russia",
+  "founded": 1935,
+  "tiers": [
+   [
+    1935,
+    "town"
+   ],
+   [
+    1960,
+    "city"
+   ]
+  ]
+ }
+]

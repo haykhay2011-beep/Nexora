@@ -1,0 +1,327 @@
+[
+  {
+    "id": "dinosaurs", "name": "Age of Dinosaurs", "start": -72000000, "end": -66000000, "bucketYears": 500000,
+    "tech": 0, "humans": false, "settlementScale": 0, "maxTier": "none",
+    "palette": { "tint": "#e9ffd0", "saturation": 1.18, "contrast": 1.04, "fog": "#b9d6a6", "skyTop": "#4f8fd0", "skyHorizon": "#d9efc4", "sun": "#fff2c8", "ambient": "#9fc48a", "ground": "#556b2f" },
+    "climateOffset": 8, "seaLevel": 170, "floraKit": "cretaceous",
+    "styles": [], "roads": "none", "layout": "organic", "vehicles": [], "boats": [], "mounts": ["glider"],
+    "currency": { "name": "nothing at all", "short": "-", "rate": 0 },
+    "clothing": { "styles": ["trousers"], "colors": ["#6b7d4a"], "accents": ["#2a9d8f"], "headwear": ["none"] },
+    "domestic": [], "ambience": ["jungle", "insects", "distant_roar"],
+    "music": { "instrument": "marimba", "scale": "pentatonic_minor", "tempo": 62, "pad": "deep" },
+    "inventions": [
+      { "id": "flowers", "name": "Flowering plants", "fact": "Flowering plants spread widely during the Cretaceous and were common by the time of the last dinosaurs." },
+      { "id": "feathers", "name": "Feathered dinosaurs", "fact": "Many dinosaurs, especially smaller theropods, had feathers. Birds are living dinosaurs." }
+    ],
+    "goods": [], "people": [],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0, "energyTier": 5,
+    "description": "Late Cretaceous Earth: warm, with high seas, conifer and fern forests, and the last great dinosaurs. About 66 million years ago an asteroid impact ended the age of the non-bird dinosaurs."
+  },
+  {
+    "id": "mammals", "name": "Age of Mammals", "start": -66000000, "end": -2580000, "bucketYears": 2000000,
+    "tech": 0, "humans": false, "settlementScale": 0, "maxTier": "none",
+    "palette": { "tint": "#fff1d6", "saturation": 1.1, "contrast": 1.02, "fog": "#cbd9b8", "skyTop": "#4b88cc", "skyHorizon": "#e4eccc", "sun": "#fff0cc", "ambient": "#a8c290", "ground": "#6b7a3a" },
+    "climateOffset": 4, "seaLevel": 40, "floraKit": "cenozoic",
+    "styles": [], "roads": "none", "layout": "organic", "vehicles": [], "boats": [], "mounts": ["glider"],
+    "currency": { "name": "nothing at all", "short": "-", "rate": 0 },
+    "clothing": { "styles": ["trousers"], "colors": ["#7a6a4a"], "accents": ["#2a9d8f"], "headwear": ["none"] },
+    "domestic": [], "ambience": ["wind", "birds", "insects"],
+    "music": { "instrument": "marimba", "scale": "pentatonic_major", "tempo": 66, "pad": "warm" },
+    "inventions": [
+      { "id": "grasslands", "name": "Grasslands", "fact": "Wide grasslands spread in the later part of the Cenozoic, and grazing animals with long legs and tough teeth evolved alongside them." }
+    ],
+    "goods": [], "people": [],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0, "energyTier": 5,
+    "description": "After the dinosaurs, mammals spread into every habitat. The continents drifted towards today's positions, and the climate slowly cooled."
+  },
+  {
+    "id": "iceage", "name": "Ice Age", "start": -2580000, "end": -11700, "bucketYears": 5000,
+    "tech": 1, "humans": true, "settlementScale": 0.25, "maxTier": "camp",
+    "palette": { "tint": "#e4f2ff", "saturation": 0.88, "contrast": 1.06, "fog": "#d4e2ec", "skyTop": "#5c8dc2", "skyHorizon": "#e4eef4", "sun": "#fff6e4", "ambient": "#b3c6d6", "ground": "#8a8f6a" },
+    "climateOffset": -6, "seaLevel": -110, "floraKit": "pleistocene",
+    "styles": ["hide_tent"], "roads": "trail", "layout": "ring", "vehicles": [], "boats": [], "mounts": ["glider"],
+    "currency": { "name": "trade beads", "short": "beads", "rate": 0.2 },
+    "clothing": { "styles": ["fur"], "colors": ["#8b6b4a", "#a58664", "#6d5238"], "accents": ["#d9c7a3", "#7a4b2a"], "headwear": ["fur_hood", "none"] },
+    "domestic": ["dog"], "ambience": ["wind_cold", "fire"],
+    "music": { "instrument": "bone_flute", "scale": "pentatonic_minor", "tempo": 58, "pad": "cold" },
+    "inventions": [
+      { "id": "fire", "name": "Controlled fire", "fact": "Humans and earlier relatives used fire for warmth, cooking and light for hundreds of thousands of years." },
+      { "id": "needle", "name": "Bone needle", "fact": "Eyed bone needles appear around 40,000 years ago and made close-fitting, sewn clothing possible in cold climates." },
+      { "id": "cave_art", "name": "Cave painting", "fact": "Ice Age artists painted animals on cave walls with mineral pigments such as ochre and charcoal." },
+      { "id": "spear_thrower", "name": "Spear-thrower", "fact": "The spear-thrower (atlatl) is a lever that helped Ice Age hunters throw farther. Carved examples survive from Europe." }
+    ],
+    "goods": ["flint", "furs", "ochre", "dried_meat", "bone_needle", "shell_beads"],
+    "people": [
+      { "id": "hunter", "name": "Hunter-gatherer", "work": "gather", "fact": "Ice Age people lived in small mobile groups, moving with the seasons and the herds." },
+      { "id": "toolmaker", "name": "Toolmaker", "work": "craft", "fact": "Skilled knappers shaped flint and obsidian into blades, scrapers and points." },
+      { "id": "storyteller", "name": "Storyteller", "work": "idle", "fact": "Stories and songs passed knowledge about land, animals and seasons from one generation to the next." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0.1, "energyTier": 3,
+    "description": "Great ice sheets grew and shrank many times. Mammoths, woolly rhinos and giant deer roamed cold steppes, and our ancestors spread across the world."
+  },
+  {
+    "id": "stoneage", "name": "Stone Age", "start": -11700, "end": -3500, "bucketYears": 500,
+    "tech": 2, "humans": true, "settlementScale": 0.5, "maxTier": "village",
+    "palette": { "tint": "#f4ead2", "saturation": 1.0, "contrast": 1.02, "fog": "#d8dcc0", "skyTop": "#4f8ac8", "skyHorizon": "#e8e8cf", "sun": "#fff0d0", "ambient": "#b0b88e", "ground": "#6f7340" },
+    "climateOffset": 0.3, "seaLevel": -20, "floraKit": "holocene",
+    "styles": ["roundhouse_thatch"], "roads": "trail", "layout": "organic", "vehicles": [], "boats": ["dugout"], "mounts": ["glider", "boat"],
+    "currency": { "name": "trade beads", "short": "beads", "rate": 0.3 },
+    "clothing": { "styles": ["wrap", "tunic"], "colors": ["#a8875f", "#8a6d4a", "#c2a77a", "#6f5a3d"], "accents": ["#b5523b", "#e0c48c"], "headwear": ["none", "headband", "fur_hood"] },
+    "domestic": ["dog", "sheep", "goat", "cattle", "pig"], "ambience": ["birds", "fire", "wind"],
+    "music": { "instrument": "flute", "scale": "pentatonic_major", "tempo": 70, "pad": "warm" },
+    "inventions": [
+      { "id": "farming", "name": "Farming", "fact": "Farming began independently in several places, including the Fertile Crescent about 11,000 years ago, and later in China, Mesoamerica, the Andes and New Guinea." },
+      { "id": "pottery", "name": "Pottery", "fact": "Fired clay pots let people cook, store grain and carry water. Some of the oldest pottery comes from East Asia." },
+      { "id": "polished_axe", "name": "Polished stone axe", "fact": "Ground and polished stone axes helped early farmers clear forests for fields." },
+      { "id": "weaving", "name": "Weaving", "fact": "People wove plant fibres such as flax into cloth, baskets and nets." }
+    ],
+    "goods": ["flint", "pottery", "grain", "wool", "shell_beads", "baskets", "ochre"],
+    "people": [
+      { "id": "farmer", "name": "Early farmer", "work": "farm", "fact": "Early farmers planted and harvested grains, and kept herds of goats, sheep and cattle." },
+      { "id": "potter", "name": "Potter", "work": "craft", "fact": "Potters shaped clay by hand, in coils, and fired it in open fires or simple kilns." },
+      { "id": "herder", "name": "Herder", "work": "herd", "fact": "Herders moved animals between pastures with the seasons." },
+      { "id": "fisher", "name": "Fisher", "work": "dock", "fact": "Fishing with nets, traps and hooks fed many coastal and river communities." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0.15, "energyTier": 3,
+    "description": "After the last glacial period, people in many parts of the world began to farm, herd animals, make pottery and live in permanent villages."
+  },
+  {
+    "id": "earlyciv", "name": "Early Civilizations", "start": -3500, "end": -800, "bucketYears": 100,
+    "tech": 3, "humans": true, "settlementScale": 0.85, "maxTier": "city",
+    "palette": { "tint": "#ffe9c4", "saturation": 1.06, "contrast": 1.04, "fog": "#e7d6b2", "skyTop": "#3f84d0", "skyHorizon": "#f2dfb6", "sun": "#fff0c8", "ambient": "#c9b48a", "ground": "#9a8456" },
+    "climateOffset": 0.2, "seaLevel": 0, "floraKit": "holocene",
+    "styles": ["mudbrick_flat"], "roads": "dirt", "layout": "organic", "vehicles": ["cart"], "boats": ["reed_boat"], "mounts": ["glider", "boat", "donkey"],
+    "currency": { "name": "silver weights", "short": "shekel-weights", "rate": 0.5 },
+    "clothing": { "styles": ["wrap", "tunic", "robe"], "colors": ["#efe6d2", "#d9c8a6", "#c7b28a", "#e6dcc4"], "accents": ["#2a6f97", "#b5523b", "#d4a017"], "headwear": ["none", "wrap", "headband"] },
+    "domestic": ["donkey", "cattle", "sheep", "goat", "dog", "cat"], "ambience": ["crowd_small", "birds", "river"],
+    "music": { "instrument": "harp", "scale": "phrygian", "tempo": 76, "pad": "warm" },
+    "inventions": [
+      { "id": "writing", "name": "Writing", "fact": "Writing developed in Mesopotamia (cuneiform) and Egypt (hieroglyphs) around 3200 BCE, and later independently in China and Mesoamerica." },
+      { "id": "wheel", "name": "The wheel", "fact": "Wheeled vehicles appear in Mesopotamia, Central Europe and the steppes around 3500 BCE." },
+      { "id": "bronze", "name": "Bronze", "fact": "Mixing copper with tin made bronze, which is harder than copper. That is why these centuries are called the Bronze Age." },
+      { "id": "irrigation", "name": "Irrigation canals", "fact": "River civilizations dug canals to bring water from rivers like the Nile, Tigris, Euphrates and Indus to their fields." },
+      { "id": "calendar", "name": "Calendars", "fact": "Ancient Egyptians used a 365-day civil calendar tied to the yearly Nile flood." }
+    ],
+    "goods": ["bread", "beer_jar", "linen", "papyrus", "pottery", "copper", "dates", "lapis", "grain"],
+    "people": [
+      { "id": "scribe", "name": "Scribe", "work": "scholar", "fact": "Scribes trained for years to read and write, and kept records of harvests, trade and taxes." },
+      { "id": "farmer", "name": "Farmer", "work": "farm", "fact": "Most people in early civilizations were farmers who worked fields watered by rivers and canals." },
+      { "id": "builder", "name": "Builder", "work": "build", "fact": "Large building projects were carried out by organised teams of skilled workers and labourers." },
+      { "id": "merchant", "name": "Merchant", "work": "market", "fact": "Traders carried goods such as copper, tin, timber and lapis lazuli over long distances." },
+      { "id": "potter", "name": "Potter", "work": "craft", "fact": "The potter's wheel made it faster to shape pots of even size." },
+      { "id": "baker", "name": "Baker", "work": "cook", "fact": "Bread and beer made from barley and wheat were everyday foods in Egypt and Mesopotamia." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0.2, "energyTier": 1,
+    "description": "The first cities, kingdoms and writing systems grew along great rivers: the Nile, the Tigris and Euphrates, the Indus and the Yellow River."
+  },
+  {
+    "id": "classical", "name": "Classical Antiquity", "start": -800, "end": 500, "bucketYears": 50,
+    "tech": 4, "humans": true, "settlementScale": 1.0, "maxTier": "city",
+    "palette": { "tint": "#ffe2a8", "saturation": 1.12, "contrast": 1.06, "fog": "#ecd9b0", "skyTop": "#3a7fd4", "skyHorizon": "#f6dfae", "sun": "#ffe9b8", "ambient": "#cdb688", "ground": "#93804f" },
+    "climateOffset": 0.1, "seaLevel": 0, "floraKit": "holocene",
+    "styles": ["stone_columned"], "roads": "stone", "layout": "grid", "vehicles": ["cart"], "boats": ["galley"], "mounts": ["glider", "boat", "horse"],
+    "currency": { "name": "silver coins", "short": "coins", "rate": 1 },
+    "clothing": { "styles": ["tunic", "robe"], "colors": ["#f1e8d6", "#e2d3b2", "#c9b18a", "#d8c7a0"], "accents": ["#a33b2a", "#3b5ea8", "#c9a227", "#6b3fa0"], "headwear": ["none", "wrap", "wide_hat"], "layer": 0.35 },
+    "domestic": ["horse", "donkey", "sheep", "goat", "cattle", "chicken", "dog", "cat"], "ambience": ["crowd", "hammer", "birds"],
+    "music": { "instrument": "lyre", "scale": "dorian", "tempo": 84, "pad": "warm" },
+    "inventions": [
+      { "id": "coins", "name": "Coins", "fact": "Some of the earliest coins were made in Lydia, in today's Turkey, around 600 BCE." },
+      { "id": "concrete", "name": "Roman concrete", "fact": "Roman builders mixed lime with volcanic ash to make a strong concrete. It let them build domes like the Pantheon's." },
+      { "id": "paper", "name": "Paper", "fact": "Papermaking was refined in China during the Han dynasty, around 105 CE." },
+      { "id": "aqueduct", "name": "Aqueducts", "fact": "Roman aqueducts carried water for many kilometres using a gentle, steady downhill slope." },
+      { "id": "astrolabe_early", "name": "Geometry & astronomy", "fact": "Greek scholars such as Eratosthenes estimated the size of the Earth around 240 BCE using shadows and geometry." }
+    ],
+    "goods": ["olive_oil", "amphora", "wine_jar", "bread", "scroll", "pottery", "wool", "silk", "spices", "glass"],
+    "people": [
+      { "id": "philosopher", "name": "Scholar", "work": "scholar", "fact": "Scholars across the classical world studied mathematics, astronomy, medicine and philosophy." },
+      { "id": "merchant", "name": "Merchant", "work": "market", "fact": "Sea and land routes such as the Silk Roads linked the Mediterranean, Persia, India and China." },
+      { "id": "farmer", "name": "Farmer", "work": "farm", "fact": "Olives, grapes and grain were the main crops around the Mediterranean." },
+      { "id": "mason", "name": "Stonemason", "work": "build", "fact": "Masons cut and fitted stone blocks so precisely that many classical buildings still stand." },
+      { "id": "sailor", "name": "Sailor", "work": "dock", "fact": "Merchant ships carried grain, wine and oil in clay amphorae across the Mediterranean." },
+      { "id": "cook", "name": "Street cook", "work": "cook", "fact": "Many city dwellers bought hot food from street counters instead of cooking at home." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0.25, "energyTier": 1,
+    "description": "Large states and empires grew across Eurasia and North Africa. They were linked by roads, sea lanes and the Silk Roads, and philosophy, mathematics and engineering flourished."
+  },
+  {
+    "id": "medieval", "name": "Medieval", "start": 500, "end": 1450, "bucketYears": 50,
+    "tech": 5, "humans": true, "settlementScale": 1.0, "maxTier": "city",
+    "palette": { "tint": "#e2f0d8", "saturation": 0.95, "contrast": 1.04, "fog": "#c8d8c0", "skyTop": "#5a88b8", "skyHorizon": "#dfe8d4", "sun": "#fff2d6", "ambient": "#9fb497", "ground": "#5f7146" },
+    "climateOffset": 0, "seaLevel": 0, "floraKit": "holocene",
+    "styles": ["timber_frame"], "roads": "dirt", "layout": "organic", "vehicles": ["cart"], "boats": ["sailboat"], "mounts": ["glider", "boat", "horse"],
+    "currency": { "name": "pennies", "short": "pennies", "rate": 1 },
+    "clothing": { "styles": ["tunic", "robe"], "colors": ["#6f7a4a", "#8a6d4a", "#a99a7a", "#5a6a7a", "#7a3b2a"], "accents": ["#c9a227", "#3b5ea8", "#a33b2a"], "headwear": ["hood", "none", "cap", "wrap"], "layer": 0.4 },
+    "domestic": ["horse", "cattle", "sheep", "pig", "chicken", "goat", "dog", "cat"], "ambience": ["crowd", "bells", "birds", "hammer"],
+    "music": { "instrument": "recorder", "scale": "dorian", "tempo": 80, "pad": "misty" },
+    "inventions": [
+      { "id": "printing", "name": "Woodblock & movable type", "fact": "Woodblock printing was used in China by the Tang dynasty, and Bi Sheng invented movable type around 1040." },
+      { "id": "compass", "name": "Magnetic compass", "fact": "Chinese sailors were using the magnetic compass for navigation by about the 11th century." },
+      { "id": "astrolabe", "name": "Astrolabe", "fact": "Astronomers of the Islamic world refined the astrolabe, an instrument for measuring the positions of stars and telling time." },
+      { "id": "windmill", "name": "Windmill", "fact": "Windmills were built in Persia and later in Europe to grind grain and pump water." },
+      { "id": "algebra", "name": "Algebra", "fact": "The word 'algebra' comes from a book by al-Khwarizmi, a scholar in 9th-century Baghdad." },
+      { "id": "mechanical_clock", "name": "Mechanical clock", "fact": "Mechanical clocks with weights and escapements appeared in European towers around the late 1200s." }
+    ],
+    "goods": ["bread", "cheese", "wool", "candles", "salt", "spices", "silk", "book", "tea", "porcelain"],
+    "people": [
+      { "id": "farmer", "name": "Farmer", "work": "farm", "fact": "Most medieval people lived in villages and worked the land." },
+      { "id": "blacksmith", "name": "Blacksmith", "work": "craft", "fact": "Blacksmiths made tools, nails, horseshoes and hinges, so every village needed one." },
+      { "id": "merchant", "name": "Merchant", "work": "market", "fact": "Markets and fairs brought traders with cloth, spices and salt." },
+      { "id": "scholar", "name": "Scholar", "work": "scholar", "fact": "Libraries and schools in cities such as Baghdad, Córdoba, Timbuktu and Kaifeng gathered books and scholars." },
+      { "id": "builder", "name": "Master builder", "work": "build", "fact": "Great cathedrals, mosques and temples could take generations to finish." },
+      { "id": "baker", "name": "Baker", "work": "cook", "fact": "Town bakers often baked bread in shared ovens." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0.25, "energyTier": 1,
+    "description": "From about 500 to 1450, kingdoms and trade networks rose across the world. Learning flourished in Baghdad, Kaifeng and Timbuktu, cathedrals and castles went up in Europe, and Polynesian voyagers crossed the Pacific."
+  },
+  {
+    "id": "exploration", "name": "Age of Exploration", "start": 1450, "end": 1750, "bucketYears": 25,
+    "tech": 6, "humans": true, "settlementScale": 1.1, "maxTier": "city",
+    "palette": { "tint": "#fff0d4", "saturation": 1.02, "contrast": 1.06, "fog": "#d8dfd6", "skyTop": "#3e7ec4", "skyHorizon": "#ece6d2", "sun": "#fff0d0", "ambient": "#b9b89a", "ground": "#6d7448" },
+    "climateOffset": -0.4, "seaLevel": 0, "floraKit": "holocene",
+    "styles": ["timber_frame"], "roads": "cobble", "layout": "organic", "vehicles": ["cart", "carriage"], "boats": ["tall_ship"], "mounts": ["glider", "boat", "horse"],
+    "currency": { "name": "silver pieces", "short": "pieces", "rate": 1.4 },
+    "clothing": { "styles": ["coat", "robe", "tunic"], "colors": ["#3b4a6b", "#6b3b3b", "#4a5a3a", "#e8e0cc", "#2d2d2d"], "accents": ["#e8e0cc", "#c9a227", "#a33b2a"], "headwear": ["wide_hat", "cap", "none", "wrap"], "layer": 0.3 },
+    "domestic": ["horse", "cattle", "sheep", "pig", "chicken", "goat", "dog", "cat"], "ambience": ["crowd", "bells", "gulls", "birds"],
+    "music": { "instrument": "lute", "scale": "major", "tempo": 92, "pad": "warm" },
+    "inventions": [
+      { "id": "printing_press", "name": "Printing press", "fact": "Johannes Gutenberg's movable-type press, built around 1440–1450, made books much cheaper in Europe." },
+      { "id": "telescope", "name": "Telescope", "fact": "The telescope appeared in the Netherlands in 1608. Galileo soon used one to see the moons of Jupiter." },
+      { "id": "globe", "name": "Terrestrial globe", "fact": "The oldest surviving terrestrial globe, the 'Erdapfel', was made in Nuremberg in 1492." },
+      { "id": "pendulum_clock", "name": "Pendulum clock", "fact": "Christiaan Huygens built the first pendulum clock in 1656, making clocks far more accurate." },
+      { "id": "microscope", "name": "Microscope", "fact": "Antonie van Leeuwenhoek used tiny handmade lenses to see bacteria and other microbes in the 1670s." }
+    ],
+    "goods": ["spices", "sugar", "coffee", "tea", "cacao", "maize", "potatoes", "silk", "porcelain", "book", "map"],
+    "people": [
+      { "id": "navigator", "name": "Navigator", "work": "dock", "fact": "Navigators used the compass, the astrolabe, the quadrant and the stars to find their way across oceans." },
+      { "id": "merchant", "name": "Merchant", "work": "market", "fact": "New ocean routes carried crops such as maize, potatoes and cacao around the world." },
+      { "id": "printer", "name": "Printer", "work": "craft", "fact": "Print shops produced books, maps and pamphlets in growing numbers." },
+      { "id": "farmer", "name": "Farmer", "work": "farm", "fact": "Crops from the Americas, such as potatoes and maize, became staple foods across the world." },
+      { "id": "astronomer", "name": "Astronomer", "work": "scholar", "fact": "Astronomers mapped the heavens ever more precisely, with and without telescopes." },
+      { "id": "carpenter", "name": "Carpenter", "work": "build", "fact": "Shipwrights and carpenters built the wooden ships and houses of the age." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0.3, "energyTier": 1,
+    "description": "Ocean voyages linked the world's continents. Crops, ideas and goods were exchanged on a global scale, with deep consequences for the peoples of every continent."
+  },
+  {
+    "id": "industrial", "name": "Industrial Age", "start": 1750, "end": 1914, "bucketYears": 20,
+    "tech": 7, "humans": true, "settlementScale": 1.3, "maxTier": "city",
+    "palette": { "tint": "#f2dcb4", "saturation": 0.72, "contrast": 1.08, "fog": "#c8bba2", "skyTop": "#6f8fae", "skyHorizon": "#ddd0b6", "sun": "#ffe8c0", "ambient": "#aa9f88", "ground": "#6b6446" },
+    "climateOffset": -0.2, "seaLevel": 0, "floraKit": "holocene",
+    "styles": ["brick_rowhouse", "factory"], "roads": "cobble", "layout": "grid", "vehicles": ["carriage", "tram"], "boats": ["steamship"], "mounts": ["glider", "boat", "horse"],
+    "currency": { "name": "shillings", "short": "shillings", "rate": 3 },
+    "clothing": { "styles": ["coat", "suit", "robe"], "colors": ["#3a3a3a", "#4a3b2a", "#2d3b4a", "#6b5a4a", "#e8e0cc"], "accents": ["#e8e0cc", "#a33b2a", "#c9a227"], "headwear": ["brimmed", "cap", "none", "wrap"], "layer": 0.25 },
+    "domestic": ["horse", "cattle", "sheep", "pig", "chicken", "dog", "cat"], "ambience": ["machines", "crowd", "train", "bells"],
+    "music": { "instrument": "piano", "scale": "major", "tempo": 96, "pad": "sepia" },
+    "inventions": [
+      { "id": "steam_engine", "name": "Steam engine", "fact": "James Watt's improvements to the steam engine in the 1760s–1770s made it far more efficient and helped power factories." },
+      { "id": "railway", "name": "Railways", "fact": "The Liverpool and Manchester Railway opened in 1830 as the first intercity line run entirely by steam locomotives." },
+      { "id": "telegraph", "name": "Telegraph", "fact": "Electric telegraphs sent messages along wires in seconds. A cable across the Atlantic worked lastingly from 1866." },
+      { "id": "photography", "name": "Photography", "fact": "Early photographic processes such as the daguerreotype were announced in 1839." },
+      { "id": "telephone", "name": "Telephone", "fact": "Alexander Graham Bell received a patent for the telephone in 1876." },
+      { "id": "light_bulb", "name": "Electric light", "fact": "Long-lasting incandescent bulbs became practical around 1879–1880, and electric street lighting spread through cities." }
+    ],
+    "goods": ["coal", "newspaper", "tea", "cotton_cloth", "bread", "pocket_watch", "tin_toy", "coffee", "book"],
+    "people": [
+      { "id": "engineer", "name": "Engineer", "work": "build", "fact": "Engineers built railways, bridges, canals and factories at a new scale." },
+      { "id": "mill_worker", "name": "Mill worker", "work": "craft", "fact": "Textile mills were among the first large factories. Many workers, including children, worked long hours until reforms limited them." },
+      { "id": "shopkeeper", "name": "Shopkeeper", "work": "market", "fact": "City shops with glass windows began selling factory-made goods." },
+      { "id": "farmer", "name": "Farmer", "work": "farm", "fact": "New machines such as mechanical reapers changed farm work in the 1800s." },
+      { "id": "newsboy", "name": "News seller", "work": "market", "fact": "Cheap newspapers spread news quickly once steam-powered presses could print thousands of copies an hour." },
+      { "id": "dockworker", "name": "Dock worker", "work": "dock", "fact": "Steamships carried goods and passengers across oceans on regular schedules." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": false },
+    "lights": 0.45, "energyTier": 1,
+    "description": "Steam power, factories and railways changed how people worked and lived, and cities grew fast."
+  },
+  {
+    "id": "modern", "name": "Modern", "start": 1914, "end": 2030, "bucketYears": 10,
+    "tech": 8, "humans": true, "settlementScale": 1.7, "maxTier": "metropolis",
+    "palette": { "tint": "#ffffff", "saturation": 1.04, "contrast": 1.05, "fog": "#cfdbe6", "skyTop": "#3d7fd6", "skyHorizon": "#dfe9f2", "sun": "#fff4e0", "ambient": "#b4c0cc", "ground": "#6a7454" },
+    "climateOffset": 0.8, "seaLevel": 0, "floraKit": "holocene",
+    "styles": ["modern_house", "modern_apartment"], "roads": "asphalt", "layout": "grid", "vehicles": ["car", "bus", "bicycle"], "boats": ["motorboat"], "mounts": ["glider", "boat", "horse"],
+    "currency": { "name": "dollars", "short": "$", "rate": 10 },
+    "clothing": { "styles": ["trousers", "dress", "suit"], "colors": ["#2d4a6b", "#e8e8e8", "#3a3a3a", "#a33b2a", "#4a6b3a", "#d9b44a", "#7a4a8a"], "accents": ["#ffffff", "#222222", "#e07a5f"], "headwear": ["none", "cap", "none", "none"] },
+    "domestic": ["dog", "cat", "cattle", "sheep", "chicken", "pigeon", "horse"], "ambience": ["traffic", "crowd", "birds"],
+    "music": { "instrument": "electric_piano", "scale": "major", "tempo": 100, "pad": "bright" },
+    "inventions": [
+      { "id": "airplane", "name": "Airplane", "fact": "The Wright brothers made the first controlled, powered airplane flights in 1903. Air travel became common later in the 1900s." },
+      { "id": "computer", "name": "Computer", "fact": "Electronic computers appeared in the 1940s. Microchips later made them small enough for desks and pockets." },
+      { "id": "spaceflight", "name": "Spaceflight", "fact": "Apollo 11 astronauts landed on the Moon on 20 July 1969." },
+      { "id": "internet", "name": "Internet & web", "fact": "The World Wide Web was invented by Tim Berners-Lee in 1989 and opened to the public in the early 1990s." },
+      { "id": "smartphone", "name": "Smartphone", "fact": "Touchscreen smartphones became common from the late 2000s and put a camera, map and library in billions of pockets." },
+      { "id": "antibiotics", "name": "Antibiotics", "fact": "Penicillin was discovered by Alexander Fleming in 1928 and mass-produced from the 1940s." }
+    ],
+    "goods": ["sandwich", "coffee", "newspaper", "battery", "sneakers", "postcard", "book", "fruit"],
+    "people": [
+      { "id": "office", "name": "Office worker", "work": "market", "fact": "By the late 1900s many people worked in offices, shops and services instead of farms or factories." },
+      { "id": "teacher", "name": "Teacher", "work": "scholar", "fact": "Schooling for all children spread across most of the world during the 1900s." },
+      { "id": "cook", "name": "Chef", "work": "cook", "fact": "Recipes and restaurants from many cultures spread around the world." },
+      { "id": "builder", "name": "Construction worker", "work": "build", "fact": "Steel frames and elevators made skyscrapers possible." },
+      { "id": "farmer", "name": "Farmer", "work": "farm", "fact": "Tractors and new crop varieties greatly increased harvests in the 1900s." },
+      { "id": "scientist", "name": "Scientist", "work": "scholar", "fact": "Scientists cooperate across countries on projects like space stations and climate research." }
+    ],
+    "sky": { "extraMoons": 0, "stations": false, "ring": false, "contrails": true },
+    "lights": 1, "energyTier": 1,
+    "description": "Cars, airplanes, electricity, computers and spaceflight connected the whole planet."
+  },
+  {
+    "id": "nearfuture", "name": "Near Future", "start": 2030, "end": 2200, "bucketYears": 20,
+    "tech": 9, "humans": true, "settlementScale": 1.6, "maxTier": "metropolis",
+    "palette": { "tint": "#eafcff", "saturation": 1.08, "contrast": 1.04, "fog": "#d4eaf0", "skyTop": "#3a86d8", "skyHorizon": "#e0f2f6", "sun": "#fffaf0", "ambient": "#b8d4dc", "ground": "#5f8054" },
+    "climateOffset": 1.4, "seaLevel": 0.4, "floraKit": "holocene",
+    "styles": ["nearfuture_tower", "modern_apartment"], "roads": "asphalt", "layout": "grid", "vehicles": ["ev", "tram", "drone_taxi"], "boats": ["solar_boat"], "mounts": ["glider", "boat"],
+    "currency": { "name": "credits", "short": "cr", "rate": 12 },
+    "clothing": { "styles": ["trousers", "dress", "future"], "colors": ["#e8f0f2", "#2a9d8f", "#264653", "#e9c46a", "#f4a261", "#8ab17d"], "accents": ["#ffffff", "#00d4ff", "#ff7aa2"], "headwear": ["none", "none", "cap", "visor"] },
+    "domestic": ["dog", "cat", "chicken", "garden_drone"], "ambience": ["city_quiet", "birds", "hum"],
+    "music": { "instrument": "synth_pluck", "scale": "lydian", "tempo": 104, "pad": "bright" },
+    "inventions": [
+      { "id": "vertical_farm", "name": "Vertical farms", "fact": "Imagined: stacked indoor farms grow fresh greens close to where people live, with far less water." },
+      { "id": "fusion", "name": "Fusion power", "fact": "Imagined: fusion reactors join light atoms to release clean energy, the same process that powers the Sun." },
+      { "id": "maglev", "name": "Maglev networks", "fact": "Maglev trains, which already ran in a few places in the 2000s, float on magnetic fields with almost no friction." }
+    ],
+    "goods": ["battery", "seed_pod", "algae_snack", "solar_tile", "holo_postcard", "fruit"],
+    "people": [
+      { "id": "gardener", "name": "City gardener", "work": "farm", "fact": "Imagined: rooftop and vertical gardens feed neighbourhoods and cool the streets." },
+      { "id": "engineer", "name": "Energy engineer", "work": "build", "fact": "Imagined: solar, wind and storage engineers keep cities running on clean power." },
+      { "id": "teacher", "name": "Teacher", "work": "scholar", "fact": "Imagined: classrooms mix real places with shared virtual field trips." },
+      { "id": "vendor", "name": "Market vendor", "work": "market", "fact": "Imagined: neighbourhood markets sell food grown within a few kilometres." }
+    ],
+    "sky": { "extraMoons": 0, "stations": true, "ring": false, "contrails": false },
+    "lights": 1, "energyTier": 1,
+    "description": "An imagined, hopeful near future: green cities, clean energy and quiet electric streets."
+  },
+  {
+    "id": "farfuture", "name": "Far Future", "start": 2200, "end": 3001, "bucketYears": 50,
+    "tech": 10, "humans": true, "settlementScale": 1.2, "maxTier": "city",
+    "palette": { "tint": "#f2f6ff", "saturation": 1.18, "contrast": 1.03, "fog": "#e4e8ff", "skyTop": "#4a6ce0", "skyHorizon": "#f0e8ff", "sun": "#ffffff", "ambient": "#c8c8ec", "ground": "#5a8a6a" },
+    "climateOffset": 0.9, "seaLevel": 0.6, "floraKit": "future",
+    "styles": ["far_future_spire", "eco_dome"], "roads": "glow", "layout": "radial", "vehicles": ["hoverpod"], "boats": ["hover_ship"], "mounts": ["glider", "boat"],
+    "currency": { "name": "chrono-shares", "short": "shares", "rate": 5 },
+    "clothing": { "styles": ["future", "robe"], "colors": ["#ffffff", "#e8e4ff", "#a0e8ff", "#ffd6f0", "#d8ffe4"], "accents": ["#00f0ff", "#ff6ad5", "#8a7bff", "#7dffb2"], "headwear": ["none", "visor", "none", "headband"], "layer": 0.3 },
+    "domestic": ["robo_hound", "garden_drone", "glow_moth"], "ambience": ["hum", "chimes", "birds"],
+    "music": { "instrument": "glass_pad", "scale": "lydian", "tempo": 72, "pad": "shimmer" },
+    "inventions": [
+      { "id": "living_buildings", "name": "Living buildings", "fact": "Imagined: grown from engineered coral and wood, these buildings repair themselves and breathe." },
+      { "id": "orbital_ring", "name": "Orbital ring", "fact": "Imagined: a ring of stations around the Earth, reached by gentle space elevators." },
+      { "id": "chronometer", "name": "Chronometer", "fact": "Imagined: the time device you carry was built by the Archive of Anywhen to study history without changing it." }
+    ],
+    "goods": ["seed_pod", "light_crystal", "memory_pearl", "star_tea", "holo_postcard"],
+    "people": [
+      { "id": "archivist", "name": "Archivist", "work": "scholar", "fact": "Imagined: archivists gather and protect the stories of every era." },
+      { "id": "gardener", "name": "Biome keeper", "work": "farm", "fact": "Imagined: keepers tend rewilded forests and living cities side by side." },
+      { "id": "artist", "name": "Light sculptor", "work": "craft", "fact": "Imagined: artists shape light and sound into public sculptures." },
+      { "id": "trader", "name": "Exchange keeper", "work": "market", "fact": "Imagined: exchanges trade time, ideas and seeds more than things." }
+    ],
+    "sky": { "extraMoons": 1, "stations": true, "ring": true, "contrails": false },
+    "lights": 0.9, "energyTier": 4,
+    "description": "An imagined, hopeful far future: living cities, rewilded lands, an orbital ring in the sky, and the Archive of Anywhen."
+  }
+]

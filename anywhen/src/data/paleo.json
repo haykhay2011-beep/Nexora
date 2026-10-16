@@ -1,0 +1,47 @@
+{
+  "_comment": "Simplified paleogeography. Plate rotations move each plate's centroid by (dLat, dLon) degrees at 66 Ma and scale linearly with age. Shelves become land when sea level drops below their depth; ice sheets cover land during glacial periods. Coarse polygons in [lon, lat].",
+  "plates": {
+    "1": { "name": "North America", "centroid": [-100, 48], "shift66": [-2, 14] },
+    "2": { "name": "South America", "centroid": [-60, -15], "shift66": [-4, 16] },
+    "3": { "name": "Eurasia", "centroid": [80, 50], "shift66": [-4, -2] },
+    "4": { "name": "Africa", "centroid": [20, 5], "shift66": [-9, -4] },
+    "5": { "name": "India", "centroid": [79, 22], "shift66": [-34, -14] },
+    "6": { "name": "Arabia", "centroid": [46, 23], "shift66": [-10, -8] },
+    "7": { "name": "Australia", "centroid": [134, -25], "shift66": [-22, -6] },
+    "8": { "name": "Antarctica", "centroid": [0, -85], "shift66": [0, 0] },
+    "9": { "name": "Pacific islands", "centroid": [-160, 0], "shift66": [0, 0] }
+  },
+  "shelves": [
+    { "name": "Beringia", "depth": 50, "polygon": [[-180, 60], [-160, 60], [-155, 72], [-180, 72]], "polygon2": [[160, 60], [180, 60], [180, 72], [160, 72]] },
+    { "name": "Doggerland", "depth": 60, "polygon": [[-6, 50], [9, 50], [9, 58], [-2, 58], [-6, 54]] },
+    { "name": "Sunda Shelf", "depth": 80, "polygon": [[95, -9], [118, -9], [118, 8], [100, 12], [95, 5]] },
+    { "name": "Sahul Shelf", "depth": 80, "polygon": [[125, -16], [150, -16], [150, -8], [130, -8]] },
+    { "name": "Bass Strait", "depth": 70, "polygon": [[143, -42], [149, -42], [149, -38], [143, -38]] },
+    { "name": "Yellow Sea", "depth": 70, "polygon": [[117, 30], [127, 30], [127, 41], [117, 41]] },
+    { "name": "Persian Gulf", "depth": 70, "polygon": [[47, 23], [57, 23], [57, 30.5], [47, 30.5]] },
+    { "name": "Grand Banks", "depth": 80, "polygon": [[-56, 42], [-46, 42], [-46, 48], [-56, 48]] },
+    { "name": "Patagonian Shelf", "depth": 90, "polygon": [[-68, -54], [-58, -54], [-58, -40], [-64, -38], [-68, -45]] },
+    { "name": "Adriatic", "depth": 90, "polygon": [[12, 42], [17, 41], [14, 46], [12, 45.8]] },
+    { "name": "Sri Lanka bridge", "depth": 40, "polygon": [[78.8, 8.5], [80.3, 8.5], [80.3, 10], [78.8, 10]] },
+    { "name": "Japan shelves", "depth": 60, "polygon": [[129, 33], [131, 33], [131, 35], [129, 35]] }
+  ],
+  "iceSheets": [
+    { "name": "Laurentide", "polygon": [[-140, 60], [-120, 49], [-100, 46], [-90, 39], [-82, 39], [-70, 41], [-62, 45], [-52, 50], [-60, 62], [-70, 72], [-95, 82], [-130, 72], [-142, 70]] },
+    { "name": "Cordilleran", "polygon": [[-150, 62], [-138, 58], [-125, 48], [-118, 49], [-120, 58], [-140, 66]] },
+    { "name": "Greenland", "polygon": [[-75, 59], [-10, 59], [-10, 84], [-75, 84]] },
+    { "name": "Fennoscandian", "polygon": [[-11, 51], [-5, 50], [5, 52], [14, 52], [22, 53], [32, 54], [40, 58], [50, 62], [64, 66], [70, 72], [55, 78], [20, 80], [4, 70], [-12, 60]] },
+    { "name": "Alps", "polygon": [[5, 44], [16, 45.5], [16, 48], [5, 47.5]] },
+    { "name": "Patagonian", "polygon": [[-76, -56], [-70, -56], [-70, -38], [-74, -38]] },
+    { "name": "Tibet glaciers", "polygon": [[78, 30], [92, 28], [100, 31], [94, 36], [80, 36]] }
+  ],
+  "glacial": [
+    { "from": -2580000, "to": -130000, "factor": 0.65 },
+    { "from": -130000, "to": -115000, "factor": 0.1 },
+    { "from": -115000, "to": -30000, "factor": 0.6 },
+    { "from": -30000, "to": -19000, "factor": 1.0 },
+    { "from": -19000, "to": -14500, "factor": 0.75 },
+    { "from": -14500, "to": -11700, "factor": 0.4 },
+    { "from": -11700, "to": -8000, "factor": 0.12 },
+    { "from": -8000, "to": 3001, "factor": 0 }
+  ]
+}

@@ -1,0 +1,451 @@
+[
+  {
+    "id": "arctic", "name": "Arctic",
+    "polygons": [[[-180, 66.5], [180, 66.5], [180, 90], [-180, 90]], [[-75, 59], [-10, 59], [-10, 66.5], [-75, 66.5]]],
+    "humanArrival": -30000,
+    "skin": [0, 1, 3, 4, 3, 1, 0, 0], "hair": [8, 3, 1, 0, 0],
+    "subzones": [
+      { "name": "Arctic North America", "polygons": [[[-170, 59], [-60, 59], [-60, 84], [-170, 84]]], "humanArrival": -2500 },
+      { "name": "Greenland", "polygons": [[[-75, 59], [-10, 59], [-10, 84], [-75, 84]]], "humanArrival": -2500,
+        "eras": { "medieval": { "styles": ["turf_house", "snowhouse"] }, "exploration": { "styles": ["turf_house", "hide_tent"] } } },
+      { "name": "Nordic Arctic", "polygons": [[[5, 66.5], [45, 66.5], [45, 72], [5, 72]]], "humanArrival": -9000,
+        "eras": { "medieval": { "styles": ["turf_house", "hide_tent", "log_cabin"] }, "industrial": { "styles": ["log_cabin"] }, "modern": { "styles": ["modern_house"] } } }
+    ],
+    "defaults": {
+      "styles": ["hide_tent"], "crops": [], "domestic": ["dog"], "settlementScale": 0.3,
+      "plants": ["tundra_shrub", "lichen"],
+      "clothing": { "styles": ["fur"], "colors": ["#8b6b4a", "#a58664", "#d9c7a3", "#6d5238"], "accents": ["#d9c7a3", "#3a2a1a"], "headwear": ["fur_hood"] },
+      "currency": { "name": "trade goods", "short": "goods", "rate": 0.5 },
+      "goods": ["furs", "dried_fish", "bone_needle", "soapstone"],
+      "people": [
+        { "id": "hunter", "name": "Hunter", "work": "gather", "fact": "Arctic peoples developed kayaks, dog sleds, snow goggles and warm layered clothing for life on sea ice and tundra." },
+        { "id": "carver", "name": "Carver", "work": "craft", "fact": "Carvers worked bone, ivory, antler and soapstone into tools and art." },
+        { "id": "fisher", "name": "Fisher", "work": "dock", "fact": "Fish and sea mammals were vital foods in the far north." }
+      ],
+      "nouns": { "camp": "camp", "hamlet": "camp", "village": "settlement", "town": "town", "city": "town" },
+      "boats": ["kayak"], "mounts": ["glider", "boat", "dogsled"],
+      "facts": ["The Arctic has long, dark winters and summers when the sun never fully sets.", "Permafrost is ground that stays frozen all year round."]
+    },
+    "eras": {
+      "medieval": { "styles": ["snowhouse", "hide_tent"], "facts": ["Around 1000 CE the Thule people, ancestors of today's Inuit, spread east across Arctic North America with dog sleds and large skin boats."] },
+      "exploration": { "styles": ["snowhouse", "hide_tent", "turf_house"] },
+      "industrial": { "styles": ["hide_tent", "log_cabin", "turf_house"] },
+      "modern": { "styles": ["modern_house"], "domestic": ["dog"], "currency": { "name": "dollars", "short": "$", "rate": 10 }, "goods": ["dried_fish", "coffee", "battery", "postcard"] },
+      "nearfuture": { "styles": ["modern_house", "eco_dome"] },
+      "farfuture": { "styles": ["eco_dome"], "facts": ["Imagined: in the far future, rewilded tundra is home to great herds again."] }
+    }
+  },
+  {
+    "id": "antarctica", "name": "Antarctica",
+    "polygons": [[[-180, -90], [180, -90], [180, -60], [-180, -60]]],
+    "humanArrival": 1956,
+    "skin": [2, 2, 2, 2, 2, 2, 2, 1], "hair": [3, 3, 2, 1, 1],
+    "defaults": {
+      "styles": ["research_station"], "crops": [], "domestic": [], "settlementScale": 0.15,
+      "plants": ["lichen"],
+      "clothing": { "styles": ["coat"], "colors": ["#e85a3a", "#f2c84a", "#2d4a6b"], "accents": ["#222222"], "headwear": ["fur_hood"] },
+      "currency": { "name": "dollars", "short": "$", "rate": 10 },
+      "goods": ["coffee", "battery", "postcard"],
+      "people": [{ "id": "scientist", "name": "Polar scientist", "work": "scholar", "fact": "Under the Antarctic Treaty of 1959, Antarctica is set aside for peace and science." }],
+      "nouns": { "camp": "field camp", "hamlet": "station", "village": "research station", "town": "research station", "city": "research station" },
+      "facts": ["Antarctica holds about 70% of the world's fresh water, frozen as ice.", "Emperor penguins breed on the sea ice during the dark Antarctic winter."]
+    },
+    "eras": {
+      "nearfuture": { "styles": ["research_station", "eco_dome"] },
+      "farfuture": { "styles": ["eco_dome"] }
+    }
+  },
+  {
+    "id": "europe", "name": "Europe",
+    "polygons": [[[-25, 34], [-6, 35.9], [10, 37.5], [12, 36.5], [15, 36.3], [20, 36], [26, 35], [26.5, 40.5], [29, 41.3], [28, 41.8], [40, 43.5], [48, 42], [50, 46], [60, 50], [60, 66.5], [-25, 66.5]]],
+    "humanArrival": -45000,
+    "skin": [4, 5, 4, 2, 1, 0.5, 0.3, 0.2], "hair": [3, 4, 4, 2, 1],
+    "subzones": [
+      { "name": "Mediterranean Europe", "polygons": [[[-10, 35], [30, 35], [30, 44], [12, 46], [-10, 44]]],
+        "crops": ["olives", "grapes", "wheat"],
+        "eras": {
+          "earlyciv": { "styles": ["stone_cottage", "mudbrick_flat"], "facts": ["Bronze Age palaces such as Knossos on Crete were centres of trade around the Aegean Sea."] },
+          "classical": { "styles": ["stone_columned", "roman_insula", "whitewashed_med"], "walls": true, "currency": { "name": "denarii and drachmae", "short": "coins", "rate": 1 },
+            "facts": ["Greek city-states and later the Roman Empire built theatres, temples, forums and roads across the Mediterranean.", "Romans called the Mediterranean 'Mare Nostrum', meaning 'our sea'."] },
+          "medieval": { "styles": ["stone_cottage", "whitewashed_med", "timber_frame"], "walls": true },
+          "exploration": { "styles": ["whitewashed_med", "stone_cottage", "timber_frame"] },
+          "industrial": { "styles": ["whitewashed_med", "brick_rowhouse", "factory"] },
+          "modern": { "styles": ["whitewashed_med", "modern_apartment", "modern_house"] }
+        } },
+      { "name": "Scandinavia", "polygons": [[[4, 55], [32, 55], [32, 66.5], [4, 66.5]]],
+        "eras": { "medieval": { "styles": ["longhouse", "timber_frame", "log_cabin"], "boats": ["longship"], "facts": ["Norse seafarers of the Viking Age (about 790–1066) were also farmers, traders and settlers, reaching Iceland, Greenland and North America."] },
+                  "exploration": { "styles": ["log_cabin", "timber_frame"] }, "industrial": { "styles": ["log_cabin", "brick_rowhouse"] } } },
+      { "name": "Iceland", "polygons": [[[-25, 63], [-13, 63], [-13, 66.6], [-25, 66.6]]], "humanArrival": 870,
+        "eras": { "medieval": { "styles": ["turf_house"] }, "exploration": { "styles": ["turf_house"] }, "industrial": { "styles": ["turf_house", "log_cabin"] } } },
+      { "name": "Eastern Europe", "polygons": [[[22, 44], [60, 44], [60, 66.5], [22, 66.5]]],
+        "eras": { "iceage": { "styles": ["mammoth_hut", "hide_tent"] }, "medieval": { "styles": ["log_cabin", "timber_frame"] }, "exploration": { "styles": ["log_cabin", "timber_frame"] }, "industrial": { "styles": ["log_cabin", "brick_rowhouse", "factory"] } } }
+    ],
+    "defaults": {
+      "crops": ["wheat", "barley", "oats"], "plants": ["oak", "beech", "pine", "birch"],
+      "domestic": ["cattle", "sheep", "pig", "horse", "chicken"],
+      "nouns": { "camp": "camp", "hamlet": "hamlet", "village": "village", "town": "market town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["Europe's mild western climate comes partly from the Gulf Stream, a warm Atlantic current."]
+    },
+    "eras": {
+      "iceage": { "styles": ["hide_tent"], "facts": ["Ice Age Europe was home to cave artists. They painted the walls of caves such as Lascaux and Chauvet in France."] },
+      "stoneage": { "styles": ["longhouse", "roundhouse_thatch"], "crops": ["wheat", "barley", "flax"], "facts": ["Neolithic farmers in central Europe built timber longhouses up to 40 metres long, around 5500 BCE."] },
+      "earlyciv": { "styles": ["roundhouse_thatch", "stone_cottage"], "crops": ["wheat", "barley"], "facts": ["Bronze Age Britain and Ireland built stone circles and burial mounds, and traded tin and copper."] },
+      "classical": { "styles": ["roundhouse_thatch", "longhouse"], "currency": { "name": "coins", "short": "coins", "rate": 1 }, "facts": ["North of the Alps, Iron Age peoples lived in farmsteads and fortified hilltop towns called oppida."] },
+      "medieval": { "styles": ["timber_frame", "stone_cottage"], "crops": ["wheat", "rye", "oats", "barley"], "walls": true, "layout": "organic", "currency": { "name": "pennies", "short": "pennies", "rate": 1 } },
+      "exploration": { "styles": ["timber_frame", "stone_cottage"], "crops": ["wheat", "rye", "potatoes"], "currency": { "name": "ducats and thalers", "short": "pieces", "rate": 1.4 } },
+      "industrial": { "styles": ["brick_rowhouse", "factory", "colonial_brick"], "crops": ["wheat", "potatoes", "sugar_beet"], "currency": { "name": "shillings and francs", "short": "coins", "rate": 3 } },
+      "modern": { "styles": ["modern_apartment", "modern_house", "colonial_brick"], "currency": { "name": "euros", "short": "€", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "modern_apartment"], "currency": { "name": "credits", "short": "cr", "rate": 12 } },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "mena", "name": "Middle East & North Africa",
+    "polygons": [[[-18, 15], [-18, 34], [-6, 35.9], [10, 37.5], [12, 36.5], [15, 36.3], [20, 36], [26, 35], [26.5, 40.5], [29, 41.3], [28, 41.8], [40, 43.5], [48, 42], [50, 40], [54, 38], [62, 37], [63, 30], [62, 25], [57, 20], [52, 12], [44, 10], [42, 14], [38, 15], [35, 15], [25, 15], [10, 16]]],
+    "humanArrival": -100000,
+    "skin": [0.5, 2, 4, 5, 4, 2, 1, 0.5], "hair": [7, 4, 1, 0.2, 0.3],
+    "subzones": [
+      { "name": "Nile Valley", "polygons": [[[29, 22], [34, 22], [34, 31.6], [29, 31.6]]],
+        "crops": ["wheat", "barley", "flax", "dates"],
+        "eras": {
+          "earlyciv": { "styles": ["mudbrick_flat", "mudbrick_courtyard"], "boats": ["reed_boat", "felucca"], "currency": { "name": "deben weights", "short": "deben", "rate": 0.5 },
+            "facts": ["Egyptians called their land Kemet, 'the black land', after the dark fertile soil left by the Nile's yearly flood.", "Ancient Egypt had no coins for most of its history. Goods were valued in weights of copper or silver called deben."] },
+          "classical": { "styles": ["mudbrick_courtyard", "stone_columned", "mudbrick_flat"], "boats": ["felucca"] },
+          "medieval": { "boats": ["felucca"] }, "exploration": { "boats": ["felucca"] }, "industrial": { "boats": ["felucca", "steamship"] }
+        } },
+      { "name": "Mesopotamia", "polygons": [[[38, 29], [49, 29], [49, 37.5], [38, 37.5]]],
+        "eras": {
+          "stoneage": { "styles": ["reed_hut", "mudbrick_flat"] },
+          "earlyciv": { "styles": ["mudbrick_flat", "reed_hut", "mudbrick_courtyard"], "walls": true, "facts": ["Sumerian cities such as Uruk and Ur were among the first cities in the world.", "Cuneiform writing was pressed into wet clay tablets with a reed stylus."] },
+          "medieval": { "facts": ["Baghdad, founded in 762, became one of the largest cities in the world and a great centre of learning."] }
+        } },
+      { "name": "Anatolia", "polygons": [[[26, 36], [45, 36], [45, 42], [26, 42]]],
+        "eras": { "stoneage": { "styles": ["mudbrick_flat"], "facts": ["Çatalhöyük, a Neolithic town in Anatolia from about 7100 BCE, had houses packed so closely that people entered through the roofs."] },
+                  "classical": { "styles": ["stone_columned", "whitewashed_med"] }, "medieval": { "styles": ["domed_house", "whitewashed_med", "timber_frame"] }, "exploration": { "styles": ["domed_house", "timber_frame", "whitewashed_med"] } } }
+    ],
+    "defaults": {
+      "crops": ["wheat", "barley", "dates", "lentils"], "plants": ["date_palm", "acacia", "olive", "cedar"],
+      "domestic": ["sheep", "goat", "donkey", "camel", "cattle"],
+      "biomeStyles": { "desert": ["tent_black"] },
+      "nouns": { "camp": "camp", "hamlet": "hamlet", "village": "village", "town": "town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["The Fertile Crescent, an arc of land from the Nile through the Levant to Mesopotamia, is where some of the earliest farming began."]
+    },
+    "eras": {
+      "stoneage": { "styles": ["mudbrick_flat"], "crops": ["wheat", "barley", "lentils"], "domestic": ["sheep", "goat", "cattle", "dog"], "facts": ["Some of the world's first farmers grew wheat and barley in the Levant and Mesopotamia about 11,000 years ago."] },
+      "earlyciv": { "styles": ["mudbrick_flat", "mudbrick_courtyard"], "domestic": ["donkey", "sheep", "goat", "cattle"] },
+      "classical": { "styles": ["mudbrick_courtyard", "stone_columned"], "domestic": ["camel", "donkey", "sheep", "goat", "horse"], "currency": { "name": "drachmae and dinars", "short": "coins", "rate": 1 } },
+      "medieval": { "styles": ["mudbrick_courtyard", "domed_house"], "currency": { "name": "dinars and dirhams", "short": "dirhams", "rate": 1 }, "goods": ["spices", "dates", "silk", "book", "coffee", "glass"], "facts": ["Scholars of the medieval Islamic world advanced algebra, optics, medicine and astronomy."] },
+      "exploration": { "styles": ["mudbrick_courtyard", "domed_house", "whitewashed_med"], "currency": { "name": "akçe and dirhams", "short": "coins", "rate": 1.4 }, "goods": ["coffee", "spices", "carpet", "dates", "silk"], "facts": ["Coffeehouses spread from Yemen and the Ottoman cities in the 1500s, becoming places to talk, read and play games."] },
+      "industrial": { "styles": ["mudbrick_courtyard", "whitewashed_med", "colonial_brick"], "currency": { "name": "piastres", "short": "piastres", "rate": 3 } },
+      "modern": { "styles": ["modern_apartment", "whitewashed_med"], "currency": { "name": "dinars and pounds", "short": "coins", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "whitewashed_med"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "subsaharan", "name": "Sub-Saharan Africa",
+    "polygons": [[[-20, 16], [10, 16], [25, 15], [35, 15], [38, 15], [42, 14], [44, 10], [52, 12], [60, 0], [55, -30], [30, -38], [10, -36], [-20, 0]]],
+    "humanArrival": -300000,
+    "skin": [0, 0, 0.2, 0.5, 1.5, 4, 5, 4], "hair": [9, 2, 0.2, 0, 0],
+    "subzones": [
+      { "name": "Madagascar", "polygons": [[[43, -26], [51, -26], [51, -11.5], [43, -11.5]]], "humanArrival": 500 },
+      { "name": "Sahel", "polygons": [[[-18, 10], [40, 10], [40, 16.5], [-18, 16.5]]],
+        "eras": {
+          "medieval": { "styles": ["mudbrick_sahel", "thatched_round"], "currency": { "name": "cowrie shells and gold dust", "short": "cowries", "rate": 1 },
+            "goods": ["salt", "gold_dust", "book", "kola_nuts", "cotton_cloth"], "facts": ["Caravans crossed the Sahara with salt from the north and returned with gold. Cities such as Timbuktu and Djenné grew rich on this trade.", "The Mali Empire was famous for its wealth in the 1300s."] },
+          "exploration": { "styles": ["mudbrick_sahel", "thatched_round"], "currency": { "name": "cowrie shells", "short": "cowries", "rate": 1.4 } },
+          "industrial": { "styles": ["mudbrick_sahel", "thatched_round"] }
+        } },
+      { "name": "Ethiopian Highlands", "polygons": [[[34, 4], [44, 4], [44, 15], [34, 15]]],
+        "crops": ["teff", "barley", "coffee"],
+        "eras": { "classical": { "facts": ["The kingdom of Aksum traded across the Red Sea and minted its own coins from about 270 CE."] } } }
+    ],
+    "defaults": {
+      "styles": ["thatched_round"], "crops": ["sorghum", "millet", "yams"], "plants": ["baobab", "acacia", "palm", "savanna_grass"],
+      "domestic": ["cattle", "goat", "chicken", "sheep"],
+      "currency": { "name": "cowrie shells", "short": "cowries", "rate": 1 },
+      "goods": ["millet", "yams", "pottery", "cotton_cloth", "kola_nuts", "shea_butter", "ironware"],
+      "nouns": { "camp": "camp", "hamlet": "homestead", "village": "village", "town": "town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["Africa is where our species, Homo sapiens, first evolved, about 300,000 years ago.", "Iron working spread widely across Sub-Saharan Africa during the first millennium BCE."]
+    },
+    "eras": {
+      "iceage": { "styles": ["leanto", "hide_tent"], "facts": ["Some of the oldest known art, engraved ochre from Blombos Cave in South Africa, is about 75,000 years old."] },
+      "stoneage": { "styles": ["leanto", "thatched_round"], "crops": ["sorghum", "millet"], "facts": ["When the Sahara was greener, about 9,000–5,000 years ago, people herded cattle and painted rock art where there is desert today."] },
+      "earlyciv": { "styles": ["thatched_round"], "facts": ["The kingdom of Kush, along the Nile south of Egypt, built cities and pyramids of its own."] },
+      "classical": { "styles": ["thatched_round", "mudbrick_flat"] },
+      "medieval": { "styles": ["thatched_round", "mudbrick_flat"], "goods": ["ironware", "gold_dust", "ivory_carving", "cotton_cloth", "kola_nuts"], "facts": ["Great Zimbabwe was a stone city and trading centre from about the 11th to the 15th century."] },
+      "exploration": { "styles": ["thatched_round", "mudbrick_flat"], "crops": ["sorghum", "maize", "cassava", "yams"] },
+      "industrial": { "styles": ["thatched_round", "colonial_brick", "mudbrick_flat"], "crops": ["maize", "cassava", "sorghum"] },
+      "modern": { "styles": ["modern_house", "modern_apartment", "thatched_round"], "currency": { "name": "shillings, naira and rand", "short": "coins", "rate": 9 }, "crops": ["maize", "cassava", "coffee"] },
+      "nearfuture": { "styles": ["nearfuture_tower", "modern_house"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "southasia", "name": "South Asia",
+    "polygons": [[[62, 37], [75, 37.5], [80, 35], [89, 28.5], [92, 28.5], [97, 28.5], [96, 26], [92.5, 21], [90, 15], [80, 4], [70, 5], [62, 25], [63, 30]]],
+    "humanArrival": -60000,
+    "skin": [0, 0.3, 1, 3, 4, 4, 2, 0.5], "hair": [9, 2, 0.2, 0, 0],
+    "subzones": [
+      { "name": "Indus Valley", "polygons": [[[66, 23], [76, 23], [76, 34], [66, 34]]],
+        "eras": { "earlyciv": { "styles": ["mudbrick_flat"], "layout": "grid", "facts": ["Indus Valley cities such as Mohenjo-daro and Harappa had grid streets, baked-brick houses and covered drains, about 2600–1900 BCE."] } } },
+      { "name": "Himalaya", "polygons": [[[72, 27.5], [97, 27.5], [97, 37], [72, 37]]], "domestic": ["yak", "goat", "sheep"], "crops": ["barley"] }
+    ],
+    "defaults": {
+      "styles": ["thatched_gable"], "crops": ["rice", "wheat", "sugarcane", "cotton"], "plants": ["banyan", "palm", "teak", "mango"],
+      "domestic": ["water_buffalo", "cattle", "goat", "chicken", "elephant_asian"],
+      "currency": { "name": "coins", "short": "coins", "rate": 1 },
+      "goods": ["cotton_cloth", "spices", "rice", "tea", "pottery", "indigo"],
+      "nouns": { "camp": "camp", "hamlet": "hamlet", "village": "village", "town": "town", "city": "city", "metropolis": "megacity" },
+      "facts": ["The monsoon brings most of South Asia's yearly rain in a few summer months.", "The decimal place-value number system with zero, used worldwide today, was developed by mathematicians in India."]
+    },
+    "eras": {
+      "stoneage": { "styles": ["mudbrick_flat", "thatched_round"], "crops": ["wheat", "barley"], "facts": ["Mehrgarh, a farming village in present-day Pakistan, dates back to about 7000 BCE."] },
+      "earlyciv": { "styles": ["mudbrick_flat"], "crops": ["wheat", "barley", "cotton"] },
+      "classical": { "styles": ["thatched_gable", "mudbrick_flat"], "currency": { "name": "punch-marked coins", "short": "coins", "rate": 1 }, "facts": ["The Maurya Empire united much of South Asia in the 3rd century BCE."] },
+      "medieval": { "styles": ["mudbrick_courtyard", "thatched_gable"], "currency": { "name": "tankas", "short": "tankas", "rate": 1 } },
+      "exploration": { "styles": ["indian_haveli", "thatched_gable", "mudbrick_courtyard"], "currency": { "name": "rupees", "short": "rupees", "rate": 1.4 }, "facts": ["The silver rupee was introduced in the 1500s and became the basis of many later currencies."] },
+      "industrial": { "styles": ["indian_haveli", "colonial_brick", "thatched_gable"], "currency": { "name": "rupees", "short": "rupees", "rate": 3 } },
+      "modern": { "styles": ["modern_apartment", "indian_haveli", "modern_house"], "currency": { "name": "rupees", "short": "₹", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "modern_apartment"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "northasia", "name": "Central & North Asia",
+    "polygons": [[[50, 40], [54, 38], [62, 37], [75, 37.5], [80, 42], [96, 42], [111, 42], [120, 47], [130, 47], [135, 48], [142, 53], [180, 60], [180, 66.5], [60, 66.5], [60, 50], [50, 46], [48, 42]]],
+    "humanArrival": -45000,
+    "skin": [1, 2, 3, 4, 3, 1, 0.3, 0.1], "hair": [7, 4, 1, 0.3, 0.2],
+    "subzones": [
+      { "name": "Siberian taiga", "polygons": [[[60, 52], [180, 52], [180, 66.5], [60, 66.5]]],
+        "eras": { "medieval": { "styles": ["log_cabin", "hide_tent"] }, "exploration": { "styles": ["log_cabin", "hide_tent"] }, "industrial": { "styles": ["log_cabin"] }, "modern": { "styles": ["modern_apartment", "log_cabin"] } } }
+    ],
+    "defaults": {
+      "styles": ["yurt"], "crops": ["wheat", "barley"], "plants": ["larch", "birch", "pine", "steppe_grass"],
+      "domestic": ["horse", "sheep", "goat", "bactrian_camel", "yak"],
+      "currency": { "name": "silver and trade goods", "short": "silver", "rate": 1 },
+      "goods": ["felt", "furs", "dried_meat", "silk", "horse_tack"],
+      "nouns": { "camp": "camp", "hamlet": "camp", "village": "village", "town": "town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["The Eurasian steppe is a band of grassland stretching about 8,000 km from Hungary to Manchuria.", "Horses were probably first domesticated on the western steppe, about 3500–2000 BCE."]
+    },
+    "eras": {
+      "iceage": { "styles": ["mammoth_hut", "hide_tent"], "facts": ["Ice Age hunters of Siberia and Ukraine built shelters from mammoth bones covered with hides."] },
+      "stoneage": { "styles": ["hide_tent", "pithouse"], "crops": [] },
+      "earlyciv": { "styles": ["hide_tent", "pithouse"], "facts": ["Steppe peoples used horses and wheeled wagons, and spread across vast distances."] },
+      "classical": { "styles": ["yurt", "hide_tent"], "facts": ["Silk Road cities in Central Asia, such as Samarkand, linked China with Persia and the Mediterranean."] },
+      "medieval": { "styles": ["yurt", "mudbrick_courtyard"], "biomeStyles": { "desert": ["mudbrick_courtyard", "yurt"], "steppe": ["yurt"] } },
+      "exploration": { "styles": ["yurt", "mudbrick_courtyard", "log_cabin"] },
+      "industrial": { "styles": ["yurt", "log_cabin", "brick_rowhouse"], "currency": { "name": "roubles and tenge", "short": "coins", "rate": 3 } },
+      "modern": { "styles": ["modern_apartment", "yurt", "modern_house"], "currency": { "name": "tenge, som and tögrög", "short": "coins", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "yurt"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "eastasia", "name": "East Asia",
+    "polygons": [[[75, 37.5], [80, 35], [89, 28.5], [97, 28.5], [98, 24], [101, 21.5], [106, 22.5], [108, 21.5], [110, 18], [122, 22], [124, 30], [130, 30], [140, 30], [148, 44], [142, 53], [135, 48], [130, 47], [120, 47], [111, 42], [96, 42], [80, 42]]],
+    "humanArrival": -50000,
+    "skin": [1, 3, 4, 3, 2, 0.5, 0.2, 0], "hair": [9, 2, 0.2, 0, 0],
+    "subzones": [
+      { "name": "Japan", "polygons": [[[128, 30], [148, 30], [148, 46], [128, 46]]], "humanArrival": -38000,
+        "eras": {
+          "stoneage": { "styles": ["pithouse"], "crops": [], "facts": ["The Jōmon people of Japan made some of the world's oldest pottery, decorated with cord patterns."] },
+          "earlyciv": { "styles": ["pithouse"], "crops": [] },
+          "classical": { "styles": ["pithouse", "thatched_gable"], "crops": ["rice"] },
+          "medieval": { "styles": ["japanese_house", "east_asian_hall"], "currency": { "name": "copper coins", "short": "mon", "rate": 1 } },
+          "exploration": { "styles": ["japanese_house", "east_asian_hall"], "currency": { "name": "mon and ryō", "short": "mon", "rate": 1.4 }, "facts": ["In the Edo period (1603–1868), Edo — today's Tokyo — grew into one of the largest cities in the world."] },
+          "industrial": { "styles": ["japanese_house", "brick_rowhouse", "east_asian_hall"], "currency": { "name": "yen", "short": "yen", "rate": 3 } },
+          "modern": { "styles": ["modern_apartment", "japanese_house", "modern_house"], "currency": { "name": "yen", "short": "¥", "rate": 9 } }
+        } },
+      { "name": "Tibetan Plateau", "polygons": [[[78, 28], [102, 28], [102, 37], [78, 37]]], "domestic": ["yak", "sheep", "goat"], "crops": ["barley"] },
+      { "name": "Korea", "polygons": [[[124, 33], [131, 33], [131, 43], [124, 43]]],
+        "eras": { "medieval": { "facts": ["Korean printers of the Goryeo kingdom cast metal movable type. The oldest surviving book printed this way dates from 1377."] } } }
+    ],
+    "defaults": {
+      "styles": ["east_asian_hall"], "crops": ["rice", "millet", "wheat", "soybeans"], "plants": ["pine", "bamboo", "maple", "cherry"],
+      "domestic": ["pig", "chicken", "water_buffalo", "duck", "cattle"],
+      "currency": { "name": "copper cash coins", "short": "cash", "rate": 1 },
+      "goods": ["silk", "tea", "porcelain", "rice", "paper", "ink", "lacquerware"],
+      "layout": "grid", "walls": true,
+      "nouns": { "camp": "camp", "hamlet": "hamlet", "village": "village", "town": "town", "city": "city", "metropolis": "megacity" },
+      "facts": ["Rice farming in flooded paddy fields feeds large populations across East Asia.", "Silk was produced in China for thousands of years before the secret spread elsewhere."]
+    },
+    "eras": {
+      "stoneage": { "styles": ["pithouse"], "crops": ["millet", "rice"], "facts": ["Millet was farmed along the Yellow River and rice along the Yangtze from about 7000 BCE or earlier."] },
+      "earlyciv": { "styles": ["pithouse", "east_asian_hall"], "crops": ["millet", "rice", "wheat"], "currency": { "name": "cowrie shells", "short": "cowries", "rate": 0.5 }, "facts": ["Shang dynasty writing on oracle bones, from about 1250 BCE, is the earliest known form of Chinese writing."] },
+      "classical": { "styles": ["east_asian_hall"], "currency": { "name": "ban liang and wu zhu coins", "short": "cash", "rate": 1 }, "facts": ["The Han dynasty (206 BCE–220 CE) expanded the Silk Roads and invented paper."] },
+      "medieval": { "styles": ["east_asian_hall"], "facts": ["Tang dynasty Chang'an was one of the largest cities in the world, with a grid of walled wards.", "Song dynasty China had paper money, movable type and large cities full of markets."] },
+      "exploration": { "styles": ["east_asian_hall"], "crops": ["rice", "wheat", "maize", "sweet_potato"], "currency": { "name": "silver taels and cash", "short": "cash", "rate": 1.4 } },
+      "industrial": { "styles": ["east_asian_hall", "shophouse", "brick_rowhouse"], "currency": { "name": "silver dollars", "short": "dollars", "rate": 3 } },
+      "modern": { "styles": ["modern_apartment", "shophouse"], "currency": { "name": "yuan and won", "short": "coins", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "modern_apartment"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "seasia", "name": "Southeast Asia",
+    "polygons": [[[92.5, 21], [97, 28.5], [98, 24], [101, 21.5], [106, 22.5], [108, 21.5], [110, 18], [122, 22], [127, 20], [141, 0], [141, -11], [95, -11], [90, 15]]],
+    "humanArrival": -60000,
+    "skin": [0, 0.3, 1.5, 3, 4, 3, 1, 0.3], "hair": [9, 2, 0.1, 0, 0],
+    "defaults": {
+      "styles": ["stilt_house"], "crops": ["rice", "taro", "bananas", "coconut"], "plants": ["palm", "banana", "bamboo", "rainforest_tree"],
+      "domestic": ["water_buffalo", "chicken", "pig", "duck"],
+      "currency": { "name": "coins and cowries", "short": "coins", "rate": 1 },
+      "goods": ["rice", "spices", "coconut", "bananas", "batik", "pottery"],
+      "nouns": { "camp": "camp", "hamlet": "kampong", "village": "village", "town": "town", "city": "city", "metropolis": "megacity" },
+      "facts": ["Southeast Asia's spice islands were the source of nutmeg and cloves, traded across the Indian Ocean for centuries.", "Houses raised on stilts stay cool, dry and safe from floods."]
+    },
+    "eras": {
+      "stoneage": { "styles": ["stilt_house", "leanto"], "crops": ["taro", "rice"] },
+      "classical": { "facts": ["Funan, in the Mekong Delta, was a busy trading state in the first centuries CE."] },
+      "medieval": { "styles": ["stilt_house"], "facts": ["The Khmer Empire built Angkor, a vast city with reservoirs and canals."] },
+      "exploration": { "styles": ["stilt_house", "shophouse"], "crops": ["rice", "coconut", "sugarcane", "spices"] },
+      "industrial": { "styles": ["stilt_house", "shophouse"], "currency": { "name": "dollars and guilders", "short": "coins", "rate": 3 } },
+      "modern": { "styles": ["shophouse", "modern_apartment"], "currency": { "name": "baht, dong, rupiah and pesos", "short": "coins", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "shophouse"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "oceania", "name": "Oceania",
+    "polygons": [[[141, 0], [180, 0], [180, -50], [110, -50], [110, -11], [141, -11]], [[130, 0], [130, 22], [180, 22], [180, 0]], [[-180, 30], [-140, 30], [-105, -20], [-105, -50], [-180, -50]]],
+    "humanArrival": -50000,
+    "skin": [0.3, 1, 1, 2, 3, 4, 3, 2], "hair": [8, 3, 0.5, 0.5, 0.2],
+    "subzones": [
+      { "name": "New Zealand", "polygons": [[[165, -48], [179, -48], [179, -34], [165, -34]]], "humanArrival": 1280,
+        "styles": ["thatched_gable"], "crops": ["sweet_potato"],
+        "eras": { "industrial": { "styles": ["colonial_brick", "thatched_gable", "modern_house"] } } },
+      { "name": "Remote Pacific islands", "polygons": [[[160, -30], [180, -30], [180, 22], [160, 22]], [[-180, -30], [-105, -30], [-105, 30], [-180, 30]]], "humanArrival": 900,
+        "styles": ["fale"], "crops": ["taro", "coconut", "breadfruit"], "domestic": ["pig", "chicken", "dog"], "boats": ["voyaging_canoe"] },
+      { "name": "Near Oceania", "polygons": [[[141, -11], [160, -11], [160, 0], [141, 0]]], "humanArrival": -45000, "styles": ["stilt_house", "fale"], "crops": ["taro", "bananas", "sugarcane"] }
+    ],
+    "defaults": {
+      "styles": ["leanto"], "crops": [], "plants": ["eucalyptus", "acacia", "spinifex", "palm"],
+      "domestic": ["dog"],
+      "currency": { "name": "shells and trade goods", "short": "shells", "rate": 0.5 },
+      "goods": ["shells", "fish", "taro", "woven_mat", "ochre"],
+      "settlementScale": 0.5,
+      "nouns": { "camp": "camp", "hamlet": "camp", "village": "village", "town": "town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["Aboriginal Australians have lived on the continent for at least 50,000 years, one of the oldest continuous cultures on Earth.", "Polynesian navigators settled islands spread across a huge triangle of ocean, from Hawaiʻi to Aotearoa New Zealand to Rapa Nui."]
+    },
+    "eras": {
+      "medieval": { "boats": ["voyaging_canoe"], "facts": ["Polynesian wayfinders navigated by stars, ocean swells, winds and birds, without instruments."] },
+      "exploration": { "boats": ["voyaging_canoe"] },
+      "industrial": { "styles": ["colonial_brick", "leanto"], "crops": ["wheat"], "domestic": ["sheep", "cattle", "horse"], "currency": { "name": "pounds and shillings", "short": "coins", "rate": 3 } },
+      "modern": { "styles": ["modern_house", "modern_apartment"], "domestic": ["sheep", "cattle", "dog"], "crops": ["wheat"], "currency": { "name": "dollars", "short": "$", "rate": 9 }, "settlementScale": 1 },
+      "nearfuture": { "styles": ["nearfuture_tower", "modern_house"], "settlementScale": 1 },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"], "settlementScale": 1 }
+    }
+  },
+  {
+    "id": "northamerica", "name": "North America",
+    "polygons": [[[-170, 66.5], [-50, 66.5], [-50, 45], [-80, 24], [-97, 25.8], [-105, 30], [-117, 32.5], [-125, 40], [-140, 58], [-170, 55]]],
+    "humanArrival": -14000,
+    "skin": [1.5, 2, 2, 2.5, 3, 2, 1.5, 1], "hair": [6, 3, 2, 1, 0.5],
+    "subzones": [
+      { "name": "American Southwest", "polygons": [[[-116, 31], [-103, 31], [-103, 38.5], [-116, 38.5]]],
+        "crops": ["maize", "beans", "squash"],
+        "eras": {
+          "earlyciv": { "styles": ["pithouse"], "crops": ["maize"] },
+          "classical": { "styles": ["pithouse"], "crops": ["maize", "squash"] },
+          "medieval": { "styles": ["adobe_pueblo", "pithouse"], "facts": ["Ancestral Puebloans built multi-storey stone and adobe great houses at Chaco Canyon between about 850 and 1150."] },
+          "exploration": { "styles": ["adobe_pueblo"] }, "industrial": { "styles": ["adobe_pueblo", "log_cabin", "colonial_brick"] }
+        } },
+      { "name": "Pacific Northwest", "polygons": [[[-140, 42], [-120, 42], [-120, 60], [-140, 60]]],
+        "eras": { "medieval": { "styles": ["longhouse"], "boats": ["dugout"], "facts": ["Peoples of the Northwest Coast built large cedar-plank houses and carved monumental poles."] }, "exploration": { "styles": ["longhouse"] } } },
+      { "name": "Great Plains", "polygons": [[[-106, 30], [-95, 30], [-95, 52], [-106, 52]]],
+        "eras": { "medieval": { "styles": ["hide_tent", "pithouse"] }, "exploration": { "styles": ["hide_tent"] }, "industrial": { "styles": ["log_cabin", "colonial_brick", "hide_tent"] } } }
+    ],
+    "defaults": {
+      "styles": ["hide_tent"], "crops": ["maize", "beans", "squash"], "plants": ["maple", "oak", "pine", "spruce"],
+      "domestic": ["dog"],
+      "currency": { "name": "shell beads and trade goods", "short": "beads", "rate": 0.5 },
+      "goods": ["maize", "furs", "shell_beads", "baskets", "pottery", "dried_fish"],
+      "nouns": { "camp": "camp", "hamlet": "hamlet", "village": "village", "town": "town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["People first reached the Americas from northeast Asia during the last Ice Age, by at least 15,000 years ago.", "The 'Three Sisters' — maize, beans and squash — were grown together by many Indigenous farmers."]
+    },
+    "eras": {
+      "iceage": { "styles": ["hide_tent"], "crops": [] },
+      "stoneage": { "styles": ["hide_tent", "pithouse"], "crops": [] },
+      "earlyciv": { "styles": ["hide_tent", "pithouse"], "crops": ["squash"] },
+      "classical": { "styles": ["pithouse", "hide_tent"], "crops": ["squash", "maize"] },
+      "medieval": { "styles": ["longhouse", "pithouse"], "crops": ["maize", "beans", "squash"], "facts": ["Cahokia, near today's St. Louis, was the largest city north of Mexico around 1050–1200."] },
+      "exploration": { "styles": ["longhouse", "log_cabin", "colonial_brick"], "domestic": ["dog", "horse", "cattle", "pig", "chicken"] },
+      "industrial": { "styles": ["colonial_brick", "brick_rowhouse", "log_cabin", "factory"], "crops": ["wheat", "maize", "cotton"], "domestic": ["horse", "cattle", "pig", "chicken", "sheep"], "currency": { "name": "dollars", "short": "$", "rate": 3 } },
+      "modern": { "styles": ["modern_house", "modern_apartment"], "crops": ["maize", "wheat", "soybeans"], "domestic": ["dog", "cat", "cattle", "horse", "chicken"], "currency": { "name": "dollars", "short": "$", "rate": 10 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "modern_house"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "centralamerica", "name": "Central America & Caribbean",
+    "polygons": [[[-117, 32.5], [-105, 30], [-97, 25.8], [-80, 24], [-60, 20], [-59, 12], [-77, 7], [-80, 7], [-92, 13], [-110, 20]]],
+    "humanArrival": -13000,
+    "skin": [0.5, 1, 2, 3, 4, 3, 2, 1.5], "hair": [9, 2, 0.2, 0, 0],
+    "subzones": [
+      { "name": "Caribbean", "polygons": [[[-85, 10], [-59, 10], [-59, 24], [-85, 24]]], "humanArrival": -5000,
+        "styles": ["thatched_round"], "crops": ["cassava", "sweet_potato"] },
+      { "name": "Maya lowlands", "polygons": [[[-92.5, 14], [-86.5, 14], [-86.5, 22], [-92.5, 22]]],
+        "eras": { "classical": { "styles": ["maya_stone", "thatched_gable"], "facts": ["Maya cities such as Tikal had stone temples, plazas and ball courts. Maya scribes used a full writing system."] },
+                  "medieval": { "styles": ["maya_stone", "thatched_gable"] } } },
+      { "name": "Central Mexico", "polygons": [[[-104, 17], [-96, 17], [-96, 22], [-104, 22]]],
+        "eras": { "classical": { "styles": ["maya_stone", "mudbrick_flat"], "layout": "grid", "facts": ["Teotihuacan, near today's Mexico City, was one of the largest cities in the world around 500 CE."] },
+                  "medieval": { "styles": ["mudbrick_flat", "maya_stone"], "facts": ["The Mexica founded Tenochtitlan on an island in Lake Texcoco around 1325, with causeways and floating gardens called chinampas."] } } }
+    ],
+    "defaults": {
+      "styles": ["thatched_gable"], "crops": ["maize", "beans", "squash", "cacao"], "plants": ["palm", "ceiba", "rainforest_tree", "agave"],
+      "domestic": ["dog", "turkey"],
+      "currency": { "name": "cacao beans", "short": "cacao", "rate": 0.6 },
+      "goods": ["cacao", "maize", "chili", "cotton_cloth", "obsidian", "jade", "feathers"],
+      "nouns": { "camp": "camp", "hamlet": "hamlet", "village": "village", "town": "town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["Maize was domesticated in southern Mexico from a wild grass called teosinte, about 9,000 years ago.", "Cacao beans were used as money in parts of Mesoamerica."]
+    },
+    "eras": {
+      "stoneage": { "styles": ["leanto", "thatched_gable"], "crops": ["squash", "maize"] },
+      "earlyciv": { "styles": ["thatched_gable"], "facts": ["The Olmec, from about 1500 BCE, are known for colossal carved stone heads."] },
+      "classical": { "styles": ["thatched_gable", "maya_stone"] },
+      "medieval": { "styles": ["thatched_gable", "maya_stone"] },
+      "exploration": { "styles": ["whitewashed_med", "thatched_gable"], "domestic": ["horse", "cattle", "chicken", "pig", "dog"], "crops": ["maize", "sugarcane", "beans"], "currency": { "name": "reales", "short": "reales", "rate": 1.4 } },
+      "industrial": { "styles": ["whitewashed_med", "colonial_brick", "thatched_gable"], "currency": { "name": "pesos", "short": "pesos", "rate": 3 } },
+      "modern": { "styles": ["modern_apartment", "whitewashed_med", "modern_house"], "currency": { "name": "pesos", "short": "$", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "whitewashed_med"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  },
+  {
+    "id": "southamerica", "name": "South America",
+    "polygons": [[[-82, 12], [-60, 12], [-30, -5], [-40, -25], [-65, -56], [-76, -56], [-82, -20]]],
+    "humanArrival": -12500,
+    "skin": [0.5, 1.5, 2, 3, 3.5, 3, 2, 1.5], "hair": [8, 3, 0.5, 0.2, 0.1],
+    "subzones": [
+      { "name": "Andes", "polygons": [[[-81, -40], [-64, -40], [-64, 10], [-81, 10]]],
+        "crops": ["potatoes", "quinoa", "maize"], "domestic": ["llama", "alpaca", "guinea_pig", "dog"],
+        "eras": {
+          "earlyciv": { "styles": ["stone_andean"], "facts": ["Caral, in Peru, is one of the oldest cities in the Americas, with stone platform mounds from about 2600 BCE."] },
+          "classical": { "styles": ["stone_andean", "mudbrick_flat"] },
+          "medieval": { "styles": ["stone_andean"] },
+          "exploration": { "styles": ["stone_andean", "whitewashed_med"], "currency": { "name": "reales", "short": "reales", "rate": 1.4 }, "facts": ["The Inca road network ran for some 40,000 km through the Andes, with rope bridges and relay runners called chasquis."] }
+        } },
+      { "name": "Amazonia", "polygons": [[[-78, -15], [-44, -15], [-44, 6], [-78, 6]]],
+        "styles": ["maloca", "stilt_house"], "crops": ["cassava", "maize"],
+        "facts": ["Large parts of the Amazon were shaped by Indigenous peoples, who created rich 'dark earth' soils called terra preta."] }
+    ],
+    "defaults": {
+      "styles": ["thatched_round"], "crops": ["cassava", "maize", "potatoes"], "plants": ["rainforest_tree", "palm", "araucaria", "pampas_grass"],
+      "domestic": ["dog", "llama"],
+      "currency": { "name": "trade goods", "short": "goods", "rate": 0.5 },
+      "goods": ["potatoes", "maize", "cotton_cloth", "feathers", "pottery", "cacao"],
+      "nouns": { "camp": "camp", "hamlet": "hamlet", "village": "village", "town": "town", "city": "city", "metropolis": "metropolis" },
+      "facts": ["The potato was domesticated in the Andes of southern Peru and Bolivia, over 7,000 years ago.", "The Amazon rainforest is the largest tropical rainforest on Earth."]
+    },
+    "eras": {
+      "stoneage": { "styles": ["leanto", "thatched_round"], "crops": ["squash", "potatoes"] },
+      "medieval": { "styles": ["thatched_round", "maloca"] },
+      "exploration": { "styles": ["whitewashed_med", "maloca", "thatched_round"], "domestic": ["horse", "cattle", "chicken", "llama", "dog"], "currency": { "name": "reales", "short": "reales", "rate": 1.4 } },
+      "industrial": { "styles": ["whitewashed_med", "colonial_brick", "maloca"], "currency": { "name": "pesos and réis", "short": "coins", "rate": 3 } },
+      "modern": { "styles": ["modern_apartment", "whitewashed_med", "modern_house"], "currency": { "name": "reais, pesos and soles", "short": "coins", "rate": 9 } },
+      "nearfuture": { "styles": ["nearfuture_tower", "modern_house"] },
+      "farfuture": { "styles": ["far_future_spire", "eco_dome"] }
+    }
+  }
+]

@@ -1,0 +1,2521 @@
+{
+ "biomes": {
+  "ocean": {
+   "name": "Open sea",
+   "ground": "#d8c890",
+   "grass": "#c8b880",
+   "density": 0
+  },
+  "beach": {
+   "name": "Coast",
+   "ground": "#e2d29a",
+   "grass": "#9bb06a",
+   "density": 0.15
+  },
+  "desert": {
+   "name": "Desert",
+   "ground": "#e0bf86",
+   "grass": "#c9a86a",
+   "density": 0.04,
+   "dunes": true
+  },
+  "scrubland": {
+   "name": "Dry scrubland",
+   "ground": "#c4a774",
+   "grass": "#a09a5a",
+   "density": 0.25
+  },
+  "savanna": {
+   "name": "Savanna",
+   "ground": "#b9a060",
+   "grass": "#c4b464",
+   "density": 0.3
+  },
+  "grassland": {
+   "name": "Grassland",
+   "ground": "#8a9a52",
+   "grass": "#9ab45a",
+   "density": 0.35
+  },
+  "mediterranean": {
+   "name": "Mediterranean hills",
+   "ground": "#a89a62",
+   "grass": "#8f9a50",
+   "density": 0.45
+  },
+  "temperate_forest": {
+   "name": "Temperate forest",
+   "ground": "#5f7a3e",
+   "grass": "#6f9a44",
+   "density": 0.9
+  },
+  "rainforest": {
+   "name": "Tropical rainforest",
+   "ground": "#4a6a2e",
+   "grass": "#4f8a32",
+   "density": 1.2
+  },
+  "tropical_dry": {
+   "name": "Tropical dry forest",
+   "ground": "#8a8a48",
+   "grass": "#8a9a44",
+   "density": 0.6
+  },
+  "taiga": {
+   "name": "Boreal forest",
+   "ground": "#5a6a44",
+   "grass": "#6a7a48",
+   "density": 0.85
+  },
+  "tundra": {
+   "name": "Tundra",
+   "ground": "#8a8a6a",
+   "grass": "#8f9a6a",
+   "density": 0.2
+  },
+  "ice": {
+   "name": "Ice sheet",
+   "ground": "#eef4f8",
+   "grass": "#dfe8ee",
+   "density": 0
+  },
+  "alpine": {
+   "name": "High mountains",
+   "ground": "#8a8478",
+   "grass": "#7f8a5f",
+   "density": 0.15
+  },
+  "wetland": {
+   "name": "Wetland",
+   "ground": "#5f6a3e",
+   "grass": "#6a8a3e",
+   "density": 0.6
+  },
+  "steppe": {
+   "name": "Steppe",
+   "ground": "#a8a066",
+   "grass": "#b0aa62",
+   "density": 0.18
+  },
+  "moon": {
+   "name": "Lunar surface",
+   "ground": "#8a8a8a",
+   "grass": "#7a7a7a",
+   "density": 0
+  }
+ },
+ "species": [
+  {
+   "id": "oak",
+   "name": "Oak",
+   "arch": "broadleaf",
+   "colors": [
+    "#4f7a32",
+    "#5f8a3a",
+    "#456e2e"
+   ],
+   "trunk": "#5a4330",
+   "size": [
+    7,
+    13
+   ],
+   "biomes": [
+    "temperate_forest",
+    "mediterranean",
+    "grassland"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ]
+  },
+  {
+   "id": "beech",
+   "name": "Beech",
+   "arch": "broadleaf",
+   "colors": [
+    "#5f8f3a",
+    "#6a9a40"
+   ],
+   "trunk": "#7a7468",
+   "size": [
+    8,
+    14
+   ],
+   "biomes": [
+    "temperate_forest"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "europe",
+    "northamerica",
+    "eastasia"
+   ]
+  },
+  {
+   "id": "maple",
+   "name": "Maple",
+   "arch": "broadleaf",
+   "colors": [
+    "#6a9a3a",
+    "#c8642a",
+    "#d8a83a"
+   ],
+   "trunk": "#5a4330",
+   "size": [
+    7,
+    12
+   ],
+   "biomes": [
+    "temperate_forest"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "europe",
+    "northamerica",
+    "eastasia"
+   ]
+  },
+  {
+   "id": "birch",
+   "name": "Birch",
+   "arch": "birch",
+   "colors": [
+    "#8ab04a",
+    "#9ab85a"
+   ],
+   "trunk": "#e8e4dc",
+   "size": [
+    6,
+    11
+   ],
+   "biomes": [
+    "taiga",
+    "temperate_forest",
+    "tundra"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "future"
+   ]
+  },
+  {
+   "id": "pine",
+   "name": "Pine",
+   "arch": "conifer",
+   "colors": [
+    "#3a5a32",
+    "#44663a"
+   ],
+   "trunk": "#5a4030",
+   "size": [
+    8,
+    16
+   ],
+   "biomes": [
+    "taiga",
+    "temperate_forest",
+    "mediterranean",
+    "alpine"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "cenozoic",
+    "future"
+   ]
+  },
+  {
+   "id": "spruce",
+   "name": "Spruce",
+   "arch": "conifer",
+   "colors": [
+    "#2e4a2e",
+    "#36543a"
+   ],
+   "trunk": "#4a3a2a",
+   "size": [
+    9,
+    18
+   ],
+   "biomes": [
+    "taiga",
+    "alpine",
+    "temperate_forest"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "cenozoic",
+    "future"
+   ]
+  },
+  {
+   "id": "larch",
+   "name": "Larch",
+   "arch": "conifer",
+   "colors": [
+    "#6a8a3a",
+    "#c8a84a"
+   ],
+   "trunk": "#5a4030",
+   "size": [
+    8,
+    15
+   ],
+   "biomes": [
+    "taiga"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene"
+   ],
+   "regions": [
+    "northasia",
+    "europe",
+    "northamerica",
+    "arctic"
+   ]
+  },
+  {
+   "id": "cedar",
+   "name": "Cedar",
+   "arch": "cedar",
+   "colors": [
+    "#3e5e3a",
+    "#48683e"
+   ],
+   "trunk": "#5a4030",
+   "size": [
+    9,
+    16
+   ],
+   "biomes": [
+    "mediterranean",
+    "alpine"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "mena",
+    "europe",
+    "southasia",
+    "northamerica"
+   ]
+  },
+  {
+   "id": "cypress",
+   "name": "Cypress",
+   "arch": "cypress",
+   "colors": [
+    "#2e4e2e",
+    "#3a5a34"
+   ],
+   "trunk": "#5a4030",
+   "size": [
+    8,
+    14
+   ],
+   "biomes": [
+    "mediterranean"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "europe",
+    "mena",
+    "northamerica"
+   ]
+  },
+  {
+   "id": "olive",
+   "name": "Olive tree",
+   "arch": "broadleaf",
+   "colors": [
+    "#8a9a6a",
+    "#7a8a5e"
+   ],
+   "trunk": "#6b5a48",
+   "size": [
+    4,
+    7
+   ],
+   "biomes": [
+    "mediterranean",
+    "scrubland"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "mena",
+    "europe"
+   ]
+  },
+  {
+   "id": "palm",
+   "name": "Palm",
+   "arch": "palm",
+   "colors": [
+    "#4a8a3a",
+    "#5a9a40"
+   ],
+   "trunk": "#8a7458",
+   "size": [
+    7,
+    13
+   ],
+   "biomes": [
+    "beach",
+    "rainforest",
+    "tropical_dry",
+    "savanna"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "cenozoic"
+   ]
+  },
+  {
+   "id": "date_palm",
+   "name": "Date palm",
+   "arch": "palm",
+   "colors": [
+    "#6a8a3a",
+    "#7a9a44"
+   ],
+   "trunk": "#9a8060",
+   "size": [
+    8,
+    14
+   ],
+   "biomes": [
+    "desert",
+    "scrubland",
+    "beach"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "nearWater": true,
+   "regions": [
+    "mena",
+    "southasia",
+    "subsaharan"
+   ]
+  },
+  {
+   "id": "banana",
+   "name": "Banana plant",
+   "arch": "banana",
+   "colors": [
+    "#5aa03a",
+    "#6ab044"
+   ],
+   "trunk": "#7a9a44",
+   "size": [
+    3,
+    5
+   ],
+   "biomes": [
+    "rainforest",
+    "tropical_dry"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "seasia",
+    "southasia",
+    "oceania",
+    "subsaharan"
+   ]
+  },
+  {
+   "id": "bamboo",
+   "name": "Bamboo",
+   "arch": "bamboo",
+   "colors": [
+    "#7ab04a",
+    "#8ac05a"
+   ],
+   "trunk": "#9ab85a",
+   "size": [
+    6,
+    12
+   ],
+   "biomes": [
+    "rainforest",
+    "temperate_forest",
+    "tropical_dry"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ]
+  },
+  {
+   "id": "rainforest_tree",
+   "name": "Rainforest giant",
+   "arch": "emergent",
+   "colors": [
+    "#3a6a2a",
+    "#4a7a30",
+    "#2e5e26"
+   ],
+   "trunk": "#6b5a48",
+   "size": [
+    16,
+    30
+   ],
+   "biomes": [
+    "rainforest"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "cenozoic"
+   ]
+  },
+  {
+   "id": "ceiba",
+   "name": "Ceiba",
+   "arch": "emergent",
+   "colors": [
+    "#4a7a30",
+    "#5a8a3a"
+   ],
+   "trunk": "#8a8478",
+   "size": [
+    18,
+    32
+   ],
+   "biomes": [
+    "rainforest",
+    "tropical_dry"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "centralamerica",
+    "southamerica",
+    "subsaharan"
+   ]
+  },
+  {
+   "id": "teak",
+   "name": "Teak",
+   "arch": "broadleaf",
+   "colors": [
+    "#5a8a3a",
+    "#6a9a40"
+   ],
+   "trunk": "#6b5a48",
+   "size": [
+    10,
+    18
+   ],
+   "biomes": [
+    "tropical_dry",
+    "rainforest"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "southasia",
+    "seasia"
+   ]
+  },
+  {
+   "id": "banyan",
+   "name": "Banyan",
+   "arch": "banyan",
+   "colors": [
+    "#3e6e2e",
+    "#4a7a34"
+   ],
+   "trunk": "#7a6a58",
+   "size": [
+    10,
+    16
+   ],
+   "biomes": [
+    "tropical_dry",
+    "rainforest",
+    "grassland"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "southasia",
+    "seasia"
+   ]
+  },
+  {
+   "id": "mango",
+   "name": "Mango tree",
+   "arch": "broadleaf",
+   "colors": [
+    "#2e6a2e",
+    "#3a7a34"
+   ],
+   "trunk": "#5a4330",
+   "size": [
+    8,
+    13
+   ],
+   "biomes": [
+    "tropical_dry",
+    "rainforest"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "southasia",
+    "seasia"
+   ]
+  },
+  {
+   "id": "baobab",
+   "name": "Baobab",
+   "arch": "baobab",
+   "colors": [
+    "#6a8a3a",
+    "#7a9a44"
+   ],
+   "trunk": "#a89480",
+   "size": [
+    10,
+    18
+   ],
+   "biomes": [
+    "savanna",
+    "tropical_dry"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "pleistocene"
+   ],
+   "regions": [
+    "subsaharan",
+    "oceania"
+   ]
+  },
+  {
+   "id": "acacia",
+   "name": "Acacia",
+   "arch": "acacia",
+   "colors": [
+    "#6a8a3a",
+    "#7a9a40",
+    "#8a9a44"
+   ],
+   "trunk": "#5a4a3a",
+   "size": [
+    5,
+    9
+   ],
+   "biomes": [
+    "savanna",
+    "scrubland",
+    "desert"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "pleistocene",
+    "cenozoic"
+   ]
+  },
+  {
+   "id": "eucalyptus",
+   "name": "Eucalyptus",
+   "arch": "eucalyptus",
+   "colors": [
+    "#7a9a6a",
+    "#8aa878"
+   ],
+   "trunk": "#d8d0c0",
+   "size": [
+    10,
+    22
+   ],
+   "biomes": [
+    "temperate_forest",
+    "savanna",
+    "scrubland",
+    "tropical_dry",
+    "grassland"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "pleistocene"
+   ],
+   "regions": [
+    "oceania"
+   ]
+  },
+  {
+   "id": "araucaria",
+   "name": "Araucaria",
+   "arch": "araucaria",
+   "colors": [
+    "#2e4e2e",
+    "#3a5a34"
+   ],
+   "trunk": "#6b5a48",
+   "size": [
+    12,
+    24
+   ],
+   "biomes": [
+    "temperate_forest",
+    "alpine",
+    "grassland"
+   ],
+   "kits": [
+    "holocene",
+    "cretaceous",
+    "cenozoic",
+    "future"
+   ],
+   "regions": [
+    "southamerica",
+    "oceania"
+   ]
+  },
+  {
+   "id": "cherry",
+   "name": "Cherry tree",
+   "arch": "broadleaf",
+   "colors": [
+    "#f2b8c8",
+    "#e8a8b8",
+    "#5a8a3a"
+   ],
+   "trunk": "#5a4330",
+   "size": [
+    5,
+    8
+   ],
+   "biomes": [
+    "temperate_forest"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "eastasia",
+    "europe"
+   ]
+  },
+  {
+   "id": "willow",
+   "name": "Willow",
+   "arch": "willow",
+   "colors": [
+    "#7a9a4a",
+    "#8aa858"
+   ],
+   "trunk": "#6b5a48",
+   "size": [
+    7,
+    11
+   ],
+   "biomes": [
+    "wetland",
+    "temperate_forest"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "pleistocene"
+   ],
+   "nearWater": true
+  },
+  {
+   "id": "mangrove",
+   "name": "Mangrove",
+   "arch": "mangrove",
+   "colors": [
+    "#3e6e2e",
+    "#4a7a34"
+   ],
+   "trunk": "#5a4a3a",
+   "size": [
+    4,
+    8
+   ],
+   "biomes": [
+    "wetland",
+    "beach"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "cenozoic"
+   ],
+   "tropical": true
+  },
+  {
+   "id": "cactus",
+   "name": "Cactus",
+   "arch": "cactus",
+   "colors": [
+    "#5a8a4a",
+    "#6a9a50"
+   ],
+   "trunk": "#5a8a4a",
+   "size": [
+    2,
+    6
+   ],
+   "biomes": [
+    "desert",
+    "scrubland"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "northamerica",
+    "centralamerica",
+    "southamerica"
+   ]
+  },
+  {
+   "id": "agave",
+   "name": "Agave",
+   "arch": "agave",
+   "colors": [
+    "#7a9a8a",
+    "#6a8a7a"
+   ],
+   "trunk": "#6a8a7a",
+   "size": [
+    1,
+    2
+   ],
+   "biomes": [
+    "desert",
+    "scrubland"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "northamerica",
+    "centralamerica",
+    "southamerica"
+   ]
+  },
+  {
+   "id": "spinifex",
+   "name": "Spinifex",
+   "arch": "tussock",
+   "colors": [
+    "#c8b46a",
+    "#b8a45a"
+   ],
+   "trunk": "#a8944a",
+   "size": [
+    0.8,
+    1.4
+   ],
+   "biomes": [
+    "desert",
+    "scrubland",
+    "savanna"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "pleistocene"
+   ],
+   "regions": [
+    "oceania"
+   ]
+  },
+  {
+   "id": "savanna_grass",
+   "name": "Tall grass",
+   "arch": "tussock",
+   "colors": [
+    "#c8b464",
+    "#d8c470"
+   ],
+   "trunk": "#b8a454",
+   "size": [
+    1,
+    1.8
+   ],
+   "biomes": [
+    "savanna",
+    "grassland",
+    "steppe"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "pleistocene",
+    "cenozoic"
+   ]
+  },
+  {
+   "id": "steppe_grass",
+   "name": "Feather grass",
+   "arch": "tussock",
+   "colors": [
+    "#b8b070",
+    "#c8c080"
+   ],
+   "trunk": "#a8a060",
+   "size": [
+    0.6,
+    1.1
+   ],
+   "biomes": [
+    "steppe",
+    "grassland",
+    "tundra"
+   ],
+   "kits": [
+    "holocene",
+    "future",
+    "pleistocene",
+    "cenozoic"
+   ]
+  },
+  {
+   "id": "pampas_grass",
+   "name": "Pampas grass",
+   "arch": "plume",
+   "colors": [
+    "#e8e0c8",
+    "#d8d0b8"
+   ],
+   "trunk": "#9aa060",
+   "size": [
+    1.5,
+    2.5
+   ],
+   "biomes": [
+    "grassland",
+    "wetland"
+   ],
+   "kits": [
+    "holocene",
+    "future"
+   ],
+   "regions": [
+    "southamerica"
+   ]
+  },
+  {
+   "id": "tundra_shrub",
+   "name": "Dwarf shrub",
+   "arch": "bush",
+   "colors": [
+    "#7a7a4a",
+    "#8a6a3a",
+    "#6a7a4a"
+   ],
+   "trunk": "#5a4a3a",
+   "size": [
+    0.4,
+    0.9
+   ],
+   "biomes": [
+    "tundra",
+    "alpine",
+    "taiga"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "future"
+   ]
+  },
+  {
+   "id": "lichen",
+   "name": "Lichen",
+   "arch": "moss",
+   "colors": [
+    "#b8b088",
+    "#a8a078",
+    "#c8c098"
+   ],
+   "trunk": "#a8a078",
+   "size": [
+    0.3,
+    0.6
+   ],
+   "biomes": [
+    "tundra",
+    "alpine",
+    "ice"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "future"
+   ]
+  },
+  {
+   "id": "bush",
+   "name": "Bush",
+   "arch": "bush",
+   "colors": [
+    "#4f7a32",
+    "#5f8a3a",
+    "#6a8a40"
+   ],
+   "trunk": "#5a4330",
+   "size": [
+    0.8,
+    2
+   ],
+   "biomes": [
+    "temperate_forest",
+    "grassland",
+    "mediterranean",
+    "scrubland",
+    "tropical_dry",
+    "savanna",
+    "taiga",
+    "wetland"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "cenozoic",
+    "future"
+   ]
+  },
+  {
+   "id": "fern",
+   "name": "Fern",
+   "arch": "fern",
+   "colors": [
+    "#4a8a3a",
+    "#5a9a44"
+   ],
+   "trunk": "#3a6a2a",
+   "size": [
+    0.8,
+    1.6
+   ],
+   "biomes": [
+    "temperate_forest",
+    "rainforest",
+    "wetland",
+    "taiga"
+   ],
+   "kits": [
+    "holocene",
+    "cretaceous",
+    "cenozoic",
+    "future"
+   ]
+  },
+  {
+   "id": "reeds",
+   "name": "Reeds",
+   "arch": "reed",
+   "colors": [
+    "#8aa04a",
+    "#9ab05a",
+    "#b8b064"
+   ],
+   "trunk": "#8a9a4a",
+   "size": [
+    1.5,
+    3
+   ],
+   "biomes": [
+    "wetland",
+    "beach",
+    "desert",
+    "grassland"
+   ],
+   "kits": [
+    "holocene",
+    "cretaceous",
+    "cenozoic",
+    "pleistocene",
+    "future"
+   ],
+   "nearWater": true
+  },
+  {
+   "id": "papyrus",
+   "name": "Papyrus",
+   "arch": "plume",
+   "colors": [
+    "#6aa03a",
+    "#7ab044"
+   ],
+   "trunk": "#6a9a3a",
+   "size": [
+    2,
+    3.5
+   ],
+   "biomes": [
+    "wetland",
+    "desert",
+    "savanna"
+   ],
+   "kits": [
+    "holocene"
+   ],
+   "nearWater": true,
+   "regions": [
+    "mena",
+    "subsaharan"
+   ]
+  },
+  {
+   "id": "flowers",
+   "name": "Wildflowers",
+   "arch": "flower",
+   "colors": [
+    "#e8c84a",
+    "#e86a5a",
+    "#a87ad8",
+    "#f2f2f2"
+   ],
+   "trunk": "#5a8a3a",
+   "size": [
+    0.3,
+    0.6
+   ],
+   "biomes": [
+    "grassland",
+    "temperate_forest",
+    "mediterranean",
+    "tundra",
+    "alpine",
+    "steppe"
+   ],
+   "kits": [
+    "holocene",
+    "cenozoic",
+    "future"
+   ]
+  },
+  {
+   "id": "cycad",
+   "name": "Cycad",
+   "arch": "cycad",
+   "colors": [
+    "#3e7a32",
+    "#4a8a3a"
+   ],
+   "trunk": "#6b5a3a",
+   "size": [
+    2,
+    4
+   ],
+   "biomes": "*",
+   "kits": [
+    "cretaceous"
+   ]
+  },
+  {
+   "id": "tree_fern",
+   "name": "Tree fern",
+   "arch": "treefern",
+   "colors": [
+    "#3e8a32",
+    "#4a9a3a"
+   ],
+   "trunk": "#5a4a3a",
+   "size": [
+    4,
+    8
+   ],
+   "biomes": "*",
+   "kits": [
+    "cretaceous",
+    "cenozoic"
+   ]
+  },
+  {
+   "id": "giant_conifer",
+   "name": "Ancient conifer",
+   "arch": "conifer",
+   "colors": [
+    "#2e5a32",
+    "#3a6a3a"
+   ],
+   "trunk": "#5a4030",
+   "size": [
+    18,
+    34
+   ],
+   "biomes": "*",
+   "kits": [
+    "cretaceous"
+   ]
+  },
+  {
+   "id": "ginkgo",
+   "name": "Ginkgo",
+   "arch": "broadleaf",
+   "colors": [
+    "#8ab04a",
+    "#d8c04a"
+   ],
+   "trunk": "#6b5a48",
+   "size": [
+    8,
+    14
+   ],
+   "biomes": "*",
+   "kits": [
+    "cretaceous",
+    "cenozoic"
+   ]
+  },
+  {
+   "id": "magnolia",
+   "name": "Early magnolia",
+   "arch": "broadleaf",
+   "colors": [
+    "#3e6e2e",
+    "#f2e8f0"
+   ],
+   "trunk": "#6b5a48",
+   "size": [
+    6,
+    10
+   ],
+   "biomes": "*",
+   "kits": [
+    "cretaceous"
+   ]
+  },
+  {
+   "id": "horsetail",
+   "name": "Horsetail",
+   "arch": "reed",
+   "colors": [
+    "#5a8a3a",
+    "#6a9a44"
+   ],
+   "trunk": "#5a8a3a",
+   "size": [
+    1.5,
+    3
+   ],
+   "biomes": "*",
+   "kits": [
+    "cretaceous"
+   ],
+   "nearWater": true
+  },
+  {
+   "id": "glow_tree",
+   "name": "Glowbloom tree",
+   "arch": "glow",
+   "colors": [
+    "#7dffb2",
+    "#a0e8ff",
+    "#ffb6f0"
+   ],
+   "trunk": "#e8f0ff",
+   "size": [
+    7,
+    14
+   ],
+   "biomes": [
+    "temperate_forest",
+    "grassland",
+    "mediterranean",
+    "tropical_dry",
+    "rainforest",
+    "savanna",
+    "beach",
+    "steppe",
+    "scrubland",
+    "wetland"
+   ],
+   "kits": [
+    "future"
+   ]
+  },
+  {
+   "id": "crystal_shrub",
+   "name": "Crystal shrub",
+   "arch": "crystal",
+   "colors": [
+    "#a0e8ff",
+    "#d8c8ff"
+   ],
+   "trunk": "#ffffff",
+   "size": [
+    0.8,
+    1.6
+   ],
+   "biomes": [
+    "desert",
+    "tundra",
+    "alpine",
+    "scrubland",
+    "ice",
+    "steppe"
+   ],
+   "kits": [
+    "future"
+   ]
+  },
+  {
+   "id": "rock",
+   "name": "Rock",
+   "arch": "rock",
+   "colors": [
+    "#8a8478",
+    "#9a948a",
+    "#7a766c"
+   ],
+   "trunk": "#8a8478",
+   "size": [
+    0.5,
+    2
+   ],
+   "biomes": "*",
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "cenozoic",
+    "cretaceous",
+    "future"
+   ]
+  },
+  {
+   "id": "boulder",
+   "name": "Boulder",
+   "arch": "boulder",
+   "colors": [
+    "#8a8478",
+    "#9a948a",
+    "#7a7468"
+   ],
+   "trunk": "#8a8478",
+   "size": [
+    2,
+    5
+   ],
+   "biomes": [
+    "alpine",
+    "tundra",
+    "desert",
+    "scrubland",
+    "taiga",
+    "temperate_forest",
+    "grassland",
+    "steppe",
+    "ice"
+   ],
+   "kits": [
+    "holocene",
+    "pleistocene",
+    "cenozoic",
+    "cretaceous",
+    "future"
+   ]
+  }
+ ],
+ "kits": {
+  "holocene": {
+   "beach": [
+    [
+     "palm",
+     1
+    ],
+    [
+     "reeds",
+     0.6
+    ],
+    [
+     "rock",
+     0.5
+    ],
+    [
+     "bush",
+     0.4
+    ]
+   ],
+   "desert": [
+    [
+     "rock",
+     1
+    ],
+    [
+     "boulder",
+     0.3
+    ],
+    [
+     "acacia",
+     0.25
+    ],
+    [
+     "date_palm",
+     0.15
+    ],
+    [
+     "cactus",
+     0.3
+    ],
+    [
+     "agave",
+     0.3
+    ],
+    [
+     "spinifex",
+     0.6
+    ]
+   ],
+   "scrubland": [
+    [
+     "bush",
+     1.5
+    ],
+    [
+     "acacia",
+     0.5
+    ],
+    [
+     "olive",
+     0.3
+    ],
+    [
+     "rock",
+     0.8
+    ],
+    [
+     "spinifex",
+     0.6
+    ],
+    [
+     "cactus",
+     0.3
+    ],
+    [
+     "agave",
+     0.3
+    ]
+   ],
+   "savanna": [
+    [
+     "savanna_grass",
+     3
+    ],
+    [
+     "acacia",
+     0.7
+    ],
+    [
+     "baobab",
+     0.12
+    ],
+    [
+     "bush",
+     0.6
+    ],
+    [
+     "rock",
+     0.3
+    ]
+   ],
+   "grassland": [
+    [
+     "steppe_grass",
+     2
+    ],
+    [
+     "flowers",
+     1.5
+    ],
+    [
+     "bush",
+     0.5
+    ],
+    [
+     "oak",
+     0.15
+    ],
+    [
+     "rock",
+     0.3
+    ]
+   ],
+   "steppe": [
+    [
+     "steppe_grass",
+     3
+    ],
+    [
+     "flowers",
+     0.5
+    ],
+    [
+     "rock",
+     0.4
+    ],
+    [
+     "bush",
+     0.2
+    ]
+   ],
+   "mediterranean": [
+    [
+     "olive",
+     1
+    ],
+    [
+     "cypress",
+     0.6
+    ],
+    [
+     "pine",
+     0.5
+    ],
+    [
+     "bush",
+     1.2
+    ],
+    [
+     "oak",
+     0.5
+    ],
+    [
+     "rock",
+     0.6
+    ],
+    [
+     "flowers",
+     0.6
+    ]
+   ],
+   "temperate_forest": [
+    [
+     "oak",
+     1.2
+    ],
+    [
+     "beech",
+     1
+    ],
+    [
+     "maple",
+     0.6
+    ],
+    [
+     "pine",
+     0.5
+    ],
+    [
+     "birch",
+     0.4
+    ],
+    [
+     "bush",
+     1
+    ],
+    [
+     "fern",
+     1
+    ],
+    [
+     "rock",
+     0.3
+    ],
+    [
+     "flowers",
+     0.4
+    ]
+   ],
+   "rainforest": [
+    [
+     "rainforest_tree",
+     1.4
+    ],
+    [
+     "palm",
+     0.8
+    ],
+    [
+     "banana",
+     0.5
+    ],
+    [
+     "fern",
+     1.5
+    ],
+    [
+     "bamboo",
+     0.3
+    ],
+    [
+     "bush",
+     1
+    ]
+   ],
+   "tropical_dry": [
+    [
+     "teak",
+     0.8
+    ],
+    [
+     "palm",
+     0.5
+    ],
+    [
+     "acacia",
+     0.4
+    ],
+    [
+     "bush",
+     1
+    ],
+    [
+     "banyan",
+     0.15
+    ],
+    [
+     "savanna_grass",
+     1
+    ]
+   ],
+   "taiga": [
+    [
+     "spruce",
+     1.5
+    ],
+    [
+     "pine",
+     1
+    ],
+    [
+     "birch",
+     0.5
+    ],
+    [
+     "larch",
+     0.6
+    ],
+    [
+     "tundra_shrub",
+     0.6
+    ],
+    [
+     "rock",
+     0.3
+    ],
+    [
+     "fern",
+     0.4
+    ]
+   ],
+   "tundra": [
+    [
+     "tundra_shrub",
+     1.4
+    ],
+    [
+     "lichen",
+     1.5
+    ],
+    [
+     "steppe_grass",
+     0.6
+    ],
+    [
+     "rock",
+     0.8
+    ],
+    [
+     "boulder",
+     0.2
+    ],
+    [
+     "flowers",
+     0.3
+    ]
+   ],
+   "ice": [
+    [
+     "boulder",
+     0.05
+    ]
+   ],
+   "alpine": [
+    [
+     "rock",
+     1.2
+    ],
+    [
+     "boulder",
+     0.5
+    ],
+    [
+     "tundra_shrub",
+     0.8
+    ],
+    [
+     "spruce",
+     0.3
+    ],
+    [
+     "lichen",
+     0.8
+    ],
+    [
+     "flowers",
+     0.4
+    ]
+   ],
+   "wetland": [
+    [
+     "reeds",
+     2.5
+    ],
+    [
+     "willow",
+     0.5
+    ],
+    [
+     "mangrove",
+     0.4
+    ],
+    [
+     "fern",
+     0.4
+    ],
+    [
+     "bush",
+     0.4
+    ]
+   ]
+  },
+  "pleistocene": {
+   "beach": [
+    [
+     "reeds",
+     0.6
+    ],
+    [
+     "rock",
+     0.6
+    ],
+    [
+     "bush",
+     0.4
+    ]
+   ],
+   "desert": [
+    [
+     "rock",
+     1
+    ],
+    [
+     "boulder",
+     0.3
+    ],
+    [
+     "acacia",
+     0.2
+    ],
+    [
+     "spinifex",
+     0.4
+    ]
+   ],
+   "scrubland": [
+    [
+     "bush",
+     1.2
+    ],
+    [
+     "acacia",
+     0.4
+    ],
+    [
+     "rock",
+     0.8
+    ],
+    [
+     "spinifex",
+     0.4
+    ]
+   ],
+   "savanna": [
+    [
+     "savanna_grass",
+     3
+    ],
+    [
+     "acacia",
+     0.6
+    ],
+    [
+     "baobab",
+     0.1
+    ],
+    [
+     "bush",
+     0.6
+    ]
+   ],
+   "grassland": [
+    [
+     "steppe_grass",
+     3
+    ],
+    [
+     "bush",
+     0.3
+    ],
+    [
+     "rock",
+     0.3
+    ]
+   ],
+   "steppe": [
+    [
+     "steppe_grass",
+     3
+    ],
+    [
+     "rock",
+     0.4
+    ],
+    [
+     "tundra_shrub",
+     0.3
+    ]
+   ],
+   "mediterranean": [
+    [
+     "pine",
+     0.8
+    ],
+    [
+     "bush",
+     1.2
+    ],
+    [
+     "rock",
+     0.6
+    ]
+   ],
+   "temperate_forest": [
+    [
+     "pine",
+     1
+    ],
+    [
+     "birch",
+     1
+    ],
+    [
+     "spruce",
+     0.6
+    ],
+    [
+     "bush",
+     0.8
+    ],
+    [
+     "rock",
+     0.3
+    ]
+   ],
+   "rainforest": [
+    [
+     "palm",
+     0.6
+    ],
+    [
+     "fern",
+     1.5
+    ],
+    [
+     "bush",
+     1
+    ]
+   ],
+   "tropical_dry": [
+    [
+     "acacia",
+     0.5
+    ],
+    [
+     "bush",
+     1
+    ],
+    [
+     "savanna_grass",
+     1
+    ]
+   ],
+   "taiga": [
+    [
+     "spruce",
+     1.4
+    ],
+    [
+     "pine",
+     0.8
+    ],
+    [
+     "larch",
+     0.8
+    ],
+    [
+     "birch",
+     0.4
+    ],
+    [
+     "tundra_shrub",
+     0.6
+    ]
+   ],
+   "tundra": [
+    [
+     "steppe_grass",
+     1.6
+    ],
+    [
+     "tundra_shrub",
+     1
+    ],
+    [
+     "lichen",
+     1.2
+    ],
+    [
+     "rock",
+     0.8
+    ],
+    [
+     "boulder",
+     0.3
+    ]
+   ],
+   "ice": [
+    [
+     "boulder",
+     0.05
+    ]
+   ],
+   "alpine": [
+    [
+     "rock",
+     1.2
+    ],
+    [
+     "boulder",
+     0.6
+    ],
+    [
+     "lichen",
+     1
+    ]
+   ],
+   "wetland": [
+    [
+     "reeds",
+     2.5
+    ],
+    [
+     "willow",
+     0.5
+    ],
+    [
+     "bush",
+     0.4
+    ]
+   ]
+  },
+  "cenozoic": {
+   "beach": [
+    [
+     "palm",
+     0.8
+    ],
+    [
+     "reeds",
+     0.6
+    ],
+    [
+     "rock",
+     0.5
+    ]
+   ],
+   "desert": [
+    [
+     "rock",
+     1
+    ],
+    [
+     "acacia",
+     0.2
+    ]
+   ],
+   "scrubland": [
+    [
+     "bush",
+     1.2
+    ],
+    [
+     "acacia",
+     0.4
+    ],
+    [
+     "rock",
+     0.6
+    ]
+   ],
+   "savanna": [
+    [
+     "savanna_grass",
+     2.5
+    ],
+    [
+     "acacia",
+     0.6
+    ],
+    [
+     "bush",
+     0.6
+    ]
+   ],
+   "grassland": [
+    [
+     "steppe_grass",
+     2
+    ],
+    [
+     "savanna_grass",
+     1
+    ],
+    [
+     "flowers",
+     0.6
+    ],
+    [
+     "bush",
+     0.4
+    ]
+   ],
+   "steppe": [
+    [
+     "steppe_grass",
+     2.5
+    ],
+    [
+     "rock",
+     0.4
+    ]
+   ],
+   "mediterranean": [
+    [
+     "pine",
+     0.8
+    ],
+    [
+     "bush",
+     1.2
+    ],
+    [
+     "ginkgo",
+     0.3
+    ],
+    [
+     "rock",
+     0.5
+    ]
+   ],
+   "temperate_forest": [
+    [
+     "ginkgo",
+     0.6
+    ],
+    [
+     "pine",
+     0.8
+    ],
+    [
+     "araucaria",
+     0.4
+    ],
+    [
+     "bush",
+     0.8
+    ],
+    [
+     "fern",
+     1
+    ]
+   ],
+   "rainforest": [
+    [
+     "rainforest_tree",
+     1.2
+    ],
+    [
+     "palm",
+     0.8
+    ],
+    [
+     "tree_fern",
+     0.6
+    ],
+    [
+     "fern",
+     1.5
+    ]
+   ],
+   "tropical_dry": [
+    [
+     "palm",
+     0.6
+    ],
+    [
+     "acacia",
+     0.4
+    ],
+    [
+     "bush",
+     1
+    ]
+   ],
+   "taiga": [
+    [
+     "spruce",
+     1.2
+    ],
+    [
+     "pine",
+     1
+    ],
+    [
+     "fern",
+     0.4
+    ]
+   ],
+   "tundra": [
+    [
+     "steppe_grass",
+     1.2
+    ],
+    [
+     "rock",
+     0.8
+    ]
+   ],
+   "ice": [
+    [
+     "boulder",
+     0.05
+    ]
+   ],
+   "alpine": [
+    [
+     "rock",
+     1.2
+    ],
+    [
+     "boulder",
+     0.5
+    ],
+    [
+     "pine",
+     0.3
+    ]
+   ],
+   "wetland": [
+    [
+     "reeds",
+     2.5
+    ],
+    [
+     "mangrove",
+     0.4
+    ],
+    [
+     "fern",
+     0.4
+    ]
+   ]
+  },
+  "cretaceous": {
+   "*": [
+    [
+     "giant_conifer",
+     0.7
+    ],
+    [
+     "araucaria",
+     0.6
+    ],
+    [
+     "cycad",
+     1.2
+    ],
+    [
+     "tree_fern",
+     1.0
+    ],
+    [
+     "fern",
+     2.2
+    ],
+    [
+     "ginkgo",
+     0.35
+    ],
+    [
+     "magnolia",
+     0.25
+    ],
+    [
+     "horsetail",
+     0.6
+    ],
+    [
+     "rock",
+     0.3
+    ]
+   ],
+   "desert": [
+    [
+     "cycad",
+     0.5
+    ],
+    [
+     "fern",
+     0.6
+    ],
+    [
+     "rock",
+     1
+    ],
+    [
+     "araucaria",
+     0.15
+    ]
+   ],
+   "beach": [
+    [
+     "cycad",
+     0.6
+    ],
+    [
+     "horsetail",
+     1
+    ],
+    [
+     "fern",
+     0.8
+    ],
+    [
+     "rock",
+     0.4
+    ]
+   ],
+   "ice": [
+    [
+     "rock",
+     0.2
+    ]
+   ]
+  },
+  "future": {
+   "beach": [
+    [
+     "palm",
+     1
+    ],
+    [
+     "glow_tree",
+     0.3
+    ],
+    [
+     "reeds",
+     0.4
+    ]
+   ],
+   "desert": [
+    [
+     "crystal_shrub",
+     0.8
+    ],
+    [
+     "rock",
+     0.8
+    ],
+    [
+     "date_palm",
+     0.2
+    ],
+    [
+     "glow_tree",
+     0.05
+    ]
+   ],
+   "scrubland": [
+    [
+     "bush",
+     1
+    ],
+    [
+     "crystal_shrub",
+     0.5
+    ],
+    [
+     "olive",
+     0.3
+    ],
+    [
+     "glow_tree",
+     0.15
+    ]
+   ],
+   "savanna": [
+    [
+     "savanna_grass",
+     2.5
+    ],
+    [
+     "acacia",
+     0.6
+    ],
+    [
+     "glow_tree",
+     0.2
+    ],
+    [
+     "baobab",
+     0.1
+    ]
+   ],
+   "grassland": [
+    [
+     "flowers",
+     2
+    ],
+    [
+     "steppe_grass",
+     1.5
+    ],
+    [
+     "glow_tree",
+     0.4
+    ],
+    [
+     "oak",
+     0.3
+    ]
+   ],
+   "steppe": [
+    [
+     "steppe_grass",
+     2.5
+    ],
+    [
+     "crystal_shrub",
+     0.3
+    ],
+    [
+     "flowers",
+     0.6
+    ]
+   ],
+   "mediterranean": [
+    [
+     "olive",
+     0.8
+    ],
+    [
+     "cypress",
+     0.5
+    ],
+    [
+     "glow_tree",
+     0.4
+    ],
+    [
+     "flowers",
+     1
+    ]
+   ],
+   "temperate_forest": [
+    [
+     "oak",
+     1
+    ],
+    [
+     "beech",
+     0.8
+    ],
+    [
+     "glow_tree",
+     0.6
+    ],
+    [
+     "fern",
+     1
+    ],
+    [
+     "flowers",
+     0.8
+    ]
+   ],
+   "rainforest": [
+    [
+     "rainforest_tree",
+     1.4
+    ],
+    [
+     "glow_tree",
+     0.4
+    ],
+    [
+     "palm",
+     0.6
+    ],
+    [
+     "fern",
+     1.5
+    ],
+    [
+     "banana",
+     0.5
+    ]
+   ],
+   "tropical_dry": [
+    [
+     "teak",
+     0.6
+    ],
+    [
+     "glow_tree",
+     0.4
+    ],
+    [
+     "palm",
+     0.5
+    ],
+    [
+     "bush",
+     0.8
+    ]
+   ],
+   "taiga": [
+    [
+     "spruce",
+     1.4
+    ],
+    [
+     "birch",
+     0.6
+    ],
+    [
+     "glow_tree",
+     0.2
+    ],
+    [
+     "tundra_shrub",
+     0.5
+    ]
+   ],
+   "tundra": [
+    [
+     "tundra_shrub",
+     1
+    ],
+    [
+     "crystal_shrub",
+     0.6
+    ],
+    [
+     "flowers",
+     0.6
+    ],
+    [
+     "lichen",
+     1
+    ]
+   ],
+   "ice": [
+    [
+     "crystal_shrub",
+     0.2
+    ]
+   ],
+   "alpine": [
+    [
+     "rock",
+     1
+    ],
+    [
+     "crystal_shrub",
+     0.6
+    ],
+    [
+     "spruce",
+     0.3
+    ],
+    [
+     "flowers",
+     0.4
+    ]
+   ],
+   "wetland": [
+    [
+     "reeds",
+     2
+    ],
+    [
+     "willow",
+     0.5
+    ],
+    [
+     "glow_tree",
+     0.3
+    ]
+   ]
+  }
+ }
+}

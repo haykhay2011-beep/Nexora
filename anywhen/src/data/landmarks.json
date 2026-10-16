@@ -1,0 +1,2504 @@
+[
+ {
+  "id": "giza",
+  "name": "Pyramids of Giza",
+  "lat": 29.9792,
+  "lon": 31.1342,
+  "region": "mena",
+  "kind": "built",
+  "builder": "pyramid",
+  "params": {
+   "layout": [
+    [
+     0,
+     0,
+     1,
+     230,
+     146
+    ],
+    [
+     -330,
+     345,
+     0.97,
+     215,
+     143
+    ],
+    [
+     -590,
+     745,
+     0.45,
+     103,
+     65
+    ]
+   ],
+   "steps": 0,
+   "casing": "#f4ecd8",
+   "core": "#c8a46e",
+   "cap": "#e8c860",
+   "sphinx": [
+    330,
+    433
+   ],
+   "causeway": true,
+   "clear": 900
+  },
+  "stages": [
+   {
+    "from": -2600,
+    "state": "construction",
+    "note": "Workers are building the Great Pyramid for the pharaoh Khufu."
+   },
+   {
+    "from": -2560,
+    "state": "complete",
+    "note": "The pyramids shine with smooth white limestone casing."
+   },
+   {
+    "from": 1300,
+    "state": "weathered",
+    "note": "Most of the casing stones were taken in the 1300s to build Cairo."
+   },
+   {
+    "from": 1990,
+    "state": "restored",
+    "note": "Today the site is protected, and the pyramids are surrounded by the city."
+   }
+  ],
+  "fact": "The Great Pyramid of Khufu, finished around 2560 BCE, was the tallest human-made structure in the world for over 3,800 years.",
+  "facts": [
+   "The pyramids were built by organised teams of workers who were fed and housed in a nearby town.",
+   "The Great Sphinx has the body of a lion and the head of a king.",
+   "Khafre's pyramid still has some of its original casing stones near the top."
+  ],
+  "terrain": {
+   "type": "flatten",
+   "radius": 1100
+  },
+  "arrive": 700
+ },
+ {
+  "id": "alexandria_lighthouse",
+  "name": "Lighthouse of Alexandria",
+  "lat": 31.2139,
+  "lon": 29.8856,
+  "region": "mena",
+  "kind": "built",
+  "builder": "lighthouse",
+  "params": {
+   "h": 100,
+   "base": 30,
+   "color": "#ece4d0",
+   "clear": 150
+  },
+  "stages": [
+   {
+    "from": -290,
+    "state": "construction"
+   },
+   {
+    "from": -280,
+    "state": "complete",
+    "note": "The Pharos lighthouse guides ships into Alexandria with fire and polished mirrors."
+   },
+   {
+    "from": 1303,
+    "state": "ruined",
+    "note": "Earthquakes badly damaged the lighthouse."
+   },
+   {
+    "from": 1477,
+    "state": "restored",
+    "note": "A citadel was built on the site using some of its stones."
+   }
+  ],
+  "fact": "The Lighthouse of Alexandria, about 100 m tall, was one of the Seven Wonders of the Ancient World.",
+  "facts": [
+   "It was built on the island of Pharos, which gave its name to lighthouses in several languages."
+  ],
+  "arrive": 300
+ },
+ {
+  "id": "petra",
+  "name": "Petra — the Treasury",
+  "lat": 30.3222,
+  "lon": 35.4516,
+  "region": "mena",
+  "kind": "built",
+  "builder": "rock_facade",
+  "params": {
+   "w": 25,
+   "h": 39,
+   "cliff": "#d08a6a",
+   "carve": "#e2a284",
+   "columns": 6,
+   "cliffW": 160,
+   "cliffH": 70,
+   "canyon": true,
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": -100,
+    "state": "construction"
+   },
+   {
+    "from": 0,
+    "state": "complete",
+    "note": "Petra is the bustling capital of the Nabataeans, a trading people."
+   },
+   {
+    "from": 700,
+    "state": "weathered",
+    "note": "Petra has been mostly abandoned."
+   },
+   {
+    "from": 1985,
+    "state": "restored",
+    "note": "Petra is a World Heritage Site visited by people from all over the world."
+   }
+  ],
+  "fact": "Petra, in Jordan, is a city carved into rose-coloured sandstone cliffs by the Nabataeans more than 2,000 years ago.",
+  "facts": [
+   "The Nabataeans built clever channels and cisterns to collect water in the desert."
+  ],
+  "arrive": 180
+ },
+ {
+  "id": "persepolis",
+  "name": "Persepolis",
+  "lat": 29.9352,
+  "lon": 52.8916,
+  "region": "mena",
+  "kind": "built",
+  "builder": "column_hall",
+  "params": {
+   "cols": 6,
+   "rows": 6,
+   "colH": 19,
+   "spacing": 8.5,
+   "platform": [
+    300,
+    450,
+    12
+   ],
+   "color": "#c8b89a",
+   "halls": 4,
+   "clear": 300
+  },
+  "stages": [
+   {
+    "from": -518,
+    "state": "construction"
+   },
+   {
+    "from": -500,
+    "state": "complete",
+    "note": "Persepolis is a grand ceremonial capital of the Achaemenid Persian Empire."
+   },
+   {
+    "from": -330,
+    "state": "ruined",
+    "note": "Persepolis was destroyed by fire in 330 BCE. Its columns and carvings still stand among the ruins."
+   }
+  ],
+  "fact": "Persepolis was the ceremonial capital of the Achaemenid Persian Empire, famous for its staircases carved with people bringing gifts from across the empire.",
+  "terrain": {
+   "type": "flatten",
+   "radius": 350
+  },
+  "arrive": 320
+ },
+ {
+  "id": "ur_ziggurat",
+  "name": "Ziggurat of Ur",
+  "lat": 30.9625,
+  "lon": 46.1031,
+  "region": "mena",
+  "kind": "built",
+  "builder": "ziggurat",
+  "params": {
+   "base": [
+    64,
+    46
+   ],
+   "h": 30,
+   "tiers": 3,
+   "color": "#b8946a",
+   "stairs": 3,
+   "clear": 150
+  },
+  "stages": [
+   {
+    "from": -2100,
+    "state": "construction"
+   },
+   {
+    "from": -2050,
+    "state": "complete",
+    "note": "The ziggurat towers over the city of Ur, with a temple at its top."
+   },
+   {
+    "from": -400,
+    "state": "ruined"
+   },
+   {
+    "from": 1980,
+    "state": "restored",
+    "note": "The lower terrace's facade was partly reconstructed."
+   }
+  ],
+  "fact": "The Great Ziggurat of Ur was built about 4,100 years ago from mud bricks, with a core of sun-dried brick and an outer layer of baked brick set in bitumen.",
+  "terrain": {
+   "type": "flatten",
+   "radius": 250
+  },
+  "arrive": 260
+ },
+ {
+  "id": "hagia_sophia",
+  "name": "Hagia Sophia",
+  "lat": 41.0086,
+  "lon": 28.9802,
+  "region": "mena",
+  "kind": "built",
+  "builder": "basilica_dome",
+  "params": {
+   "dome": 31,
+   "h": 55,
+   "w": 70,
+   "l": 75,
+   "color": "#d8a888",
+   "domeColor": "#8a9aa8",
+   "minaretsFrom": 1481,
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 532,
+    "state": "construction"
+   },
+   {
+    "from": 537,
+    "state": "complete",
+    "note": "Its giant dome seems to float above a ring of windows."
+   },
+   {
+    "from": 1800,
+    "state": "weathered"
+   },
+   {
+    "from": 1935,
+    "state": "restored"
+   }
+  ],
+  "fact": "Hagia Sophia in Istanbul was completed in 537. Its huge dome was an engineering marvel, and it was the world's largest cathedral for nearly a thousand years.",
+  "facts": [
+   "Minarets were added after 1453, when the building became a mosque."
+  ],
+  "arrive": 220
+ },
+ {
+  "id": "abu_simbel",
+  "name": "Abu Simbel temples",
+  "lat": 22.3372,
+  "lon": 31.6258,
+  "region": "mena",
+  "kind": "built",
+  "builder": "rock_temple",
+  "params": {
+   "w": 38,
+   "h": 30,
+   "colossi": 4,
+   "cliff": "#d8a878",
+   "clear": 150
+  },
+  "stages": [
+   {
+    "from": -1264,
+    "state": "construction"
+   },
+   {
+    "from": -1244,
+    "state": "complete",
+    "note": "Four colossal seated statues of Ramesses II guard the temple entrance."
+   },
+   {
+    "from": 1000,
+    "state": "weathered",
+    "note": "Drifting sand has buried much of the temple."
+   },
+   {
+    "from": 1968,
+    "state": "restored",
+    "note": "The temples were cut into blocks and moved to higher ground to save them from the rising waters of Lake Nasser."
+   }
+  ],
+  "fact": "The Great Temple of Abu Simbel was carved into a sandstone cliff about 1264–1244 BCE. Twice a year, sunlight reaches deep inside to light up statues in the inner sanctuary.",
+  "arrive": 220
+ },
+ {
+  "id": "burj_khalifa",
+  "name": "Burj Khalifa",
+  "lat": 25.1972,
+  "lon": 55.2744,
+  "region": "mena",
+  "kind": "built",
+  "builder": "skyscraper",
+  "params": {
+   "h": 828,
+   "base": 60,
+   "style": "spire_y",
+   "color": "#c8d4e0",
+   "clear": 200
+  },
+  "stages": [
+   {
+    "from": 2004,
+    "state": "construction"
+   },
+   {
+    "from": 2010,
+    "state": "complete"
+   }
+  ],
+  "fact": "Burj Khalifa in Dubai, finished in 2010, is about 828 m tall, the tallest building in the world.",
+  "arrive": 380
+ },
+ {
+  "id": "great_zimbabwe",
+  "name": "Great Zimbabwe",
+  "lat": -20.2674,
+  "lon": 30.9338,
+  "region": "subsaharan",
+  "kind": "built",
+  "builder": "stone_enclosure",
+  "params": {
+   "rx": 60,
+   "rz": 45,
+   "wallH": 10,
+   "tower": 10,
+   "color": "#9a8a72",
+   "hill": true,
+   "clear": 250
+  },
+  "stages": [
+   {
+    "from": 1100,
+    "state": "construction"
+   },
+   {
+    "from": 1300,
+    "state": "complete",
+    "note": "Great Zimbabwe is a busy capital and trade centre, linked to the Indian Ocean."
+   },
+   {
+    "from": 1450,
+    "state": "weathered"
+   },
+   {
+    "from": 1800,
+    "state": "ruined"
+   },
+   {
+    "from": 1986,
+    "state": "restored",
+    "note": "A World Heritage Site and a symbol of Zimbabwe, whose name means \"houses of stone\"."
+   }
+  ],
+  "fact": "Great Zimbabwe's Great Enclosure has walls up to 11 m high, built from granite blocks fitted together without mortar.",
+  "arrive": 240
+ },
+ {
+  "id": "djinguereber",
+  "name": "Djinguereber Mosque, Timbuktu",
+  "lat": 16.7712,
+  "lon": -3.0098,
+  "region": "subsaharan",
+  "kind": "built",
+  "builder": "mud_mosque",
+  "params": {
+   "w": 60,
+   "l": 70,
+   "tower": 16,
+   "color": "#b5845a",
+   "torons": true,
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 1325,
+    "state": "construction"
+   },
+   {
+    "from": 1330,
+    "state": "complete",
+    "note": "The mosque is a centre of learning in one of Africa's great scholarly cities."
+   },
+   {
+    "from": 1600,
+    "state": "weathered"
+   },
+   {
+    "from": 1990,
+    "state": "restored",
+    "note": "Townspeople re-plaster the mud walls together in an annual festival."
+   }
+  ],
+  "fact": "Djinguereber Mosque in Timbuktu was built around 1327, during the reign of Mansa Musa of Mali. It is made of mud brick, straw and wood.",
+  "facts": [
+   "Timbuktu's libraries hold hundreds of thousands of manuscripts on astronomy, mathematics, law and medicine."
+  ],
+  "arrive": 200
+ },
+ {
+  "id": "djenne",
+  "name": "Great Mosque of Djenné",
+  "lat": 13.9054,
+  "lon": -4.5553,
+  "region": "subsaharan",
+  "kind": "built",
+  "builder": "mud_mosque",
+  "params": {
+   "w": 75,
+   "l": 75,
+   "tower": 16,
+   "towers": 3,
+   "color": "#a8784e",
+   "torons": true,
+   "platform": 3,
+   "clear": 150
+  },
+  "stages": [
+   {
+    "from": 1240,
+    "state": "complete",
+    "note": "An early great mosque stands at the heart of the town."
+   },
+   {
+    "from": 1830,
+    "state": "ruined"
+   },
+   {
+    "from": 1907,
+    "state": "complete",
+    "note": "The present mosque was rebuilt in 1907 and is the largest mud-brick building in the world."
+   }
+  ],
+  "fact": "Each year the people of Djenné hold the Crépissage, a festival where everyone helps re-plaster the mosque with fresh mud.",
+  "arrive": 200
+ },
+ {
+  "id": "lalibela",
+  "name": "Church of St George, Lalibela",
+  "lat": 12.0317,
+  "lon": 39.0411,
+  "region": "subsaharan",
+  "kind": "built",
+  "builder": "rock_church",
+  "params": {
+   "size": 12,
+   "depth": 12,
+   "color": "#b07a5a",
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 1180,
+    "state": "construction"
+   },
+   {
+    "from": 1220,
+    "state": "complete",
+    "note": "The church was carved downward from a single block of volcanic rock."
+   },
+   {
+    "from": 1978,
+    "state": "restored"
+   }
+  ],
+  "fact": "The rock-hewn churches of Lalibela, in Ethiopia, were carved out of solid rock in the late 1100s and early 1200s, and are still used for worship.",
+  "terrain": {
+   "type": "pit",
+   "radius": 14,
+   "depth": 12
+  },
+  "arrive": 90
+ },
+ {
+  "id": "victoria_falls",
+  "name": "Victoria Falls",
+  "lat": -17.9243,
+  "lon": 25.8572,
+  "region": "subsaharan",
+  "kind": "natural",
+  "builder": "falls",
+  "params": {
+   "width": 1700,
+   "drop": 108,
+   "mist": true,
+   "clear": 0
+  },
+  "stages": [
+   {
+    "from": -100000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Victoria Falls, on the Zambezi River, is about 1.7 km wide. Its local name, Mosi-oa-Tunya, means \"the smoke that thunders\".",
+  "terrain": {
+   "type": "falls",
+   "radius": 2600,
+   "height": 108,
+   "width": 1700,
+   "angle": 0
+  },
+  "arrive": 520
+ },
+ {
+  "id": "kilimanjaro",
+  "name": "Mount Kilimanjaro",
+  "lat": -3.0674,
+  "lon": 37.3556,
+  "region": "subsaharan",
+  "kind": "natural",
+  "builder": "none",
+  "params": {
+   "snow": 0.8
+  },
+  "stages": [
+   {
+    "from": -1000000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Kilimanjaro, in Tanzania, is Africa's highest mountain at 5,895 m. It is a dormant volcano with glaciers near the equator.",
+  "terrain": {
+   "type": "peak",
+   "radius": 5200,
+   "height": 2400
+  },
+  "arrive": 2600
+ },
+ {
+  "id": "stonehenge",
+  "name": "Stonehenge",
+  "lat": 51.1789,
+  "lon": -1.8262,
+  "region": "europe",
+  "kind": "built",
+  "builder": "stone_circle",
+  "params": {
+   "radius": 16.5,
+   "stones": 30,
+   "trilithons": 5,
+   "h": 4.1,
+   "color": "#9a968a",
+   "bank": 55,
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": -3000,
+    "state": "construction",
+    "note": "A circular ditch and bank have been dug, and the first stones are arriving."
+   },
+   {
+    "from": -2500,
+    "state": "complete",
+    "note": "The great sarsen stones stand in a circle, aligned with the midsummer sunrise and midwinter sunset."
+   },
+   {
+    "from": -1000,
+    "state": "weathered"
+   },
+   {
+    "from": 1950,
+    "state": "restored"
+   }
+  ],
+  "fact": "Stonehenge was built in stages from about 3000 BCE. Its largest sarsen stones weigh around 25 tonnes.",
+  "facts": [
+   "The smaller bluestones were brought about 250 km from the Preseli Hills in Wales."
+  ],
+  "arrive": 200
+ },
+ {
+  "id": "parthenon",
+  "name": "Parthenon, Acropolis",
+  "lat": 37.9715,
+  "lon": 23.7267,
+  "region": "europe",
+  "kind": "built",
+  "builder": "temple_columns",
+  "params": {
+   "w": 31,
+   "l": 70,
+   "colsX": 8,
+   "colsZ": 17,
+   "colH": 10.4,
+   "color": "#efe6d2",
+   "paint": true,
+   "hill": [
+    160,
+    70
+   ],
+   "clear": 160
+  },
+  "stages": [
+   {
+    "from": -447,
+    "state": "construction"
+   },
+   {
+    "from": -432,
+    "state": "complete",
+    "note": "The Parthenon gleams with painted sculpture on top of the Acropolis."
+   },
+   {
+    "from": 500,
+    "state": "weathered"
+   },
+   {
+    "from": 1687,
+    "state": "ruined",
+    "note": "An explosion in 1687 destroyed much of the roof and middle."
+   },
+   {
+    "from": 1975,
+    "state": "restored",
+    "note": "Careful restoration has been going on since the 1970s."
+   }
+  ],
+  "fact": "The Parthenon was built in 447–432 BCE in honour of the goddess Athena. Its columns are slightly curved so that they look perfectly straight.",
+  "terrain": {
+   "type": "peak",
+   "radius": 200,
+   "height": 70,
+   "flat": 60
+  },
+  "arrive": 280
+ },
+ {
+  "id": "colosseum",
+  "name": "Colosseum",
+  "lat": 41.8902,
+  "lon": 12.4922,
+  "region": "europe",
+  "kind": "built",
+  "builder": "amphitheater",
+  "params": {
+   "rx": 94,
+   "rz": 78,
+   "h": 48,
+   "tiers": 4,
+   "arches": 80,
+   "color": "#d8c4a0",
+   "clear": 160
+  },
+  "stages": [
+   {
+    "from": 70,
+    "state": "construction"
+   },
+   {
+    "from": 80,
+    "state": "complete",
+    "note": "Crowds of up to 50,000 gather in the amphitheatre."
+   },
+   {
+    "from": 1349,
+    "state": "ruined",
+    "note": "An earthquake in 1349 brought down part of the outer wall."
+   },
+   {
+    "from": 1990,
+    "state": "restored"
+   }
+  ],
+  "fact": "The Colosseum in Rome opened in 80 CE. It could hold around 50,000 people, who came and went through 80 numbered entrances.",
+  "arrive": 260
+ },
+ {
+  "id": "pantheon",
+  "name": "Pantheon",
+  "lat": 41.8986,
+  "lon": 12.4769,
+  "region": "europe",
+  "kind": "built",
+  "builder": "pantheon",
+  "params": {
+   "radius": 21.7,
+   "h": 43.3,
+   "portico": 16,
+   "color": "#d8ccb4",
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 113,
+    "state": "construction"
+   },
+   {
+    "from": 125,
+    "state": "complete"
+   },
+   {
+    "from": 700,
+    "state": "weathered"
+   }
+  ],
+  "fact": "The Pantheon's dome, finished around 125 CE, is still the largest unreinforced concrete dome in the world. The round opening at its top, the oculus, is 8.2 m across.",
+  "arrive": 150
+ },
+ {
+  "id": "notre_dame",
+  "name": "Notre-Dame de Paris",
+  "lat": 48.853,
+  "lon": 2.3499,
+  "region": "europe",
+  "kind": "built",
+  "builder": "cathedral",
+  "params": {
+   "l": 128,
+   "w": 48,
+   "towerH": 69,
+   "spire": 96,
+   "color": "#d8ccb0",
+   "roof": "#5a6068",
+   "island": true,
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 1163,
+    "state": "construction",
+    "note": "The cathedral is being built over many decades by stonemasons, carpenters and glassmakers."
+   },
+   {
+    "from": 1345,
+    "state": "complete"
+   },
+   {
+    "from": 1790,
+    "state": "weathered"
+   },
+   {
+    "from": 1864,
+    "state": "restored",
+    "note": "A restoration led by Viollet-le-Duc added a new spire."
+   },
+   {
+    "from": 2019,
+    "state": "construction",
+    "note": "After a fire in 2019, craftspeople are rebuilding the roof and spire."
+   },
+   {
+    "from": 2024,
+    "state": "restored",
+    "note": "Notre-Dame reopened in December 2024."
+   }
+  ],
+  "fact": "Notre-Dame de Paris is a masterpiece of Gothic architecture, famous for its flying buttresses, rose windows and gargoyles.",
+  "arrive": 220
+ },
+ {
+  "id": "eiffel",
+  "name": "Eiffel Tower",
+  "lat": 48.8584,
+  "lon": 2.2945,
+  "region": "europe",
+  "kind": "built",
+  "builder": "lattice_tower",
+  "params": {
+   "h": 300,
+   "base": 125,
+   "color": "#7a5a40",
+   "levels": [
+    57,
+    116,
+    276
+   ],
+   "antenna": 24,
+   "clear": 200
+  },
+  "stages": [
+   {
+    "from": 1887,
+    "state": "construction"
+   },
+   {
+    "from": 1889,
+    "state": "complete",
+    "note": "The tower opens for the 1889 World's Fair."
+   }
+  ],
+  "fact": "The Eiffel Tower was built in 1887–1889. At 300 m it was the tallest structure in the world until 1930.",
+  "facts": [
+   "It is held together by about 2.5 million rivets and is repainted every few years."
+  ],
+  "arrive": 360
+ },
+ {
+  "id": "big_ben",
+  "name": "Elizabeth Tower (Big Ben)",
+  "lat": 51.5007,
+  "lon": -0.1246,
+  "region": "europe",
+  "kind": "built",
+  "builder": "clock_tower",
+  "params": {
+   "h": 96,
+   "w": 12,
+   "color": "#c8b48a",
+   "roof": "#3a4a4a",
+   "clock": true,
+   "style": "gothic",
+   "palace": true,
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 1843,
+    "state": "construction"
+   },
+   {
+    "from": 1859,
+    "state": "complete"
+   },
+   {
+    "from": 2017,
+    "state": "construction"
+   },
+   {
+    "from": 2022,
+    "state": "restored"
+   }
+  ],
+  "fact": "\"Big Ben\" is the name of the great bell inside the clock tower at Westminster. The tower was renamed Elizabeth Tower in 2012.",
+  "arrive": 220
+ },
+ {
+  "id": "pisa",
+  "name": "Leaning Tower of Pisa",
+  "lat": 43.723,
+  "lon": 10.3966,
+  "region": "europe",
+  "kind": "built",
+  "builder": "round_tower",
+  "params": {
+   "h": 56,
+   "r": 7.8,
+   "tiers": 8,
+   "tilt": 4,
+   "color": "#f2ece0",
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 1173,
+    "state": "construction",
+    "note": "The tower began to lean while it was still being built."
+   },
+   {
+    "from": 1372,
+    "state": "complete"
+   },
+   {
+    "from": 2001,
+    "state": "restored",
+    "note": "Engineers reduced the lean so the tower would stay standing."
+   }
+  ],
+  "fact": "The Leaning Tower of Pisa began to lean during construction because of soft ground on one side.",
+  "arrive": 150
+ },
+ {
+  "id": "neuschwanstein",
+  "name": "Neuschwanstein Castle",
+  "lat": 47.5576,
+  "lon": 10.7498,
+  "region": "europe",
+  "kind": "built",
+  "builder": "castle",
+  "params": {
+   "towers": 6,
+   "color": "#efe8dc",
+   "roof": "#5a7a9a",
+   "ridge": true,
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 1869,
+    "state": "construction"
+   },
+   {
+    "from": 1886,
+    "state": "complete"
+   }
+  ],
+  "fact": "Neuschwanstein, a 19th-century romantic castle in Bavaria, was built for King Ludwig II.",
+  "terrain": {
+   "type": "peak",
+   "radius": 380,
+   "height": 90,
+   "flat": 55
+  },
+  "arrive": 320
+ },
+ {
+  "id": "sagrada",
+  "name": "Sagrada Família",
+  "lat": 41.4036,
+  "lon": 2.1744,
+  "region": "europe",
+  "kind": "built",
+  "builder": "cathedral",
+  "params": {
+   "l": 90,
+   "w": 60,
+   "towerH": 110,
+   "spire": 172,
+   "color": "#c8b494",
+   "roof": "#a8946a",
+   "style": "gaudi",
+   "clear": 100
+  },
+  "stages": [
+   {
+    "from": 1882,
+    "state": "construction",
+    "note": "Antoni Gaudí's basilica is slowly rising, funded by donations."
+   },
+   {
+    "from": 2030,
+    "state": "complete",
+    "note": "Imagined: the basilica is finally complete."
+   }
+  ],
+  "fact": "Construction of the Sagrada Família in Barcelona began in 1882. Antoni Gaudí worked on it for over 40 years.",
+  "arrive": 260
+ },
+ {
+  "id": "brandenburg",
+  "name": "Brandenburg Gate",
+  "lat": 52.5163,
+  "lon": 13.3777,
+  "region": "europe",
+  "kind": "built",
+  "builder": "gate",
+  "params": {
+   "w": 65,
+   "h": 26,
+   "cols": 6,
+   "color": "#e2d8c0",
+   "quadriga": true,
+   "clear": 80
+  },
+  "stages": [
+   {
+    "from": 1788,
+    "state": "construction"
+   },
+   {
+    "from": 1791,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Brandenburg Gate in Berlin was completed in 1791, and has become a symbol of German reunification.",
+  "arrive": 200
+ },
+ {
+  "id": "mont_saint_michel",
+  "name": "Mont-Saint-Michel",
+  "lat": 48.6361,
+  "lon": -1.5115,
+  "region": "europe",
+  "kind": "built",
+  "builder": "castle",
+  "params": {
+   "towers": 3,
+   "color": "#a8a294",
+   "roof": "#5a6068",
+   "abbey": true,
+   "island": true,
+   "clear": 200
+  },
+  "stages": [
+   {
+    "from": 966,
+    "state": "construction"
+   },
+   {
+    "from": 1228,
+    "state": "complete"
+   },
+   {
+    "from": 1879,
+    "state": "restored"
+   }
+  ],
+  "fact": "Mont-Saint-Michel is a tidal island in Normandy crowned by an abbey. At high tide the sea can surround it.",
+  "terrain": {
+   "type": "island",
+   "radius": 520,
+   "height": 80,
+   "flat": 0
+  },
+  "arrive": 700
+ },
+ {
+  "id": "tower_bridge",
+  "name": "Tower Bridge",
+  "lat": 51.5055,
+  "lon": -0.0754,
+  "region": "europe",
+  "kind": "built",
+  "builder": "tower_bridge",
+  "params": {
+   "span": 244,
+   "towerH": 65,
+   "color": "#d8d0c0",
+   "blue": "#6a9ac0",
+   "clear": 0
+  },
+  "stages": [
+   {
+    "from": 1886,
+    "state": "construction"
+   },
+   {
+    "from": 1894,
+    "state": "complete"
+   }
+  ],
+  "fact": "Tower Bridge in London, opened in 1894, has two halves (bascules) that lift to let tall ships pass.",
+  "arrive": 260
+ },
+ {
+  "id": "lascaux",
+  "name": "Lascaux cave",
+  "lat": 45.0539,
+  "lon": 1.1683,
+  "region": "europe",
+  "kind": "built",
+  "builder": "cave",
+  "params": {
+   "color": "#a8a090",
+   "paintings": true,
+   "clear": 40
+  },
+  "stages": [
+   {
+    "from": -100000,
+    "state": "construction",
+    "note": "The cave is here, but its walls are still bare."
+   },
+   {
+    "from": -17000,
+    "state": "complete",
+    "note": "Ice Age artists have painted horses, aurochs and deer on the walls."
+   },
+   {
+    "from": 1940,
+    "state": "weathered",
+    "note": "Teenagers rediscovered the cave in 1940. It has been closed since 1963 to protect the paintings."
+   }
+  ],
+  "fact": "The Lascaux cave paintings, about 17,000 years old, show horses, aurochs, deer and other animals in red, yellow and black.",
+  "arrive": 90
+ },
+ {
+  "id": "taj_mahal",
+  "name": "Taj Mahal",
+  "lat": 27.1751,
+  "lon": 78.0421,
+  "region": "southasia",
+  "kind": "built",
+  "builder": "domed_mausoleum",
+  "params": {
+   "platform": 95,
+   "dome": 24,
+   "h": 73,
+   "minarets": 4,
+   "minaretH": 40,
+   "color": "#f6f2ec",
+   "garden": 300,
+   "clear": 360
+  },
+  "stages": [
+   {
+    "from": 1632,
+    "state": "construction"
+   },
+   {
+    "from": 1653,
+    "state": "complete"
+   },
+   {
+    "from": 1800,
+    "state": "weathered"
+   },
+   {
+    "from": 1950,
+    "state": "restored"
+   }
+  ],
+  "fact": "The Taj Mahal in Agra was built by the Mughal emperor Shah Jahan in memory of his wife Mumtaz Mahal. Its white marble is inlaid with semi-precious stones.",
+  "arrive": 380
+ },
+ {
+  "id": "qutub_minar",
+  "name": "Qutub Minar",
+  "lat": 28.5244,
+  "lon": 77.1855,
+  "region": "southasia",
+  "kind": "built",
+  "builder": "minaret_tower",
+  "params": {
+   "h": 72.5,
+   "r": 7.2,
+   "tiers": 5,
+   "color": "#b8644a",
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 1199,
+    "state": "construction"
+   },
+   {
+    "from": 1220,
+    "state": "complete"
+   },
+   {
+    "from": 1503,
+    "state": "complete"
+   },
+   {
+    "from": 1950,
+    "state": "restored"
+   }
+  ],
+  "fact": "Qutub Minar in Delhi, begun in 1199, is a 72.5 m tower of red sandstone and marble.",
+  "arrive": 180
+ },
+ {
+  "id": "sanchi",
+  "name": "Great Stupa at Sanchi",
+  "lat": 23.4794,
+  "lon": 77.7398,
+  "region": "southasia",
+  "kind": "built",
+  "builder": "stupa",
+  "params": {
+   "r": 18,
+   "h": 16,
+   "gates": 4,
+   "color": "#c8b8a0",
+   "hill": true,
+   "clear": 100
+  },
+  "stages": [
+   {
+    "from": -250,
+    "state": "construction"
+   },
+   {
+    "from": -50,
+    "state": "complete",
+    "note": "Carved stone gateways tell stories from the life of the Buddha."
+   },
+   {
+    "from": 1300,
+    "state": "weathered"
+   },
+   {
+    "from": 1912,
+    "state": "restored"
+   }
+  ],
+  "fact": "The Great Stupa at Sanchi was first built in the 3rd century BCE under the emperor Ashoka, and is one of the oldest stone structures in India.",
+  "arrive": 180
+ },
+ {
+  "id": "everest",
+  "name": "Mount Everest",
+  "lat": 27.9881,
+  "lon": 86.925,
+  "region": "southasia",
+  "kind": "natural",
+  "builder": "none",
+  "params": {
+   "snow": 1
+  },
+  "stages": [
+   {
+    "from": -10000000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Mount Everest, called Sagarmatha in Nepali and Chomolungma in Tibetan, is 8,849 m high, the highest point above sea level on Earth.",
+  "facts": [
+   "Tenzing Norgay and Edmund Hillary first reached the summit in 1953."
+  ],
+  "terrain": {
+   "type": "peak",
+   "radius": 5000,
+   "height": 2800
+  },
+  "arrive": 2400
+ },
+ {
+  "id": "great_wall",
+  "name": "Great Wall at Badaling",
+  "lat": 40.3597,
+  "lon": 116.02,
+  "region": "eastasia",
+  "kind": "built",
+  "builder": "great_wall",
+  "params": {
+   "length": 2400,
+   "h": 7.8,
+   "w": 5,
+   "towers": 170,
+   "color": "#9a948a",
+   "ridge": true,
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": -220,
+    "state": "construction",
+    "note": "Earlier walls of rammed earth guard the northern frontier."
+   },
+   {
+    "from": 1505,
+    "state": "complete",
+    "note": "Ming dynasty builders have rebuilt the wall here in brick and stone."
+   },
+   {
+    "from": 1800,
+    "state": "weathered"
+   },
+   {
+    "from": 1957,
+    "state": "restored",
+    "note": "The Badaling section was restored and opened to visitors."
+   }
+  ],
+  "fact": "The Great Wall of China is not one wall but many, built and rebuilt over 2,000 years. The famous brick sections near Beijing are from the Ming dynasty.",
+  "arrive": 200
+ },
+ {
+  "id": "forbidden_city",
+  "name": "Forbidden City",
+  "lat": 39.9163,
+  "lon": 116.3972,
+  "region": "eastasia",
+  "kind": "built",
+  "builder": "palace_complex",
+  "params": {
+   "w": 750,
+   "l": 960,
+   "wallH": 10,
+   "moat": 52,
+   "color": "#a8322a",
+   "roof": "#e8b83a",
+   "halls": 9,
+   "clear": 600
+  },
+  "stages": [
+   {
+    "from": 1406,
+    "state": "construction"
+   },
+   {
+    "from": 1420,
+    "state": "complete",
+    "note": "The imperial palace is home to the emperor and his court."
+   },
+   {
+    "from": 1900,
+    "state": "weathered"
+   },
+   {
+    "from": 1925,
+    "state": "restored",
+    "note": "The palace became the Palace Museum in 1925."
+   }
+  ],
+  "fact": "The Forbidden City in Beijing was the imperial palace of the Ming and Qing dynasties. It has about 980 buildings, and its roofs are covered in yellow-glazed tiles.",
+  "arrive": 680
+ },
+ {
+  "id": "temple_of_heaven",
+  "name": "Temple of Heaven",
+  "lat": 39.8822,
+  "lon": 116.4066,
+  "region": "eastasia",
+  "kind": "built",
+  "builder": "round_hall",
+  "params": {
+   "r": 16,
+   "h": 38,
+   "tiers": 3,
+   "color": "#a8322a",
+   "roof": "#2a4a9a",
+   "terrace": 3,
+   "clear": 160
+  },
+  "stages": [
+   {
+    "from": 1406,
+    "state": "construction"
+   },
+   {
+    "from": 1420,
+    "state": "complete"
+   },
+   {
+    "from": 1889,
+    "state": "restored",
+    "note": "The Hall of Prayer was rebuilt after a fire in 1889."
+   }
+  ],
+  "fact": "At the Temple of Heaven in Beijing, emperors prayed for good harvests. The round Hall of Prayer stands on three marble terraces.",
+  "arrive": 220
+ },
+ {
+  "id": "himeji",
+  "name": "Himeji Castle",
+  "lat": 34.8394,
+  "lon": 134.6939,
+  "region": "eastasia",
+  "kind": "built",
+  "builder": "castle_tiers",
+  "params": {
+   "tiers": 5,
+   "w": 28,
+   "color": "#f6f6f2",
+   "roof": "#5a6068",
+   "base": 15,
+   "clear": 160
+  },
+  "stages": [
+   {
+    "from": 1601,
+    "state": "construction"
+   },
+   {
+    "from": 1609,
+    "state": "complete"
+   },
+   {
+    "from": 1964,
+    "state": "restored"
+   },
+   {
+    "from": 2015,
+    "state": "restored"
+   }
+  ],
+  "fact": "Himeji Castle, completed in 1609, is called the \"White Heron Castle\" because of its brilliant white plaster walls.",
+  "terrain": {
+   "type": "peak",
+   "radius": 220,
+   "height": 40,
+   "flat": 50
+  },
+  "arrive": 300
+ },
+ {
+  "id": "fuji",
+  "name": "Mount Fuji",
+  "lat": 35.3606,
+  "lon": 138.7274,
+  "region": "eastasia",
+  "kind": "natural",
+  "builder": "none",
+  "params": {
+   "snow": 0.75
+  },
+  "stages": [
+   {
+    "from": -100000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Mount Fuji, at 3,776 m, is Japan's highest mountain. It is an active volcano that last erupted in 1707.",
+  "terrain": {
+   "type": "peak",
+   "radius": 5800,
+   "height": 2200,
+   "crater": true
+  },
+  "arrive": 3200
+ },
+ {
+  "id": "tokyo_tower",
+  "name": "Tokyo Tower",
+  "lat": 35.6586,
+  "lon": 139.7454,
+  "region": "eastasia",
+  "kind": "built",
+  "builder": "lattice_tower",
+  "params": {
+   "h": 333,
+   "base": 90,
+   "color": "#e8542a",
+   "white": "#f2f2f0",
+   "levels": [
+    150,
+    250
+   ],
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 1957,
+    "state": "construction"
+   },
+   {
+    "from": 1958,
+    "state": "complete"
+   }
+  ],
+  "fact": "Tokyo Tower, opened in 1958, is painted international orange and white for aviation safety.",
+  "arrive": 380
+ },
+ {
+  "id": "su_song_clock",
+  "name": "Su Song's Astronomical Clock Tower",
+  "lat": 34.797,
+  "lon": 114.36,
+  "region": "eastasia",
+  "kind": "built",
+  "builder": "clock_tower",
+  "params": {
+   "h": 12,
+   "w": 8,
+   "color": "#a8322a",
+   "roof": "#3a4448",
+   "style": "chinese",
+   "armillary": true,
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 1088,
+    "state": "construction"
+   },
+   {
+    "from": 1092,
+    "state": "complete",
+    "note": "Water drives a great wheel that turns a celestial globe and rings bells and drums every hour."
+   },
+   {
+    "from": 1127,
+    "state": "ruined",
+    "note": "The clock tower was dismantled and taken away in 1127."
+   }
+  ],
+  "fact": "Su Song's clock tower in Kaifeng, completed in 1092, was a water-powered astronomical clock with an escapement mechanism, centuries before Europe's mechanical clocks.",
+  "arrive": 120
+ },
+ {
+  "id": "angkor_wat",
+  "name": "Angkor Wat",
+  "lat": 13.4125,
+  "lon": 103.867,
+  "region": "seasia",
+  "kind": "built",
+  "builder": "temple_mountain",
+  "params": {
+   "moat": 1300,
+   "w": 215,
+   "towers": 5,
+   "h": 65,
+   "color": "#9a9078",
+   "clear": 700
+  },
+  "stages": [
+   {
+    "from": 1113,
+    "state": "construction"
+   },
+   {
+    "from": 1150,
+    "state": "complete",
+    "note": "Angkor Wat is the heart of the Khmer capital, built as a temple to Vishnu."
+   },
+   {
+    "from": 1500,
+    "state": "weathered"
+   },
+   {
+    "from": 1990,
+    "state": "restored"
+   }
+  ],
+  "fact": "Angkor Wat, built in the early 1100s, is the largest religious monument in the world. Its five towers represent the peaks of Mount Meru.",
+  "arrive": 760
+ },
+ {
+  "id": "borobudur",
+  "name": "Borobudur",
+  "lat": -7.6079,
+  "lon": 110.2038,
+  "region": "seasia",
+  "kind": "built",
+  "builder": "stepped_terraces",
+  "params": {
+   "base": 123,
+   "levels": 9,
+   "h": 35,
+   "stupas": 72,
+   "color": "#8a8478",
+   "clear": 180
+  },
+  "stages": [
+   {
+    "from": 780,
+    "state": "construction"
+   },
+   {
+    "from": 825,
+    "state": "complete"
+   },
+   {
+    "from": 1100,
+    "state": "weathered"
+   },
+   {
+    "from": 1500,
+    "state": "ruined",
+    "note": "The temple is covered by volcanic ash and jungle."
+   },
+   {
+    "from": 1983,
+    "state": "restored",
+    "note": "A great restoration finished in 1983."
+   }
+  ],
+  "fact": "Borobudur in Java is the world's largest Buddhist temple. Its terraces hold 72 bell-shaped stupas and over 2,600 relief panels.",
+  "arrive": 280
+ },
+ {
+  "id": "petronas",
+  "name": "Petronas Towers",
+  "lat": 3.1579,
+  "lon": 101.7116,
+  "region": "seasia",
+  "kind": "built",
+  "builder": "skyscraper",
+  "params": {
+   "h": 452,
+   "base": 46,
+   "style": "twin",
+   "color": "#c8ccd4",
+   "clear": 150
+  },
+  "stages": [
+   {
+    "from": 1993,
+    "state": "construction"
+   },
+   {
+    "from": 1998,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Petronas Towers in Kuala Lumpur were the tallest buildings in the world from 1998 to 2004. A skybridge links them.",
+  "arrive": 380
+ },
+ {
+  "id": "ha_long",
+  "name": "Ha Long Bay",
+  "lat": 20.9101,
+  "lon": 107.1839,
+  "region": "seasia",
+  "kind": "natural",
+  "builder": "karst_islands",
+  "params": {
+   "count": 40,
+   "h": [
+    40,
+    120
+   ],
+   "color": "#6a7a5a",
+   "clear": 0
+  },
+  "stages": [
+   {
+    "from": -10000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Ha Long Bay in Vietnam has about 1,600 limestone islands and islets rising from emerald water.",
+  "terrain": {
+   "type": "reef",
+   "radius": 3200,
+   "depth": 6
+  },
+  "arrive": 200
+ },
+ {
+  "id": "sydney_opera",
+  "name": "Sydney Opera House",
+  "lat": -33.8568,
+  "lon": 151.2153,
+  "region": "oceania",
+  "kind": "built",
+  "builder": "opera_shells",
+  "params": {
+   "l": 183,
+   "w": 120,
+   "h": 65,
+   "color": "#f6f4ee",
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 1959,
+    "state": "construction"
+   },
+   {
+    "from": 1973,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Sydney Opera House, opened in 1973, is roofed with shell-shaped vaults covered in over a million tiles.",
+  "arrive": 300
+ },
+ {
+  "id": "uluru",
+  "name": "Uluru",
+  "lat": -25.3444,
+  "lon": 131.0369,
+  "region": "oceania",
+  "kind": "natural",
+  "builder": "none",
+  "params": {
+   "color": "#c8603a"
+  },
+  "stages": [
+   {
+    "from": -60000000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Uluru is a giant sandstone monolith in central Australia, sacred to the Aṉangu people. It glows red at sunrise and sunset.",
+  "terrain": {
+   "type": "monolith",
+   "radius": 1900,
+   "height": 348,
+   "width": 2400
+  },
+  "arrive": 1500
+ },
+ {
+  "id": "great_barrier_reef",
+  "name": "Great Barrier Reef",
+  "lat": -18.2871,
+  "lon": 147.6992,
+  "region": "oceania",
+  "kind": "natural",
+  "builder": "reef",
+  "params": {
+   "count": 260,
+   "color": "#e86a8a",
+   "clear": 0
+  },
+  "stages": [
+   {
+    "from": -8000,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Great Barrier Reef is the world's largest coral reef system, stretching over 2,300 km. It can be seen from space.",
+  "terrain": {
+   "type": "reef",
+   "radius": 3000,
+   "depth": 4
+  },
+  "arrive": 120
+ },
+ {
+  "id": "moai",
+  "name": "Moai of Ahu Tongariki",
+  "lat": -27.1258,
+  "lon": -109.2769,
+  "region": "oceania",
+  "kind": "built",
+  "builder": "moai_row",
+  "params": {
+   "count": 15,
+   "h": [
+    5,
+    9
+   ],
+   "color": "#7a7068",
+   "hat": "#a8503a",
+   "clear": 80
+  },
+  "stages": [
+   {
+    "from": 1250,
+    "state": "construction"
+   },
+   {
+    "from": 1400,
+    "state": "complete",
+    "note": "The moai face inland, watching over the community."
+   },
+   {
+    "from": 1800,
+    "state": "ruined",
+    "note": "By the 1800s all the moai on Rapa Nui had been toppled."
+   },
+   {
+    "from": 1996,
+    "state": "restored",
+    "note": "The 15 moai of Ahu Tongariki were re-erected in the 1990s."
+   }
+  ],
+  "fact": "The moai of Rapa Nui (Easter Island) were carved from volcanic tuff, mostly between about 1250 and 1500, to honour ancestors.",
+  "arrive": 160
+ },
+ {
+  "id": "statue_of_liberty",
+  "name": "Statue of Liberty",
+  "lat": 40.6892,
+  "lon": -74.0445,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "statue",
+  "params": {
+   "h": 46,
+   "pedestal": 47,
+   "pose": "torch",
+   "color": "#b87a4a",
+   "patina": "#7ab8a0",
+   "fort": true,
+   "island": true,
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 1884,
+    "state": "construction"
+   },
+   {
+    "from": 1886,
+    "state": "complete",
+    "note": "The new statue gleams copper-brown."
+   },
+   {
+    "from": 1906,
+    "state": "weathered",
+    "note": "The copper has turned green with a protective patina."
+   },
+   {
+    "from": 1986,
+    "state": "restored"
+   }
+  ],
+  "fact": "The Statue of Liberty was a gift from the people of France to the United States, dedicated in 1886. Its copper skin is only about 2.4 mm thick.",
+  "terrain": {
+   "type": "island",
+   "radius": 260,
+   "height": 4,
+   "flat": 200
+  },
+  "arrive": 380
+ },
+ {
+  "id": "grand_canyon",
+  "name": "Grand Canyon",
+  "lat": 36.0544,
+  "lon": -112.1401,
+  "region": "northamerica",
+  "kind": "natural",
+  "builder": "none",
+  "params": {
+   "strata": true
+  },
+  "stages": [
+   {
+    "from": -5000000,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Grand Canyon, carved by the Colorado River, is up to 1.8 km deep. Its rock layers record nearly two billion years of Earth's history.",
+  "terrain": {
+   "type": "canyon",
+   "radius": 6000,
+   "depth": 900,
+   "width": 1500,
+   "angle": 20
+  },
+  "arrive": 700
+ },
+ {
+  "id": "golden_gate",
+  "name": "Golden Gate Bridge",
+  "lat": 37.8199,
+  "lon": -122.4783,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "suspension_bridge",
+  "params": {
+   "span": 1280,
+   "towerH": 227,
+   "deck": 67,
+   "color": "#c0362c",
+   "clear": 0
+  },
+  "stages": [
+   {
+    "from": 1933,
+    "state": "construction"
+   },
+   {
+    "from": 1937,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Golden Gate Bridge opened in 1937. Its colour, \"International Orange\", was chosen to stand out in the fog.",
+  "arrive": 900
+ },
+ {
+  "id": "empire_state",
+  "name": "Empire State Building",
+  "lat": 40.7484,
+  "lon": -73.9857,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "skyscraper",
+  "params": {
+   "h": 381,
+   "base": 57,
+   "style": "artdeco",
+   "color": "#c8c0b0",
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 1930,
+    "state": "construction"
+   },
+   {
+    "from": 1931,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Empire State Building was built in just 410 days and opened in 1931. It was the world's tallest building for nearly 40 years.",
+  "arrive": 320
+ },
+ {
+  "id": "cn_tower",
+  "name": "CN Tower",
+  "lat": 43.6426,
+  "lon": -79.3871,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "needle_tower",
+  "params": {
+   "h": 553,
+   "pod": 342,
+   "color": "#d8d4cc",
+   "clear": 80
+  },
+  "stages": [
+   {
+    "from": 1973,
+    "state": "construction"
+   },
+   {
+    "from": 1976,
+    "state": "complete"
+   }
+  ],
+  "fact": "Toronto's CN Tower, 553 m tall, was the world's tallest free-standing structure from 1976 to 2007.",
+  "arrive": 360
+ },
+ {
+  "id": "cahokia",
+  "name": "Monks Mound, Cahokia",
+  "lat": 38.6604,
+  "lon": -90.0618,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "earth_mound",
+  "params": {
+   "w": 290,
+   "l": 236,
+   "h": 30,
+   "palisade": true,
+   "color": "#6a7a42",
+   "clear": 400
+  },
+  "stages": [
+   {
+    "from": 900,
+    "state": "construction"
+   },
+   {
+    "from": 1100,
+    "state": "complete",
+    "note": "Cahokia is a large city with plazas, mounds and a wooden palisade."
+   },
+   {
+    "from": 1350,
+    "state": "weathered"
+   }
+  ],
+  "fact": "Monks Mound at Cahokia is the largest earthen mound in the Americas, built by Mississippian people around 900–1200 CE.",
+  "arrive": 420
+ },
+ {
+  "id": "mesa_verde",
+  "name": "Cliff Palace, Mesa Verde",
+  "lat": 37.1678,
+  "lon": -108.4733,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "cliff_dwelling",
+  "params": {
+   "rooms": 40,
+   "towers": 4,
+   "color": "#c8a078",
+   "cliff": "#b89070",
+   "clear": 120
+  },
+  "stages": [
+   {
+    "from": 1190,
+    "state": "construction"
+   },
+   {
+    "from": 1260,
+    "state": "complete"
+   },
+   {
+    "from": 1300,
+    "state": "ruined",
+    "note": "The Ancestral Puebloans moved away around 1300."
+   }
+  ],
+  "fact": "Cliff Palace in Mesa Verde, with about 150 rooms, is the largest cliff dwelling in North America, built by Ancestral Puebloans.",
+  "arrive": 200
+ },
+ {
+  "id": "pueblo_bonito",
+  "name": "Pueblo Bonito, Chaco Canyon",
+  "lat": 36.0608,
+  "lon": -107.9614,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "great_house",
+  "params": {
+   "r": 95,
+   "floors": 4,
+   "kivas": 12,
+   "color": "#c8a47a",
+   "clear": 200
+  },
+  "stages": [
+   {
+    "from": 850,
+    "state": "construction"
+   },
+   {
+    "from": 1050,
+    "state": "complete"
+   },
+   {
+    "from": 1150,
+    "state": "ruined"
+   }
+  ],
+  "fact": "Pueblo Bonito was a great house with about 600 rooms, up to four storeys high, at the centre of the Chaco world.",
+  "arrive": 260
+ },
+ {
+  "id": "niagara",
+  "name": "Niagara Falls",
+  "lat": 43.0828,
+  "lon": -79.0742,
+  "region": "northamerica",
+  "kind": "natural",
+  "builder": "falls",
+  "params": {
+   "width": 800,
+   "drop": 51,
+   "mist": true,
+   "horseshoe": true,
+   "clear": 0
+  },
+  "stages": [
+   {
+    "from": -12000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Niagara Falls formed at the end of the last ice age, about 12,000 years ago. The Horseshoe Falls drop about 51 m.",
+  "terrain": {
+   "type": "falls",
+   "radius": 2400,
+   "height": 51,
+   "width": 800,
+   "angle": 0
+  },
+  "arrive": 500
+ },
+ {
+  "id": "launch_pad",
+  "name": "Launch Complex 39A",
+  "lat": 28.6083,
+  "lon": -80.6041,
+  "region": "northamerica",
+  "kind": "built",
+  "builder": "launch_pad",
+  "params": {
+   "h": 110,
+   "color": "#f2f2f0",
+   "clear": 200
+  },
+  "stages": [
+   {
+    "from": 1966,
+    "state": "complete"
+   },
+   {
+    "from": 1967,
+    "state": "complete",
+    "note": "A Saturn V rocket stands on the launch pad."
+   },
+   {
+    "from": 1973,
+    "state": "complete"
+   }
+  ],
+  "fact": "Apollo 11 launched from Launch Complex 39A in Florida on 16 July 1969, carrying Neil Armstrong, Buzz Aldrin and Michael Collins.",
+  "arrive": 520
+ },
+ {
+  "id": "chichen_itza",
+  "name": "El Castillo, Chichén Itzá",
+  "lat": 20.6843,
+  "lon": -88.5678,
+  "region": "centralamerica",
+  "kind": "built",
+  "builder": "pyramid",
+  "params": {
+   "layout": [
+    [
+     0,
+     0,
+     1,
+     55,
+     30
+    ]
+   ],
+   "steps": 9,
+   "casing": "#e2dcc8",
+   "core": "#c8c0a8",
+   "temple": true,
+   "stairs": 4,
+   "clear": 260
+  },
+  "stages": [
+   {
+    "from": 800,
+    "state": "construction"
+   },
+   {
+    "from": 1000,
+    "state": "complete"
+   },
+   {
+    "from": 1250,
+    "state": "weathered"
+   },
+   {
+    "from": 1450,
+    "state": "ruined",
+    "note": "The jungle has grown over the city."
+   },
+   {
+    "from": 1930,
+    "state": "restored"
+   }
+  ],
+  "fact": "El Castillo has four staircases of 91 steps. With the top platform they make 365, one for each day of the year. At the equinoxes, shadows form a serpent on its stairs.",
+  "arrive": 260
+ },
+ {
+  "id": "teotihuacan",
+  "name": "Pyramid of the Sun, Teotihuacan",
+  "lat": 19.6925,
+  "lon": -98.8438,
+  "region": "centralamerica",
+  "kind": "built",
+  "builder": "pyramid",
+  "params": {
+   "layout": [
+    [
+     0,
+     0,
+     1,
+     223,
+     65
+    ],
+    [
+     -280,
+     -760,
+     0.62,
+     147,
+     43
+    ]
+   ],
+   "steps": 5,
+   "casing": "#c8a888",
+   "core": "#a8907a",
+   "temple": false,
+   "stairs": 1,
+   "avenue": true,
+   "clear": 900
+  },
+  "stages": [
+   {
+    "from": 100,
+    "state": "construction"
+   },
+   {
+    "from": 200,
+    "state": "complete",
+    "note": "Teotihuacan is one of the largest cities in the world, painted in bright colours."
+   },
+   {
+    "from": 600,
+    "state": "weathered"
+   },
+   {
+    "from": 1000,
+    "state": "ruined"
+   },
+   {
+    "from": 1910,
+    "state": "restored"
+   }
+  ],
+  "fact": "The Pyramid of the Sun at Teotihuacan is one of the largest pyramids in the world. It lies along the Avenue of the Dead.",
+  "arrive": 480
+ },
+ {
+  "id": "tikal",
+  "name": "Temple I, Tikal",
+  "lat": 17.2222,
+  "lon": -89.6237,
+  "region": "centralamerica",
+  "kind": "built",
+  "builder": "pyramid",
+  "params": {
+   "layout": [
+    [
+     0,
+     0,
+     1,
+     35,
+     47
+    ],
+    [
+     0,
+     -120,
+     0.85,
+     32,
+     38
+    ]
+   ],
+   "steps": 9,
+   "casing": "#e2dcc8",
+   "core": "#a8a090",
+   "temple": true,
+   "comb": true,
+   "stairs": 1,
+   "steep": true,
+   "clear": 200
+  },
+  "stages": [
+   {
+    "from": 700,
+    "state": "construction"
+   },
+   {
+    "from": 732,
+    "state": "complete"
+   },
+   {
+    "from": 950,
+    "state": "ruined",
+    "note": "Tikal has been abandoned to the rainforest."
+   },
+   {
+    "from": 1960,
+    "state": "restored"
+   }
+  ],
+  "fact": "Temple I at Tikal, in Guatemala, rises 47 m above the rainforest and was built around 732 CE.",
+  "arrive": 200
+ },
+ {
+  "id": "machu_picchu",
+  "name": "Machu Picchu",
+  "lat": -13.1631,
+  "lon": -72.545,
+  "region": "southamerica",
+  "kind": "built",
+  "builder": "terraced_city",
+  "params": {
+   "buildings": 120,
+   "terraces": 30,
+   "color": "#9a948a",
+   "roof": "#c9a85a",
+   "peak": true,
+   "clear": 320
+  },
+  "stages": [
+   {
+    "from": 1450,
+    "state": "construction"
+   },
+   {
+    "from": 1460,
+    "state": "complete",
+    "note": "Machu Picchu is a royal estate of the Inca emperor Pachacuti."
+   },
+   {
+    "from": 1572,
+    "state": "weathered",
+    "note": "Machu Picchu has been left behind and is slowly being overgrown."
+   },
+   {
+    "from": 1911,
+    "state": "ruined"
+   },
+   {
+    "from": 1983,
+    "state": "restored"
+   }
+  ],
+  "fact": "Machu Picchu was built around 1450 high in the Andes. Its stones are cut so precisely that they fit together without mortar.",
+  "terrain": {
+   "type": "peak",
+   "radius": 900,
+   "height": 420,
+   "flat": 180
+  },
+  "arrive": 360
+ },
+ {
+  "id": "christ_redeemer",
+  "name": "Christ the Redeemer",
+  "lat": -22.9519,
+  "lon": -43.2105,
+  "region": "southamerica",
+  "kind": "built",
+  "builder": "statue",
+  "params": {
+   "h": 30,
+   "pedestal": 8,
+   "pose": "arms",
+   "color": "#e8e4dc",
+   "patina": "#e8e4dc",
+   "clear": 40
+  },
+  "stages": [
+   {
+    "from": 1922,
+    "state": "construction"
+   },
+   {
+    "from": 1931,
+    "state": "complete"
+   }
+  ],
+  "fact": "Christ the Redeemer, 30 m tall, stands on Corcovado mountain above Rio de Janeiro. Its arms stretch 28 m wide.",
+  "terrain": {
+   "type": "peak",
+   "radius": 900,
+   "height": 420,
+   "flat": 20
+  },
+  "arrive": 220
+ },
+ {
+  "id": "nazca",
+  "name": "Nazca Lines",
+  "lat": -14.739,
+  "lon": -75.13,
+  "region": "southamerica",
+  "kind": "built",
+  "builder": "geoglyphs",
+  "params": {
+   "figures": [
+    "hummingbird",
+    "monkey",
+    "spider",
+    "lines"
+   ],
+   "color": "#e2c8a8",
+   "clear": 0
+  },
+  "stages": [
+   {
+    "from": -200,
+    "state": "construction"
+   },
+   {
+    "from": 200,
+    "state": "complete"
+   },
+   {
+    "from": 1000,
+    "state": "weathered"
+   }
+  ],
+  "fact": "The Nazca Lines are giant figures and lines scraped into the desert of Peru between about 500 BCE and 500 CE. Many are best seen from the air.",
+  "arrive": 200
+ },
+ {
+  "id": "seed_vault",
+  "name": "Svalbard Global Seed Vault",
+  "lat": 78.2357,
+  "lon": 15.4913,
+  "region": "arctic",
+  "kind": "built",
+  "builder": "seed_vault",
+  "params": {
+   "color": "#c8ccd0",
+   "light": "#7ad8ff",
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 2008,
+    "state": "complete"
+   }
+  ],
+  "fact": "The Svalbard Global Seed Vault, opened in 2008, stores backup copies of seeds from crops all over the world, deep in the permafrost.",
+  "terrain": {
+   "type": "peak",
+   "radius": 900,
+   "height": 180,
+   "flat": 0
+  },
+  "arrive": 200
+ },
+ {
+  "id": "erebus",
+  "name": "Mount Erebus",
+  "lat": -77.53,
+  "lon": 167.15,
+  "region": "antarctica",
+  "kind": "natural",
+  "builder": "none",
+  "params": {
+   "snow": 1,
+   "steam": true
+  },
+  "stages": [
+   {
+    "from": -1300000,
+    "state": "complete"
+   }
+  ],
+  "fact": "Mount Erebus, in Antarctica, is the southernmost active volcano on Earth and has a long-lived lava lake.",
+  "terrain": {
+   "type": "peak",
+   "radius": 5200,
+   "height": 2400,
+   "crater": true
+  },
+  "arrive": 2600
+ },
+ {
+  "id": "archive",
+  "name": "Archive of Anywhen",
+  "lat": 31.209,
+  "lon": 29.95,
+  "region": "mena",
+  "kind": "imagined",
+  "builder": "archive_spire",
+  "params": {
+   "h": 420,
+   "color": "#ffffff",
+   "glow": "#8a7bff",
+   "clear": 300
+  },
+  "stages": [
+   {
+    "from": 2900,
+    "state": "construction"
+   },
+   {
+    "from": 2990,
+    "state": "complete",
+    "note": "The Archive of Anywhen, home of the Time Walkers."
+   }
+  ],
+  "fact": "Imagined: the Archive of Anywhen is where every moment of history is studied and cared for. It was built near where the Library of Alexandria once stood.",
+  "arrive": 420
+ },
+ {
+  "id": "rainhill",
+  "name": "Rainhill Trials track",
+  "lat": 53.4166,
+  "lon": -2.7666,
+  "region": "europe",
+  "kind": "built",
+  "builder": "railway",
+  "params": {
+   "length": 1600,
+   "color": "#5a4a3a",
+   "clear": 60
+  },
+  "stages": [
+   {
+    "from": 1829,
+    "state": "construction",
+    "note": "The track is ready for the locomotive trials."
+   },
+   {
+    "from": 1830,
+    "state": "complete",
+    "note": "The Liverpool and Manchester Railway is open."
+   }
+  ],
+  "fact": "The Rainhill Trials of October 1829 tested locomotives for the Liverpool and Manchester Railway. Stephenson's Rocket reached about 48 km/h.",
+  "arrive": 160
+ },
+ {
+  "id": "apollo11_site",
+  "name": "Tranquility Base",
+  "lat": 0.6741,
+  "lon": 23.4729,
+  "region": "moon",
+  "kind": "built",
+  "builder": "lunar_lander",
+  "params": {
+   "clear": 20
+  },
+  "stages": [
+   {
+    "from": 1969,
+    "state": "complete",
+    "note": "The Apollo 11 lunar module descent stage, a flag and footprints remain."
+   }
+  ],
+  "fact": "Apollo 11's lunar module Eagle landed in the Sea of Tranquility on 20 July 1969. Its descent stage is still there.",
+  "arrive": 120
+ }
+]

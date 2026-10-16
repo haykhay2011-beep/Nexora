@@ -1,0 +1,866 @@
+[
+ {
+  "id": "giza",
+  "index": 1,
+  "title": "The Missing Stone",
+  "place": "Giza, Egypt",
+  "year": -2560,
+  "lat": 29.9792,
+  "lon": 31.1342,
+  "intro": "The Chronometer flickers awake. A shard of broken time has landed at Giza, where the Great Pyramid is being finished.",
+  "npcs": [
+   {
+    "id": "merit",
+    "name": "Merit",
+    "role": "Stone overseer",
+    "lines": [
+     "You came out of thin air! Are you a messenger of the gods? No? Well, whoever you are, we need help.",
+     "This morning a polished casing stone vanished in a flash of light, and this strange glowing slab appeared in its place!",
+     "It keeps buzzing and running away from the workers. Could you catch it?"
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Arrive at Giza around 2560 BCE.",
+    "lat": 29.9792,
+    "lon": 31.1342,
+    "radiusKm": 30,
+    "yearMin": -2620,
+    "yearMax": -2500
+   },
+   {
+    "type": "talk",
+    "npc": "merit",
+    "text": "Talk to Merit, the stone overseer, near the pyramid."
+   },
+   {
+    "type": "capture",
+    "anomaly": "smartphone",
+    "text": "Catch the buzzing glowing slab (a smartphone!) near the workers.",
+    "hint": "Follow the radar. Get close and press E."
+   },
+   {
+    "type": "return",
+    "anomaly": "smartphone",
+    "era": "modern",
+    "text": "Take the smartphone home to the Modern era. Press T to open the Chronometer, choose any year from 2008 to 2029, then return it from your Vault (Tab).",
+    "hint": "Any place on Earth works, as long as the year is right."
+   },
+   {
+    "type": "moon",
+    "text": "The Chronometer has traced the missing pyramid stone to the Moon! Open the time travel screen and choose the Moon."
+   },
+   {
+    "type": "capture",
+    "anomaly": "pyramid_stone",
+    "text": "Find the pyramid casing stone on the Moon.",
+    "hint": "Jumps are high in low gravity!"
+   },
+   {
+    "type": "return",
+    "anomaly": "pyramid_stone",
+    "era": "earlyciv",
+    "lat": 29.9792,
+    "lon": 31.1342,
+    "radiusKm": 30,
+    "text": "Bring the stone back to Giza around 2560 BCE and return it."
+   },
+   {
+    "type": "talk",
+    "npc": "merit",
+    "text": "Tell Merit the stone is back.",
+    "lines": [
+     "It's back! And it fits perfectly, look at it shine!",
+     "The pyramid will be finished on time. Thank you, Time Walker."
+    ]
+   }
+  ],
+  "outro": "The casing stone slides back into place. A ripple of golden light runs across the timeline.",
+  "mirra": "[Signal fragment] …Time Walker? Is someone there? This is Mirra, of the Archive. I tried to hold every moment at once and the timeline shattered. Please, find the Rifts…",
+  "unlocks": [
+   "moon"
+  ],
+  "reward": {
+   "energy": 60,
+   "maxEnergy": 20
+  },
+  "fact": "The Great Pyramid was originally about 146 m tall and covered with smooth white limestone that reflected the sunlight."
+ },
+ {
+  "id": "alexandria",
+  "index": 2,
+  "title": "Scrolls on the Wind",
+  "place": "Alexandria, Egypt",
+  "year": -250,
+  "lat": 31.2,
+  "lon": 29.918,
+  "intro": "In Alexandria, scholars are gathering the world's knowledge into one great library. But scrolls are slipping away through cracks in time.",
+  "npcs": [
+   {
+    "id": "theon",
+    "name": "Theon",
+    "role": "Young librarian",
+    "lines": [
+     "Welcome to Alexandria! Ships that dock here have their books copied for the Library.",
+     "Something terrible has happened! Three scrolls of geography vanished from my desk and reappeared all over the city, flickering like candle flames.",
+     "Could you find them before they fade away completely?"
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Alexandria around 250 BCE.",
+    "lat": 31.2,
+    "lon": 29.918,
+    "radiusKm": 25,
+    "yearMin": -300,
+    "yearMax": -150
+   },
+   {
+    "type": "talk",
+    "npc": "theon",
+    "text": "Find Theon, the young librarian."
+   },
+   {
+    "type": "find",
+    "item": "story_scroll",
+    "count": 3,
+    "text": "Collect 3 flickering scrolls around the city.",
+    "hint": "Use Q (Chronometer pulse) to reveal them."
+   },
+   {
+    "type": "visit",
+    "landmark": "alexandria_lighthouse",
+    "text": "Visit the great Lighthouse on Pharos island. Theon says a scholar there can steady the scrolls."
+   },
+   {
+    "type": "deliver",
+    "item": "story_scroll",
+    "count": 3,
+    "npc": "theon",
+    "text": "Bring the scrolls back to Theon."
+   }
+  ],
+  "outro": "Theon carefully rolls the scrolls onto the shelf. \"Every book matters,\" he says.",
+  "mirra": "…the Library. I loved it most of all. I wanted to keep it from ever being lost. I didn't understand that history must flow to be alive…",
+  "unlocks": [],
+  "reward": {
+   "energy": 60,
+   "maxEnergy": 10
+  },
+  "fact": "The Library of Alexandria, founded under the Ptolemies in the 3rd century BCE, tried to collect a copy of every book in the known world."
+ },
+ {
+  "id": "baghdad",
+  "index": 3,
+  "title": "The House of Wisdom",
+  "place": "Baghdad, Iraq",
+  "year": 830,
+  "lat": 33.315,
+  "lon": 44.366,
+  "intro": "In Baghdad, scholars from many lands translate and expand the knowledge of the world. An astrolabe has fallen out of time.",
+  "npcs": [
+   {
+    "id": "yasmin",
+    "name": "Yasmin",
+    "role": "Translator's apprentice",
+    "lines": [
+     "Peace be with you! You are just in time.",
+     "Our master's astrolabe was knocked out of time. Its star plate flew off and the rings are scrambled.",
+     "If you find the star plate and align the rings, we can measure the stars again tonight."
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Baghdad around 830.",
+    "lat": 33.315,
+    "lon": 44.366,
+    "radiusKm": 25,
+    "yearMin": 780,
+    "yearMax": 950
+   },
+   {
+    "type": "talk",
+    "npc": "yasmin",
+    "text": "Meet Yasmin, the translator's apprentice."
+   },
+   {
+    "type": "find",
+    "item": "star_chart",
+    "count": 1,
+    "text": "Find the astrolabe's star plate somewhere in the city."
+   },
+   {
+    "type": "puzzle",
+    "text": "Align the astrolabe's rings (talk to Yasmin).",
+    "npc": "yasmin"
+   },
+   {
+    "type": "deliver",
+    "item": "star_chart",
+    "count": 1,
+    "npc": "yasmin",
+    "text": "Return the star plate to Yasmin."
+   }
+  ],
+  "outro": "The astrolabe clicks together. Yasmin smiles. \"Tonight we will measure Aldebaran.\"",
+  "mirra": "…in Baghdad they gathered books from Greece, Persia and India and built on them. Knowledge grows when it is shared. I see that now…",
+  "unlocks": [],
+  "reward": {
+   "energy": 60,
+   "maxEnergy": 10
+  },
+  "fact": "In the House of Wisdom in Baghdad, scholars translated Greek, Persian and Indian works into Arabic and made new discoveries in mathematics and astronomy."
+ },
+ {
+  "id": "kaifeng",
+  "index": 4,
+  "title": "The Clock that Stopped",
+  "place": "Kaifeng, China",
+  "year": 1092,
+  "lat": 34.797,
+  "lon": 114.307,
+  "intro": "In Kaifeng, capital of the Song dynasty, Su Song's great water-driven clock tower has stopped. Gears have scattered through time.",
+  "npcs": [
+   {
+    "id": "lin",
+    "name": "Lin",
+    "role": "Clockmaker's apprentice",
+    "lines": [
+     "Ah, a visitor! I'm sorry, I'm in a panic.",
+     "The great clock has stopped! Four bronze gears popped right out of the escapement and vanished into the city.",
+     "Without them the celestial globe won't turn, and the bells won't ring the hours."
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Kaifeng around 1092.",
+    "lat": 34.797,
+    "lon": 114.307,
+    "radiusKm": 25,
+    "yearMin": 1088,
+    "yearMax": 1126
+   },
+   {
+    "type": "talk",
+    "npc": "lin",
+    "text": "Find Lin near the clock tower."
+   },
+   {
+    "type": "find",
+    "item": "clock_gear",
+    "count": 4,
+    "text": "Collect 4 bronze gears scattered around the city."
+   },
+   {
+    "type": "visit",
+    "landmark": "su_song_clock",
+    "text": "Go to Su Song's clock tower."
+   },
+   {
+    "type": "puzzle",
+    "text": "Fit the gears into the escapement (talk to Lin).",
+    "npc": "lin"
+   },
+   {
+    "type": "talk",
+    "npc": "lin",
+    "text": "Watch the clock start again with Lin.",
+    "lines": [
+     "Listen! The water wheel turns, the globe moves, and the drums are sounding the hour!",
+     "Su Song will be so relieved. Thank you!"
+    ]
+   }
+  ],
+  "outro": "Water flows, the great wheel turns, and bells ring across Kaifeng.",
+  "mirra": "…clocks. I thought if I stopped all the clocks, nothing would ever be lost. But a stopped clock tells no stories…",
+  "unlocks": [],
+  "reward": {
+   "energy": 60,
+   "maxEnergy": 10
+  },
+  "fact": "Su Song's clock tower, finished in 1092, used a water wheel and an escapement to turn an armillary sphere and a celestial globe."
+ },
+ {
+  "id": "hawaii",
+  "index": 5,
+  "title": "Stars of the Wayfinders",
+  "place": "Hawaiʻi",
+  "year": 1150,
+  "lat": 19.73,
+  "lon": -155.08,
+  "intro": "Polynesian voyagers have crossed thousands of kilometres of ocean using the stars. But tonight, pieces of the sky have fallen to the shore.",
+  "npcs": [
+   {
+    "id": "kaimana",
+    "name": "Kaimana",
+    "role": "Wayfinder",
+    "lines": [
+     "Aloha, traveller. You arrived without a canoe! That is a rare kind of voyage.",
+     "We read the rising and setting of stars, the swells and the birds to find our way.",
+     "But fallen star shards are scattered on the beach, and the sky feels wrong. Gather them so I can set them back in their houses."
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Hawaiʻi around 1150.",
+    "lat": 19.73,
+    "lon": -155.08,
+    "radiusKm": 120,
+    "yearMin": 1050,
+    "yearMax": 1400
+   },
+   {
+    "type": "talk",
+    "npc": "kaimana",
+    "text": "Meet Kaimana the wayfinder by the shore."
+   },
+   {
+    "type": "find",
+    "item": "memory_shard",
+    "count": 3,
+    "text": "Gather 3 fallen star shards. They glow brighter at night."
+   },
+   {
+    "type": "puzzle",
+    "text": "Set the stars back into the star compass (talk to Kaimana).",
+    "npc": "kaimana"
+   },
+   {
+    "type": "talk",
+    "npc": "kaimana",
+    "text": "Look at the sky with Kaimana.",
+    "lines": [
+     "There. Hōkūleʻa, the star of gladness, is back where it belongs.",
+     "Now our canoes can find their way home."
+    ]
+   }
+  ],
+  "outro": "The stars settle into place, and the night sky glitters over the ocean.",
+  "mirra": "…they crossed an ocean by reading the sky. They trusted the stars to keep moving. I tried to pin the stars still…",
+  "unlocks": [],
+  "reward": {
+   "energy": 60,
+   "maxEnergy": 10
+  },
+  "fact": "Polynesian wayfinders kept a \"star compass\" in their minds. They read the rising and setting points of stars, along with ocean swells, winds and birds."
+ },
+ {
+  "id": "timbuktu",
+  "index": 6,
+  "title": "Gold, Salt and Books",
+  "place": "Timbuktu, Mali",
+  "year": 1340,
+  "lat": 16.773,
+  "lon": -3.007,
+  "intro": "Timbuktu is a city of scholars, where manuscripts are worth more than gold. But time-wind is blowing their pages away, and something noisy has appeared in the library.",
+  "npcs": [
+   {
+    "id": "fatoumata",
+    "name": "Fatoumata",
+    "role": "Manuscript keeper",
+    "lines": [
+     "Welcome to Timbuktu! Salt comes from the north, gold from the south, and books from everywhere.",
+     "A gust of shimmering wind blew three pages of an astronomy manuscript across the city.",
+     "And there's a clacking metal machine in the reading room. It frightens the students!"
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Timbuktu around 1340.",
+    "lat": 16.773,
+    "lon": -3.007,
+    "radiusKm": 25,
+    "yearMin": 1327,
+    "yearMax": 1450
+   },
+   {
+    "type": "talk",
+    "npc": "fatoumata",
+    "text": "Talk to Fatoumata near the Djinguereber Mosque."
+   },
+   {
+    "type": "capture",
+    "anomaly": "typewriter",
+    "text": "Sneak up on the clacking machine (a typewriter!) without being seen by its watcher.",
+    "hint": "Hold C to crouch and stay out of the watcher's view cone."
+   },
+   {
+    "type": "find",
+    "item": "manuscript",
+    "count": 3,
+    "text": "Collect 3 manuscript pages."
+   },
+   {
+    "type": "deliver",
+    "item": "manuscript",
+    "count": 3,
+    "npc": "fatoumata",
+    "text": "Return the pages to Fatoumata."
+   },
+   {
+    "type": "return",
+    "anomaly": "typewriter",
+    "era": "industrial",
+    "text": "Return the typewriter to the Industrial Age (1870 or later)."
+   }
+  ],
+  "outro": "The pages are bound back into their manuscript, safe in Timbuktu's libraries.",
+  "mirra": "…libraries in sand and stone, cared for by families for centuries. They did not freeze their books. They copied, taught and passed them on…",
+  "unlocks": [],
+  "reward": {
+   "energy": 70,
+   "maxEnergy": 10
+  },
+  "fact": "Families in Timbuktu protected manuscripts for centuries, and many survive today. They cover astronomy, mathematics, medicine, law and poetry."
+ },
+ {
+  "id": "machu",
+  "index": 7,
+  "title": "The Knotted Cords",
+  "place": "Machu Picchu, Peru",
+  "year": 1460,
+  "lat": -13.1631,
+  "lon": -72.545,
+  "intro": "High in the Andes, the Inca keep records on knotted cords called khipu. Some cords have come undone in time.",
+  "npcs": [
+   {
+    "id": "kusi",
+    "name": "Kusi",
+    "role": "Khipu keeper",
+    "lines": [
+     "Allillanchu! Welcome to the mountain estate.",
+     "We record harvests and stores with knots on cords. Each colour and knot has a meaning.",
+     "Three cords slipped away, and now the storehouse counts are a mystery. Can you find them?"
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Machu Picchu around 1460.",
+    "lat": -13.1631,
+    "lon": -72.545,
+    "radiusKm": 25,
+    "yearMin": 1450,
+    "yearMax": 1530
+   },
+   {
+    "type": "talk",
+    "npc": "kusi",
+    "text": "Meet Kusi, the khipu keeper."
+   },
+   {
+    "type": "find",
+    "item": "quipu_cord",
+    "count": 3,
+    "text": "Find 3 knotted cords among the terraces."
+   },
+   {
+    "type": "photograph",
+    "landmark": "machu_picchu",
+    "text": "Take a photograph of Machu Picchu for your journal (P for camera mode)."
+   },
+   {
+    "type": "deliver",
+    "item": "quipu_cord",
+    "count": 3,
+    "npc": "kusi",
+    "text": "Return the cords to Kusi."
+   }
+  ],
+  "outro": "Kusi ties the cords back onto the main khipu. \"Now the count is whole again.\"",
+  "mirra": "…every knot was a memory, held by a person who cared. The Chronometer is getting stronger, Time Walker. It can reach the deep past now.",
+  "unlocks": [
+   "iceage",
+   "stoneage"
+  ],
+  "reward": {
+   "energy": 80,
+   "maxEnergy": 20
+  },
+  "fact": "Khipu, cords with knots, were used by the Inca to record numbers and other information."
+ },
+ {
+  "id": "lascaux",
+  "index": 8,
+  "title": "Colours of the Ice Age",
+  "place": "Lascaux, France",
+  "year": -17000,
+  "lat": 45.0539,
+  "lon": 1.1683,
+  "intro": "In Ice Age France, artists are painting animals on cave walls. But a whirring machine is scaring the deer, and pigments have spilled out of time.",
+  "npcs": [
+   {
+    "id": "ama",
+    "name": "Ama",
+    "role": "Young painter",
+    "lines": [
+     "You came over the ridge so quietly. Welcome to our fire.",
+     "I am painting the horses inside the cave, but my pigment pots have vanished. The red, the yellow and the black.",
+     "And a round, humming creature keeps chasing the deer away!"
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Lascaux around 17,000 years ago.",
+    "lat": 45.0539,
+    "lon": 1.1683,
+    "radiusKm": 30,
+    "yearMin": -18500,
+    "yearMax": -15500
+   },
+   {
+    "type": "talk",
+    "npc": "ama",
+    "text": "Meet Ama near the cave."
+   },
+   {
+    "type": "capture",
+    "anomaly": "robot_vacuum",
+    "text": "Chase down the humming machine (a robot vacuum!)."
+   },
+   {
+    "type": "find",
+    "item": "pigment",
+    "count": 3,
+    "text": "Find the 3 pigment pots."
+   },
+   {
+    "type": "deliver",
+    "item": "pigment",
+    "count": 3,
+    "npc": "ama",
+    "text": "Give the pigments to Ama."
+   },
+   {
+    "type": "visit",
+    "landmark": "lascaux",
+    "text": "See the paintings inside the cave."
+   },
+   {
+    "type": "return",
+    "anomaly": "robot_vacuum",
+    "era": "modern",
+    "text": "Send the robot vacuum home to the Modern era."
+   }
+  ],
+  "outro": "By flickering lamplight, Ama paints a running horse. It looks alive.",
+  "mirra": "…they painted animals that would outlive them by seventeen thousand years. Art is how a moment travels forward. I should have let them travel…",
+  "unlocks": [],
+  "reward": {
+   "energy": 80,
+   "maxEnergy": 10
+  },
+  "fact": "Lascaux artists used mineral pigments: red and yellow ochre, and black from charcoal or manganese oxide."
+ },
+ {
+  "id": "rainhill",
+  "index": 9,
+  "title": "The Iron Horse",
+  "place": "Rainhill, England",
+  "year": 1829,
+  "lat": 53.4166,
+  "lon": -2.7666,
+  "intro": "At Rainhill, steam locomotives are competing to run on the new Liverpool and Manchester Railway. One team's valves have gone missing.",
+  "npcs": [
+   {
+    "id": "edith",
+    "name": "Edith",
+    "role": "Young engineer",
+    "lines": [
+     "Mind the track! Oh, you're here to help? Splendid!",
+     "The trials start tomorrow and three brass valves have rattled away into another time, or so it seems.",
+     "Without them the boiler can't hold its steam."
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Rainhill in October 1829.",
+    "lat": 53.4166,
+    "lon": -2.7666,
+    "radiusKm": 25,
+    "yearMin": 1828,
+    "yearMax": 1832
+   },
+   {
+    "type": "talk",
+    "npc": "edith",
+    "text": "Find Edith by the railway."
+   },
+   {
+    "type": "find",
+    "item": "brass_valve",
+    "count": 3,
+    "text": "Find 3 brass valves."
+   },
+   {
+    "type": "deliver",
+    "item": "brass_valve",
+    "count": 3,
+    "npc": "edith",
+    "text": "Bring the valves to Edith."
+   },
+   {
+    "type": "visit",
+    "landmark": "rainhill",
+    "text": "Watch the locomotive on the trial track."
+   }
+  ],
+  "outro": "With a hiss and a roar, the locomotive puffs down the track, faster than a galloping horse.",
+  "mirra": "…steam, speed, change. So much change. I was afraid of it. But look how it brought people together…",
+  "unlocks": [],
+  "reward": {
+   "energy": 80,
+   "maxEnergy": 10
+  },
+  "fact": "At the Rainhill Trials in 1829, Robert Stephenson and George Stephenson's locomotive Rocket won the competition."
+ },
+ {
+  "id": "apollo",
+  "index": 10,
+  "title": "One Small Step",
+  "place": "Cape Canaveral, Florida",
+  "year": 1969,
+  "lat": 28.6083,
+  "lon": -80.6041,
+  "intro": "July 1969: a Saturn V rocket waits to carry Apollo 11 to the Moon. A gadget from the future is zipping around the launch site.",
+  "npcs": [
+   {
+    "id": "grace",
+    "name": "Grace",
+    "role": "Launch engineer",
+    "lines": [
+     "Hey! You shouldn't be out here. Wait, is that a badge? Never mind, we need all hands!",
+     "Something is zooming around the pad, a floating board humming like a hornet. It's confusing our radar.",
+     "Can you catch it before the launch?"
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Cape Canaveral in 1969.",
+    "lat": 28.6083,
+    "lon": -80.6041,
+    "radiusKm": 30,
+    "yearMin": 1969,
+    "yearMax": 1969
+   },
+   {
+    "type": "talk",
+    "npc": "grace",
+    "text": "Find Grace near the launch pad."
+   },
+   {
+    "type": "capture",
+    "anomaly": "hoverboard",
+    "text": "Catch the hoverboard."
+   },
+   {
+    "type": "photograph",
+    "landmark": "launch_pad",
+    "text": "Take a photo of the Saturn V on the pad."
+   },
+   {
+    "type": "return",
+    "anomaly": "hoverboard",
+    "era": "nearfuture",
+    "text": "Return the hoverboard to the Near Future."
+   },
+   {
+    "type": "talk",
+    "npc": "grace",
+    "text": "Tell Grace the radar is clear.",
+    "lines": [
+     "All clear! T-minus counting… you're welcome to watch the launch.",
+     "\"That's one small step for man, one giant leap for mankind.\" People will remember those words forever."
+    ]
+   }
+  ],
+  "outro": "Engines thunder, and Apollo 11 climbs into the sky on a column of fire.",
+  "mirra": "…they went to the Moon and looked back at the Earth, and saw it whole. Your Chronometer can now reach the deepest past, Time Walker…",
+  "unlocks": [
+   "dinosaurs",
+   "mammals"
+  ],
+  "reward": {
+   "energy": 100,
+   "maxEnergy": 20
+  },
+  "fact": "Apollo 11 landed on the Moon on 20 July 1969. Neil Armstrong and Buzz Aldrin walked on the surface while Michael Collins orbited above."
+ },
+ {
+  "id": "hellcreek",
+  "index": 11,
+  "title": "Eggs Out of Time",
+  "place": "Hell Creek, Montana",
+  "year": -66500000,
+  "lat": 47.6,
+  "lon": -106.7,
+  "intro": "A baby Triceratops has appeared in medieval Japan! Its nest, 66 million years in the past, is missing eggs.",
+  "npcs": [
+   {
+    "id": "echo",
+    "name": "Mirra's Echo",
+    "role": "Archive hologram",
+    "outfit": "hologram",
+    "lines": [
+     "Time Walker, I am an echo of Mirra, sent ahead to watch over the nest.",
+     "The baby is lost in medieval Japan, and three eggs have rolled away across the floodplain.",
+     "Be careful. A Tyrannosaurus hunts here. If it charges, run, hide or jump into water."
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to Kyoto, Japan, around 1100, where the baby Triceratops was seen.",
+    "lat": 35.011,
+    "lon": 135.768,
+    "radiusKm": 60,
+    "yearMin": 900,
+    "yearMax": 1300
+   },
+   {
+    "type": "capture",
+    "anomaly": "baby_triceratops",
+    "text": "Catch the baby Triceratops!"
+   },
+   {
+    "type": "travel",
+    "text": "Travel to Hell Creek, Montana, about 66.5 million years ago.",
+    "lat": 47.6,
+    "lon": -106.7,
+    "radiusKm": 150,
+    "yearMin": -68000000,
+    "yearMax": -66000000
+   },
+   {
+    "type": "return",
+    "anomaly": "baby_triceratops",
+    "era": "dinosaurs",
+    "text": "Return the baby Triceratops to its home time."
+   },
+   {
+    "type": "talk",
+    "npc": "echo",
+    "text": "Find Mirra's Echo by the nest."
+   },
+   {
+    "type": "find",
+    "item": "egg",
+    "count": 3,
+    "text": "Find 3 lost eggs. Watch out for the Tyrannosaurus!"
+   },
+   {
+    "type": "deliver",
+    "item": "egg",
+    "count": 3,
+    "npc": "echo",
+    "text": "Bring the eggs back to the nest."
+   }
+  ],
+  "outro": "The baby Triceratops snuggles beside the eggs. Far away, a herd calls across the floodplain.",
+  "mirra": "…sixty-six million years, and still the story continues. I am waiting for you at the Archive, Time Walker. In the year 2999.",
+  "unlocks": [
+   "farfuture"
+  ],
+  "reward": {
+   "energy": 120,
+   "maxEnergy": 20
+  },
+  "fact": "The Hell Creek Formation in Montana preserves fossils of Tyrannosaurus, Triceratops and Edmontosaurus from the last 2 million years of the Cretaceous."
+ },
+ {
+  "id": "archive",
+  "index": 12,
+  "title": "The Archive of Anywhen",
+  "place": "Alexandria, Egypt",
+  "year": 2999,
+  "lat": 31.209,
+  "lon": 29.95,
+  "intro": "The Archive of Anywhen, where the Chronometer was made. Mirra waits at its heart, among the last shards of the shattered timeline.",
+  "npcs": [
+   {
+    "id": "mirra",
+    "name": "Mirra",
+    "role": "Keeper of the Archive",
+    "outfit": "hologram",
+    "lines": [
+     "You came. You really came.",
+     "I loved history so much that I tried to hold every moment still, safe forever. And the timeline cracked like glass.",
+     "You have shown me that moments are not meant to be frozen. They are meant to be lived, shared and passed on.",
+     "The last memory shards are scattered around the Archive. Bring them to me, and together we will set time flowing again."
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "type": "travel",
+    "text": "Travel to the Archive of Anywhen, Alexandria, in 2999.",
+    "lat": 31.209,
+    "lon": 29.95,
+    "radiusKm": 25,
+    "yearMin": 2990,
+    "yearMax": 3000
+   },
+   {
+    "type": "talk",
+    "npc": "mirra",
+    "text": "Meet Mirra at the Archive."
+   },
+   {
+    "type": "find",
+    "item": "memory_shard",
+    "count": 5,
+    "text": "Gather 5 memory shards around the Archive."
+   },
+   {
+    "type": "visit",
+    "landmark": "archive",
+    "text": "Enter the light at the Archive's heart."
+   },
+   {
+    "type": "puzzle",
+    "text": "Weave the timeline back together (talk to Mirra).",
+    "npc": "mirra"
+   },
+   {
+    "type": "talk",
+    "npc": "mirra",
+    "text": "Speak with Mirra one last time.",
+    "lines": [
+     "Look. The timeline is whole again, every moment flowing into the next.",
+     "I will keep the Archive not as a prison of moments, but as a library open to all.",
+     "The Chronometer is yours, Time Walker. Anywhere, anywhen. Go and explore."
+    ]
+   }
+  ],
+  "outro": "Light floods out of the Archive and runs back through every era. The timeline is whole.",
+  "mirra": "Thank you, Time Walker.",
+  "unlocks": [
+   "ending"
+  ],
+  "reward": {
+   "energy": 200,
+   "maxEnergy": 50
+  },
+  "fact": "Imagined: the Archive of Anywhen stands where the ancient Library of Alexandria once was, a promise that knowledge would never again be lost."
+ }
+]

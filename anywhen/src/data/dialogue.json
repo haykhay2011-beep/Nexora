@@ -1,0 +1,83 @@
+{
+  "_comment": "Template lines. Slots: {place} {settlement} {year} {era} {weather} {crop} {animal} {good} {landmark} {dir} {dist} {anomaly} {name} {job} {time} {season} {river} {currency} {region}. Lines with a missing slot are skipped.",
+  "names": {
+    "default": ["Ari", "Bel", "Cai", "Dara", "Eli", "Fen", "Gali", "Hana", "Ilo", "Juno", "Kael", "Lumi", "Mika", "Nori", "Oren", "Pema", "Rin", "Sami", "Tavi", "Uma", "Vela", "Wren", "Yara", "Zev"],
+    "europe": ["Agnes", "Bram", "Clara", "Dario", "Elin", "Frida", "Giulia", "Hugo", "Ines", "Jonas", "Katla", "Luca", "Mira", "Nils", "Oda", "Piet", "Rosa", "Sven", "Teo", "Una"],
+    "mena": ["Amira", "Bashir", "Dalia", "Farid", "Hala", "Idris", "Jamila", "Karim", "Layla", "Malik", "Nadia", "Omar", "Rania", "Samir", "Tariq", "Yasmin", "Zaid", "Huda", "Nabil", "Salma"],
+    "subsaharan": ["Abena", "Kofi", "Amara", "Chidi", "Ayo", "Nia", "Jabari", "Zola", "Kwame", "Adaeze", "Sefu", "Imani", "Tunde", "Asha", "Bongani", "Lindiwe", "Musa", "Wanjiru", "Oumar", "Fatou"],
+    "southasia": ["Aarav", "Anika", "Dev", "Isha", "Kiran", "Lata", "Mohan", "Nisha", "Priya", "Ravi", "Sita", "Tara", "Vikram", "Asha", "Arjun", "Meera", "Sanjay", "Noor", "Imran", "Leela"],
+    "eastasia": ["Mei", "Jun", "Hana", "Kenji", "Lan", "Wei", "Yuki", "Hiro", "Lin", "Sora", "Min", "Ji-woo", "Tao", "Aiko", "Bo", "Ren", "Xiu", "Haru", "Seo-yeon", "Feng"],
+    "seasia": ["Anh", "Budi", "Chai", "Dewi", "Gani", "Hoa", "Intan", "Kanya", "Linh", "Maya", "Nam", "Putri", "Rizal", "Sari", "Thanh", "Wira", "Ayu", "Bao", "Malai", "Tala"],
+    "northasia": ["Aigerim", "Batu", "Dina", "Erlan", "Gulnara", "Temir", "Saule", "Bolat", "Yerlan", "Altan", "Oyun", "Sarnai", "Timur", "Zarina", "Arman", "Nurlan", "Saran", "Bayar", "Kamila", "Ruslan"],
+    "oceania": ["Aroha", "Tama", "Leilani", "Koa", "Moana", "Tane", "Mere", "Kai", "Sina", "Losa", "Hemi", "Ana", "Pita", "Malia", "Rangi", "Nalu", "Iolana", "Wiremu", "Sefa", "Tui"],
+    "northamerica": ["Aiyana", "Kai", "Lena", "Mason", "Nova", "Owen", "Sky", "Tala", "River", "June", "Eli", "Ada", "Cole", "Maya", "Rowan", "Sage", "Dakota", "Ruby", "Finn", "Ivy"],
+    "centralamerica": ["Itzel", "Mateo", "Xochi", "Diego", "Citlali", "Pablo", "Yaretzi", "Tomás", "Ixchel", "Lucía", "Emilio", "Nayeli", "Javier", "Sofía", "Andrés", "Marisol", "Raúl", "Elena", "Iker", "Camila"],
+    "southamerica": ["Inti", "Killa", "Mateus", "Ayelen", "Thiago", "Luana", "Rafael", "Nayra", "Bruno", "Valentina", "Kusi", "Isabela", "Gael", "Antonella", "Joaquín", "Wayra", "Lía", "Ciro", "Paola", "Amaru"],
+    "arctic": ["Aput", "Siku", "Nuka", "Ivalu", "Taqqiq", "Pilu", "Aaju", "Kunuk", "Naja", "Malik", "Inuk", "Miki", "Anori", "Sakari", "Ulla", "Elsa", "Aila", "Nils", "Panik", "Tulu"],
+    "antarctica": ["Dr. Ana", "Dr. Ken", "Dr. Lise", "Dr. Omar", "Dr. Priya", "Dr. Juan", "Dr. Mei", "Dr. Femi"],
+    "future": ["Astra", "Lumen", "Kito", "Seren", "Ori", "Vesper", "Nyx", "Sol", "Echo", "Halo", "Iris", "Lyra", "Nova", "Quill", "Rune", "Tamsin", "Zephyr", "Ember", "Pax", "Mira"]
+  },
+  "greetings": {
+    "default": ["Hello there, traveller!", "Welcome, stranger. You look like you've come a long way.", "Good day to you!", "Oh! I didn't see you there. Welcome!"],
+    "iceage": ["You are not of our band, but you are welcome by our fire.", "Greetings, wanderer. The herds are moving. Do you follow them too?"],
+    "stoneage": ["Welcome to our village, traveller. Sit, the pot is warm.", "Greetings! Have you come to trade?"],
+    "earlyciv": ["May the river bless you, traveller.", "Greetings, stranger. Are you a merchant or a messenger?"],
+    "classical": ["Greetings, friend! Have you come for the market?", "Hail, traveller. What news from the road?"],
+    "medieval": ["Good morrow, traveller!", "Peace be with you, stranger. Rest your feet a while."],
+    "exploration": ["Welcome! Have you come off one of the ships?", "Greetings, traveller. Strange clothes you wear. Are you from far across the sea?"],
+    "industrial": ["Good day! Mind the carts. The street's busy today.", "Morning! You look lost. Can I help you find your way?"],
+    "modern": ["Hey! Are you visiting?", "Hi there! Need directions?", "Hello! Nice day, isn't it?"],
+    "nearfuture": ["Hi! Your wrist device looks like an old model. Very retro!", "Welcome! The garden tram stops just over there."],
+    "farfuture": ["Bright moment to you, Time Walker.", "Welcome, traveller. The Archive's light shines on you.", "Oh, a Chronometer! It's been ages since I saw a Time Walker."]
+  },
+  "smalltalk": {
+    "default": [
+      "The {crop} harvest looks good this year.",
+      "Have you seen the {animal}? They come by now and then.",
+      "If you need {good}, the market has the best.",
+      "The {weather} keeps everyone busy today.",
+      "My family has lived in this {settlement} for as long as anyone remembers.",
+      "Travellers say the land beyond the hills is full of wonders.",
+      "I love this time of day. Everything feels calm.",
+      "They say {place} is the finest place in the world, and I believe it!"
+    ],
+    "iceage": ["The mammoths passed by three days ago. The hunters will go out soon.", "The cold wind tells us winter is close.", "My grandmother says the ice was once even closer to here.", "We make our needles from bone, and our thread from sinew."],
+    "stoneage": ["We planted the first seeds by the stream this spring.", "My cousin makes the best pots in the valley. Look at the patterns!", "The elders know which plants heal and which ones harm."],
+    "earlyciv": ["The scribes are counting the harvest again.", "When the river floods, the fields come back to life.", "A trader came with blue stones from very far away."],
+    "classical": ["Did you hear the philosophers arguing in the square? They never stop!", "The ship from the east brought spices and silk.", "The new road makes the journey to the next city so much shorter."],
+    "medieval": ["The bells will ring for the market soon.", "A scholar from abroad is copying books in the library.", "The miller says the wind has been kind this year."],
+    "exploration": ["Ships come in with plants I have never seen before.", "My uncle sailed for two years and came back with stories you wouldn't believe.", "They printed a new map. The world keeps getting bigger!"],
+    "industrial": ["The factory whistle wakes the whole street.", "Have you ridden the train yet? It's faster than any horse!", "Did you read the newspaper? There's a new invention every week."],
+    "modern": ["My phone battery is almost dead, again.", "Traffic was terrible this morning.", "Have you tried the food truck on the corner? It's amazing."],
+    "nearfuture": ["Our rooftop garden grows enough tomatoes for the whole building now.", "The air's so clean since the city went electric.", "My grandmother still talks about the old petrol cars."],
+    "farfuture": ["The forest grew back over the old highway. Now there are deer where the cars used to be.", "Tonight the orbital ring will shine bright. Look up!", "The Archive says every moment matters, even small ones."]
+  },
+  "facts": [
+    "Did you know? {fact}",
+    "My teacher told me that {fact_lower}",
+    "Here's something interesting: {fact}",
+    "Everyone around here knows this: {fact}"
+  ],
+  "hints": [
+    "I saw something strange to the {dir}, about {dist} away. It didn't look like it belonged here at all.",
+    "There's a {anomaly} hiding to the {dir}! At least, I think that's what it was. It shimmered.",
+    "Strange things are happening to the {dir}. The animals won't go near.",
+    "A child came running, saying there was a glowing thing to the {dir}."
+  ],
+  "farewells": ["Safe travels!", "Come back any time.", "Good luck on your journey!", "Take care, traveller."],
+  "translator": ["Chronometer translating…", "Tuning to local language…", "Translation matrix aligned."],
+  "trader": {
+    "default": ["Take a look at my wares. Fair prices, I promise!", "Buying or selling? Either way, you've come to the right place."],
+    "farfuture": ["We trade ideas as much as things. What do you have?"],
+    "iceage": ["I'll trade you fair. Flint, furs, beads, whatever you need."]
+  },
+  "requests": {
+    "deliver": ["Could you take this {item} to {target}? They live nearby.", "I promised {target} this {item}. Would you bring it to them?"],
+    "find": ["I've lost my {item} somewhere near here. Could you look for it?", "My {item} went missing. Have you seen it? It must be close."],
+    "build": ["We're building a new {building}. Could you help gather {count} {item}?", "Our {building} needs repairs. Bring {count} {item} and we can fix it together."],
+    "photograph": ["I'd love a picture of the {landmark}. Could you capture it for me?", "Could you take a photograph of a {animal}? I want to show my children."],
+    "gather": ["Could you gather {count} {item} for me? They grow around here.", "I need {count} {item} for tonight's meal. Will you help?"]
+  },
+  "thanks": ["Thank you so much! Here, take this.", "You're a true friend. Please accept this.", "Wonderful! I knew I could count on you."],
+  "night": ["It's late. I should be getting home.", "The stars are out. Time to rest.", "Shh, people are sleeping."]
+}

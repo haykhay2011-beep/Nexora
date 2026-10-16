@@ -1,0 +1,483 @@
+[
+ {
+  "id": "smartphone",
+  "name": "Smartphone",
+  "model": "phone",
+  "homeEra": "modern",
+  "homeHint": "It belongs in the Modern era, any time after about 2007.",
+  "challenge": "catch",
+  "energy": 25,
+  "fact": "Smartphones combine a phone, camera, map, music player and computer in one pocket-sized device.",
+  "featured": [
+   {
+    "lat": 41.89,
+    "lon": 12.49,
+    "radiusKm": 40,
+    "era": "classical"
+   }
+  ]
+ },
+ {
+  "id": "robot_vacuum",
+  "name": "Robot vacuum",
+  "model": "robot_vacuum",
+  "homeEra": "modern",
+  "homeHint": "It whirs home to the Modern era, the 2000s or later.",
+  "challenge": "chase",
+  "energy": 25,
+  "fact": "Robot vacuum cleaners map rooms with sensors and steer around furniture."
+ },
+ {
+  "id": "bicycle",
+  "name": "Bicycle",
+  "model": "bicycle",
+  "homeEra": "industrial",
+  "homeHint": "It rolled out of the Industrial Age, from the 1880s.",
+  "challenge": "chase",
+  "energy": 25,
+  "fact": "The \"safety bicycle\", with two equal wheels and a chain drive, became popular in the 1880s."
+ },
+ {
+  "id": "alarm_clock",
+  "name": "Wind-up alarm clock",
+  "model": "alarm_clock",
+  "homeEra": "industrial",
+  "homeHint": "It ticks to Industrial Age time.",
+  "challenge": "puzzle",
+  "energy": 22,
+  "fact": "Affordable mechanical alarm clocks became common in homes in the late 1800s."
+ },
+ {
+  "id": "box_camera",
+  "name": "Box camera",
+  "model": "camera",
+  "homeEra": "industrial",
+  "homeHint": "It belongs around 1900, in the late Industrial Age.",
+  "challenge": "sneak",
+  "energy": 24,
+  "fact": "The Kodak Brownie of 1900 was a cheap box camera that made photography popular."
+ },
+ {
+  "id": "skateboard",
+  "name": "Skateboard",
+  "model": "skateboard",
+  "homeEra": "modern",
+  "homeHint": "It rolls home to the Modern era.",
+  "challenge": "chase",
+  "energy": 22,
+  "fact": "Skateboarding began in California in the 1950s when surfers put wheels on boards."
+ },
+ {
+  "id": "headphones",
+  "name": "Headphones",
+  "model": "headphones",
+  "homeEra": "modern",
+  "homeHint": "Their music belongs to the Modern era.",
+  "challenge": "sneak",
+  "energy": 20,
+  "fact": "Early headphones were used by telephone operators. Portable music players made them common."
+ },
+ {
+  "id": "rubber_duck",
+  "name": "Rubber duck",
+  "model": "rubber_duck",
+  "homeEra": "modern",
+  "homeHint": "It floats home to the Modern era.",
+  "challenge": "catch",
+  "energy": 18,
+  "fact": "Rubber ducks became popular bath toys in the 1900s, once rubber could be moulded cheaply."
+ },
+ {
+  "id": "teddy_bear",
+  "name": "Teddy bear",
+  "model": "teddy",
+  "homeEra": "industrial",
+  "homeHint": "It was first hugged in the early 1900s, at the end of the Industrial Age.",
+  "challenge": "sneak",
+  "energy": 20,
+  "fact": "The teddy bear, named after US President Theodore Roosevelt, appeared in 1902–1903."
+ },
+ {
+  "id": "light_bulb",
+  "name": "Light bulb",
+  "model": "bulb",
+  "homeEra": "industrial",
+  "homeHint": "It glows in the late Industrial Age, from about 1880.",
+  "challenge": "puzzle",
+  "energy": 24,
+  "fact": "Practical incandescent light bulbs used a glowing filament in a glass bulb with the air removed."
+ },
+ {
+  "id": "gramophone",
+  "name": "Gramophone",
+  "model": "gramophone",
+  "homeEra": "industrial",
+  "homeHint": "It plays music from the late Industrial Age.",
+  "challenge": "puzzle",
+  "energy": 26,
+  "fact": "Emile Berliner’s gramophone of 1887 played flat discs, the ancestors of vinyl records."
+ },
+ {
+  "id": "typewriter",
+  "name": "Typewriter",
+  "model": "typewriter",
+  "homeEra": "industrial",
+  "homeHint": "It clacks home to the Industrial Age, from the 1870s.",
+  "challenge": "sneak",
+  "energy": 24,
+  "fact": "Commercially successful typewriters appeared in the 1870s and introduced the QWERTY layout."
+ },
+ {
+  "id": "toy_train",
+  "name": "Toy steam train",
+  "model": "toy_train",
+  "homeEra": "industrial",
+  "homeHint": "It chugs home to the Industrial Age.",
+  "challenge": "chase",
+  "energy": 22,
+  "fact": "Steam railways inspired some of the first mass-produced toys."
+ },
+ {
+  "id": "terrestrial_globe",
+  "name": "Terrestrial globe",
+  "model": "globe",
+  "homeEra": "exploration",
+  "homeHint": "It was made in the Age of Exploration.",
+  "challenge": "puzzle",
+  "energy": 24,
+  "fact": "Globe makers updated their globes with every new voyage, so old globes show how knowledge grew."
+ },
+ {
+  "id": "telescope",
+  "name": "Brass telescope",
+  "model": "telescope",
+  "homeEra": "exploration",
+  "homeHint": "It belongs to the Age of Exploration, after 1608.",
+  "challenge": "sneak",
+  "energy": 26,
+  "fact": "The refracting telescope used two lenses to make distant things appear closer."
+ },
+ {
+  "id": "pocket_watch",
+  "name": "Pocket watch",
+  "model": "pocket_watch",
+  "homeEra": "exploration",
+  "homeHint": "It ticks home to the Age of Exploration or later, from the 1500s.",
+  "challenge": "catch",
+  "energy": 20,
+  "fact": "Portable spring-driven watches were first made in the 1500s."
+ },
+ {
+  "id": "printed_book",
+  "name": "Printed book",
+  "model": "book",
+  "homeEra": "exploration",
+  "homeHint": "It was printed in the Age of Exploration.",
+  "challenge": "sneak",
+  "energy": 22,
+  "fact": "Within 50 years of Gutenberg’s press, millions of printed books circulated in Europe."
+ },
+ {
+  "id": "astrolabe",
+  "name": "Astrolabe",
+  "model": "astrolabe",
+  "homeEra": "medieval",
+  "homeHint": "It was crafted in the Medieval Middle East.",
+  "challenge": "puzzle",
+  "energy": 26,
+  "fact": "A brass astrolabe could tell the time, find directions to Mecca, and measure the height of stars.",
+  "homeRegion": "mena"
+ },
+ {
+  "id": "compass",
+  "name": "Floating compass",
+  "model": "compass",
+  "homeEra": "medieval",
+  "homeHint": "It points home to Medieval East Asia.",
+  "challenge": "puzzle",
+  "energy": 24,
+  "fact": "Early Chinese compasses used a magnetised needle floating in water or hanging from a silk thread.",
+  "homeRegion": "eastasia"
+ },
+ {
+  "id": "movable_type",
+  "name": "Clay movable type",
+  "model": "type_block",
+  "homeEra": "medieval",
+  "homeHint": "It belongs in Medieval East Asia, around 1040.",
+  "challenge": "puzzle",
+  "energy": 24,
+  "fact": "Bi Sheng’s movable type was made of baked clay, one character per block.",
+  "homeRegion": "eastasia"
+ },
+ {
+  "id": "porcelain_vase",
+  "name": "Blue-and-white vase",
+  "model": "vase_blue",
+  "homeEra": "medieval",
+  "homeHint": "It was fired in Medieval China, in the 1300s.",
+  "challenge": "sneak",
+  "energy": 26,
+  "fact": "Blue-and-white porcelain was painted with cobalt and became famous worldwide.",
+  "homeRegion": "eastasia"
+ },
+ {
+  "id": "stained_glass",
+  "name": "Stained-glass panel",
+  "model": "stained_glass",
+  "homeEra": "medieval",
+  "homeHint": "Its colours belong to Medieval Europe.",
+  "challenge": "puzzle",
+  "energy": 22,
+  "fact": "Medieval glassmakers coloured glass with metal oxides and joined pieces with lead strips.",
+  "homeRegion": "europe"
+ },
+ {
+  "id": "figurehead",
+  "name": "Carved ship’s figurehead",
+  "model": "figurehead",
+  "homeEra": "medieval",
+  "homeHint": "It sailed in Medieval Scandinavia.",
+  "challenge": "sneak",
+  "energy": 22,
+  "fact": "Viking Age ships often had carved prows. Despite the myths, there is no evidence of horned helmets.",
+  "homeRegion": "europe"
+ },
+ {
+  "id": "papyrus_scroll",
+  "name": "Papyrus scroll",
+  "model": "scroll",
+  "homeEra": "earlyciv",
+  "homeHint": "It was written in Early Civilizations Egypt.",
+  "challenge": "catch",
+  "energy": 20,
+  "fact": "Egyptian scribes wrote on papyrus with reed brushes and ink made from soot.",
+  "homeRegion": "mena"
+ },
+ {
+  "id": "clay_tablet",
+  "name": "Cuneiform tablet",
+  "model": "tablet",
+  "homeEra": "earlyciv",
+  "homeHint": "It was pressed in Early Civilizations Mesopotamia.",
+  "challenge": "puzzle",
+  "energy": 22,
+  "fact": "Cuneiform tablets recorded everything from beer rations to the Epic of Gilgamesh.",
+  "homeRegion": "mena"
+ },
+ {
+  "id": "sundial",
+  "name": "Shadow clock",
+  "model": "sundial",
+  "homeEra": "earlyciv",
+  "homeHint": "It tells time in Early Civilizations Egypt.",
+  "challenge": "puzzle",
+  "energy": 22,
+  "fact": "Egyptian shadow clocks from about 1500 BCE are among the oldest known timekeeping instruments.",
+  "homeRegion": "mena"
+ },
+ {
+  "id": "amphora",
+  "name": "Amphora",
+  "model": "amphora",
+  "homeEra": "classical",
+  "homeHint": "It was carried in Classical Antiquity, around the Mediterranean.",
+  "challenge": "catch",
+  "energy": 20,
+  "fact": "Amphorae had pointed bottoms so they could be packed tightly in a ship’s hold."
+ },
+ {
+  "id": "kite",
+  "name": "Silk kite",
+  "model": "kite",
+  "homeEra": "classical",
+  "homeHint": "It flies home to Classical East Asia.",
+  "challenge": "chase",
+  "energy": 22,
+  "fact": "Kites are thought to have been invented in China over 2,000 years ago.",
+  "homeRegion": "eastasia"
+ },
+ {
+  "id": "abacus",
+  "name": "Abacus",
+  "model": "abacus",
+  "homeEra": "classical",
+  "homeHint": "It counts home to Classical Antiquity.",
+  "challenge": "puzzle",
+  "energy": 20,
+  "fact": "Counting boards and abacuses helped merchants calculate quickly."
+ },
+ {
+  "id": "hand_axe",
+  "name": "Hand axe",
+  "model": "hand_axe",
+  "homeEra": "iceage",
+  "homeHint": "It was knapped in the Ice Age.",
+  "challenge": "catch",
+  "energy": 28,
+  "fact": "Teardrop-shaped hand axes were made for over a million years, the longest-used tool design in history."
+ },
+ {
+  "id": "ochre_pot",
+  "name": "Ochre paint pot",
+  "model": "ochre_pot",
+  "homeEra": "iceage",
+  "homeHint": "Its paint belongs to Ice Age Europe.",
+  "challenge": "sneak",
+  "energy": 28,
+  "fact": "Cave painters mixed ochre and charcoal with water or fat to make paint."
+ },
+ {
+  "id": "mammoth_calf",
+  "name": "Mammoth calf",
+  "model": "mammoth_calf",
+  "homeEra": "iceage",
+  "homeHint": "This calf belongs on the Ice Age steppe.",
+  "challenge": "chase",
+  "energy": 34,
+  "fact": "Mammoth calves had fluffy reddish-brown fur and stayed close to their mothers.",
+  "creature": true
+ },
+ {
+  "id": "sabertooth_kitten",
+  "name": "Sabre-tooth kitten",
+  "model": "sabertooth_kitten",
+  "homeEra": "iceage",
+  "homeHint": "It belongs in the Ice Age Americas.",
+  "challenge": "chase",
+  "energy": 32,
+  "fact": "Smilodon kittens were born with small teeth. Their famous sabres grew in later.",
+  "homeRegion": "northamerica",
+  "creature": true
+ },
+ {
+  "id": "baby_triceratops",
+  "name": "Baby Triceratops",
+  "model": "baby_trike",
+  "homeEra": "dinosaurs",
+  "homeHint": "It hatched in the Age of Dinosaurs, about 66 million years ago.",
+  "challenge": "chase",
+  "energy": 40,
+  "fact": "Baby Triceratops had tiny horns and a short frill, which grew as they matured.",
+  "creature": true
+ },
+ {
+  "id": "ammonite",
+  "name": "Living ammonite",
+  "model": "ammonite",
+  "homeEra": "dinosaurs",
+  "homeHint": "It swam in seas of the Age of Dinosaurs.",
+  "challenge": "catch",
+  "energy": 34,
+  "fact": "Ammonites were shelled relatives of squid that died out with the dinosaurs.",
+  "creature": true
+ },
+ {
+  "id": "dodo",
+  "name": "Dodo",
+  "model": "dodo",
+  "homeEra": "exploration",
+  "homeHint": "It waddles home to Mauritius, in the Age of Exploration.",
+  "challenge": "chase",
+  "energy": 30,
+  "fact": "The dodo of Mauritius was a flightless bird. It was last reliably seen in the 1660s.",
+  "homeRegion": "subsaharan",
+  "creature": true
+ },
+ {
+  "id": "moa_chick",
+  "name": "Moa chick",
+  "model": "moa_chick",
+  "homeEra": "medieval",
+  "homeHint": "It belongs in Medieval Aotearoa New Zealand.",
+  "challenge": "chase",
+  "energy": 30,
+  "fact": "Moa were giant flightless birds of New Zealand. Some species stood 3.6 m tall.",
+  "homeRegion": "oceania",
+  "creature": true
+ },
+ {
+  "id": "hoverboard",
+  "name": "Hoverboard",
+  "model": "hoverboard",
+  "homeEra": "nearfuture",
+  "homeHint": "It hums home to the Near Future.",
+  "challenge": "chase",
+  "energy": 26,
+  "fact": "Imagined: magnetic boards that glide over special pavements."
+ },
+ {
+  "id": "solar_kite",
+  "name": "Solar kite drone",
+  "model": "solar_drone",
+  "homeEra": "nearfuture",
+  "homeHint": "It flies home to the Near Future.",
+  "challenge": "chase",
+  "energy": 26,
+  "fact": "Imagined: kite-shaped drones that harvest wind and sun high above cities.",
+  "creature": true
+ },
+ {
+  "id": "holo_cube",
+  "name": "Holo-cube",
+  "model": "holo_cube",
+  "homeEra": "farfuture",
+  "homeHint": "It glows home to the Far Future.",
+  "challenge": "puzzle",
+  "energy": 30,
+  "fact": "Imagined: memory cubes that store a whole library in light."
+ },
+ {
+  "id": "robot_companion",
+  "name": "Robot companion \"Bolt\"",
+  "model": "robot",
+  "homeEra": "farfuture",
+  "homeHint": "Bolt wants to go home to the Far Future.",
+  "challenge": "chase",
+  "energy": 32,
+  "fact": "Imagined: helper robots in the far future are designed to be curious and kind.",
+  "creature": true
+ },
+ {
+  "id": "time_crystal",
+  "name": "Time crystal",
+  "model": "time_crystal",
+  "homeEra": "farfuture",
+  "homeHint": "It hums home to the Far Future.",
+  "challenge": "sneak",
+  "energy": 34,
+  "fact": "Imagined: crystals that store a heartbeat of time, used to power Chronometers."
+ },
+ {
+  "id": "pyramid_stone",
+  "name": "Pyramid casing stone",
+  "model": "casing_stone",
+  "homeEra": "earlyciv",
+  "homeHint": "It belongs at Giza, around 2560 BCE.",
+  "challenge": "catch",
+  "energy": 40,
+  "fact": "The Great Pyramid was originally covered in polished white limestone casing stones that shone in the sun.",
+  "homeRegion": "mena",
+  "story": true
+ },
+ {
+  "id": "rocket_toy",
+  "name": "Saturn V model",
+  "model": "rocket",
+  "homeEra": "modern",
+  "homeHint": "It belongs in the Modern era, from 1967 on.",
+  "challenge": "catch",
+  "energy": 24,
+  "fact": "The Saturn V rocket that launched Apollo 11 stood 110 metres tall."
+ },
+ {
+  "id": "film_reel",
+  "name": "Film reel",
+  "model": "film_reel",
+  "homeEra": "modern",
+  "homeHint": "It belongs in the Modern era.",
+  "challenge": "sneak",
+  "energy": 22,
+  "fact": "Before digital cameras, movies were recorded on long strips of film."
+ }
+]

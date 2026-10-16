@@ -1,0 +1,5375 @@
+[
+ {
+  "id": "tyrannosaurus",
+  "name": "Tyrannosaurus",
+  "archetype": "theropod",
+  "scale": 12,
+  "body": {
+   "l": 5,
+   "h": 2.2,
+   "w": 1.6,
+   "leg": 3.2,
+   "legT": 0.7,
+   "neck": 1.2,
+   "neckUp": 0.3,
+   "head": 1.6,
+   "tail": 5
+  },
+  "features": [
+   "big_head",
+   "tiny_arms",
+   "feathers_light"
+  ],
+  "colors": [
+   "#6b5a3a",
+   "#c8b48a",
+   "#8a3a2a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   2.2,
+   7.5
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   1
+  ],
+  "sound": "roar_big",
+  "fact": "Tyrannosaurus rex lived in western North America at the very end of the Cretaceous. It had one of the strongest bites of any land animal.",
+  "plates": [
+   1
+  ]
+ },
+ {
+  "id": "triceratops",
+  "name": "Triceratops",
+  "archetype": "quadruped",
+  "scale": 8,
+  "body": {
+   "l": 4.5,
+   "h": 2.2,
+   "w": 2,
+   "leg": 1.4,
+   "legT": 0.6,
+   "neck": 0.6,
+   "neckUp": 0.1,
+   "head": 1.8,
+   "tail": 2.2
+  },
+  "features": [
+   "frill",
+   "horns3",
+   "beak"
+  ],
+  "colors": [
+   "#7a6a4a",
+   "#c8b48a",
+   "#a8603a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.5,
+   5
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   6
+  ],
+  "sound": "honk_low",
+  "fact": "Triceratops had three horns and a great bony frill. It lived in herds, browsing low plants.",
+  "plates": [
+   1
+  ]
+ },
+ {
+  "id": "edmontosaurus",
+  "name": "Edmontosaurus",
+  "archetype": "theropod",
+  "scale": 11,
+  "body": {
+   "l": 4.6,
+   "h": 1.8,
+   "w": 1.4,
+   "leg": 2.6,
+   "legT": 0.6,
+   "neck": 1.6,
+   "neckUp": 0.35,
+   "head": 1.4,
+   "tail": 4.4
+  },
+  "features": [
+   "duckbill",
+   "herbivore"
+  ],
+  "colors": [
+   "#6a7a4a",
+   "#c8c48a",
+   "#4a5a3a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.6,
+   6
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   8
+  ],
+  "sound": "honk",
+  "fact": "Edmontosaurus was a duck-billed dinosaur with hundreds of grinding teeth for chewing tough plants.",
+  "plates": [
+   1,
+   3
+  ]
+ },
+ {
+  "id": "ankylosaurus",
+  "name": "Ankylosaurus",
+  "archetype": "quadruped",
+  "scale": 7,
+  "body": {
+   "l": 4,
+   "h": 1.4,
+   "w": 2.2,
+   "leg": 0.9,
+   "legT": 0.6,
+   "neck": 0.4,
+   "neckUp": 0,
+   "head": 1.2,
+   "tail": 2.6
+  },
+  "features": [
+   "armor",
+   "tail_club"
+  ],
+  "colors": [
+   "#7a6a5a",
+   "#a89a7a",
+   "#5a4a3a"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   1,
+   2.5
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   2
+  ],
+  "sound": "grunt",
+  "fact": "Ankylosaurus was covered in bony armour plates and swung a heavy club at the end of its tail.",
+  "plates": [
+   1
+  ]
+ },
+ {
+  "id": "alamosaurus",
+  "name": "Alamosaurus",
+  "archetype": "sauropod",
+  "scale": 26,
+  "body": {
+   "l": 7,
+   "h": 3,
+   "w": 3,
+   "leg": 4.5,
+   "legT": 1.1,
+   "neck": 9,
+   "neckUp": 0.65,
+   "head": 1.2,
+   "tail": 10
+  },
+  "features": [
+   "longneck"
+  ],
+  "colors": [
+   "#8a8a7a",
+   "#c8c4b4",
+   "#6a6a5a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   3
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "rumble",
+  "fact": "Alamosaurus was a giant long-necked titanosaur that lived in what is now the southwestern United States.",
+  "plates": [
+   1
+  ]
+ },
+ {
+  "id": "titanosaur",
+  "name": "Titanosaur",
+  "archetype": "sauropod",
+  "scale": 22,
+  "body": {
+   "l": 6.5,
+   "h": 2.8,
+   "w": 2.8,
+   "leg": 4.2,
+   "legT": 1,
+   "neck": 8,
+   "neckUp": 0.6,
+   "head": 1.1,
+   "tail": 9
+  },
+  "features": [
+   "longneck",
+   "armor_light"
+  ],
+  "colors": [
+   "#8a7a6a",
+   "#c8b8a4",
+   "#6a5a4a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   3
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "rumble",
+  "fact": "Titanosaurs were the last great long-necked dinosaurs and lived on almost every continent.",
+  "plates": [
+   2,
+   3,
+   4,
+   5,
+   7,
+   8
+  ]
+ },
+ {
+  "id": "abelisaur",
+  "name": "Abelisaur",
+  "archetype": "theropod",
+  "scale": 8,
+  "body": {
+   "l": 3.4,
+   "h": 1.6,
+   "w": 1.1,
+   "leg": 2.4,
+   "legT": 0.5,
+   "neck": 0.9,
+   "neckUp": 0.3,
+   "head": 1.1,
+   "tail": 3.6
+  },
+  "features": [
+   "tiny_arms",
+   "brow_horns"
+  ],
+  "colors": [
+   "#8a4a3a",
+   "#c8a88a",
+   "#5a3a2a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   2,
+   7
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   1
+  ],
+  "sound": "roar",
+  "fact": "Abelisaurs, such as Carnotaurus and Majungasaurus, were short-armed predators of the southern continents.",
+  "plates": [
+   2,
+   4,
+   5,
+   8
+  ]
+ },
+ {
+  "id": "velociraptor",
+  "name": "Velociraptor",
+  "archetype": "theropod",
+  "scale": 2,
+  "body": {
+   "l": 0.9,
+   "h": 0.45,
+   "w": 0.3,
+   "leg": 0.7,
+   "legT": 0.15,
+   "neck": 0.35,
+   "neckUp": 0.4,
+   "head": 0.35,
+   "tail": 1.1
+  },
+  "features": [
+   "feathers",
+   "claws"
+  ],
+  "colors": [
+   "#8a6a4a",
+   "#d8c8a8",
+   "#3a5a8a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   2.5,
+   8
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   3
+  ],
+  "sound": "chirp_harsh",
+  "fact": "Velociraptor was about the size of a turkey, covered in feathers, and lived in the deserts of Mongolia.",
+  "plates": [
+   3
+  ]
+ },
+ {
+  "id": "hadrosaur",
+  "name": "Hadrosaur",
+  "archetype": "theropod",
+  "scale": 9,
+  "body": {
+   "l": 4,
+   "h": 1.6,
+   "w": 1.3,
+   "leg": 2.4,
+   "legT": 0.55,
+   "neck": 1.5,
+   "neckUp": 0.4,
+   "head": 1.3,
+   "tail": 4
+  },
+  "features": [
+   "duckbill",
+   "crest"
+  ],
+  "colors": [
+   "#5a7a6a",
+   "#c8d0b4",
+   "#a84a3a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.6,
+   6
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   7
+  ],
+  "sound": "honk",
+  "fact": "Hadrosaurs were plant-eaters that walked on two or four legs. Some had hollow crests for calling.",
+  "plates": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ]
+ },
+ {
+  "id": "pterosaur",
+  "name": "Quetzalcoatlus",
+  "archetype": "pterosaur",
+  "scale": 5,
+  "body": {
+   "l": 1.6,
+   "h": 0.6,
+   "w": 0.5,
+   "leg": 1.6,
+   "legT": 0.15,
+   "neck": 1.6,
+   "neckUp": 0.6,
+   "head": 1.8,
+   "tail": 0.2
+  },
+  "features": [
+   "crest",
+   "wings_big"
+  ],
+  "colors": [
+   "#e8e0d0",
+   "#c8b8a0",
+   "#a84a3a"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   4,
+   12
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "screech",
+  "fact": "Quetzalcoatlus was a pterosaur, a flying reptile, with a wingspan of about 10 metres, as wide as a small plane."
+ },
+ {
+  "id": "ornithomimus",
+  "name": "Ornithomimus",
+  "archetype": "theropod",
+  "scale": 3.5,
+  "body": {
+   "l": 1.4,
+   "h": 0.8,
+   "w": 0.6,
+   "leg": 1.6,
+   "legT": 0.2,
+   "neck": 1.2,
+   "neckUp": 0.6,
+   "head": 0.5,
+   "tail": 1.8
+  },
+  "features": [
+   "feathers",
+   "beak"
+  ],
+  "colors": [
+   "#a88a5a",
+   "#e8dcc0",
+   "#5a4a3a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   3,
+   12
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   8
+  ],
+  "sound": "chirp",
+  "fact": "Ornithomimus looked a little like an ostrich and was one of the fastest dinosaurs.",
+  "plates": [
+   1,
+   3
+  ]
+ },
+ {
+  "id": "protoceratops",
+  "name": "Protoceratops",
+  "archetype": "quadruped",
+  "scale": 2,
+  "body": {
+   "l": 1.2,
+   "h": 0.7,
+   "w": 0.6,
+   "leg": 0.5,
+   "legT": 0.2,
+   "neck": 0.3,
+   "neckUp": 0.1,
+   "head": 0.7,
+   "tail": 0.8
+  },
+  "features": [
+   "frill_small",
+   "beak"
+  ],
+  "colors": [
+   "#c8a878",
+   "#e8d8b8",
+   "#8a6a4a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1,
+   3.5
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   6
+  ],
+  "sound": "grunt",
+  "fact": "Protoceratops was a sheep-sized horned dinosaur from Mongolia, often found fossilised near Velociraptor.",
+  "plates": [
+   3
+  ]
+ },
+ {
+  "id": "mosasaur",
+  "name": "Mosasaur",
+  "archetype": "fish",
+  "scale": 12,
+  "body": {
+   "l": 8,
+   "h": 1.4,
+   "w": 1.2,
+   "leg": 0,
+   "legT": 0,
+   "neck": 0.5,
+   "neckUp": 0,
+   "head": 2,
+   "tail": 4
+  },
+  "features": [
+   "flippers",
+   "jaws"
+  ],
+  "colors": [
+   "#3a5a6a",
+   "#a8c0c8",
+   "#2a3a4a"
+  ],
+  "behaviour": "swimmer",
+  "speed": [
+   2,
+   6
+  ],
+  "eras": [
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": [
+   "ocean",
+   "beach"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "splash",
+  "fact": "Mosasaurs were huge marine reptiles, not dinosaurs, that swam in Cretaceous seas."
+ },
+ {
+  "id": "early_horse",
+  "name": "Early horse",
+  "archetype": "quadruped",
+  "scale": 1.2,
+  "body": {
+   "l": 0.9,
+   "h": 0.5,
+   "w": 0.35,
+   "leg": 0.6,
+   "legT": 0.1,
+   "neck": 0.35,
+   "neckUp": 0.5,
+   "head": 0.35,
+   "tail": 0.3
+  },
+  "features": [
+   "toes"
+  ],
+  "colors": [
+   "#8a6a4a",
+   "#c8b08a",
+   "#5a4030"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.5,
+   6
+  ],
+  "eras": [
+   "mammals"
+  ],
+  "regions": "*",
+  "biomes": [
+   "temperate_forest",
+   "grassland",
+   "savanna",
+   "tropical_dry",
+   "mediterranean"
+  ],
+  "group": [
+   3,
+   7
+  ],
+  "sound": "neigh_small",
+  "fact": "The earliest horses were the size of a fox and had several toes on each foot."
+ },
+ {
+  "id": "mastodon",
+  "name": "Mastodon",
+  "archetype": "quadruped",
+  "scale": 4,
+  "body": {
+   "l": 3,
+   "h": 2,
+   "w": 1.6,
+   "leg": 1.8,
+   "legT": 0.5,
+   "neck": 0.4,
+   "neckUp": 0.2,
+   "head": 1,
+   "tail": 0.4
+  },
+  "features": [
+   "trunk",
+   "tusks",
+   "hair"
+  ],
+  "colors": [
+   "#5a4030",
+   "#7a5a40",
+   "#e8e0cc"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   3
+  ],
+  "eras": [
+   "mammals",
+   "iceage"
+  ],
+  "regions": [
+   "northamerica",
+   "centralamerica",
+   "southamerica",
+   "europe",
+   "northasia",
+   "eastasia",
+   "subsaharan"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "grassland",
+   "taiga",
+   "wetland",
+   "steppe"
+  ],
+  "group": [
+   2,
+   5
+  ],
+  "sound": "trumpet",
+  "fact": "Mastodons were distant relatives of elephants that browsed on trees and shrubs."
+ },
+ {
+  "id": "terror_bird",
+  "name": "Terror bird",
+  "archetype": "theropod",
+  "scale": 2.5,
+  "body": {
+   "l": 1,
+   "h": 0.8,
+   "w": 0.5,
+   "leg": 1.2,
+   "legT": 0.2,
+   "neck": 0.8,
+   "neckUp": 0.7,
+   "head": 0.6,
+   "tail": 0.5
+  },
+  "features": [
+   "beak_hook",
+   "feathers"
+  ],
+  "colors": [
+   "#5a4a3a",
+   "#a89070",
+   "#c84a2a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   2,
+   8
+  ],
+  "eras": [
+   "mammals"
+  ],
+  "regions": [
+   "southamerica"
+  ],
+  "biomes": "*",
+  "group": [
+   1,
+   2
+  ],
+  "sound": "squawk",
+  "fact": "Terror birds were tall flightless predatory birds that lived in South America."
+ },
+ {
+  "id": "ground_sloth",
+  "name": "Giant ground sloth",
+  "archetype": "quadruped",
+  "scale": 5,
+  "body": {
+   "l": 3,
+   "h": 2,
+   "w": 1.6,
+   "leg": 1.4,
+   "legT": 0.6,
+   "neck": 0.6,
+   "neckUp": 0.5,
+   "head": 0.8,
+   "tail": 1.2
+  },
+  "features": [
+   "claws",
+   "hair"
+  ],
+  "colors": [
+   "#7a5a40",
+   "#a8885a",
+   "#5a4030"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   0.6,
+   1.6
+  ],
+  "eras": [
+   "mammals",
+   "iceage"
+  ],
+  "regions": [
+   "northamerica",
+   "centralamerica",
+   "southamerica"
+  ],
+  "biomes": "*",
+  "group": [
+   1,
+   2
+  ],
+  "sound": "grunt",
+  "fact": "Giant ground sloths could be as big as an elephant and stood on their hind legs to reach leaves."
+ },
+ {
+  "id": "glyptodon",
+  "name": "Glyptodon",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.2,
+   "h": 1.3,
+   "w": 1.6,
+   "leg": 0.6,
+   "legT": 0.4,
+   "neck": 0.2,
+   "neckUp": 0,
+   "head": 0.5,
+   "tail": 1.2
+  },
+  "features": [
+   "shell",
+   "tail_club"
+  ],
+  "colors": [
+   "#8a7a5a",
+   "#a89a7a",
+   "#5a4a3a"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   0.6,
+   1.5
+  ],
+  "eras": [
+   "mammals",
+   "iceage"
+  ],
+  "regions": [
+   "southamerica",
+   "centralamerica"
+  ],
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "grunt",
+  "fact": "Glyptodon was a car-sized relative of armadillos with a domed shell."
+ },
+ {
+  "id": "mammoth",
+  "name": "Woolly mammoth",
+  "archetype": "quadruped",
+  "scale": 5,
+  "body": {
+   "l": 3.6,
+   "h": 2.4,
+   "w": 2,
+   "leg": 2,
+   "legT": 0.7,
+   "neck": 0.5,
+   "neckUp": 0.2,
+   "head": 1.2,
+   "tail": 0.5
+  },
+  "features": [
+   "trunk",
+   "tusks_curved",
+   "hair_long",
+   "hump_small"
+  ],
+  "colors": [
+   "#6b4a30",
+   "#8a6040",
+   "#f2ead8"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   4
+  ],
+  "eras": [
+   "iceage"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "northamerica",
+   "arctic",
+   "eastasia"
+  ],
+  "biomes": [
+   "tundra",
+   "steppe",
+   "grassland",
+   "taiga",
+   "ice"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "trumpet",
+  "fact": "Woolly mammoths had thick fur, small ears and a layer of fat. A few survived on Wrangel Island until about 4,000 years ago."
+ },
+ {
+  "id": "woolly_rhino",
+  "name": "Woolly rhinoceros",
+  "archetype": "quadruped",
+  "scale": 3.5,
+  "body": {
+   "l": 2.8,
+   "h": 1.6,
+   "w": 1.4,
+   "leg": 1.1,
+   "legT": 0.5,
+   "neck": 0.4,
+   "neckUp": 0.1,
+   "head": 0.9,
+   "tail": 0.4
+  },
+  "features": [
+   "horn_big",
+   "hair_long"
+  ],
+  "colors": [
+   "#7a5a3a",
+   "#9a7a5a",
+   "#d8d0c0"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   1.2,
+   5
+  ],
+  "eras": [
+   "iceage"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "eastasia",
+   "arctic"
+  ],
+  "biomes": [
+   "tundra",
+   "steppe",
+   "grassland"
+  ],
+  "group": [
+   1,
+   3
+  ],
+  "sound": "grunt",
+  "fact": "Woolly rhinoceroses grazed the cold steppes of Europe and Asia. Ice Age artists painted them in caves."
+ },
+ {
+  "id": "megaloceros",
+  "name": "Giant deer",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2,
+   "h": 1.1,
+   "w": 0.7,
+   "leg": 1.6,
+   "legT": 0.2,
+   "neck": 0.8,
+   "neckUp": 0.6,
+   "head": 0.6,
+   "tail": 0.2
+  },
+  "features": [
+   "antlers_giant"
+  ],
+  "colors": [
+   "#8a6040",
+   "#c8a880",
+   "#5a4030"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.5,
+   8
+  ],
+  "eras": [
+   "iceage",
+   "stoneage"
+  ],
+  "regions": [
+   "europe",
+   "northasia"
+  ],
+  "biomes": [
+   "grassland",
+   "steppe",
+   "tundra",
+   "temperate_forest",
+   "taiga"
+  ],
+  "group": [
+   3,
+   6
+  ],
+  "sound": "bellow",
+  "fact": "The giant deer Megaloceros had antlers up to 3.6 metres across."
+ },
+ {
+  "id": "cave_bear",
+  "name": "Cave bear",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.2,
+   "h": 1.4,
+   "w": 1.1,
+   "leg": 1,
+   "legT": 0.45,
+   "neck": 0.5,
+   "neckUp": 0.2,
+   "head": 0.7,
+   "tail": 0.2
+  },
+  "features": [
+   "hair"
+  ],
+  "colors": [
+   "#5a3e2a",
+   "#7a5a40",
+   "#3a2a1a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   1.2,
+   6
+  ],
+  "eras": [
+   "iceage"
+  ],
+  "regions": [
+   "europe",
+   "northasia"
+  ],
+  "biomes": "*",
+  "group": [
+   1,
+   1
+  ],
+  "sound": "growl",
+  "fact": "Cave bears were large bears that ate mostly plants. Their bones are found by the thousands in European caves."
+ },
+ {
+  "id": "cave_lion",
+  "name": "Cave lion",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.2,
+   "h": 1,
+   "w": 0.7,
+   "leg": 1.2,
+   "legT": 0.3,
+   "neck": 0.5,
+   "neckUp": 0.4,
+   "head": 0.6,
+   "tail": 1
+  },
+  "features": [
+   "tail_tuft"
+  ],
+  "colors": [
+   "#c8a878",
+   "#e8d8b8",
+   "#8a6a4a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   1.5,
+   9
+  ],
+  "eras": [
+   "iceage"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "northamerica",
+   "arctic"
+  ],
+  "biomes": "*",
+  "group": [
+   1,
+   2
+  ],
+  "sound": "roar",
+  "fact": "Cave lions hunted across the Ice Age steppe from Europe to Alaska."
+ },
+ {
+  "id": "smilodon",
+  "name": "Smilodon",
+  "archetype": "quadruped",
+  "scale": 2.5,
+  "body": {
+   "l": 1.8,
+   "h": 1,
+   "w": 0.8,
+   "leg": 1,
+   "legT": 0.35,
+   "neck": 0.4,
+   "neckUp": 0.4,
+   "head": 0.6,
+   "tail": 0.3
+  },
+  "features": [
+   "sabre_teeth"
+  ],
+  "colors": [
+   "#b8946a",
+   "#e0c8a0",
+   "#6a5030"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   1.5,
+   9
+  ],
+  "eras": [
+   "iceage"
+  ],
+  "regions": [
+   "northamerica",
+   "centralamerica",
+   "southamerica"
+  ],
+  "biomes": "*",
+  "group": [
+   1,
+   2
+  ],
+  "sound": "roar",
+  "fact": "Smilodon, the sabre-toothed cat, had canine teeth up to 28 cm long."
+ },
+ {
+  "id": "steppe_bison",
+  "name": "Steppe bison",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.4,
+   "h": 1.6,
+   "w": 1.1,
+   "leg": 1.2,
+   "legT": 0.4,
+   "neck": 0.4,
+   "neckUp": 0.2,
+   "head": 0.8,
+   "tail": 0.4
+  },
+  "features": [
+   "horns",
+   "hump",
+   "hair"
+  ],
+  "colors": [
+   "#5a3e2a",
+   "#7a5a40",
+   "#3a2a1a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   7
+  ],
+  "eras": [
+   "iceage"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "northamerica",
+   "arctic"
+  ],
+  "biomes": [
+   "steppe",
+   "grassland",
+   "tundra"
+  ],
+  "group": [
+   4,
+   10
+  ],
+  "sound": "grunt",
+  "fact": "Steppe bison were common on the Ice Age grasslands and appear often in cave paintings."
+ },
+ {
+  "id": "diprotodon",
+  "name": "Diprotodon",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.6,
+   "h": 1.6,
+   "w": 1.4,
+   "leg": 1,
+   "legT": 0.5,
+   "neck": 0.3,
+   "neckUp": 0.1,
+   "head": 0.8,
+   "tail": 0.3
+  },
+  "features": [
+   "hair"
+  ],
+  "colors": [
+   "#7a6040",
+   "#a88a60",
+   "#5a4030"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   0.8,
+   2.5
+  ],
+  "eras": [
+   "iceage"
+  ],
+  "regions": [
+   "oceania"
+  ],
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "grunt",
+  "fact": "Diprotodon was the largest marsupial ever, about the size of a rhinoceros, living in Ice Age Australia."
+ },
+ {
+  "id": "wild_horse",
+  "name": "Wild horse",
+  "archetype": "quadruped",
+  "scale": 2.2,
+  "body": {
+   "l": 1.6,
+   "h": 0.9,
+   "w": 0.5,
+   "leg": 1.2,
+   "legT": 0.16,
+   "neck": 0.7,
+   "neckUp": 0.6,
+   "head": 0.6,
+   "tail": 0.6
+  },
+  "features": [
+   "mane"
+  ],
+  "colors": [
+   "#a8784a",
+   "#d8b88a",
+   "#3a2a1a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.6,
+   12
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "arctic",
+   "northamerica"
+  ],
+  "biomes": [
+   "steppe",
+   "grassland",
+   "tundra"
+  ],
+  "group": [
+   4,
+   10
+  ],
+  "sound": "neigh",
+  "fact": "Wild horses roamed Ice Age steppes across Eurasia and North America."
+ },
+ {
+  "id": "reindeer",
+  "name": "Reindeer",
+  "archetype": "quadruped",
+  "scale": 2,
+  "body": {
+   "l": 1.6,
+   "h": 0.9,
+   "w": 0.5,
+   "leg": 1.1,
+   "legT": 0.15,
+   "neck": 0.6,
+   "neckUp": 0.5,
+   "head": 0.5,
+   "tail": 0.15
+  },
+  "features": [
+   "antlers"
+  ],
+  "colors": [
+   "#8a7a6a",
+   "#d8d0c0",
+   "#5a4a3a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.4,
+   10
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "arctic",
+   "northasia",
+   "europe",
+   "northamerica"
+  ],
+  "biomes": [
+   "tundra",
+   "taiga",
+   "ice"
+  ],
+  "group": [
+   4,
+   12
+  ],
+  "sound": "grunt",
+  "fact": "Reindeer (caribou in North America) migrate huge distances, and both males and females grow antlers."
+ },
+ {
+  "id": "arctic_fox",
+  "name": "Arctic fox",
+  "archetype": "quadruped",
+  "scale": 0.7,
+  "body": {
+   "l": 0.6,
+   "h": 0.3,
+   "w": 0.22,
+   "leg": 0.3,
+   "legT": 0.07,
+   "neck": 0.15,
+   "neckUp": 0.4,
+   "head": 0.22,
+   "tail": 0.35
+  },
+  "features": [
+   "tail_bushy"
+  ],
+  "colors": [
+   "#f2f2f0",
+   "#e8e8e4",
+   "#3a3a3a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1.5,
+   8
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "arctic",
+   "northasia",
+   "northamerica",
+   "europe"
+  ],
+  "biomes": [
+   "tundra",
+   "ice",
+   "taiga"
+  ],
+  "group": [
+   1,
+   2
+  ],
+  "sound": "yip",
+  "fact": "Arctic foxes turn white in winter and brown-grey in summer."
+ },
+ {
+  "id": "aurochs",
+  "name": "Aurochs",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.4,
+   "h": 1.6,
+   "w": 1,
+   "leg": 1.3,
+   "legT": 0.4,
+   "neck": 0.4,
+   "neckUp": 0.2,
+   "head": 0.8,
+   "tail": 0.8
+  },
+  "features": [
+   "horns_long"
+  ],
+  "colors": [
+   "#2e2622",
+   "#4a3a30",
+   "#e8e0d0"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   7
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration"
+  ],
+  "regions": [
+   "europe",
+   "mena",
+   "northasia",
+   "southasia"
+  ],
+  "biomes": [
+   "grassland",
+   "temperate_forest",
+   "wetland",
+   "steppe"
+  ],
+  "group": [
+   3,
+   7
+  ],
+  "sound": "moo_low",
+  "fact": "The aurochs, the wild ancestor of cattle, survived in Poland until 1627."
+ },
+ {
+  "id": "red_deer",
+  "name": "Deer",
+  "archetype": "quadruped",
+  "scale": 1.8,
+  "body": {
+   "l": 1.3,
+   "h": 0.8,
+   "w": 0.45,
+   "leg": 1,
+   "legT": 0.12,
+   "neck": 0.6,
+   "neckUp": 0.6,
+   "head": 0.45,
+   "tail": 0.15
+  },
+  "features": [
+   "antlers"
+  ],
+  "colors": [
+   "#9a6a40",
+   "#d8c0a0",
+   "#5a4030"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1.4,
+   11
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "europe",
+   "northamerica",
+   "northasia",
+   "eastasia",
+   "mena",
+   "southasia"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "taiga",
+   "grassland",
+   "mediterranean",
+   "alpine"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "bellow",
+  "fact": "Deer shed and regrow their antlers every year."
+ },
+ {
+  "id": "wild_boar",
+  "name": "Wild boar",
+  "archetype": "quadruped",
+  "scale": 1.5,
+  "body": {
+   "l": 1.2,
+   "h": 0.8,
+   "w": 0.55,
+   "leg": 0.5,
+   "legT": 0.15,
+   "neck": 0.2,
+   "neckUp": 0.1,
+   "head": 0.5,
+   "tail": 0.2
+  },
+  "features": [
+   "tusks_small",
+   "bristles"
+  ],
+  "colors": [
+   "#4a3a2e",
+   "#6a5a48",
+   "#2a2018"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   1,
+   6
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "europe",
+   "eastasia",
+   "southasia",
+   "mena",
+   "northasia",
+   "seasia"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "mediterranean",
+   "taiga",
+   "wetland",
+   "tropical_dry"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "oink",
+  "fact": "Wild boar are the ancestors of domestic pigs and still live in forests across Eurasia."
+ },
+ {
+  "id": "brown_bear",
+  "name": "Brown bear",
+  "archetype": "quadruped",
+  "scale": 2.4,
+  "body": {
+   "l": 1.9,
+   "h": 1.2,
+   "w": 0.9,
+   "leg": 0.85,
+   "legT": 0.4,
+   "neck": 0.4,
+   "neckUp": 0.2,
+   "head": 0.6,
+   "tail": 0.15
+  },
+  "features": [
+   "hair"
+  ],
+  "colors": [
+   "#6b4a30",
+   "#8a6a48",
+   "#3a2a1a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   1.2,
+   9
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "northamerica",
+   "arctic",
+   "eastasia"
+  ],
+  "biomes": [
+   "taiga",
+   "temperate_forest",
+   "alpine",
+   "tundra"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "growl",
+  "fact": "Brown bears eat berries, roots, fish and insects, and sleep through the winter in dens."
+ },
+ {
+  "id": "wolf",
+  "name": "Wolf",
+  "archetype": "quadruped",
+  "scale": 1.5,
+  "body": {
+   "l": 1.2,
+   "h": 0.6,
+   "w": 0.35,
+   "leg": 0.8,
+   "legT": 0.12,
+   "neck": 0.4,
+   "neckUp": 0.4,
+   "head": 0.4,
+   "tail": 0.5
+  },
+  "features": [
+   "tail_bushy",
+   "ears_pointed"
+  ],
+  "colors": [
+   "#8a8478",
+   "#c8c4b8",
+   "#4a4640"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   1.5,
+   10
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "northamerica",
+   "arctic",
+   "eastasia",
+   "mena",
+   "southasia"
+  ],
+  "biomes": [
+   "taiga",
+   "temperate_forest",
+   "tundra",
+   "steppe",
+   "grassland",
+   "alpine"
+  ],
+  "group": [
+   2,
+   5
+  ],
+  "sound": "howl",
+  "fact": "Wolves live in family packs. Dogs were domesticated from ancient wolves."
+ },
+ {
+  "id": "fox",
+  "name": "Red fox",
+  "archetype": "quadruped",
+  "scale": 0.8,
+  "body": {
+   "l": 0.7,
+   "h": 0.32,
+   "w": 0.22,
+   "leg": 0.35,
+   "legT": 0.07,
+   "neck": 0.18,
+   "neckUp": 0.4,
+   "head": 0.25,
+   "tail": 0.45
+  },
+  "features": [
+   "tail_bushy",
+   "ears_pointed"
+  ],
+  "colors": [
+   "#c8642a",
+   "#f2e8d8",
+   "#2a2018"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1.5,
+   9
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "europe",
+   "northasia",
+   "northamerica",
+   "eastasia",
+   "mena",
+   "southasia"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "grassland",
+   "taiga",
+   "mediterranean",
+   "steppe",
+   "scrubland"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "yip",
+  "fact": "Red foxes live on more continents than any other wild carnivore."
+ },
+ {
+  "id": "rabbit",
+  "name": "Rabbit",
+  "archetype": "hopper",
+  "scale": 0.4,
+  "body": {
+   "l": 0.35,
+   "h": 0.25,
+   "w": 0.2,
+   "leg": 0.2,
+   "legT": 0.06,
+   "neck": 0.1,
+   "neckUp": 0.5,
+   "head": 0.16,
+   "tail": 0.06
+  },
+  "features": [
+   "ears_long"
+  ],
+  "colors": [
+   "#a8906a",
+   "#e8dcc8",
+   "#6a5a48"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1,
+   7
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "europe",
+   "mena",
+   "northamerica",
+   "subsaharan",
+   "northasia"
+  ],
+  "biomes": [
+   "grassland",
+   "mediterranean",
+   "temperate_forest",
+   "scrubland",
+   "steppe",
+   "desert"
+  ],
+  "group": [
+   2,
+   5
+  ],
+  "sound": "none",
+  "fact": "Rabbits and hares have long ears that help them hear danger and shed heat."
+ },
+ {
+  "id": "moose",
+  "name": "Moose",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.2,
+   "h": 1.4,
+   "w": 0.8,
+   "leg": 1.6,
+   "legT": 0.25,
+   "neck": 0.6,
+   "neckUp": 0.5,
+   "head": 0.8,
+   "tail": 0.15
+  },
+  "features": [
+   "antlers_palm",
+   "hump_small"
+  ],
+  "colors": [
+   "#4a3a2e",
+   "#6a5a48",
+   "#2a2018"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   1.2,
+   9
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "northamerica",
+   "northasia",
+   "europe",
+   "arctic"
+  ],
+  "biomes": [
+   "taiga",
+   "wetland",
+   "tundra"
+  ],
+  "group": [
+   1,
+   2
+  ],
+  "sound": "bellow",
+  "fact": "Moose are the largest deer and are good swimmers."
+ },
+ {
+  "id": "bison",
+  "name": "Bison",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.4,
+   "h": 1.6,
+   "w": 1.1,
+   "leg": 1.1,
+   "legT": 0.4,
+   "neck": 0.4,
+   "neckUp": 0.15,
+   "head": 0.8,
+   "tail": 0.4
+  },
+  "features": [
+   "horns",
+   "hump",
+   "hair"
+  ],
+  "colors": [
+   "#4a3424",
+   "#6a4a34",
+   "#2a1a12"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   9
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "northamerica",
+   "europe"
+  ],
+  "biomes": [
+   "grassland",
+   "steppe",
+   "temperate_forest"
+  ],
+  "group": [
+   5,
+   14
+  ],
+  "sound": "grunt",
+  "fact": "Tens of millions of bison once roamed the Great Plains of North America."
+ },
+ {
+  "id": "gazelle",
+  "name": "Gazelle",
+  "archetype": "quadruped",
+  "scale": 1.2,
+  "body": {
+   "l": 1,
+   "h": 0.55,
+   "w": 0.32,
+   "leg": 0.9,
+   "legT": 0.08,
+   "neck": 0.45,
+   "neckUp": 0.6,
+   "head": 0.3,
+   "tail": 0.15
+  },
+  "features": [
+   "horns_thin"
+  ],
+  "colors": [
+   "#c8a06a",
+   "#f2e8d8",
+   "#4a3424"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1.6,
+   14
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "mena",
+   "subsaharan",
+   "southasia",
+   "northasia"
+  ],
+  "biomes": [
+   "desert",
+   "savanna",
+   "scrubland",
+   "steppe",
+   "grassland"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "none",
+  "fact": "Gazelles can run at over 60 km/h and bound high to show predators they are fit."
+ },
+ {
+  "id": "lion",
+  "name": "Lion",
+  "archetype": "quadruped",
+  "scale": 2.5,
+  "body": {
+   "l": 1.9,
+   "h": 1,
+   "w": 0.7,
+   "leg": 1.1,
+   "legT": 0.3,
+   "neck": 0.5,
+   "neckUp": 0.4,
+   "head": 0.6,
+   "tail": 0.9
+  },
+  "features": [
+   "mane_lion",
+   "tail_tuft"
+  ],
+  "colors": [
+   "#c8a06a",
+   "#e8d0a0",
+   "#7a4a2a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   1.2,
+   9
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan"
+  ],
+  "biomes": [
+   "savanna",
+   "grassland",
+   "scrubland",
+   "tropical_dry"
+  ],
+  "group": [
+   1,
+   3
+  ],
+  "sound": "roar",
+  "fact": "Lions are the only cats that live in groups, called prides."
+ },
+ {
+  "id": "elephant",
+  "name": "African elephant",
+  "archetype": "quadruped",
+  "scale": 6,
+  "body": {
+   "l": 4,
+   "h": 2.6,
+   "w": 2,
+   "leg": 2.2,
+   "legT": 0.7,
+   "neck": 0.5,
+   "neckUp": 0.15,
+   "head": 1.4,
+   "tail": 1
+  },
+  "features": [
+   "trunk",
+   "tusks",
+   "ears_big"
+  ],
+  "colors": [
+   "#8a8478",
+   "#a8a094",
+   "#e8e0d0"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.3,
+   4
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan"
+  ],
+  "biomes": [
+   "savanna",
+   "tropical_dry",
+   "rainforest",
+   "grassland"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "trumpet",
+  "fact": "African elephants are the largest land animals alive and can recognise friends after years apart."
+ },
+ {
+  "id": "giraffe",
+  "name": "Giraffe",
+  "archetype": "quadruped",
+  "scale": 4.5,
+  "body": {
+   "l": 1.8,
+   "h": 1,
+   "w": 0.7,
+   "leg": 2.2,
+   "legT": 0.18,
+   "neck": 2.2,
+   "neckUp": 0.85,
+   "head": 0.6,
+   "tail": 0.8
+  },
+  "features": [
+   "ossicones",
+   "spots"
+  ],
+  "colors": [
+   "#d8a060",
+   "#f2e8d0",
+   "#8a5a30"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   9
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan"
+  ],
+  "biomes": [
+   "savanna",
+   "tropical_dry"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "none",
+  "fact": "A giraffe’s neck has the same number of bones as a human neck: seven."
+ },
+ {
+  "id": "zebra",
+  "name": "Zebra",
+  "archetype": "quadruped",
+  "scale": 2.3,
+  "body": {
+   "l": 1.6,
+   "h": 0.95,
+   "w": 0.5,
+   "leg": 1.2,
+   "legT": 0.16,
+   "neck": 0.7,
+   "neckUp": 0.6,
+   "head": 0.6,
+   "tail": 0.5
+  },
+  "features": [
+   "mane",
+   "stripes"
+  ],
+  "colors": [
+   "#f2f2f0",
+   "#1a1a1a",
+   "#3a3a3a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.6,
+   12
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan"
+  ],
+  "biomes": [
+   "savanna",
+   "grassland",
+   "scrubland"
+  ],
+  "group": [
+   5,
+   12
+  ],
+  "sound": "neigh",
+  "fact": "No two zebras have exactly the same stripes."
+ },
+ {
+  "id": "wildebeest",
+  "name": "Wildebeest",
+  "archetype": "quadruped",
+  "scale": 2.2,
+  "body": {
+   "l": 1.7,
+   "h": 1.1,
+   "w": 0.6,
+   "leg": 1.1,
+   "legT": 0.16,
+   "neck": 0.5,
+   "neckUp": 0.4,
+   "head": 0.6,
+   "tail": 0.5
+  },
+  "features": [
+   "horns",
+   "mane"
+  ],
+  "colors": [
+   "#5a5450",
+   "#7a746a",
+   "#2a2622"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.5,
+   11
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan"
+  ],
+  "biomes": [
+   "savanna",
+   "grassland"
+  ],
+  "group": [
+   8,
+   18
+  ],
+  "sound": "grunt",
+  "fact": "Over a million wildebeest migrate each year through the Serengeti and Maasai Mara."
+ },
+ {
+  "id": "hippo",
+  "name": "Hippopotamus",
+  "archetype": "quadruped",
+  "scale": 4,
+  "body": {
+   "l": 3,
+   "h": 1.5,
+   "w": 1.5,
+   "leg": 0.6,
+   "legT": 0.5,
+   "neck": 0.2,
+   "neckUp": 0,
+   "head": 1,
+   "tail": 0.3
+  },
+  "features": [
+   "wide_mouth"
+  ],
+  "colors": [
+   "#7a6a6e",
+   "#c8a8a0",
+   "#5a4a4e"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.8,
+   6
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan",
+   "mena"
+  ],
+  "biomes": [
+   "wetland",
+   "savanna",
+   "beach"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "grunt",
+  "fact": "Hippos spend the day in water to keep cool and come out at night to graze."
+ },
+ {
+  "id": "rhino",
+  "name": "Rhinoceros",
+  "archetype": "quadruped",
+  "scale": 3.5,
+  "body": {
+   "l": 2.8,
+   "h": 1.6,
+   "w": 1.3,
+   "leg": 1,
+   "legT": 0.5,
+   "neck": 0.3,
+   "neckUp": 0.1,
+   "head": 0.9,
+   "tail": 0.4
+  },
+  "features": [
+   "horn_big"
+  ],
+  "colors": [
+   "#8a8478",
+   "#a8a094",
+   "#5a5650"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   1,
+   7
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan",
+   "southasia",
+   "seasia"
+  ],
+  "biomes": [
+   "savanna",
+   "grassland",
+   "wetland",
+   "tropical_dry"
+  ],
+  "group": [
+   1,
+   2
+  ],
+  "sound": "grunt",
+  "fact": "Rhinoceros horn is made of keratin, the same material as your fingernails."
+ },
+ {
+  "id": "crocodile",
+  "name": "Crocodile",
+  "archetype": "quadruped",
+  "scale": 4,
+  "body": {
+   "l": 3.6,
+   "h": 0.5,
+   "w": 0.7,
+   "leg": 0.25,
+   "legT": 0.15,
+   "neck": 0.2,
+   "neckUp": 0,
+   "head": 1,
+   "tail": 2.4
+  },
+  "features": [
+   "scales",
+   "jaws"
+  ],
+  "colors": [
+   "#4a5a3a",
+   "#8a8a5a",
+   "#2a3a22"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.5,
+   3
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture",
+   "dinosaurs",
+   "mammals"
+  ],
+  "regions": [
+   "subsaharan",
+   "mena",
+   "southasia",
+   "seasia",
+   "oceania",
+   "centralamerica",
+   "southamerica",
+   "northamerica"
+  ],
+  "biomes": [
+   "wetland",
+   "beach",
+   "rainforest",
+   "savanna"
+  ],
+  "group": [
+   1,
+   3
+  ],
+  "sound": "hiss",
+  "fact": "Crocodilians have barely changed in shape since the age of dinosaurs."
+ },
+ {
+  "id": "tiger",
+  "name": "Tiger",
+  "archetype": "quadruped",
+  "scale": 2.8,
+  "body": {
+   "l": 2,
+   "h": 1,
+   "w": 0.7,
+   "leg": 1.1,
+   "legT": 0.3,
+   "neck": 0.5,
+   "neckUp": 0.4,
+   "head": 0.6,
+   "tail": 1
+  },
+  "features": [
+   "stripes"
+  ],
+  "colors": [
+   "#d8782a",
+   "#f2e8d8",
+   "#1a1a1a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   1.2,
+   9
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "southasia",
+   "seasia",
+   "eastasia",
+   "northasia"
+  ],
+  "biomes": [
+   "rainforest",
+   "tropical_dry",
+   "temperate_forest",
+   "wetland",
+   "taiga"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "roar",
+  "fact": "Tigers are the largest cats and, unlike most cats, enjoy swimming."
+ },
+ {
+  "id": "panda",
+  "name": "Giant panda",
+  "archetype": "quadruped",
+  "scale": 1.6,
+  "body": {
+   "l": 1.3,
+   "h": 0.9,
+   "w": 0.8,
+   "leg": 0.6,
+   "legT": 0.3,
+   "neck": 0.3,
+   "neckUp": 0.3,
+   "head": 0.55,
+   "tail": 0.1
+  },
+  "features": [
+   "panda"
+  ],
+  "colors": [
+   "#f2f2f0",
+   "#1a1a1a",
+   "#1a1a1a"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   0.6,
+   2
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "eastasia"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "alpine"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "none",
+  "fact": "Giant pandas eat bamboo for up to 14 hours a day."
+ },
+ {
+  "id": "crane",
+  "name": "Red-crowned crane",
+  "archetype": "bird",
+  "scale": 1.4,
+  "body": {
+   "l": 0.6,
+   "h": 0.4,
+   "w": 0.3,
+   "leg": 1,
+   "legT": 0.04,
+   "neck": 0.7,
+   "neckUp": 0.85,
+   "head": 0.25,
+   "tail": 0.2
+  },
+  "features": [
+   "crest_red"
+  ],
+  "colors": [
+   "#f2f2f0",
+   "#1a1a1a",
+   "#c82a2a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1,
+   8
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "eastasia"
+  ],
+  "biomes": [
+   "wetland",
+   "grassland"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "call",
+  "fact": "Red-crowned cranes dance in pairs, leaping and bowing, and are a symbol of long life in East Asia."
+ },
+ {
+  "id": "orangutan",
+  "name": "Orangutan",
+  "archetype": "quadruped",
+  "scale": 1.4,
+  "body": {
+   "l": 0.8,
+   "h": 0.9,
+   "w": 0.6,
+   "leg": 0.7,
+   "legT": 0.2,
+   "neck": 0.2,
+   "neckUp": 0.8,
+   "head": 0.4,
+   "tail": 0
+  },
+  "features": [
+   "long_arms",
+   "hair"
+  ],
+  "colors": [
+   "#b85a2a",
+   "#d87a4a",
+   "#5a2a1a"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.6,
+   2
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "seasia"
+  ],
+  "biomes": [
+   "rainforest"
+  ],
+  "group": [
+   1,
+   2
+  ],
+  "sound": "none",
+  "fact": "Orangutans, whose name means \"person of the forest\", build a new nest in the trees every night."
+ },
+ {
+  "id": "kangaroo",
+  "name": "Kangaroo",
+  "archetype": "hopper",
+  "scale": 1.8,
+  "body": {
+   "l": 1,
+   "h": 1.1,
+   "w": 0.5,
+   "leg": 0.9,
+   "legT": 0.18,
+   "neck": 0.3,
+   "neckUp": 0.8,
+   "head": 0.4,
+   "tail": 1.1
+  },
+  "features": [
+   "ears_long",
+   "tail_thick"
+  ],
+  "colors": [
+   "#b8784a",
+   "#e0c0a0",
+   "#6a4a30"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.5,
+   12
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "oceania"
+  ],
+  "biomes": [
+   "savanna",
+   "scrubland",
+   "grassland",
+   "desert",
+   "temperate_forest"
+  ],
+  "group": [
+   3,
+   10
+  ],
+  "sound": "none",
+  "fact": "Kangaroos can hop at over 50 km/h, using their tails for balance."
+ },
+ {
+  "id": "emu",
+  "name": "Emu",
+  "archetype": "theropod",
+  "scale": 1.8,
+  "body": {
+   "l": 0.8,
+   "h": 0.8,
+   "w": 0.6,
+   "leg": 1.1,
+   "legT": 0.1,
+   "neck": 0.8,
+   "neckUp": 0.85,
+   "head": 0.25,
+   "tail": 0.3
+  },
+  "features": [
+   "feathers_shaggy"
+  ],
+  "colors": [
+   "#5a4a3a",
+   "#7a6a5a",
+   "#3a3a5a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1.4,
+   12
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "oceania"
+  ],
+  "biomes": [
+   "savanna",
+   "scrubland",
+   "grassland",
+   "desert"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "boom",
+  "fact": "Emus cannot fly, but they can run at 50 km/h and swim well."
+ },
+ {
+  "id": "koala",
+  "name": "Koala",
+  "archetype": "quadruped",
+  "scale": 0.7,
+  "body": {
+   "l": 0.6,
+   "h": 0.45,
+   "w": 0.4,
+   "leg": 0.3,
+   "legT": 0.12,
+   "neck": 0.15,
+   "neckUp": 0.6,
+   "head": 0.3,
+   "tail": 0
+  },
+  "features": [
+   "ears_round"
+  ],
+  "colors": [
+   "#a8a4a0",
+   "#e8e4e0",
+   "#3a3a3a"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   0.3,
+   1.5
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "oceania"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "savanna"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "none",
+  "fact": "Koalas eat almost nothing but eucalyptus leaves and sleep up to 20 hours a day."
+ },
+ {
+  "id": "kiwi",
+  "name": "Kiwi",
+  "archetype": "bird",
+  "scale": 0.4,
+  "body": {
+   "l": 0.4,
+   "h": 0.35,
+   "w": 0.3,
+   "leg": 0.2,
+   "legT": 0.04,
+   "neck": 0.1,
+   "neckUp": 0.3,
+   "head": 0.22,
+   "tail": 0
+  },
+  "features": [
+   "beak_long",
+   "flightless"
+  ],
+  "colors": [
+   "#7a5a3a",
+   "#9a7a5a",
+   "#d8c8a8"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   0.6,
+   3
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "oceania"
+  ],
+  "biomes": [
+   "temperate_forest"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "whistle",
+  "fact": "The kiwi of Aotearoa New Zealand lays one of the largest eggs for its size of any bird."
+ },
+ {
+  "id": "polar_bear",
+  "name": "Polar bear",
+  "archetype": "quadruped",
+  "scale": 2.6,
+  "body": {
+   "l": 2.2,
+   "h": 1.2,
+   "w": 0.9,
+   "leg": 0.9,
+   "legT": 0.4,
+   "neck": 0.6,
+   "neckUp": 0.25,
+   "head": 0.6,
+   "tail": 0.1
+  },
+  "features": [
+   "hair"
+  ],
+  "colors": [
+   "#f2f0e8",
+   "#e8e4d8",
+   "#1a1a1a"
+  ],
+  "behaviour": "predator",
+  "speed": [
+   1.2,
+   8
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "arctic"
+  ],
+  "biomes": [
+   "ice",
+   "tundra",
+   "beach"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "growl",
+  "fact": "Polar bears hunt seals from the sea ice and can swim for days."
+ },
+ {
+  "id": "walrus",
+  "name": "Walrus",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2.8,
+   "h": 1.2,
+   "w": 1.4,
+   "leg": 0.3,
+   "legT": 0.4,
+   "neck": 0.2,
+   "neckUp": 0.2,
+   "head": 0.7,
+   "tail": 0.2
+  },
+  "features": [
+   "tusks",
+   "flippers"
+  ],
+  "colors": [
+   "#a8786a",
+   "#c8988a",
+   "#e8e0d0"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.4,
+   2
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "arctic"
+  ],
+  "biomes": [
+   "beach",
+   "ice",
+   "tundra"
+  ],
+  "group": [
+   3,
+   10
+  ],
+  "sound": "grunt",
+  "fact": "Walruses use their long tusks to haul themselves out of the water onto ice."
+ },
+ {
+  "id": "musk_ox",
+  "name": "Musk ox",
+  "archetype": "quadruped",
+  "scale": 2.3,
+  "body": {
+   "l": 1.9,
+   "h": 1.3,
+   "w": 1,
+   "leg": 0.8,
+   "legT": 0.35,
+   "neck": 0.3,
+   "neckUp": 0.15,
+   "head": 0.6,
+   "tail": 0.1
+  },
+  "features": [
+   "horns_curl",
+   "hair_long"
+  ],
+  "colors": [
+   "#3a2a20",
+   "#5a4434",
+   "#d8ccb8"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1,
+   6
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "arctic",
+   "northamerica",
+   "northasia"
+  ],
+  "biomes": [
+   "tundra",
+   "ice"
+  ],
+  "group": [
+   4,
+   10
+  ],
+  "sound": "grunt",
+  "fact": "Musk oxen have the warmest wool of any animal. It is called qiviut."
+ },
+ {
+  "id": "seal",
+  "name": "Seal",
+  "archetype": "fish",
+  "scale": 1.8,
+  "body": {
+   "l": 1.6,
+   "h": 0.6,
+   "w": 0.6,
+   "leg": 0,
+   "legT": 0,
+   "neck": 0.2,
+   "neckUp": 0.2,
+   "head": 0.35,
+   "tail": 0.3
+  },
+  "features": [
+   "flippers"
+  ],
+  "colors": [
+   "#6a6a6e",
+   "#a8a8ac",
+   "#3a3a3e"
+  ],
+  "behaviour": "swimmer",
+  "speed": [
+   0.5,
+   4
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture",
+   "mammals"
+  ],
+  "regions": [
+   "arctic",
+   "antarctica",
+   "europe",
+   "northamerica",
+   "northasia",
+   "southamerica",
+   "oceania"
+  ],
+  "biomes": [
+   "beach",
+   "ice",
+   "ocean"
+  ],
+  "group": [
+   2,
+   8
+  ],
+  "sound": "bark",
+  "fact": "Seals can dive to great depths and hold their breath for many minutes."
+ },
+ {
+  "id": "penguin",
+  "name": "Penguin",
+  "archetype": "penguin",
+  "scale": 1,
+  "body": {
+   "l": 0.5,
+   "h": 0.9,
+   "w": 0.4,
+   "leg": 0.25,
+   "legT": 0.08,
+   "neck": 0.1,
+   "neckUp": 0.9,
+   "head": 0.3,
+   "tail": 0.05
+  },
+  "features": [
+   "flippers"
+  ],
+  "colors": [
+   "#1a1a22",
+   "#f2f2f0",
+   "#e8b83a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   0.4,
+   1.5
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture",
+   "mammals"
+  ],
+  "regions": [
+   "antarctica",
+   "southamerica",
+   "subsaharan",
+   "oceania"
+  ],
+  "biomes": [
+   "ice",
+   "beach"
+  ],
+  "group": [
+   6,
+   20
+  ],
+  "sound": "squawk",
+  "fact": "Penguins cannot fly, but they \"fly\" underwater with their flipper-like wings."
+ },
+ {
+  "id": "llama_wild",
+  "name": "Guanaco",
+  "archetype": "quadruped",
+  "scale": 2,
+  "body": {
+   "l": 1.4,
+   "h": 0.9,
+   "w": 0.5,
+   "leg": 1.2,
+   "legT": 0.14,
+   "neck": 0.9,
+   "neckUp": 0.85,
+   "head": 0.4,
+   "tail": 0.2
+  },
+  "features": [
+   "ears_long",
+   "wool"
+  ],
+  "colors": [
+   "#b8784a",
+   "#e8d8c0",
+   "#6a4a30"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.4,
+   10
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "southamerica"
+  ],
+  "biomes": [
+   "alpine",
+   "grassland",
+   "steppe",
+   "scrubland",
+   "desert"
+  ],
+  "group": [
+   3,
+   10
+  ],
+  "sound": "none",
+  "fact": "Guanacos are the wild ancestors of llamas and live from the high Andes to Patagonia."
+ },
+ {
+  "id": "jaguar",
+  "name": "Jaguar",
+  "archetype": "quadruped",
+  "scale": 2,
+  "body": {
+   "l": 1.6,
+   "h": 0.8,
+   "w": 0.6,
+   "leg": 0.85,
+   "legT": 0.28,
+   "neck": 0.4,
+   "neckUp": 0.4,
+   "head": 0.55,
+   "tail": 0.8
+  },
+  "features": [
+   "spots"
+  ],
+  "colors": [
+   "#d8a04a",
+   "#f2e8d0",
+   "#1a1a1a"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   1.2,
+   9
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "southamerica",
+   "centralamerica"
+  ],
+  "biomes": [
+   "rainforest",
+   "tropical_dry",
+   "wetland"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "growl",
+  "fact": "Jaguars have the strongest bite of any big cat for their size and swim well."
+ },
+ {
+  "id": "capybara",
+  "name": "Capybara",
+  "archetype": "quadruped",
+  "scale": 1.2,
+  "body": {
+   "l": 1.1,
+   "h": 0.6,
+   "w": 0.5,
+   "leg": 0.4,
+   "legT": 0.15,
+   "neck": 0.15,
+   "neckUp": 0.2,
+   "head": 0.4,
+   "tail": 0
+  },
+  "features": [
+   "round"
+  ],
+  "colors": [
+   "#8a6040",
+   "#a8805a",
+   "#5a4030"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   0.8,
+   4
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "southamerica"
+  ],
+  "biomes": [
+   "wetland",
+   "rainforest",
+   "savanna",
+   "grassland"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "none",
+  "fact": "Capybaras are the world’s largest rodents and are very calm, even with other animals."
+ },
+ {
+  "id": "armadillo",
+  "name": "Armadillo",
+  "archetype": "quadruped",
+  "scale": 0.7,
+  "body": {
+   "l": 0.6,
+   "h": 0.3,
+   "w": 0.3,
+   "leg": 0.15,
+   "legT": 0.07,
+   "neck": 0.1,
+   "neckUp": 0,
+   "head": 0.2,
+   "tail": 0.35
+  },
+  "features": [
+   "shell"
+  ],
+  "colors": [
+   "#a8907a",
+   "#c8b09a",
+   "#7a6a5a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   0.6,
+   3
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "southamerica",
+   "centralamerica",
+   "northamerica"
+  ],
+  "biomes": [
+   "scrubland",
+   "grassland",
+   "savanna",
+   "tropical_dry",
+   "rainforest"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "none",
+  "fact": "Some armadillos can roll into a tight ball protected by their shell."
+ },
+ {
+  "id": "raccoon",
+  "name": "Raccoon",
+  "archetype": "quadruped",
+  "scale": 0.7,
+  "body": {
+   "l": 0.6,
+   "h": 0.35,
+   "w": 0.3,
+   "leg": 0.3,
+   "legT": 0.09,
+   "neck": 0.15,
+   "neckUp": 0.4,
+   "head": 0.22,
+   "tail": 0.35
+  },
+  "features": [
+   "mask",
+   "rings"
+  ],
+  "colors": [
+   "#8a8478",
+   "#c8c4b8",
+   "#2a2a2a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   0.8,
+   5
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "northamerica",
+   "centralamerica"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "wetland"
+  ],
+  "group": [
+   1,
+   2
+  ],
+  "sound": "chitter",
+  "fact": "Raccoons have very sensitive front paws and often handle food underwater."
+ },
+ {
+  "id": "wild_turkey",
+  "name": "Wild turkey",
+  "archetype": "bird",
+  "scale": 1,
+  "body": {
+   "l": 0.6,
+   "h": 0.5,
+   "w": 0.4,
+   "leg": 0.5,
+   "legT": 0.05,
+   "neck": 0.35,
+   "neckUp": 0.7,
+   "head": 0.15,
+   "tail": 0.4
+  },
+  "features": [
+   "wattle",
+   "tail_fan"
+  ],
+  "colors": [
+   "#4a3a2e",
+   "#8a6a48",
+   "#c82a2a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1,
+   6
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "northamerica",
+   "centralamerica"
+  ],
+  "biomes": [
+   "temperate_forest",
+   "grassland"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "gobble",
+  "fact": "Turkeys were domesticated in Mesoamerica over 2,000 years ago."
+ },
+ {
+  "id": "camel_wild",
+  "name": "Wild camel",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2,
+   "h": 1.3,
+   "w": 0.8,
+   "leg": 1.6,
+   "legT": 0.2,
+   "neck": 1,
+   "neckUp": 0.6,
+   "head": 0.6,
+   "tail": 0.5
+  },
+  "features": [
+   "hump"
+  ],
+  "colors": [
+   "#c8a070",
+   "#e0c098",
+   "#8a6a48"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   8
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "mena",
+   "northasia"
+  ],
+  "biomes": [
+   "desert",
+   "scrubland",
+   "steppe"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "grunt",
+  "fact": "Camels store fat, not water, in their humps, and can go for days without drinking."
+ },
+ {
+  "id": "monkey",
+  "name": "Monkey",
+  "archetype": "quadruped",
+  "scale": 0.7,
+  "body": {
+   "l": 0.5,
+   "h": 0.4,
+   "w": 0.3,
+   "leg": 0.4,
+   "legT": 0.08,
+   "neck": 0.15,
+   "neckUp": 0.7,
+   "head": 0.2,
+   "tail": 0.6
+  },
+  "features": [
+   "long_arms",
+   "tail_long"
+  ],
+  "colors": [
+   "#7a5a3a",
+   "#c8a880",
+   "#3a2a1a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   1,
+   6
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan",
+   "southasia",
+   "seasia",
+   "southamerica",
+   "centralamerica",
+   "eastasia"
+  ],
+  "biomes": [
+   "rainforest",
+   "tropical_dry",
+   "savanna"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "chatter",
+  "fact": "Monkeys live in social troops and communicate with calls, faces and gestures."
+ },
+ {
+  "id": "flamingo",
+  "name": "Flamingo",
+  "archetype": "bird",
+  "scale": 1.4,
+  "body": {
+   "l": 0.6,
+   "h": 0.45,
+   "w": 0.35,
+   "leg": 1.1,
+   "legT": 0.03,
+   "neck": 0.8,
+   "neckUp": 0.8,
+   "head": 0.25,
+   "tail": 0.15
+  },
+  "features": [
+   "beak_bent"
+  ],
+  "colors": [
+   "#f28a9a",
+   "#f2a8b8",
+   "#1a1a1a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   0.8,
+   6
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "subsaharan",
+   "mena",
+   "southamerica",
+   "centralamerica",
+   "southasia",
+   "europe"
+  ],
+  "biomes": [
+   "wetland",
+   "beach"
+  ],
+  "group": [
+   8,
+   24
+  ],
+  "sound": "honk",
+  "fact": "Flamingos are pink because of the pigments in the algae and shrimp they eat."
+ },
+ {
+  "id": "songbird",
+  "name": "Songbirds",
+  "archetype": "bird",
+  "scale": 0.2,
+  "body": {
+   "l": 0.15,
+   "h": 0.1,
+   "w": 0.08,
+   "leg": 0.06,
+   "legT": 0.02,
+   "neck": 0.04,
+   "neckUp": 0.5,
+   "head": 0.06,
+   "tail": 0.08
+  },
+  "features": [
+   "wings"
+  ],
+  "colors": [
+   "#8a6a4a",
+   "#d8c8a8",
+   "#c84a2a"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   2,
+   7
+  ],
+  "eras": [
+   "mammals",
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture",
+   "dinosaurs"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   4,
+   10
+  ],
+  "sound": "chirp",
+  "fact": "There are about 10,000 species of birds. Birds are the living descendants of dinosaurs."
+ },
+ {
+  "id": "seagull",
+  "name": "Seagulls",
+  "archetype": "bird",
+  "scale": 0.5,
+  "body": {
+   "l": 0.35,
+   "h": 0.2,
+   "w": 0.18,
+   "leg": 0.12,
+   "legT": 0.03,
+   "neck": 0.08,
+   "neckUp": 0.4,
+   "head": 0.12,
+   "tail": 0.12
+  },
+  "features": [
+   "wings"
+  ],
+  "colors": [
+   "#f2f2f0",
+   "#a8b0b8",
+   "#e8b83a"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   3,
+   9
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": [
+   "beach",
+   "ocean",
+   "wetland"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "gull",
+  "fact": "Gulls are clever birds that follow fishing boats and ships."
+ },
+ {
+  "id": "parrot",
+  "name": "Parrots",
+  "archetype": "bird",
+  "scale": 0.4,
+  "body": {
+   "l": 0.25,
+   "h": 0.15,
+   "w": 0.12,
+   "leg": 0.08,
+   "legT": 0.03,
+   "neck": 0.06,
+   "neckUp": 0.6,
+   "head": 0.1,
+   "tail": 0.25
+  },
+  "features": [
+   "wings"
+  ],
+  "colors": [
+   "#2ab04a",
+   "#e8c83a",
+   "#c82a2a"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   3,
+   9
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": [
+   "southamerica",
+   "centralamerica",
+   "oceania",
+   "subsaharan",
+   "southasia",
+   "seasia"
+  ],
+  "biomes": [
+   "rainforest",
+   "tropical_dry",
+   "savanna"
+  ],
+  "group": [
+   3,
+   8
+  ],
+  "sound": "squawk",
+  "fact": "Many parrots can imitate sounds and live for over 50 years."
+ },
+ {
+  "id": "eagle",
+  "name": "Eagle",
+  "archetype": "bird",
+  "scale": 0.9,
+  "body": {
+   "l": 0.6,
+   "h": 0.3,
+   "w": 0.25,
+   "leg": 0.2,
+   "legT": 0.05,
+   "neck": 0.1,
+   "neckUp": 0.5,
+   "head": 0.15,
+   "tail": 0.25
+  },
+  "features": [
+   "wings_big"
+  ],
+  "colors": [
+   "#5a3e2a",
+   "#e8e0d0",
+   "#e8b83a"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   4,
+   12
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": [
+   "alpine",
+   "taiga",
+   "steppe",
+   "grassland",
+   "tundra",
+   "desert",
+   "scrubland"
+  ],
+  "group": [
+   1,
+   1
+  ],
+  "sound": "screech",
+  "fact": "Eagles can spot prey from several kilometres away."
+ },
+ {
+  "id": "fish",
+  "name": "Fish",
+  "archetype": "fish",
+  "scale": 0.5,
+  "body": {
+   "l": 0.45,
+   "h": 0.18,
+   "w": 0.08,
+   "leg": 0,
+   "legT": 0,
+   "neck": 0,
+   "neckUp": 0,
+   "head": 0.12,
+   "tail": 0.15
+  },
+  "features": [
+   "fins"
+  ],
+  "colors": [
+   "#6a8aa8",
+   "#c8d8e8",
+   "#e8c83a"
+  ],
+  "behaviour": "swimmer",
+  "speed": [
+   0.6,
+   3
+  ],
+  "eras": [
+   "dinosaurs",
+   "mammals",
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": [
+   "ocean",
+   "beach",
+   "wetland"
+  ],
+  "group": [
+   5,
+   12
+  ],
+  "sound": "none",
+  "fact": "Fish were swimming in Earth’s seas long before the first dinosaurs."
+ },
+ {
+  "id": "dolphin",
+  "name": "Dolphin",
+  "archetype": "fish",
+  "scale": 2.5,
+  "body": {
+   "l": 2.2,
+   "h": 0.6,
+   "w": 0.5,
+   "leg": 0,
+   "legT": 0,
+   "neck": 0.1,
+   "neckUp": 0,
+   "head": 0.5,
+   "tail": 0.6
+  },
+  "features": [
+   "dorsal",
+   "flippers"
+  ],
+  "colors": [
+   "#6a7a8a",
+   "#d8dce0",
+   "#3a4a5a"
+  ],
+  "behaviour": "swimmer",
+  "speed": [
+   2,
+   8
+  ],
+  "eras": [
+   "mammals",
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": [
+   "ocean"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "click",
+  "fact": "Dolphins call each other with signature whistles that work like names."
+ },
+ {
+  "id": "whale",
+  "name": "Whale",
+  "archetype": "fish",
+  "scale": 14,
+  "body": {
+   "l": 12,
+   "h": 3,
+   "w": 3,
+   "leg": 0,
+   "legT": 0,
+   "neck": 0.5,
+   "neckUp": 0,
+   "head": 3,
+   "tail": 3
+  },
+  "features": [
+   "flippers",
+   "tail_flukes"
+  ],
+  "colors": [
+   "#3a4a5a",
+   "#c8ccd0",
+   "#2a3a4a"
+  ],
+  "behaviour": "swimmer",
+  "speed": [
+   1,
+   3
+  ],
+  "eras": [
+   "mammals",
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": [
+   "ocean"
+  ],
+  "group": [
+   1,
+   2
+  ],
+  "sound": "whale",
+  "fact": "The blue whale is the largest animal ever known to have lived. It is bigger than any dinosaur."
+ },
+ {
+  "id": "dog",
+  "name": "Dog",
+  "archetype": "quadruped",
+  "scale": 0.9,
+  "body": {
+   "l": 0.8,
+   "h": 0.4,
+   "w": 0.3,
+   "leg": 0.45,
+   "legT": 0.1,
+   "neck": 0.25,
+   "neckUp": 0.5,
+   "head": 0.3,
+   "tail": 0.35
+  },
+  "features": [
+   "ears_floppy",
+   "tail_up"
+  ],
+  "colors": [
+   "#a8784a",
+   "#e8d8c0",
+   "#3a2a1a"
+  ],
+  "behaviour": "follower",
+  "speed": [
+   1.2,
+   8
+  ],
+  "eras": [
+   "iceage",
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   2
+  ],
+  "sound": "bark",
+  "fact": "Dogs were the first domesticated animals, tamed from wolves more than 15,000 years ago.",
+  "domestic": true
+ },
+ {
+  "id": "cat",
+  "name": "Cat",
+  "archetype": "quadruped",
+  "scale": 0.5,
+  "body": {
+   "l": 0.45,
+   "h": 0.22,
+   "w": 0.16,
+   "leg": 0.22,
+   "legT": 0.05,
+   "neck": 0.1,
+   "neckUp": 0.5,
+   "head": 0.15,
+   "tail": 0.35
+  },
+  "features": [
+   "ears_pointed",
+   "tail_up"
+  ],
+  "colors": [
+   "#c8a070",
+   "#f2e8d8",
+   "#4a3a2e"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.8,
+   6
+  ],
+  "eras": [
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   1
+  ],
+  "sound": "meow",
+  "fact": "Cats lived alongside farmers by about 9,500 years ago. Ancient Egyptians loved and honoured them.",
+  "domestic": true
+ },
+ {
+  "id": "cattle",
+  "name": "Cattle",
+  "archetype": "quadruped",
+  "scale": 2.4,
+  "body": {
+   "l": 2,
+   "h": 1.2,
+   "w": 0.8,
+   "leg": 1,
+   "legT": 0.25,
+   "neck": 0.4,
+   "neckUp": 0.2,
+   "head": 0.65,
+   "tail": 0.8
+  },
+  "features": [
+   "horns"
+  ],
+  "colors": [
+   "#8a5a3a",
+   "#f2ead8",
+   "#3a2a1a"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   0.8,
+   5
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   8
+  ],
+  "sound": "moo",
+  "fact": "Cattle were domesticated from the wild aurochs about 10,500 years ago in the Near East and separately in South Asia.",
+  "domestic": true
+ },
+ {
+  "id": "sheep",
+  "name": "Sheep",
+  "archetype": "quadruped",
+  "scale": 1.2,
+  "body": {
+   "l": 1,
+   "h": 0.7,
+   "w": 0.6,
+   "leg": 0.45,
+   "legT": 0.1,
+   "neck": 0.25,
+   "neckUp": 0.4,
+   "head": 0.35,
+   "tail": 0.15
+  },
+  "features": [
+   "wool"
+  ],
+  "colors": [
+   "#f2ead8",
+   "#2a2a2a",
+   "#e8e0cc"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   0.8,
+   6
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   5,
+   14
+  ],
+  "sound": "baa",
+  "fact": "Sheep were first domesticated in the Near East about 11,000 years ago, at first for meat and later for wool.",
+  "domestic": true
+ },
+ {
+  "id": "goat",
+  "name": "Goat",
+  "archetype": "quadruped",
+  "scale": 1.1,
+  "body": {
+   "l": 0.9,
+   "h": 0.55,
+   "w": 0.4,
+   "leg": 0.55,
+   "legT": 0.08,
+   "neck": 0.3,
+   "neckUp": 0.5,
+   "head": 0.3,
+   "tail": 0.12
+  },
+  "features": [
+   "horns_back",
+   "beard"
+  ],
+  "colors": [
+   "#e8e0d0",
+   "#8a6a4a",
+   "#3a2a1a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   0.9,
+   7
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   10
+  ],
+  "sound": "baa",
+  "fact": "Goats were among the first animals domesticated, in the Zagros Mountains about 10,000 years ago.",
+  "domestic": true
+ },
+ {
+  "id": "pig",
+  "name": "Pig",
+  "archetype": "quadruped",
+  "scale": 1.2,
+  "body": {
+   "l": 1.1,
+   "h": 0.65,
+   "w": 0.55,
+   "leg": 0.35,
+   "legT": 0.12,
+   "neck": 0.15,
+   "neckUp": 0.1,
+   "head": 0.4,
+   "tail": 0.1
+  },
+  "features": [
+   "snout"
+  ],
+  "colors": [
+   "#e8b8a8",
+   "#f2c8b8",
+   "#c8987a"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.7,
+   4
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   6
+  ],
+  "sound": "oink",
+  "fact": "Pigs were domesticated from wild boar, separately in the Near East and in China.",
+  "domestic": true
+ },
+ {
+  "id": "chicken",
+  "name": "Chicken",
+  "archetype": "bird",
+  "scale": 0.4,
+  "body": {
+   "l": 0.35,
+   "h": 0.3,
+   "w": 0.2,
+   "leg": 0.18,
+   "legT": 0.03,
+   "neck": 0.15,
+   "neckUp": 0.7,
+   "head": 0.12,
+   "tail": 0.15
+  },
+  "features": [
+   "comb",
+   "flightless"
+  ],
+  "colors": [
+   "#c8642a",
+   "#e8b86a",
+   "#c82a2a"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.6,
+   4
+  ],
+  "eras": [
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   10
+  ],
+  "sound": "cluck",
+  "fact": "Chickens descend from the red junglefowl of Southeast Asia.",
+  "domestic": true
+ },
+ {
+  "id": "duck",
+  "name": "Ducks",
+  "archetype": "bird",
+  "scale": 0.5,
+  "body": {
+   "l": 0.4,
+   "h": 0.25,
+   "w": 0.22,
+   "leg": 0.12,
+   "legT": 0.04,
+   "neck": 0.12,
+   "neckUp": 0.5,
+   "head": 0.14,
+   "tail": 0.08
+  },
+  "features": [
+   "beak_flat"
+  ],
+  "colors": [
+   "#e8e0d0",
+   "#3a6a3a",
+   "#e8a83a"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.5,
+   3
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   8
+  ],
+  "sound": "quack",
+  "fact": "Ducks were domesticated in China for their eggs and meat.",
+  "domestic": true
+ },
+ {
+  "id": "horse",
+  "name": "Horse",
+  "archetype": "quadruped",
+  "scale": 2.4,
+  "body": {
+   "l": 1.7,
+   "h": 1,
+   "w": 0.55,
+   "leg": 1.3,
+   "legT": 0.17,
+   "neck": 0.75,
+   "neckUp": 0.6,
+   "head": 0.65,
+   "tail": 0.7
+  },
+  "features": [
+   "mane"
+  ],
+  "colors": [
+   "#7a4a2a",
+   "#c8a880",
+   "#2a1a12"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   1.4,
+   12
+  ],
+  "eras": [
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   5
+  ],
+  "sound": "neigh",
+  "fact": "Horses were domesticated on the steppes and transformed travel, farming and trade.",
+  "domestic": true
+ },
+ {
+  "id": "donkey",
+  "name": "Donkey",
+  "archetype": "quadruped",
+  "scale": 1.6,
+  "body": {
+   "l": 1.3,
+   "h": 0.8,
+   "w": 0.45,
+   "leg": 0.9,
+   "legT": 0.13,
+   "neck": 0.5,
+   "neckUp": 0.6,
+   "head": 0.5,
+   "tail": 0.4
+  },
+  "features": [
+   "ears_long",
+   "mane"
+  ],
+  "colors": [
+   "#8a8478",
+   "#e8e4dc",
+   "#3a3a3a"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   1,
+   6
+  ],
+  "eras": [
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "bray",
+  "fact": "Donkeys were domesticated in northeast Africa about 7,000 years ago and carried loads on trade routes.",
+  "domestic": true
+ },
+ {
+  "id": "camel",
+  "name": "Camel",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2,
+   "h": 1.3,
+   "w": 0.8,
+   "leg": 1.6,
+   "legT": 0.2,
+   "neck": 1,
+   "neckUp": 0.6,
+   "head": 0.6,
+   "tail": 0.5
+  },
+  "features": [
+   "hump"
+  ],
+  "colors": [
+   "#c8a070",
+   "#e0c098",
+   "#8a6a48"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   1,
+   7
+  ],
+  "eras": [
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   6
+  ],
+  "sound": "grunt",
+  "fact": "Dromedary camels made long caravan journeys across the Sahara and Arabia possible.",
+  "domestic": true
+ },
+ {
+  "id": "bactrian_camel",
+  "name": "Bactrian camel",
+  "archetype": "quadruped",
+  "scale": 3,
+  "body": {
+   "l": 2,
+   "h": 1.3,
+   "w": 0.9,
+   "leg": 1.5,
+   "legT": 0.22,
+   "neck": 0.9,
+   "neckUp": 0.6,
+   "head": 0.6,
+   "tail": 0.5
+  },
+  "features": [
+   "humps2",
+   "hair"
+  ],
+  "colors": [
+   "#a8805a",
+   "#c8a07a",
+   "#6a4a30"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   1,
+   7
+  ],
+  "eras": [
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   6
+  ],
+  "sound": "grunt",
+  "fact": "Two-humped Bactrian camels carried goods along the Silk Roads through cold deserts.",
+  "domestic": true
+ },
+ {
+  "id": "llama",
+  "name": "Llama",
+  "archetype": "quadruped",
+  "scale": 1.9,
+  "body": {
+   "l": 1.3,
+   "h": 0.9,
+   "w": 0.5,
+   "leg": 1.1,
+   "legT": 0.14,
+   "neck": 0.9,
+   "neckUp": 0.85,
+   "head": 0.4,
+   "tail": 0.2
+  },
+  "features": [
+   "ears_long",
+   "wool"
+  ],
+  "colors": [
+   "#f2ead8",
+   "#8a6a4a",
+   "#3a2a1a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1,
+   6
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   8
+  ],
+  "sound": "none",
+  "fact": "Llamas were domesticated in the Andes and carried goods along mountain roads.",
+  "domestic": true
+ },
+ {
+  "id": "alpaca",
+  "name": "Alpaca",
+  "archetype": "quadruped",
+  "scale": 1.4,
+  "body": {
+   "l": 1,
+   "h": 0.8,
+   "w": 0.5,
+   "leg": 0.8,
+   "legT": 0.14,
+   "neck": 0.6,
+   "neckUp": 0.85,
+   "head": 0.3,
+   "tail": 0.15
+  },
+  "features": [
+   "wool",
+   "ears_long"
+  ],
+  "colors": [
+   "#e8dcc8",
+   "#a8805a",
+   "#5a4030"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   0.9,
+   5
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   8
+  ],
+  "sound": "none",
+  "fact": "Alpacas are raised for their soft, warm fleece.",
+  "domestic": true
+ },
+ {
+  "id": "guinea_pig",
+  "name": "Guinea pig",
+  "archetype": "quadruped",
+  "scale": 0.25,
+  "body": {
+   "l": 0.25,
+   "h": 0.14,
+   "w": 0.14,
+   "leg": 0.05,
+   "legT": 0.04,
+   "neck": 0.05,
+   "neckUp": 0.2,
+   "head": 0.1,
+   "tail": 0
+  },
+  "features": [
+   "round"
+  ],
+  "colors": [
+   "#c8783a",
+   "#f2ead8",
+   "#3a2a1a"
+  ],
+  "behaviour": "skittish",
+  "speed": [
+   0.4,
+   1.5
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   5
+  ],
+  "sound": "squeak",
+  "fact": "Guinea pigs were domesticated in the Andes about 7,000 years ago.",
+  "domestic": true
+ },
+ {
+  "id": "yak",
+  "name": "Yak",
+  "archetype": "quadruped",
+  "scale": 2.8,
+  "body": {
+   "l": 2.1,
+   "h": 1.4,
+   "w": 1,
+   "leg": 0.9,
+   "legT": 0.3,
+   "neck": 0.35,
+   "neckUp": 0.15,
+   "head": 0.7,
+   "tail": 0.5
+  },
+  "features": [
+   "horns",
+   "hair_long"
+  ],
+  "colors": [
+   "#2a2220",
+   "#4a3a34",
+   "#e8e0d0"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   0.8,
+   5
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   3,
+   8
+  ],
+  "sound": "grunt",
+  "fact": "Yaks thrive at high altitudes on the Tibetan Plateau and provide milk, wool and transport.",
+  "domestic": true
+ },
+ {
+  "id": "water_buffalo",
+  "name": "Water buffalo",
+  "archetype": "quadruped",
+  "scale": 2.6,
+  "body": {
+   "l": 2.2,
+   "h": 1.3,
+   "w": 1,
+   "leg": 0.9,
+   "legT": 0.3,
+   "neck": 0.35,
+   "neckUp": 0.1,
+   "head": 0.7,
+   "tail": 0.6
+  },
+  "features": [
+   "horns_wide"
+  ],
+  "colors": [
+   "#3a3634",
+   "#5a5450",
+   "#1a1a1a"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   0.7,
+   4
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   5
+  ],
+  "sound": "moo_low",
+  "fact": "Water buffalo help plough flooded rice paddies across Asia.",
+  "domestic": true
+ },
+ {
+  "id": "elephant_asian",
+  "name": "Asian elephant",
+  "archetype": "quadruped",
+  "scale": 5,
+  "body": {
+   "l": 3.4,
+   "h": 2.4,
+   "w": 1.8,
+   "leg": 1.9,
+   "legT": 0.6,
+   "neck": 0.5,
+   "neckUp": 0.15,
+   "head": 1.2,
+   "tail": 1
+  },
+  "features": [
+   "trunk",
+   "ears_small"
+  ],
+  "colors": [
+   "#7a7470",
+   "#9a948e",
+   "#e8e0d0"
+  ],
+  "behaviour": "grazer",
+  "speed": [
+   1,
+   4
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "trumpet",
+  "fact": "Asian elephants have smaller ears than African elephants and have worked alongside people for thousands of years.",
+  "domestic": true
+ },
+ {
+  "id": "turkey",
+  "name": "Turkey",
+  "archetype": "bird",
+  "scale": 0.9,
+  "body": {
+   "l": 0.6,
+   "h": 0.5,
+   "w": 0.4,
+   "leg": 0.45,
+   "legT": 0.05,
+   "neck": 0.35,
+   "neckUp": 0.7,
+   "head": 0.15,
+   "tail": 0.4
+  },
+  "features": [
+   "wattle",
+   "tail_fan"
+  ],
+  "colors": [
+   "#4a3a2e",
+   "#8a6a48",
+   "#c82a2a"
+  ],
+  "behaviour": "wander",
+  "speed": [
+   0.8,
+   4
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   2,
+   6
+  ],
+  "sound": "gobble",
+  "fact": "Turkeys were domesticated in Mesoamerica and kept by the Maya and Aztecs.",
+  "domestic": true
+ },
+ {
+  "id": "pigeon",
+  "name": "Pigeons",
+  "archetype": "bird",
+  "scale": 0.3,
+  "body": {
+   "l": 0.25,
+   "h": 0.15,
+   "w": 0.12,
+   "leg": 0.06,
+   "legT": 0.02,
+   "neck": 0.06,
+   "neckUp": 0.5,
+   "head": 0.08,
+   "tail": 0.1
+  },
+  "features": [
+   "wings"
+  ],
+  "colors": [
+   "#8a8a94",
+   "#c8c8d0",
+   "#5a8a7a"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   1,
+   7
+  ],
+  "eras": [
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   4,
+   12
+  ],
+  "sound": "coo",
+  "fact": "Homing pigeons can find their way home from hundreds of kilometres away.",
+  "domestic": true
+ },
+ {
+  "id": "reindeer_herd",
+  "name": "Herded reindeer",
+  "archetype": "quadruped",
+  "scale": 2,
+  "body": {
+   "l": 1.6,
+   "h": 0.9,
+   "w": 0.5,
+   "leg": 1.1,
+   "legT": 0.15,
+   "neck": 0.6,
+   "neckUp": 0.5,
+   "head": 0.5,
+   "tail": 0.15
+  },
+  "features": [
+   "antlers"
+  ],
+  "colors": [
+   "#8a7a6a",
+   "#d8d0c0",
+   "#5a4a3a"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1,
+   8
+  ],
+  "eras": [
+   "stoneage",
+   "earlyciv",
+   "classical",
+   "medieval",
+   "exploration",
+   "industrial",
+   "modern",
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   4,
+   10
+  ],
+  "sound": "grunt",
+  "fact": "Reindeer herding has been practised by Sámi, Nenets and other Arctic peoples for centuries.",
+  "domestic": true
+ },
+ {
+  "id": "robo_hound",
+  "name": "Robo-hound",
+  "archetype": "quadruped",
+  "scale": 0.9,
+  "body": {
+   "l": 0.8,
+   "h": 0.4,
+   "w": 0.35,
+   "leg": 0.45,
+   "legT": 0.08,
+   "neck": 0.2,
+   "neckUp": 0.5,
+   "head": 0.3,
+   "tail": 0.2
+  },
+  "features": [
+   "robot",
+   "glow"
+  ],
+  "colors": [
+   "#e8f0f8",
+   "#8a9aa8",
+   "#00d4ff"
+  ],
+  "behaviour": "follower",
+  "speed": [
+   1.2,
+   8
+  ],
+  "eras": [
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   1
+  ],
+  "sound": "beep",
+  "fact": "Imagined: friendly robot companions that help carry things and guide visitors.",
+  "domestic": true
+ },
+ {
+  "id": "garden_drone",
+  "name": "Garden drone",
+  "archetype": "drone",
+  "scale": 0.6,
+  "body": {
+   "l": 0.5,
+   "h": 0.15,
+   "w": 0.5,
+   "leg": 0,
+   "legT": 0,
+   "neck": 0,
+   "neckUp": 0,
+   "head": 0,
+   "tail": 0
+  },
+  "features": [
+   "rotors",
+   "glow"
+  ],
+  "colors": [
+   "#f2f2f0",
+   "#2a9d8f",
+   "#7dffb2"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   1,
+   4
+  ],
+  "eras": [
+   "nearfuture",
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   1,
+   3
+  ],
+  "sound": "whirr",
+  "fact": "Imagined: little drones that pollinate gardens and water rooftop farms.",
+  "domestic": true
+ },
+ {
+  "id": "glow_moth",
+  "name": "Glow moths",
+  "archetype": "bird",
+  "scale": 0.3,
+  "body": {
+   "l": 0.15,
+   "h": 0.08,
+   "w": 0.3,
+   "leg": 0.05,
+   "legT": 0.02,
+   "neck": 0.02,
+   "neckUp": 0.5,
+   "head": 0.06,
+   "tail": 0.05
+  },
+  "features": [
+   "wings",
+   "glow"
+  ],
+  "colors": [
+   "#a0e8ff",
+   "#ffb6f0",
+   "#7dffb2"
+  ],
+  "behaviour": "flyer",
+  "speed": [
+   1,
+   4
+  ],
+  "eras": [
+   "farfuture"
+  ],
+  "regions": "*",
+  "biomes": "*",
+  "group": [
+   5,
+   12
+  ],
+  "sound": "none",
+  "fact": "Imagined: bioluminescent moths that light far-future gardens at night.",
+  "domestic": true
+ },
+ {
+  "id": "rewilded_mammoth",
+  "name": "Restored mammoth",
+  "archetype": "quadruped",
+  "scale": 5,
+  "body": {
+   "l": 3.6,
+   "h": 2.4,
+   "w": 2,
+   "leg": 2,
+   "legT": 0.7,
+   "neck": 0.5,
+   "neckUp": 0.2,
+   "head": 1.2,
+   "tail": 0.5
+  },
+  "features": [
+   "trunk",
+   "tusks_curved",
+   "hair_long",
+   "hump_small"
+  ],
+  "colors": [
+   "#7a5638",
+   "#9a6e48",
+   "#f2ead8"
+  ],
+  "behaviour": "herd",
+  "speed": [
+   1.2,
+   4
+  ],
+  "eras": [
+   "farfuture"
+  ],
+  "regions": [
+   "arctic",
+   "northasia",
+   "northamerica"
+  ],
+  "biomes": [
+   "tundra",
+   "taiga",
+   "steppe",
+   "grassland",
+   "ice"
+  ],
+  "group": [
+   2,
+   6
+  ],
+  "sound": "trumpet",
+  "fact": "Imagined: far-future scientists and Arctic communities help mammoth-like elephants return to the tundra."
+ }
+]
