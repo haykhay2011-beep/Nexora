@@ -200,6 +200,8 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
     const def = LANDMARKS.find((l) => l.id === pl.id)!;
     pl.base = ts.height(pl.x, pl.z);
     if (def.kind !== 'natural' && (!def.terrain || def.terrain.type === 'flatten' || def.terrain.type === 'pit') && pl.clear > 0) {
+      // a coastal landmark the coarse raster puts at sea (e.g. Cape Canaveral) gets a landmass to stand on
+      if (pl.base < 0.5) { mods.push({ type: 'island', x: pl.x, z: pl.z, radius: Math.max(350, pl.clear * 2.5), height: 4, flat: 1 }); ts = new TerrainSampler(terrain); }
       const existing = mods.find((m) => m.type === 'flatten' && m.x === pl.x && m.z === pl.z);
       const target = Math.max(1.2, pl.base);
       if (existing) existing.target = target;
@@ -330,7 +332,7 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
   if (urbanSpawn) spawn = urbanSpawn;
   else if (lmFocus) {
     const def = LANDMARKS.find((l) => l.id === lmFocus.id)!;
-    spawn = tryAround(lmFocus.x, lmFocus.z, def.arrive ?? 250, Math.PI / 2) ?? spawn;
+    spawn = tryAround(lmFocus.x, lmFocus.z, def.arrive ?? 250, Math.PI / 2) ?? tryAround(lmFocus.x, lmFocus.z, lmFocus.clear + 40, Math.PI / 2) ?? spawn;
   } else if (settlement) {
     spawn = tryAround(settlement.x, settlement.z, settlement.radius * 0.95 + 25, Math.atan2(-settlement.z, -settlement.x)) ?? spawn;
   } else {

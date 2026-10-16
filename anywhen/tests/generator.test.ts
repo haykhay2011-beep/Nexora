@@ -136,3 +136,18 @@ describe('landmarks', () => {
     });
   }
 });
+
+describe('arrival on land', () => {
+  const earth = loadEarthSync();
+  it('every built landmark in its complete stage has its spawn and base on land', () => {
+    for (const l of LANDMARKS) {
+      if (l.kind === 'natural' || l.region === 'moon' || l.lat === undefined) continue;
+      const st = l.stages?.find((s) => s.state === 'complete');
+      if (!st || st.from < -60000) continue;
+      const plan = planWorld(earth, { lat: l.lat, lon: l.lon, year: Math.max(st.from + 1, -60000) });
+      if (!plan.landmarks.some((p) => p.id === l.id)) continue;
+      const ts = new TerrainSampler(plan.terrain);
+      expect(ts.height(plan.spawn.x, plan.spawn.z), `${l.id} spawn`).toBeGreaterThan(0.5);
+    }
+  });
+});
