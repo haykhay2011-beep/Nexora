@@ -151,7 +151,8 @@ export class PlatePuzzle {
       return;
     }
     const p = this.game.player.pos;
-    const dx = b.pos.x - p.x, dz = b.pos.z - p.z;
+    const [bx, bz] = this.cellPos(b.c, b.r);
+    const dx = bx - p.x, dz = bz - p.z;
     let dc = 0, dr = 0;
     if (Math.abs(dx) > Math.abs(dz)) dc = Math.sign(dx); else dr = Math.sign(dz);
     let c = b.c, r = b.r;

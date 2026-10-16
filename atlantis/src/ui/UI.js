@@ -221,6 +221,7 @@ export class UI {
       if (g.mode === 'menu' && g.menuName === 'reader' && e.code === 'KeyE' && !e.repeat) {
         this.closeAllMenus();
         g.closeMenu();
+        g.input.pressed.delete('KeyE'); // don't re-trigger the interactable this frame
       }
       if (g.mode === 'title' || g.mode === 'paused') {
         if (e.code === 'Escape' && this.subScreen) {

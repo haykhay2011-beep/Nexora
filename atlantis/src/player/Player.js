@@ -58,7 +58,8 @@ export class Player {
   applyFlashlight() {
     const strong = (this.game.state.upgrades.light || 0) > 0;
     const fl = this.flashlight;
-    fl.intensity = this.flashlightOn ? (strong ? 260 : 70) : 0;
+    this.flashBase = this.flashlightOn ? (strong ? 260 : 70) : 0;
+    fl.intensity = this.flashBase;
     fl.distance = strong ? 85 : 42;
     fl.angle = strong ? 0.6 : 0.48;
     this.glow.intensity = this.flashlightOn ? (strong ? 4 : 2) : 0;

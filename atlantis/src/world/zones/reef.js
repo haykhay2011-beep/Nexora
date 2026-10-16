@@ -127,7 +127,7 @@ function buildGrotto(ctx) {
   ctx.scene.add(clam);
   ctx.C.cylinder(cx, cz, 1.8, fy - 1, fy + 0.6);
   const shard = items.addShard('reef', cx, fy + 2.3, cz, { hidden: true });
-  game.world.addLight({ pos: new THREE.Vector3(cx, fy + 4, cz), color: 0x7ff3ff, intensity: 22, distance: 16 });
+  game.world.addLight({ pos: new THREE.Vector3(cx, fy + 4, cz), color: 0x7ff3ff, intensity: 8, distance: 14 });
 
   const puzzle = {
     id: 'reefClam',

@@ -124,7 +124,7 @@ export function clamModel(scale = 1, color = 0x8a7aa8) {
   const bottom = new THREE.Mesh(shellGeo, lambert(color));
   bottom.rotation.x = Math.PI;
   g.add(bottom);
-  const lip = new THREE.Mesh(new THREE.TorusGeometry(0.93, 0.08, 4, 14), lambert(0x4fd0e8, 0x0b3540));
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(0.93, 0.08, 4, 14), lambert(0x3a9ab0, 0x04161c));
   lip.rotation.x = Math.PI / 2;
   lip.scale.set(1, 0.85, 1);
   g.add(lip);

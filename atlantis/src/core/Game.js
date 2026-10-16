@@ -289,6 +289,7 @@ export class Game {
       this.items.update(dt, new THREE.Vector3(0, 9999, 0));
       this.base.spin(dt);
       this.map.prepareStep();
+      this.audio.update(dt);
       this.renderer.render(this.scene, this.camera);
       return;
     }
@@ -299,6 +300,7 @@ export class Game {
       this.atmosphere.update(dt, this.camera.position, false);
       this.puzzles.update(dt);
       this.items.update(dt, new THREE.Vector3(0, 9999, 0));
+      this.audio.update(dt);
       this.renderer.render(this.scene, this.camera);
       return;
     }
@@ -328,6 +330,8 @@ export class Game {
     shared.uGlyphGlow.value += (glow - shared.uGlyphGlow.value) * Math.min(1, dt * 0.8);
     this.world.update(dt, p.pos);
     const atm = this.atmosphere.update(dt, p.pos, p.flashlightOn);
+    // the lamp matters less in bright shallow water
+    p.flashlight.intensity = (p.flashBase || 0) * Math.max(0.15, 1.1 - atm.light);
     this.ui.updateHUD(dt, atm);
     this.renderer.render(this.scene, this.camera);
   }

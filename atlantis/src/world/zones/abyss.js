@@ -57,8 +57,8 @@ export function buildAbyss(ctx) {
   items.addRelic('starCompass', 60, heightAt(60, -520) + 1, -520);
   world.addLight({ pos: new THREE.Vector3(0, -150, -625), color: 0x3a6aff, intensity: 10, distance: 30 });
 
-  addSign(ctx, 0, -355, 'Marker left by Mara Quill', 'The Abyss begins past the palace. Below 110 m you need an Abyssal Suit, and a lamp strong enough to cut the dark.');
-  items.addPage('log_abyss', 90, null, -380);
+  addSign(ctx, 0, -333, 'Marker left by Mara Quill', 'The Abyss begins past the palace. Below 110 m you need an Abyssal Suit, and a lamp strong enough to cut the dark.');
+  items.addPage('log_abyss', 70, null, -320);
 
   scatterPearls(ctx, 'abyss', 16, { padMargin: 4 });
   scatterClams(ctx, 'abyss', 3, 10, { padMargin: 5 });

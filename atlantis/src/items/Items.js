@@ -172,7 +172,7 @@ export class Items {
     const shard = { id: `shard:${shardId}`, shardId, model, taken: false, revealed: !hidden, baseY: y };
     this.shards.push(shard);
     shard.light = this.game.world.addLight({
-      pos: model.position, color, intensity: 30, distance: 18,
+      pos: model.position, color, intensity: 12, distance: 14,
       active: () => shard.revealed && !shard.taken,
     });
     this.game.interact.add({

@@ -37,9 +37,9 @@ export function buildVents(ctx) {
     const p = randomInZone(ctx, 'vents', { padMargin: 2 });
     if (!p) continue;
     const [x, z] = p;
-    const len = rng.float(4, 14), ry = rng.float(0, 6.28);
+    const len = rng.float(2.5, 7), ry = rng.float(0, 6.28);
     const y = Math.min(heightAt(x, z), heightAt(x + Math.sin(ry) * len / 2, z + Math.cos(ry) * len / 2), heightAt(x - Math.sin(ry) * len / 2, z - Math.cos(ry) * len / 2));
-    B.add(G.box, 'emissive', T(x, y + 0.05, z, ry, rng.float(0.2, 0.5), 0.4, len), rng.pick([0xff5a1a, 0xff8a2a, 0xffb040]), 0.15);
+    B.add(G.box, 'emissive', T(x, y - 0.1, z, ry, rng.float(0.2, 0.5), 0.4, len), rng.pick([0xff5a1a, 0xff8a2a, 0xffb040]), 0.15);
   }
 
   // Glowing vent life: lantern caps and luminous anemones
