@@ -145,6 +145,12 @@ export class UI {
           <div class="close-hint">E / Esc to close</div>
         </div>
       </div>
+      <div id="ask" class="screen panel-screen hidden">
+        <div class="panel small ask-panel">
+          <p class="ask-text"></p>
+          <div class="ask-row"><button data-act="ask-no">Cancel</button><button data-act="ask-yes" class="ask-yes"></button></div>
+        </div>
+      </div>
       <div id="blackout" class="hidden"><div class="bo-text"></div></div>
       <div id="click-resume" class="hidden">Click to resume</div>
       <div id="cutscene" class="hidden"><div class="bar top"></div><div class="bar bottom"></div><div class="caption"></div><div class="skip">Hold E to skip</div></div>
@@ -235,8 +241,8 @@ export class UI {
     const g = this.game;
     switch (act) {
       case 'new':
-        if (hasSave() && !confirm('Start a new game? Your saved progress will be replaced when the game next saves.')) return;
-        g.startNew();
+        if (hasSave()) this.ask('Start a new game? Your saved progress will be replaced when the game next saves.', 'Start new game', () => g.startNew());
+        else g.startNew();
         break;
       case 'continue':
         if (hasSave()) g.continueGame();
@@ -252,12 +258,19 @@ export class UI {
         window.location.reload();
         break;
       case 'delete-save':
-        if (confirm('Delete your saved game? This cannot be undone.')) {
+        this.ask('Delete your saved game? This cannot be undone.', 'Delete save', () => {
           deleteSave();
           this.refreshTitle();
           this.toast('Saved game deleted.', 'info');
-        }
+        });
         break;
+      case 'ask-yes': {
+        const fn = this.askFn;
+        this.closeAsk();
+        if (fn) fn();
+        break;
+      }
+      case 'ask-no': this.closeAsk(); break;
       case 'buy': this.buy(btn.dataset.id); break;
       case 'explore':
         this.screens.ending.classList.add('hidden');
@@ -270,6 +283,20 @@ export class UI {
         break;
       default: break;
     }
+  }
+
+  // In-game confirmation (browser dialogs are not available everywhere).
+  ask(text, yesLabel, onYes) {
+    const a = this.root.querySelector('#ask');
+    a.querySelector('.ask-text').textContent = text;
+    a.querySelector('.ask-yes').textContent = yesLabel;
+    this.askFn = onYes;
+    a.classList.remove('hidden');
+  }
+
+  closeAsk() {
+    this.root.querySelector('#ask').classList.add('hidden');
+    this.askFn = null;
   }
 
   // ---- Title / pause / settings ----
