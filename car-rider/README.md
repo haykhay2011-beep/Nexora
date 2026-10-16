@@ -49,7 +49,8 @@ The speed readout (bottom left) switches between km/h and mph when clicked. The 
 - The car drives itself; you steer. The road bends constantly and the bends push you towards the outside, so keep
   correcting. Curves get tighter and more frequent the longer you survive, and speed slowly climbs.
 - **Shoulder** (the tan strip): slows you down. **Guardrail**: scraping it is fine, hitting it head-on is a crash.
-- **Obstacles**: cones, barrels, roadblocks and slow cars end the run. Potholes slow you and bounce the car. Oil slicks make
+- **Traffic**: cars and trucks cruise the lanes at their own speeds, so you weave through them. Hitting one ends the run, and traffic never lines up three abreast.
+- **Obstacles**: cones, barrels and roadblocks end the run, and so does hitting a car. Potholes slow you and bounce the car. Oil slicks make
   steering slippery for a moment. Hopping clears cones and barrels. There is always a passable path.
 - **Ramps** appear on straighter stretches. In the air, steer to spin. Every full rotation is a trick; landing roughly
   straight scores trick points and raises the **multiplier** (x2, x3 …). Landing sideways is a crash. The multiplier resets

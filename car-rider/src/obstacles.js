@@ -59,6 +59,20 @@ function trafficCarGeo(color) {
   return b.build();
 }
 
+function truckGeo(color) {
+  const b = new PartBuilder();
+  b.box(2.1, 0.5, 6.6, 0x3a3d45, [0, 0.55, 0.3]);
+  b.box(2.2, 2.2, 4.3, color, [0, 1.9, 1.15]);
+  b.box(2.0, 1.5, 1.7, color, [0, 1.5, -2.1]);
+  b.box(1.9, 0.6, 0.1, 0x34465a, [0, 1.95, -2.98]);
+  b.box(2.1, 0.2, 0.14, 0x2a2c33, [0, 0.45, -3.05]);
+  b.box(0.4, 0.2, 0.06, 0xff2a2a, [0.8, 0.8, 3.62]);
+  b.box(0.4, 0.2, 0.06, 0xff2a2a, [-0.8, 0.8, 3.62]);
+  b.box(2.24, 0.12, 4.34, 0xffffff, [0, 3.04, 1.15]);
+  for (const x of [-1.0, 1.0]) for (const z of [-2.0, 1.6, 2.9]) b.cyl(0.5, 0.5, 0.34, 8, 0x26262b, [x, 0.5, z], [0, 0, Math.PI / 2]);
+  return b.build();
+}
+
 function potholeGeo() {
   const b = new PartBuilder();
   b.cyl(1.15, 1.15, 0.03, 10, 0x37383e, [0, 0.03, 0]);
@@ -111,9 +125,11 @@ const TYPES = {
   cone: { geo: coneGeo, count: 40, hl: 0.4, hw: 0.4, h: 0.75, solid: true, crush: true },
   barrel: { geo: barrelGeo, count: 28, hl: 0.5, hw: 0.5, h: 1.05, solid: true, crush: true },
   roadblock: { geo: roadblockGeo, count: 14, hl: 0.4, hw: 1.5, h: 1.5, solid: true },
-  car0: { geo: () => trafficCarGeo(0x7a4fd1), count: 3, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
-  car1: { geo: () => trafficCarGeo(0x2fb5a8), count: 3, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
-  car2: { geo: () => trafficCarGeo(0xf3f3ee), count: 3, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  car0: { geo: () => trafficCarGeo(0x7a4fd1), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  car1: { geo: () => trafficCarGeo(0x2fb5a8), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  car2: { geo: () => trafficCarGeo(0xf3f3ee), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  car3: { geo: () => trafficCarGeo(0xf0b429), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  truck: { geo: () => truckGeo(0xd9dde4), count: 4, hl: 3.4, hw: 1.1, h: 3.2, solid: true, car: true, truck: true },
   pothole: { geo: potholeGeo, count: 20, hl: 1.0, hw: 0.95, h: 0, hazard: true },
   oil: { geo: oilGeo, count: 14, hl: 1.5, hw: 1.4, h: 0, hazard: true },
   ramp: { geo: rampGeo, count: 5, hl: RAMP_L / 2, hw: RAMP_W / 2, h: 0, ramp: true },
@@ -161,10 +177,8 @@ export class Obstacles {
     this.nextRampS = startS + 330;
     this.nextNitroS = startS + 520;
     this.nextBoxS = startS + 300;
-    this.carWindowEnd = -1;
-    this.carLane = -1;
+    this.trafficNextS = startS + 190;
     this.reserveEnd = -1;
-    this.activeCar = null;
   }
 
   _free(o) {
@@ -180,7 +194,7 @@ export class Obstacles {
     const o = {
       type, poolName: type, spec, mesh, s, d,
       hl: spec.hl, hw: spec.hw, h: spec.h,
-      solid: !!spec.solid, crush: !!spec.crush, hazard: !!spec.hazard, ramp: !!spec.ramp,
+      solid: !!spec.solid, crush: !!spec.crush, hazard: !!spec.hazard, ramp: !!spec.ramp, car: !!spec.car,
       dead: false, fly: null, vs: 0, hit: false,
     };
     if (extra) Object.assign(o, extra);
@@ -238,21 +252,81 @@ export class Obstacles {
     this.t = t;
     this.diff = this.difficulty(t);
     while (this.nextS < horizon) this._row(this.nextS, speedRef);
+    while (this.trafficNextS < horizon + 20) this._traffic(this.trafficNextS);
+  }
+
+  _laneOf(d) {
+    return Math.min(2, Math.max(0, Math.round(d / LANE_CENTERS[2]) + 1));
+  }
+
+  // A wave of one or two vehicles cruising at different speeds, never three abreast.
+  _traffic(s) {
+    const r = this.rng;
+    const diff = this.diff;
+    const gap = (95 - 50 * diff) * r.range(0.75, 1.35);
+    this.trafficNextS = s + gap;
+    if (s < this.reserveEnd + 5) return;
+    const n = diff > 0.2 && r.chance(0.2 + 0.25 * diff) ? 2 : 1;
+    const lanes = [0, 1, 2];
+    for (let k = 0; k < n; k++) {
+      const lane = lanes.splice(r.int(0, lanes.length - 1), 1)[0];
+      // keep clear of other vehicles already in that lane
+      let clear = true;
+      for (const o of this.items) if (o.car && !o.dead && o.lane === lane && Math.abs(o.s - s) < 45) clear = false;
+      if (!clear) continue;
+      const truck = r.chance(0.18);
+      const type = truck ? 'truck' : ['car0', 'car1', 'car2', 'car3'][r.int(0, 3)];
+      const cruise = truck ? r.range(7, 10) : r.range(8.5, 15.5);
+      this._spawn(type, s + (k ? r.range(-12, 12) : 0), this._laneD(lane), { vs: cruise, cruise, lane });
+    }
+  }
+
+  _trafficUpdate(dt) {
+    const items = this.items;
+    for (const c of items) {
+      if (!c.car || c.dead) continue;
+      let target = c.cruise;
+      // follow the vehicle ahead in the same lane
+      for (const o of items) {
+        if (o === c || !o.car || o.dead || o.lane !== c.lane || o.s <= c.s) continue;
+        const gap = o.s - c.s - o.hl - c.hl;
+        if (gap < 24) target = Math.min(target, Math.max(0, o.vs + (gap - 8) * 0.5));
+      }
+      // never help seal all three lanes: the rearmost car of a cluster drops back
+      let others = 0;
+      let rearmost = true;
+      const occ = [false, false, false];
+      for (const o of items) {
+        if (o === c || o.dead || !o.solid) continue;
+        const win = o.car ? 16 : 10;
+        if (Math.abs(o.s - c.s) > win) continue;
+        const l = o.lane !== undefined ? o.lane : this._laneOf(o.d);
+        if (l === c.lane) continue;
+        occ[l] = true;
+        if (o.car && o.s < c.s) rearmost = false;
+      }
+      others = occ.filter(Boolean).length;
+      if (others >= 2 && rearmost) target = Math.min(target, c.vs - 6);
+      const dv = target - c.vs;
+      c.vs += Math.max(-9 * dt, Math.min(2.5 * dt, dv));
+      if (c.vs < 2.5) c.vs = 2.5;
+    }
   }
 
   _row(s, speedRef) {
     const r = this.rng;
     const diff = this.diff;
-    const inWindow = s < this.carWindowEnd && this.carLane >= 0;
     const reserved = s < this.reserveEnd;
     const v = Math.max(speedRef, 22);
-    let gap = v * (2.3 - 1.25 * diff) * r.range(0.9, 1.25);
+    let gap = v * (2.3 - 1.3 * diff) * r.range(0.9, 1.25);
     gap = Math.max(gap, 24);
 
     // --- ramp
-    if (!reserved && !inWindow && s > this.nextRampS) {
-      if (this._straight(s + 8, s + 88)) {
-        const lane = r.int(0, 2);
+    if (!reserved && s > this.nextRampS) {
+      // a lane is usable if no traffic could drive into the ramp from behind
+      const free = [0, 1, 2].filter((l) => !this.items.some((o) => o.car && !o.dead && o.lane === l && o.s > s - 200 && o.s < s + 110));
+      if (free.length && this._straight(s + 8, s + 88)) {
+        const lane = free[r.int(0, free.length - 1)];
         this._spawn('ramp', s + 20, this._laneD(lane));
         this.reserveEnd = s + 20 + 85;
         this.nextRampS = s + r.range(300, 560);
@@ -268,32 +342,15 @@ export class Obstacles {
       this.nextRampS = s + 30;
     }
 
-    // --- slow car convoy
-    if (!inWindow && !reserved && diff > 0.1 && r.chance(0.12 + 0.12 * diff) && !this.activeCar) {
-      const lane = r.int(0, 2);
-      const names = ['car0', 'car1', 'car2'];
-      const car = this._spawn(names[r.int(0, 2)], s + 40, this._laneD(lane), { vs: r.range(7.5, 10) });
-      if (car) {
-        this.activeCar = car;
-        this.carLane = lane;
-        this.carWindowEnd = s + 40 + 320;
-        if (this.safe === lane) this.safe = lane === 1 ? (r.chance(0.5) ? 0 : 2) : 1;
-      }
-    }
-    const win = s < this.carWindowEnd && this.carLane >= 0;
-    const allowed = win ? [0, 1, 2].filter((l) => l !== this.carLane) : null;
-
     const safe = this.safe;
-    const next = this._walk(safe, allowed);
+    const next = this._walk(safe, null);
     this.safe = next;
 
     if (!reserved) {
       // solid obstacles
-      let nBlock = 1;
-      if (diff > 0.25 && r.chance(0.25 + 0.55 * diff)) nBlock = 2;
-      if (win) nBlock = 1;
-      if (s < 260) nBlock = 1;
-      const lanes = [0, 1, 2].filter((l) => l !== safe && !(win && l === this.carLane));
+      // traffic shares the road, so static rows only ever block a single lane
+      const nBlock = 1;
+      const lanes = [0, 1, 2].filter((l) => l !== safe);
       const blocked = [];
       while (blocked.length < nBlock && lanes.length) blocked.push(lanes.splice(r.int(0, lanes.length - 1), 1)[0]);
       const sparse = s < 220;
@@ -316,12 +373,11 @@ export class Obstacles {
       // hazards (never solid, so the safe lane stays passable)
       if (r.chance(0.18 + 0.3 * diff)) {
         const l = r.int(0, 2);
-        const skipCarLane = win && l === this.carLane;
-        if (!skipCarLane) this._spawn('pothole', s + gap * 0.5 + r.range(-4, 4), this._laneD(l) + r.range(-0.5, 0.5));
+        this._spawn('pothole', s + gap * 0.5 + r.range(-4, 4), this._laneD(l) + r.range(-0.5, 0.5));
       }
       if (diff > 0.08 && r.chance(0.12 + 0.2 * diff)) {
         const l = r.int(0, 2);
-        if (!(win && l === this.carLane)) this._spawn('oil', s + gap * 0.5 + r.range(-6, 6), this._laneD(l));
+        this._spawn('oil', s + gap * 0.5 + r.range(-6, 6), this._laneD(l));
       }
     }
 
@@ -351,6 +407,7 @@ export class Obstacles {
 
   // ------------------------------------------------------------- per frame
   update(dt, playerS) {
+    this._trafficUpdate(dt);
     for (let i = this.items.length - 1; i >= 0; i--) {
       const o = this.items[i];
       if (o.vs && !o.dead) {
@@ -368,18 +425,9 @@ export class Obstacles {
         continue;
       }
       if (o.s < playerS - 40) {
-        if (o === this.activeCar) {
-          this.activeCar = null;
-          this.carLane = -1;
-        }
         this._remove(i);
       }
     }
-    if (this.activeCar && this.activeCar.s > this.carWindowEnd + 100) {
-      this.activeCar = null;
-      this.carLane = -1;
-    }
-    if (!this.activeCar && this.carLane >= 0 && playerS > this.carWindowEnd) this.carLane = -1;
   }
 
   _remove(i) {
@@ -400,10 +448,6 @@ export class Obstacles {
       vel: new THREE.Vector3(_f.fx * speed * 0.8 + (Math.random() - 0.5) * 6, 6 + Math.random() * 4, _f.fz * speed * 0.8 + (Math.random() - 0.5) * 6),
       rot: { x: (Math.random() - 0.5) * 14, z: (Math.random() - 0.5) * 14 },
     };
-    if (o === this.activeCar) {
-      this.activeCar = null;
-      this.carLane = -1;
-    }
   }
 
   // Returns list of contacts for the vehicle this frame.
