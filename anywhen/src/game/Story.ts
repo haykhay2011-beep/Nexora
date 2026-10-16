@@ -212,7 +212,8 @@ export class Story {
       return a ? { lat: NaN, lon: NaN, year: NaN, moon: false, label: a.homeHint } : null;
     }
     const loc = this.locationStep();
-    if (loc && loc.lat !== undefined) return { lat: loc.lat, lon: loc.lon!, year: r.year, moon: false, label: r.place };
+    if (loc?.type === 'moon') return { lat: 0.67, lon: 23.47, year: r.year, moon: true, label: 'The Moon' };
+    if (loc && loc.lat !== undefined) return { lat: loc.lat, lon: loc.lon!, year: r.year, moon: false, label: `${r.place}, ${formatYear(r.year)}` };
     return null;
   }
 

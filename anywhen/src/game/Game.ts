@@ -933,6 +933,10 @@ export class Game {
     let objective = this.story.objective();
     if (!objective && s.story.ended) objective = { title: 'Timeline restored', text: 'Explore anywhere, anywhen. Anomalies still drift through time.' };
     if (objective && (this.story.step?.type === 'travel' || this.story.step?.type === 'moon')) objective = { ...objective, hint: (objective.hint ?? '') + ' Press T to open the Chronometer and use ★ Objective.' };
+    else if (objective && this.story.step?.type !== 'return' && !this.story.activeHere(w.plan)) {
+      const dest = this.story.destinationHint();
+      if (dest) objective = { ...objective, hint: `This happens at ${dest.label}. Press T and use ★ Objective to go back.` };
+    }
     const unlockHint = nextUnlockHint(s);
     this.hud.update({
       place: w.plan.place.name,

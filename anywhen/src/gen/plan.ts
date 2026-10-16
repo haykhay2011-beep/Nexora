@@ -377,9 +377,11 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
   const anomalies = planAnomalies(rng.fork('anomalies'), key, era, region.id, ts, spawn, lat, lon, !!humans, settlement, animals);
 
   // ---- place & facts
+  // built landmarks always stand on land, even where the coarse coast raster says sea
+  const landFrac = snapped && snapped.kind !== 'natural' ? 1 : 1 - centreWater;
   const place: PlaceInfo = snapped
-    ? { ...describePlace(earth, present.lat, present.lon, year, 1 - centreWater, subzone?.name), short: snapped.name }
-    : describePlace(earth, present.lat, present.lon, year, 1 - centreWater, subzone?.name);
+    ? { ...describePlace(earth, present.lat, present.lon, year, landFrac, subzone?.name), short: snapped.name }
+    : describePlace(earth, present.lat, present.lon, year, landFrac, subzone?.name);
   if (snapped) place.name = `${snapped.name} — ${place.name.replace(/^near present-day /, '')}`;
   const facts: string[] = [];
   for (const p of placed) {

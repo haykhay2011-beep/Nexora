@@ -65,7 +65,12 @@ const mid = (st, d) => (st.yearMin !== undefined ? Math.round((st.yearMin + (st.
 const here = async () => { await until(() => window.anywhen.mode === 'play' && window.anywhen.world, null, 120000); return page.evaluate(() => { const p = window.anywhen.world.plan; return { lat: p.presentLat, lon: p.presentLon, year: p.year, moon: p.moon }; }); };
 
 const act = async (st, loc) => {
-  const h = await here();
+  let h = await here();
+  if (!['travel', 'moon', 'return'].includes(st.type)) {
+    // the step happens somewhere else (e.g. back in 1969 after a trip to the future): follow the ★ Objective
+    const dest = await page.evaluate(() => { const g = window.anywhen; return g.story.activeHere(g.world.plan) ? null : g.story.destinationHint(); });
+    if (dest && Number.isFinite(dest.lat)) { await jump(dest.lat, dest.lon, dest.year, dest.moon); h = await here(); }
+  }
   switch (st.type) {
     case 'travel': await jump(st.lat ?? h.lat, st.lon ?? h.lon, mid(st, h.year)); return true;
     case 'moon': await jump(0.67, 23.47, 2024, true); return true;
