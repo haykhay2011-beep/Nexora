@@ -792,11 +792,14 @@ export class Game {
   // ------------------------------------------------------------------ visits & photos
   private checkVisits() {
     const w = this.world!, p = this.player!;
+    const st = this.story.step;
     for (const l of w.plan.landmarks) {
       const d = Math.hypot(p.pos.x - l.x, p.pos.z - l.z);
       const def = LANDMARK_BY_ID.get(l.id);
       if (!def) continue;
       const r = Math.max(60, l.clear * 0.9 + 40) * (def.kind === 'natural' ? 3 : 1);
+      // a story visit step counts even if the player was already standing here when it began
+      if (d < r && st?.type === 'visit' && st.landmark === l.id) this.story.notify({ type: 'visit', landmark: l.id });
       if (d < r && !this.visited.has(w.plan.key + l.id)) {
         this.visited.add(w.plan.key + l.id);
         const key = l.id;

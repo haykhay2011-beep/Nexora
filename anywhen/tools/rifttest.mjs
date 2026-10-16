@@ -59,7 +59,8 @@ const ret = async (id) => {
 const log = (ok, label) => console.log(ok ? 'PASS' : 'FAIL', label);
 const ERAS = JSON.parse(await (await import('node:fs/promises')).readFile(new URL('../src/data/eras.json', import.meta.url), 'utf8'));
 const RIFTS = JSON.parse(await (await import('node:fs/promises')).readFile(new URL('../src/data/rifts.json', import.meta.url), 'utf8'));
-const eraMid = (id) => { const e = ERAS.find((x) => x.id === id); return Math.round(e.start + (Math.min(e.end, 3000) - e.start) * 0.75); };
+const ERA_YEAR = { modern: 2020 }; // some anomalies need a late year (smartphones after 2007)
+const eraMid = (id) => { if (ERA_YEAR[id]) return ERA_YEAR[id]; const e = ERAS.find((x) => x.id === id); return Math.round(e.start + (Math.min(e.end, 3000) - e.start) * 0.75); };
 const mid = (st, d) => (st.yearMin !== undefined ? Math.round((st.yearMin + (st.yearMax ?? st.yearMin)) / 2) : d);
 const here = async () => { await until(() => window.anywhen.mode === 'play' && window.anywhen.world, null, 120000); return page.evaluate(() => { const p = window.anywhen.world.plan; return { lat: p.presentLat, lon: p.presentLon, year: p.year, moon: p.moon }; }); };
 
