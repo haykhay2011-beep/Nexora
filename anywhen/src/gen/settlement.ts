@@ -100,33 +100,45 @@ function addRoad(roads: RoadSeg[], ax: number, az: number, bx: number, bz: numbe
   roads.push({ ax: cl(ax), az: cl(az), bx: cl(bx), bz: cl(bz), w, main });
 }
 
-/** Place buildings along both sides of each road. */
+/** Place buildings along both sides of each road, filling the centre first. */
 function fillAlongRoads(ctx: Ctx, s: Settlement, roads: RoadSeg[], maxPlots: number, minH: number) {
   const r = ctx.rng;
+  const cands: { x: number; z: number; ang: number; side: number; road: RoadSeg; d: number }[] = [];
   for (const road of roads) {
     const len = Math.hypot(road.bx - road.ax, road.bz - road.az);
+    if (len < 1) continue;
     const dx = (road.bx - road.ax) / len, dz = (road.bz - road.az) / len;
     const ang = Math.atan2(dz, dx);
-    for (const side of [-1, 1]) {
-      let t = r.range(4, 12);
-      while (t < len - 4 && ctx.plots.length < maxPlots) {
-        const cx = road.ax + dx * t, cz = road.az + dz * t;
-        const distFrac = Math.hypot(cx - s.x, cz - s.z) / s.radius;
-        if (distFrac > 1.05) { t += 12; continue; }
-        const role: PlotRole = distFrac < 0.18 && r.chance(0.35) ? 'market' : r.chance(0.12) ? 'workshop' : 'home';
-        const st = styleFor(ctx, role, distFrac, s.tier);
-        const p = makePlot(ctx, st, 0, 0, ang, role);
-        const setback = road.w / 2 + p.d / 2 + r.range(1, st.shape === 'skyscraper' ? 8 : 4);
-        p.x = cx + -dz * side * setback;
-        p.z = cz + dx * side * setback;
-        p.rot = ang + (side > 0 ? 0 : Math.PI);
-        if (st.shape === 'round' || st.shape === 'tent' || st.shape === 'dome') p.rot = r.range(0, Math.PI * 2);
-        if (plotOk(ctx, p, roads, minH)) {
-          p.base = ctx.ts.height(p.x, p.z);
-          ctx.plots.push(p);
-          t += p.w + r.range(1.5, st.shape === 'skyscraper' ? 14 : 6);
-        } else t += 5;
-      }
+    const step = s.tier === 'metropolis' ? 16 : s.tier === 'city' ? 9 : 8;
+    for (const side of [-1, 1]) for (let t = r.range(3, 8); t < len - 3; t += step) {
+      const cx = road.ax + dx * t, cz = road.az + dz * t;
+      const d = Math.hypot(cx - s.x, cz - s.z);
+      if (d > s.radius * 1.05) continue;
+      cands.push({ x: cx, z: cz, ang, side, road, d: d * r.range(0.9, 1.1) });
+    }
+  }
+  cands.sort((a, b) => a.d - b.d);
+  for (const c of cands) {
+    if (ctx.plots.length >= maxPlots) break;
+    const distFrac = c.d / s.radius;
+    const role: PlotRole = distFrac < 0.18 && r.chance(0.35) ? 'market' : r.chance(0.12) ? 'workshop' : 'home';
+    const st = styleFor(ctx, role, distFrac, s.tier);
+    const p = makePlot(ctx, st, 0, 0, c.ang, role);
+    const dx = Math.cos(c.ang), dz = Math.sin(c.ang);
+    const setback = c.road.w / 2 + p.d / 2 + r.range(1, st.shape === 'skyscraper' ? 6 : 3);
+    p.x = c.x + -dz * c.side * setback;
+    p.z = c.z + dx * c.side * setback;
+    p.rot = c.ang + (c.side > 0 ? 0 : Math.PI);
+    if (st.shape === 'round' || st.shape === 'tent' || st.shape === 'dome') p.rot = r.range(0, Math.PI * 2);
+    if (plotOk(ctx, p, roads, minH)) { p.base = ctx.ts.height(p.x, p.z); ctx.plots.push(p); }
+    else if (st.shape === 'skyscraper' || st.width[1] > 14) {
+      // big buildings that do not fit: try a smaller style in the same spot
+      const small = STYLE_BY_ID.get(ctx.profile.styles.find((x) => STYLE_BY_ID.get(x)?.shape === 'box') ?? '') ;
+      if (!small) continue;
+      const q = makePlot(ctx, small, p.x, p.z, p.rot, role);
+      const sb2 = c.road.w / 2 + q.d / 2 + 1.5;
+      q.x = c.x + -dz * c.side * sb2; q.z = c.z + dx * c.side * sb2;
+      if (plotOk(ctx, q, roads, minH)) { q.base = ctx.ts.height(q.x, q.z); ctx.plots.push(q); }
     }
   }
 }
@@ -158,7 +170,7 @@ export function layoutSettlement(inp: SettlementInput): Settlement {
   const roadType = inp.era.roads;
   const roadW = (main: boolean) => (inp.tier === 'metropolis' ? (main ? 22 : 14) : inp.tier === 'city' ? (main ? 12 : 7) : main ? 7 : 4.5) * (roadType === 'trail' ? 0.5 : 1);
   const angle = rng.range(0, Math.PI);
-  const maxPlots = [0, 9, 14, 34, 80, 170, 300][tierIdx];
+  const maxPlots = [0, 9, 14, 34, 110, 320, 650][tierIdx];
   const minH = 0.9;
   const roads = s.roads;
 

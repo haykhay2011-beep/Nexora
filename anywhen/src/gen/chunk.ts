@@ -225,7 +225,8 @@ function scatterFlora(ctx: ChunkCtx, cx: number, cz: number, lod: number): Flora
       let p = density * (0.35 + patch * 1.1) * 0.55;
       if (s) {
         const d = Math.hypot(x - s.x, z - s.z);
-        if (d < s.radius * 1.1) p *= 1 - urban * 0.9;
+        if (d < s.radius * 1.1) p *= urban >= 0.8 ? 0.03 : 1 - urban * 0.9;
+        else if (d < s.radius * 1.6 && urban >= 0.8) p *= 0.35;
       }
       if (r1 > p) continue;
       // species pick

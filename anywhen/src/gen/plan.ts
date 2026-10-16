@@ -222,6 +222,7 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
   let settlement: Settlement | null = null;
   const outlying: Plot[] = [];
   let tier: SettlementTier = 'none';
+  let cityTier = false;
   if (humans) {
     const hab = HABITABILITY[biome] ?? 0.5;
     const waterBoost = (river ? 0.9 : 0) + (hasCoast ? 0.45 : 0) + (streams.length ? 0.2 : 0);
@@ -242,12 +243,15 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
       const reach = city.tier === 'metropolis' ? 16 : city.tier === 'city' ? 7 : city.tier === 'town' ? 4 : 2.5;
       const drop = city.km < reach ? 0 : city.km < reach * 2.2 ? 1 : city.km < reach * 4 ? 2 : 3;
       const ct = TIER_ORDER[Math.max(0, ci - drop)];
-      if (TIER_ORDER.indexOf(ct) > TIER_ORDER.indexOf(tier)) tier = ct;
+      if (TIER_ORDER.indexOf(ct) > TIER_ORDER.indexOf(tier)) { tier = ct; cityTier = true; }
     }
     const maxI = TIER_ORDER.indexOf(era.maxTier);
     if (TIER_ORDER.indexOf(tier) > maxI) tier = era.maxTier;
     if (placed.some((p) => ['machu_picchu', 'great_zimbabwe', 'pueblo_bonito', 'mesa_verde'].includes(p.id) && p.state === 'complete')) tier = TIER_ORDER.indexOf(tier) > 3 ? tier : 'hamlet';
   }
+  // urban landmarks (flat ground) sit inside their city instead of pushing it away
+  const hardTerrain = placed.some((p) => { const d = LANDMARKS.find((l) => l.id === p.id); return !!d?.terrain && d.terrain.type !== 'flatten' && d.terrain.type !== 'pit'; });
+  const urbanCentre = cityTier && TIER_ORDER.indexOf(tier) >= TIER_ORDER.indexOf('town') && !hardTerrain;
   if (tier !== 'none') {
     const radius = TIER_RADIUS[tier];
     // settlement centre: nearest good land a little away from the arrival point
@@ -255,12 +259,13 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
     const want = Math.min(radius * 0.9 + 120, 1500);
     const maxClear = clearZones.reduce((m, c) => Math.max(m, Math.hypot(c.x, c.z) + c.r), 0);
     for (let i = 0; i < 140; i++) {
-      const a = rng.range(0, Math.PI * 2), rr = rng.range(want * 0.5, Math.max(want * 1.4, maxClear + radius * 0.8));
+      const a = rng.range(0, Math.PI * 2), rr = urbanCentre ? rng.range(20, radius * 0.5 + 200) : rng.range(want * 0.5, Math.max(want * 1.4, maxClear + radius * 0.8));
       const x = Math.cos(a) * rr, z = Math.sin(a) * rr;
       if (Math.abs(x) > AREA_HALF - radius * 0.7 - 100 || Math.abs(z) > AREA_HALF - radius * 0.7 - 100) continue;
       const h = ts.height(x, z);
       if (h < 1.2) continue;
-      if (clearZones.some((c) => Math.hypot(c.x - x, c.z - z) < c.r + radius * 0.6)) continue;
+      if (urbanCentre) { if (rr > radius * 0.5 + 200 || clearZones.some((c) => Math.hypot(c.x - x, c.z - z) < c.r + 10)) continue; }
+      else if (clearZones.some((c) => Math.hypot(c.x - x, c.z - z) < c.r + radius * 0.6)) continue;
       // land fraction inside the radius
       let land = 0;
       for (let k = 0; k < 8; k++) {
@@ -269,7 +274,7 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
       }
       const sl = ts.slope(x, z, 8);
       const nearWater = ts.riverDist(x, z) < radius * 1.5 || hasCoast ? 0.3 : 0;
-      const score = land / 8 + sl * 0.5 + nearWater - Math.max(0, rr - Math.max(want, maxClear + radius * 0.7)) / want * 0.3 - Math.abs(rr - want) / want * 0.05;
+      const score = urbanCentre ? land / 8 + sl * 0.3 - rr / radius * 0.4 : land / 8 + sl * 0.5 + nearWater - Math.max(0, rr - Math.max(want, maxClear + radius * 0.7)) / want * 0.3 - Math.abs(rr - want) / want * 0.05;
       if (land >= 5 && (!bestC || score > bestC.score)) bestC = { x, z, score };
     }
     if (bestC) {
@@ -310,7 +315,20 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
     }
     return null;
   };
-  if (lmFocus) {
+  let urbanSpawn: { x: number; z: number; facing: number } | null = null;
+  if (lmFocus && settlement && urbanCentre) {
+    // arrive on a street near the landmark
+    const pts: { x: number; z: number; d: number }[] = [];
+    for (const r of settlement.roads) for (let t = 0; t <= 1; t += 0.05) {
+      const x = r.ax + (r.bx - r.ax) * t, z = r.az + (r.bz - r.az) * t;
+      const d = Math.hypot(x - lmFocus.x, z - lmFocus.z);
+      if (d > lmFocus.clear + 25 && d < Math.max(260, lmFocus.clear + 160)) pts.push({ x, z, d });
+    }
+    pts.sort((a, b) => a.d - b.d);
+    for (const p of pts) if (ts.height(p.x, p.z) > 0.6 && !settlement.plots.some((q) => Math.hypot(q.x - p.x, q.z - p.z) < Math.max(q.w, q.d) * 0.6 + 1.5)) { urbanSpawn = { x: p.x, z: p.z, facing: Math.atan2(lmFocus.x - p.x, lmFocus.z - p.z) }; break; }
+  }
+  if (urbanSpawn) spawn = urbanSpawn;
+  else if (lmFocus) {
     const def = LANDMARKS.find((l) => l.id === lmFocus.id)!;
     spawn = tryAround(lmFocus.x, lmFocus.z, def.arrive ?? 250, Math.PI / 2) ?? spawn;
   } else if (settlement) {
