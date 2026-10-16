@@ -26,6 +26,11 @@ npm run preview    # serve the production build locally
 Add `?seed=1234` to the URL to replay a specific road for the first run of a session (the seed is also shown on the
 game-over screen). Without it each run gets a fresh random seed.
 
+## Single-file version
+
+`car-rider.html` is the whole game in one self-contained file. Open it directly in a browser, no server needed.
+Regenerate it with `npm run build:single`.
+
 ## Controls
 
 | Action | Keyboard | Touch |
