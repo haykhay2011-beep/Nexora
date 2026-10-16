@@ -36,6 +36,7 @@ export class Input {
 
   _key(e, down) {
     const k = e.code;
+    if (e.target && e.target.tagName === 'INPUT') return;
     const handled = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyA', 'KeyD', 'KeyP', 'Escape', 'Enter'].includes(k);
     if (handled && e.target && e.target.tagName === 'BUTTON' && (k === 'Space' || k === 'Enter')) return;
     if (handled) e.preventDefault();

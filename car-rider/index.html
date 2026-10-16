@@ -49,6 +49,7 @@
             <div><kbd>P</kbd> / <kbd>Esc</kbd><span>Pause</span></div>
             <div class="touch-only"><em>Touch</em><span>Hold left / right half · swipe up to hop</span></div>
           </div>
+          <label class="speedctl" for="speed-start"><span>Car speed</span><input type="range" id="speed-start" min="60" max="150" step="5" value="100" /><b id="speed-start-val">100%</b></label>
           <div class="row">
             <button id="btn-start" class="btn primary">Drive</button>
             <button id="btn-garage" class="btn">Garage</button>
@@ -70,6 +71,7 @@
       <section id="screen-pause" class="screen">
         <div class="panel">
           <h2>Paused</h2>
+          <label class="speedctl" for="speed-pause"><span>Car speed</span><input type="range" id="speed-pause" min="60" max="150" step="5" value="100" /><b id="speed-pause-val">100%</b></label>
           <div class="row col">
             <button id="btn-resume" class="btn primary">Resume</button>
             <button id="btn-pause-restart" class="btn">Restart</button>

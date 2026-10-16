@@ -94,6 +94,9 @@ function oilGeo() {
   return g;
 }
 
+// How many times busier the road is than the original tuning.
+const TRAFFIC_DENSITY = 5;
+
 const RAMP_L = 11;
 const RAMP_W = 3.6;
 const RAMP_H = 2.5;
@@ -125,11 +128,11 @@ const TYPES = {
   cone: { geo: coneGeo, count: 40, hl: 0.4, hw: 0.4, h: 0.75, solid: true, crush: true },
   barrel: { geo: barrelGeo, count: 28, hl: 0.5, hw: 0.5, h: 1.05, solid: true, crush: true },
   roadblock: { geo: roadblockGeo, count: 14, hl: 0.4, hw: 1.5, h: 1.5, solid: true },
-  car0: { geo: () => trafficCarGeo(0x7a4fd1), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
-  car1: { geo: () => trafficCarGeo(0x2fb5a8), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
-  car2: { geo: () => trafficCarGeo(0xf3f3ee), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
-  car3: { geo: () => trafficCarGeo(0xf0b429), count: 5, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
-  truck: { geo: () => truckGeo(0xd9dde4), count: 4, hl: 3.4, hw: 1.1, h: 3.2, solid: true, car: true, truck: true },
+  car0: { geo: () => trafficCarGeo(0x7a4fd1), count: 11, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  car1: { geo: () => trafficCarGeo(0x2fb5a8), count: 11, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  car2: { geo: () => trafficCarGeo(0xf3f3ee), count: 11, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  car3: { geo: () => trafficCarGeo(0xf0b429), count: 11, hl: 1.9, hw: 0.95, h: 1.5, solid: true, car: true },
+  truck: { geo: () => truckGeo(0xd9dde4), count: 8, hl: 3.4, hw: 1.1, h: 3.2, solid: true, car: true, truck: true },
   pothole: { geo: potholeGeo, count: 20, hl: 1.0, hw: 0.95, h: 0, hazard: true },
   oil: { geo: oilGeo, count: 14, hl: 1.5, hw: 1.4, h: 0, hazard: true },
   ramp: { geo: rampGeo, count: 5, hl: RAMP_L / 2, hw: RAMP_W / 2, h: 0, ramp: true },
@@ -177,7 +180,8 @@ export class Obstacles {
     this.nextRampS = startS + 330;
     this.nextNitroS = startS + 520;
     this.nextBoxS = startS + 300;
-    this.trafficNextS = startS + 190;
+    this.trafficNextS = startS + 120;
+    this.trafficScale = 1; // set by the game from the car-speed setting
     this.reserveEnd = -1;
   }
 
@@ -263,7 +267,9 @@ export class Obstacles {
   _traffic(s) {
     const r = this.rng;
     const diff = this.diff;
-    const gap = (95 - 50 * diff) * r.range(0.75, 1.35);
+    // eases from 1.5x to the full density over the first ~40 s of a run
+    const density = Math.min(TRAFFIC_DENSITY, 1.5 + this.t / 12);
+    const gap = ((95 - 50 * diff) / density) * r.range(0.75, 1.35);
     this.trafficNextS = s + gap;
     if (s < this.reserveEnd + 5) return;
     const n = diff > 0.2 && r.chance(0.2 + 0.25 * diff) ? 2 : 1;
@@ -272,11 +278,15 @@ export class Obstacles {
       const lane = lanes.splice(r.int(0, lanes.length - 1), 1)[0];
       // keep clear of other vehicles already in that lane
       let clear = true;
-      for (const o of this.items) if (o.car && !o.dead && o.lane === lane && Math.abs(o.s - s) < 45) clear = false;
-      if (!clear) continue;
+      for (const o of this.items) if (o.car && !o.dead && o.lane === lane && Math.abs(o.s - s) < 16 + o.hl) clear = false;
+      // do not spawn into a spot where the other two lanes are already occupied
+      const occ = new Set();
+      for (const o of this.items) if (o.solid && !o.dead && Math.abs(o.s - s) < 26) occ.add(o.lane !== undefined ? o.lane : this._laneOf(o.d));
+      occ.delete(lane);
+      if (!clear || occ.size >= 2) continue;
       const truck = r.chance(0.18);
       const type = truck ? 'truck' : ['car0', 'car1', 'car2', 'car3'][r.int(0, 3)];
-      const cruise = truck ? r.range(7, 10) : r.range(8.5, 15.5);
+      const cruise = (truck ? r.range(7, 10) : r.range(8.5, 15.5)) * this.trafficScale;
       this._spawn(type, s + (k ? r.range(-12, 12) : 0), this._laneD(lane), { vs: cruise, cruise, lane });
     }
   }
@@ -298,7 +308,7 @@ export class Obstacles {
       const occ = [false, false, false];
       for (const o of items) {
         if (o === c || o.dead || !o.solid) continue;
-        const win = o.car ? 16 : 10;
+        const win = o.car ? 22 : 18;
         if (Math.abs(o.s - c.s) > win) continue;
         const l = o.lane !== undefined ? o.lane : this._laneOf(o.d);
         if (l === c.lane) continue;
@@ -306,9 +316,9 @@ export class Obstacles {
         if (o.car && o.s < c.s) rearmost = false;
       }
       others = occ.filter(Boolean).length;
-      if (others >= 2 && rearmost) target = Math.min(target, c.vs - 6);
+      if (others >= 2 && rearmost) target = Math.min(target, c.vs - 8);
       const dv = target - c.vs;
-      c.vs += Math.max(-9 * dt, Math.min(2.5 * dt, dv));
+      c.vs += Math.max(-12 * dt, Math.min(2.5 * dt, dv));
       if (c.vs < 2.5) c.vs = 2.5;
     }
   }
@@ -318,7 +328,7 @@ export class Obstacles {
     const diff = this.diff;
     const reserved = s < this.reserveEnd;
     const v = Math.max(speedRef, 22);
-    let gap = v * (2.3 - 1.3 * diff) * r.range(0.9, 1.25);
+    let gap = v * (2.3 - 1.3 * diff) * r.range(1.1, 1.5);
     gap = Math.max(gap, 24);
 
     // --- ramp
@@ -356,6 +366,10 @@ export class Obstacles {
       const sparse = s < 220;
       for (const l of blocked) {
         if (sparse && r.chance(0.35)) continue;
+        // traffic already fills the other two lanes here: leave this lane open
+        const taken = new Set();
+        for (const o of this.items) if (o.car && !o.dead && Math.abs(o.s - s) < 28 && o.lane !== l) taken.add(o.lane);
+        if (taken.size >= 2) continue;
         const roll = r.next();
         const d = this._laneD(l);
         if (roll < 0.45) {

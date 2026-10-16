@@ -8,6 +8,7 @@ const DEFAULTS = {
   selected: 'compact',
   muted: false,
   units: 'kmh',
+  speedMul: 1,
 };
 
 function read() {

@@ -65,11 +65,17 @@ export class Game {
         persist();
         this.ui.setUnits(save.units);
       },
+      setSpeed: (pct) => {
+        save.speedMul = pct / 100;
+        persist();
+        this.ui.setSpeedSetting(pct);
+      },
       selectVehicle: (id, locked) => this.selectVehicle(id, locked),
       click: () => this.sound.click(),
     });
     this.ui.setMuteIcon(this.sound.muted);
     this.ui.setUnits(save.units);
+    this.ui.setSpeedSetting(Math.round(this.speedMul() * 100));
     this.ui.setBest(save.best);
     if (this.mobile) this.ui.setTouchMode(true);
 
@@ -173,7 +179,8 @@ export class Game {
     this.seedUsed = Number.isFinite(fixed);
     this.resetWorld(seed);
     this.run = this.newRun();
-    this.vehicle.speed = PHYS.START_SPEED * 0.8 * this.vehicle.def.speedMul;
+    this.vehicle.speed = PHYS.START_SPEED * 0.8 * this.vehicle.def.speedMul * this.speedMul();
+    this.obstacles.trafficScale = Math.min(1, this.speedMul());
     this.shake = 0;
     this.state = 'playing';
     this.input.setEnabled(true);
@@ -320,8 +327,13 @@ export class Game {
 
   groundAt = (s, d) => this.obstacles.groundAt(s, d);
 
+  speedMul() {
+    const m = Number(save.speedMul);
+    return m >= 0.6 && m <= 1.5 ? m : 1;
+  }
+
   targetSpeed(t) {
-    return PHYS.START_SPEED + PHYS.SPEED_GAIN * (1 - Math.exp(-t / PHYS.SPEED_TAU));
+    return (PHYS.START_SPEED + PHYS.SPEED_GAIN * (1 - Math.exp(-t / PHYS.SPEED_TAU))) * this.speedMul();
   }
 
   // Autopilot used behind the menus.

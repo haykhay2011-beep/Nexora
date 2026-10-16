@@ -42,11 +42,16 @@ export class UI {
     $('btn-over-garage').onclick = () => h.openGarage();
     $('btn-over-menu').onclick = () => h.menu();
     this.el.pause.onclick = () => h.pause();
+    for (const id of ['speed-start', 'speed-pause']) {
+      const el = $(id);
+      el.addEventListener('input', () => h.setSpeed(Number(el.value)));
+      el.addEventListener('change', () => el.blur());
+    }
     this.el.mute.onclick = () => h.toggleMute();
     $('hud-speed-wrap').onclick = () => h.toggleUnits();
     // tapping the start screen background starts the game
     this.screens.start.addEventListener('click', (e) => {
-      if (e.target.closest('button')) return;
+      if (e.target.closest('button, input, label')) return;
       h.start();
     });
     for (const b of document.querySelectorAll('button')) {
@@ -75,6 +80,11 @@ export class UI {
   setUnits(u) {
     this.units = u;
     this.el.unit.textContent = u === 'mph' ? 'mph' : 'km/h';
+  }
+
+  setSpeedSetting(pct) {
+    for (const id of ['speed-start', 'speed-pause']) $(id).value = pct;
+    for (const id of ['speed-start-val', 'speed-pause-val']) $(id).textContent = pct + '%';
   }
 
   setBest(best) {
