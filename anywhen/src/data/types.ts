@@ -86,6 +86,7 @@ export interface RegionEraOverride {
 }
 
 export interface SubZone extends RegionEraOverride {
+  biomeMap?: Record<string, string>;
   name: string;
   polygons: [number, number][][];
   humanArrival?: number;
@@ -162,7 +163,7 @@ export interface AnomalyDef {
 }
 
 export interface LandmarkStage { from: number; state: 'construction' | 'complete' | 'weathered' | 'ruined' | 'restored'; note?: string }
-export interface TerrainMod { type: 'flatten' | 'canyon' | 'peak' | 'falls' | 'monolith' | 'reef' | 'island' | 'gorge' | 'lake'; radius: number; height?: number; depth?: number; angle?: number; width?: number }
+export interface TerrainMod { type: 'flatten' | 'canyon' | 'peak' | 'falls' | 'monolith' | 'reef' | 'island' | 'gorge' | 'lake' | 'pit'; flat?: number; crater?: boolean; radius: number; height?: number; depth?: number; angle?: number; width?: number }
 
 export interface LandmarkDef {
   id: string;

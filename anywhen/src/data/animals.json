@@ -886,8 +886,7 @@
    "tundra",
    "steppe",
    "grassland",
-   "taiga",
-   "ice"
+   "taiga"
   ],
   "group": [
    3,
@@ -1329,8 +1328,7 @@
   ],
   "biomes": [
    "tundra",
-   "taiga",
-   "ice"
+   "taiga"
   ],
   "group": [
    4,
@@ -1941,8 +1939,7 @@
   ],
   "biomes": [
    "grassland",
-   "steppe",
-   "temperate_forest"
+   "steppe"
   ],
   "group": [
    5,
@@ -2540,7 +2537,10 @@
    1
   ],
   "sound": "roar",
-  "fact": "Tigers are the largest cats and, unlike most cats, enjoy swimming."
+  "fact": "Tigers are the largest cats and, unlike most cats, enjoy swimming.",
+  "excludeZones": [
+   "Japan"
+  ]
  },
  {
   "id": "panda",
@@ -2594,7 +2594,12 @@
    1
   ],
   "sound": "none",
-  "fact": "Giant pandas eat bamboo for up to 14 hours a day."
+  "fact": "Giant pandas eat bamboo for up to 14 hours a day.",
+  "excludeZones": [
+   "Japan",
+   "Korea",
+   "Tibetan Plateau"
+  ]
  },
  {
   "id": "crane",
@@ -3089,8 +3094,7 @@
    "northasia"
   ],
   "biomes": [
-   "tundra",
-   "ice"
+   "tundra"
   ],
   "group": [
    4,

@@ -8,7 +8,7 @@ import type { EraProfile, SettlementTier, LandmarkDef } from '../data/types';
 import { TIER_ORDER } from '../data/types';
 import type { EarthData } from '../geo/earth';
 import { FEATURE, CELL_M, CELL_DEG } from '../geo/earth';
-import { paleoSample, pastToPresent, driftFactor, glacialFactor } from '../geo/paleo';
+import { paleoSample, pastToPresent, presentToPast, driftFactor, glacialFactor } from '../geo/paleo';
 import { computeClimate, seasonalTemp, seasonName, type BiomeId } from '../geo/climate';
 import { describePlace, distanceKm, nearestCity, type PlaceInfo } from '../geo/places';
 import { regionAt, subzoneAt, resolveProfile, type WorldProfile } from './profiles';
@@ -34,13 +34,20 @@ function landmarkStage(l: LandmarkDef, year: number) {
 }
 
 /** Landmark the travel target should snap to (within ~20 km), if any. */
-export function snapLandmark(lat: number, lon: number, year: number, moon: boolean): (LandmarkDef & { arrive?: number }) | null {
-  if (driftFactor(year) > 0) return null;
+/** Where a landmark sits on the (possibly drifted) globe in a given year. */
+export function landmarkPos(earth: EarthData | null, l: LandmarkDef, year: number): [number, number] {
+  if (!earth || l.region === 'moon' || driftFactor(year) === 0) return [l.lat, l.lon];
+  return presentToPast(l.lat, l.lon, earth.plateAt(l.lat, l.lon), year);
+}
+
+export function snapLandmark(lat: number, lon: number, year: number, moon: boolean, earth: EarthData | null = null): (LandmarkDef & { arrive?: number }) | null {
   let best: (LandmarkDef & { arrive?: number }) | null = null, bd = moon ? 400 : 20;
   for (const l of LANDMARKS) {
     if ((l.region === 'moon') !== moon) continue;
     if (!landmarkStage(l, year)) continue;
-    const d = distanceKm(lat, lon, l.lat, l.lon);
+    if (driftFactor(year) > 0 && !earth) continue;
+    const [llat, llon] = landmarkPos(earth, l, year);
+    const d = distanceKm(lat, lon, llat, llon);
     if (d < bd) { bd = d; best = l; }
   }
   return best;
@@ -58,8 +65,8 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
   const era = eraForYear(year);
   const moon = !!req.moon;
   let lat = req.lat, lon = ((((req.lon + 180) % 360) + 360) % 360) - 180;
-  const snapped = snapLandmark(lat, lon, year, moon);
-  if (snapped) { lat = snapped.lat; lon = snapped.lon; }
+  const snapped = snapLandmark(lat, lon, year, moon, earth);
+  if (snapped) [lat, lon] = landmarkPos(earth, snapped, year);
   lat = Math.round(lat * 100) / 100;
   lon = Math.round(lon * 100) / 100;
   const key = worldKey(lat, lon, year, moon);
@@ -99,6 +106,8 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
     climateOffset: era.climateOffset, glacial, ice: s0.ice, lake: s0.lake, land: 1 - centreWater,
   });
   let biome: BiomeId = climate.biome;
+  const bmap = (subzone as { biomeMap?: Record<string, BiomeId> } | null)?.biomeMap;
+  if (bmap && bmap[biome] && era.floraKit !== 'cretaceous') biome = bmap[biome];
   if (biome === 'ocean') biome = climate.temp > 18 ? 'beach' : climate.temp < -5 ? 'ice' : 'beach';
   const day = rng.int(0, 364);
   const seasonT = seasonalTemp(climate, lat, day);
@@ -125,12 +134,12 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
   // landmarks within the area (built + natural)
   for (const l of LANDMARKS) {
     if (l.region === 'moon') continue;
-    if (driftFactor(year) > 0) continue;
     const st = landmarkStage(l, year);
     if (!st) continue;
-    const dk = distanceKm(lat, lon, l.lat, l.lon);
+    const [llat, llon] = landmarkPos(earth, l, year);
+    const dk = distanceKm(lat, lon, llat, llon);
     if (dk > 3.2) continue;
-    const x = (l.lon - lon) * M_PER_DEG * cosLat, z = -(l.lat - lat) * M_PER_DEG;
+    const x = (llon - lon) * M_PER_DEG * cosLat, z = -(llat - lat) * M_PER_DEG;
     const clear = Number(l.params.clear ?? 80);
     placed.push({ id: l.id, name: l.name, x, z, rot: Number(l.params.rot ?? 0), state: st.state, note: st.note ?? null, base: 0, clear });
     if (clear > 0) clearZones.push({ x, z, r: clear });
@@ -158,6 +167,10 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
       const px = ccx + off * -Math.sin(a), pz = ccz - off * Math.cos(a);
       const ddx = Math.cos(a), ddz = -Math.sin(a);
       const perp = Math.abs(-px * ddz + pz * ddx);
+      // the river must actually pass through this cell near the closest point, not just on its extension
+      const tt = -(px * ddx + pz * ddz);
+      const cpx = px + ddx * tt, cpz = pz + ddz * tt;
+      if (Math.hypot(cpx - ccx, cpz - ccz) > CELL_M * 0.75) continue;
       const width = rs.riverSize === 3 ? 140 : rs.riverSize === 2 ? 55 : 22;
       if (perp < 3800 && (!best || perp < best.d)) best = { d: perp, line: { px, pz, dx: ddx, dz: ddz, width, valley: 260 + width * 3 } };
     }
@@ -226,7 +239,8 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
     tier = scoreTier(score);
     if (city) {
       const ci = TIER_ORDER.indexOf(city.tier);
-      const drop = city.km < 6 ? 0 : city.km < 14 ? 1 : city.km < 26 ? 2 : 3;
+      const reach = city.tier === 'metropolis' ? 16 : city.tier === 'city' ? 7 : city.tier === 'town' ? 4 : 2.5;
+      const drop = city.km < reach ? 0 : city.km < reach * 2.2 ? 1 : city.km < reach * 4 ? 2 : 3;
       const ct = TIER_ORDER[Math.max(0, ci - drop)];
       if (TIER_ORDER.indexOf(ct) > TIER_ORDER.indexOf(tier)) tier = ct;
     }
@@ -239,8 +253,9 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
     // settlement centre: nearest good land a little away from the arrival point
     let bestC: { x: number; z: number; score: number } | null = null;
     const want = Math.min(radius * 0.9 + 120, 1500);
-    for (let i = 0; i < 80; i++) {
-      const a = rng.range(0, Math.PI * 2), rr = rng.range(want * 0.5, want * 1.4);
+    const maxClear = clearZones.reduce((m, c) => Math.max(m, Math.hypot(c.x, c.z) + c.r), 0);
+    for (let i = 0; i < 140; i++) {
+      const a = rng.range(0, Math.PI * 2), rr = rng.range(want * 0.5, Math.max(want * 1.4, maxClear + radius * 0.8));
       const x = Math.cos(a) * rr, z = Math.sin(a) * rr;
       if (Math.abs(x) > AREA_HALF - radius * 0.7 - 100 || Math.abs(z) > AREA_HALF - radius * 0.7 - 100) continue;
       const h = ts.height(x, z);
@@ -254,7 +269,7 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
       }
       const sl = ts.slope(x, z, 8);
       const nearWater = ts.riverDist(x, z) < radius * 1.5 || hasCoast ? 0.3 : 0;
-      const score = land / 8 + sl * 0.5 + nearWater - Math.abs(rr - want) / want * 0.3;
+      const score = land / 8 + sl * 0.5 + nearWater - Math.max(0, rr - Math.max(want, maxClear + radius * 0.7)) / want * 0.3 - Math.abs(rr - want) / want * 0.05;
       if (land >= 5 && (!bestC || score > bestC.score)) bestC = { x, z, score };
     }
     if (bestC) {
@@ -336,13 +351,13 @@ export function planWorld(earth: EarthData, req: PlanRequest): WorldPlan {
   const npcs = settlement ? populate(seed, settlement, profile, region) : [];
 
   // ---- animals
-  const animals = planAnimals(rng.fork('animals'), era, region.id, biome, present.plate || s0.plate, profile, settlement, ts, clearZones, hasCoast);
+  const animals = planAnimals(rng.fork('animals'), era, region.id, biome, present.plate || s0.plate, profile, settlement, ts, clearZones, hasCoast, subzone?.name ?? null);
 
   // ---- anomalies
   const anomalies = planAnomalies(rng.fork('anomalies'), key, era, region.id, ts, spawn, lat, lon, !!humans, settlement, animals);
 
   // ---- place & facts
-  const place: PlaceInfo = snapped && driftFactor(year) === 0
+  const place: PlaceInfo = snapped
     ? { ...describePlace(earth, present.lat, present.lon, year, 1 - centreWater, subzone?.name), short: snapped.name }
     : describePlace(earth, present.lat, present.lon, year, 1 - centreWater, subzone?.name);
   if (snapped) place.name = `${snapped.name} — ${place.name.replace(/^near present-day /, '')}`;
@@ -422,15 +437,17 @@ function previousEraStyles(era: EraProfile, profile: WorldProfile, regionId: str
 }
 
 function planAnimals(rng: Rng, era: EraProfile, regionId: string, biome: BiomeId, plate: number, profile: WorldProfile, s: Settlement | null,
-  ts: TerrainSampler, clear: { x: number; z: number; r: number }[], hasCoast: boolean): AnimalSpawn[] {
+  ts: TerrainSampler, clear: { x: number; z: number; r: number }[], hasCoast: boolean, zone: string | null): AnimalSpawn[] {
   const out: AnimalSpawn[] = [];
   const deep = era.id === 'dinosaurs' || era.id === 'mammals';
   const wild = ANIMALS.filter((a) => {
     if (a.domestic) return false;
     if (!a.eras.includes(era.id)) return false;
     if (deep && a.plates && !a.plates.includes(plate)) return false;
+    if (zone && (a as { excludeZones?: string[] }).excludeZones?.includes(zone)) return false;
     if (!deep || !a.plates) if (a.regions !== '*' && !a.regions.includes(regionId)) return false;
     if (a.biomes !== '*' && !a.biomes.includes(biome) && !(a.behaviour === 'swimmer' && hasCoast)) return false;
+    if (biome === 'ice' && (a.biomes === '*' || !a.biomes.includes('ice')) && a.behaviour !== 'swimmer') return false;
     if (a.behaviour === 'swimmer' && !hasCoast) return false;
     return true;
   });
@@ -446,8 +463,10 @@ function planAnimals(rng: Rng, era: EraProfile, regionId: string, biome: BiomeId
     }
     return null;
   };
-  const groups = deep ? rng.int(5, 8) : rng.int(3, 6);
-  const nonFlyers = wild.filter((a) => a.behaviour !== 'flyer' && a.behaviour !== 'swimmer');
+  const tierI = s ? ['none', 'camp', 'hamlet', 'village', 'town', 'city', 'metropolis'].indexOf(s.tier) : 0;
+  const groups = deep ? rng.int(5, 8) : Math.max(1, rng.int(3, 6) - Math.max(0, tierI - 3) * 2);
+  const cityLimit = tierI >= 5;
+  const nonFlyers = wild.filter((a) => a.behaviour !== 'flyer' && a.behaviour !== 'swimmer' && (!cityLimit || (a.scale <= 1 && a.behaviour !== 'predator')));
   const flyers = wild.filter((a) => a.behaviour === 'flyer');
   const swimmers = wild.filter((a) => a.behaviour === 'swimmer');
   const pickWeighted = (list: typeof wild) => rng.weighted(list.map((a) => [a, a.behaviour === 'predator' ? 0.35 : a.scale > 6 ? 0.8 : 1] as const));
@@ -477,6 +496,7 @@ function planAnimals(rng: Rng, era: EraProfile, regionId: string, biome: BiomeId
       let x = s.x, z = s.z;
       if (['cattle', 'sheep', 'goat', 'horse', 'llama', 'alpaca', 'yak', 'water_buffalo', 'camel', 'bactrian_camel', 'donkey', 'reindeer_herd'].includes(a.id)) {
         const f = s.farms.length ? rng.pick(s.farms) : null;
+        if (!f && tierI >= 5) continue;
         if (f) { x = f.x + rng.range(-40, 40); z = f.z + rng.range(-40, 40); } else { const ang = rng.range(0, 6.28); x += Math.cos(ang) * s.radius * 1.4; z += Math.sin(ang) * s.radius * 1.4; }
       } else { x += rng.range(-s.radius, s.radius) * 0.6; z += rng.range(-s.radius, s.radius) * 0.6; }
       if (ts.height(x, z) < 0.8) continue;

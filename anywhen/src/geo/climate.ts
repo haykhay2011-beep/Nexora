@@ -33,7 +33,7 @@ export interface Climate {
   snowLine: number; // metres above local base where permanent snow starts
 }
 
-const TEMP_TABLE: [number, number][] = [[0, 27], [15, 26], [25, 22.5], [35, 16.5], [45, 10.5], [55, 4], [65, -3], [75, -12], [90, -22]];
+const TEMP_TABLE: [number, number][] = [[0, 27], [15, 26], [25, 23], [35, 17.5], [45, 12], [55, 5.5], [65, -2], [75, -12], [90, -22]];
 
 function tempForLat(lat: number): number {
   const a = Math.abs(lat);
@@ -52,6 +52,7 @@ export function computeClimate(c: ClimateInput): Climate {
   let temp = tempForLat(c.lat);
   temp -= Math.max(0, c.elev) * 0.0065;
   if (a > 35) temp -= 2.5 * continentality;
+  if (a > 30 && a < 65 && c.coastKm < 150) temp += 1.5; // maritime
   temp += c.climateOffset * (c.climateOffset > 0 ? polarAmp * 0.8 : polarAmp);
   temp -= 6 * c.glacial * polarAmp * (c.climateOffset < 0 ? 0.3 : 1);
   if (c.ice > 0.6) temp = Math.min(temp, -12);

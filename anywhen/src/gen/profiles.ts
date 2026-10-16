@@ -89,14 +89,16 @@ export function resolveProfile(eraId: EraId, region: RegionProfile, subzone: Sub
   const strip = (o?: RegionEraOverride): RegionEraOverride | undefined => (o && keepEraClothing ? { ...o, clothing: undefined } : o);
   apply(p, strip(region.defaults), biome);
   // era defaults win for these when the region has nothing era-specific
-  if (e.tech >= 8) { p.styles = e.styles; p.goods = e.goods; p.currency = region.eras[eraId]?.currency ?? e.currency; }
+  if (e.tech >= 8) { p.styles = e.styles; p.goods = e.goods; p.domestic = e.domestic; p.currency = region.eras[eraId]?.currency ?? e.currency; }
   if (e.tech <= 1 && !region.eras[eraId]?.styles) p.styles = region.defaults.styles ?? e.styles;
   if (e.tech <= 2) { p.goods = e.goods; p.currency = e.currency; }
   apply(p, strip(region.eras[eraId]), biome);
   if (subzone) {
     const { name: _n, polygons: _p, humanArrival: _h, eras, ...top } = subzone;
     void _n; void _p; void _h;
-    apply(p, strip(top), biome);
+    const topO: RegionEraOverride = { ...top };
+    if (e.tech >= 8) { delete topO.styles; delete topO.domestic; }
+    apply(p, strip(topO), biome);
     apply(p, strip(eras?.[eraId]), biome);
   }
   if (e.tech <= 2) p.walls = false;
