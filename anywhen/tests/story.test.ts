@@ -27,6 +27,24 @@ describe('story locations', () => {
     expect(Story.matches(st, plan({ presentLat: 29.98, presentLon: 31.13, year: 2000, eraId: 'modern' }))).toBe(false);
   });
 
+  test('a find step needs its own pickups, not an item carried over from an earlier rift', () => {
+    const s = newGame();
+    const story = new Story(s, hooks);
+    const ri = RIFTS.findIndex((r) => r.id === 'archive');
+    const step = RIFTS[ri].steps.findIndex((st) => st.type === 'find');
+    const item = RIFTS[ri].steps[step].item!;
+    s.story.rift = ri; s.story.step = step;
+    const count = RIFTS[ri].steps[step].count ?? 1;
+    s.inventory[item] = count; // already carrying enough of the same item from earlier play
+    const archive = plan({ presentLat: RIFTS[ri].steps[0].lat, presentLon: RIFTS[ri].steps[0].lon, year: 2995, eraId: 'farfuture' });
+    const pk = story.pickupsHere(archive);
+    expect(pk.length).toBe(count);
+    story.notify({ type: 'inventory' });
+    expect(s.story.step).toBe(step);
+    for (const p of pk) { s.pickups.push(p.id); s.inventory[item]++; story.notify({ type: 'inventory' }); }
+    expect(s.story.step).toBe(step + 1);
+  });
+
   test('every rift step that needs an NPC names one the rift defines', () => {
     for (const r of RIFTS) for (const st of r.steps) if (st.npc) expect(r.npcs.some((n) => n.id === st.npc), `${r.id}:${st.npc}`).toBe(true);
   });

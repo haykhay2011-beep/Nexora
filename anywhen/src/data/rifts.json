@@ -326,7 +326,7 @@
    },
    {
     "type": "find",
-    "item": "memory_shard",
+    "item": "star_shard",
     "count": 3,
     "text": "Gather 3 fallen star shards. They glow brighter at night."
    },

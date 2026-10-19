@@ -69,7 +69,8 @@ export class Story {
     const r = this.rift, st = this.step;
     if (!r || !st) return null;
     let text = st.text;
-    if (st.type === 'find' || st.type === 'deliver') text += ` (${Math.min(st.count ?? 1, this.s.inventory[st.item ?? ''] ?? 0)}/${st.count ?? 1})`;
+    const got = st.type === 'find' ? this.foundThisStep() : this.s.inventory[st.item ?? ''] ?? 0;
+    if (st.type === 'find' || st.type === 'deliver') text += ` (${Math.min(st.count ?? 1, got)}/${st.count ?? 1})`;
     return { title: `Rift ${r.index}: ${r.title}`, text, hint: st.hint };
   }
 
@@ -95,15 +96,20 @@ export class Story {
     const r = this.rift, st = this.step;
     if (!r || !st || st.type !== 'find' || !this.activeHere(plan)) return [];
     const out: { id: string; item: string }[] = [];
-    const have = this.s.inventory[st.item!] ?? 0;
-    const need = (st.count ?? 1) - have;
     for (let i = 0; i < (st.count ?? 1); i++) {
       const id = `story:${r.id}:${this.s.story.step}:${i}`;
-      if (this.s.pickups.includes(id)) continue;
-      if (out.length >= need) break;
-      out.push({ id, item: st.item! });
+      if (!this.s.pickups.includes(id)) out.push({ id, item: st.item! });
     }
     return out;
+  }
+
+  /** How many of the current find step's own pickups have been collected. Items carried from an
+   * earlier rift (the same item can be found twice) don't count. */
+  private foundThisStep(): number {
+    const r = this.rift;
+    if (!r) return 0;
+    const prefix = `story:${r.id}:${this.s.story.step}:`;
+    return this.s.pickups.filter((id) => id.startsWith(prefix)).length;
   }
 
   /** Story anomaly to spawn here (capture steps). */
@@ -140,7 +146,7 @@ export class Story {
       case 'travel': if (ev.type === 'arrive' && Story.matches(st, ev.plan)) done = true; break;
       case 'moon': if (ev.type === 'arrive' && ev.plan.moon) done = true; break;
       case 'talk': if (ev.type === 'talk' && ev.npc === st.npc) done = true; break;
-      case 'find': if ((ev.type === 'inventory' || ev.type === 'arrive') && (this.s.inventory[st.item!] ?? 0) >= (st.count ?? 1)) done = true; break;
+      case 'find': if ((ev.type === 'inventory' || ev.type === 'arrive') && this.foundThisStep() >= (st.count ?? 1)) done = true; break;
       case 'capture': if (ev.type === 'capture' && ev.anomaly === st.anomaly) done = true; break;
       case 'return':
         if (ev.type === 'return' && ev.anomaly === st.anomaly && (st.lat === undefined || Story.matches({ ...st, type: 'travel' }, ev.plan))) done = true;

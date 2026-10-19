@@ -101,6 +101,7 @@
   { "id": "manuscript", "name": "Manuscript page", "icon": "📃", "value": 0, "kind": "quest" },
   { "id": "egg", "name": "Dinosaur egg", "icon": "🥚", "value": 0, "kind": "quest" },
   { "id": "memory_shard", "name": "Memory shard", "icon": "💠", "value": 0, "kind": "quest" },
+  { "id": "star_shard", "name": "Star shard", "icon": "🌟", "value": 0, "kind": "quest" },
   { "id": "brass_valve", "name": "Brass valve", "icon": "🔩", "value": 0, "kind": "quest" },
   { "id": "quipu_cord", "name": "Knotted cord", "icon": "🪢", "value": 0, "kind": "quest" },
   { "id": "lens", "name": "Glass lens", "icon": "🔍", "value": 0, "kind": "quest" },

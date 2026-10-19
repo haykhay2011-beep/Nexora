@@ -82,10 +82,10 @@ const act = async (st, loc) => {
     case 'capture': return capture(st.anomaly);
     case 'find': {
       for (let n = 0; n < (st.count ?? 1); n++) {
-        const ok = await page.evaluate((item) => { const g = window.anywhen, pk = g.world.pickups.list.find((x) => x.item === item); if (!pk) return false; g.player.pos.set(pk.pos.x + 0.3, pk.pos.y, pk.pos.z); return true; }, st.item);
-        if (!ok) return false;
+        const id = await page.evaluate((item) => { const g = window.anywhen, pk = g.world.pickups.list.find((x) => x.item === item); if (!pk) return null; g.player.pos.set(pk.pos.x + 0.3, pk.pos.y, pk.pos.z); return pk.id; }, st.item);
+        if (!id) return false;
         await page.waitForTimeout(700); await page.keyboard.press('KeyE');
-        await until(([item, c]) => (window.anywhen.state.inventory[item] ?? 0) >= c, [st.item, n + 1], 15000);
+        await until((id) => window.anywhen.state.pickups.includes(id), id, 15000);
       }
       return true;
     }
