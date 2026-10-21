@@ -1,0 +1,275 @@
+<title>Firefly Minute</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=DM+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one full-bleed meadow canvas at night, a slim HUD strip on top, a centered card for start/end. Single dark theme by choice. */
+  :root {
+    --night: #0c1a1e;
+    --night-2: #142a2c;
+    --glow: #d9f27a;
+    --lantern: #f2b84b;
+    --wasp: #e0564a;
+    --fg: #e6eee1;
+    --muted: #84a09a;
+    --display: "Gloock", Georgia, "Times New Roman", serif;
+    --mono: "DM Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--night); color: var(--fg); font-family: var(--mono);
+    overflow: hidden; user-select: none; -webkit-user-select: none;
+  }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+  .hud {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 2; pointer-events: none;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 12px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    font-variant-numeric: tabular-nums;
+  }
+  .hud .label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .hud .value { font-size: 26px; color: var(--fg); }
+  .hud .clock .value { color: var(--lantern); }
+  .hud .clock.low .value { color: var(--wasp); }
+  .hud .combo { text-align: center; }
+  .hud .combo .value { color: var(--glow); }
+  .hud > div:last-child { text-align: right; }
+  .overlay {
+    position: fixed; inset: 0; z-index: 3; display: grid; place-items: center;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    background: color-mix(in srgb, var(--night) 55%, transparent);
+  }
+  .card { max-width: 30rem; display: grid; gap: 14px; text-align: left; }
+  .card h1 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 9vw, 68px); line-height: 1; margin: 0; text-wrap: balance; }
+  .card h1 em { font-style: normal; color: var(--glow); text-shadow: 0 0 18px color-mix(in srgb, var(--glow) 60%, transparent); }
+  .card p { margin: 0; line-height: 1.6; color: var(--fg); font-size: 14px; }
+  .card .key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12px; color: var(--muted); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .result { font-family: var(--display); font-size: 22px; }
+  .result b { color: var(--lantern); font-weight: 400; }
+  button {
+    justify-self: start; font: 500 15px var(--mono); letter-spacing: .06em; text-transform: uppercase;
+    background: var(--lantern); color: var(--night); border: 0; border-radius: 999px; padding: 12px 26px; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
+</style>
+
+<canvas id="game" aria-label="Meadow at night with fireflies"></canvas>
+
+<div class="hud" aria-live="polite">
+  <div class="clock" id="clockBox"><div class="label">Time</div><div class="value" id="time">60.0</div></div>
+  <div class="combo"><div class="label">Streak</div><div class="value" id="combo">×1</div></div>
+  <div><div class="label">Jar</div><div class="value" id="score">0</div></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <h1>Firefly <em>Minute</em></h1>
+    <p id="msg">You have sixty seconds to fill the jar. Tap fireflies to catch them. Catch them back to back to build a streak; a miss resets it. Leave the wasps alone.</p>
+    <div class="key">
+      <span><i class="dot" style="background: var(--glow)"></i>Firefly +1 × streak</span>
+      <span><i class="dot" style="background: var(--lantern)"></i>Lantern bug +5 s</span>
+      <span><i class="dot" style="background: var(--wasp)"></i>Wasp −5 s</span>
+    </div>
+    <div class="result" id="best">Best jar: <b>0</b></div>
+    <button id="start" type="button">Start the minute</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const css = getComputedStyle(document.documentElement);
+  const C = k => css.getPropertyValue(k).trim();
+  const COL = { night: C('--night'), night2: C('--night-2'), glow: C('--glow'), lantern: C('--lantern'), wasp: C('--wasp'), fg: C('--fg') };
+
+  const cv = document.getElementById('game'), ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const ui = { time: $('time'), clockBox: $('clockBox'), combo: $('combo'), score: $('score'), overlay: $('overlay'), msg: $('msg'), best: $('best'), start: $('start') };
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let W = 0, H = 0, dpr = 1;
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    makeGrass();
+  }
+
+  let grass = [];
+  function makeGrass() {
+    grass = [];
+    for (let x = 0; x < W; x += 6) grass.push({ x, h: 30 + Math.random() * 60, lean: Math.random() * 10 - 5 });
+  }
+
+  let best = 0;
+  try { best = +localStorage.getItem('firefly-minute-best') || 0; } catch (e) {}
+  ui.best.innerHTML = `Best jar: <b>${best}</b>`;
+
+  const state = { running: false, time: 60, score: 0, streak: 1, bugs: [], sparks: [], spawn: 0, t: 0 };
+
+  function spawnBug() {
+    const r = Math.random();
+    const kind = r < 0.14 ? 'wasp' : r < 0.2 ? 'lantern' : 'fly';
+    const speed = (kind === 'wasp' ? 70 : kind === 'lantern' ? 110 : 45) * (1 + (60 - state.time) / 80);
+    const a = Math.random() * Math.PI * 2;
+    state.bugs.push({
+      kind, x: 40 + Math.random() * (W - 80), y: 90 + Math.random() * (H - 200),
+      vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, speed,
+      r: kind === 'wasp' ? 15 : kind === 'lantern' ? 12 : 10,
+      life: kind === 'lantern' ? 3 : 5 + Math.random() * 3, age: 0, phase: Math.random() * 6.28
+    });
+  }
+
+  function burst(x, y, color, n = 14) {
+    if (reduced) n = 4;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.28, s = 40 + Math.random() * 160;
+      state.sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.6, color });
+    }
+  }
+
+  function floatText(x, y, text, color) { state.sparks.push({ x, y, text, color, life: 0.9, vy: -40, vx: 0 }); }
+
+  function tap(px, py) {
+    if (!state.running) return;
+    let hit = null, bestD = Infinity;
+    for (const b of state.bugs) {
+      const d = Math.hypot(b.x - px, b.y - py);
+      if (d < b.r + 22 && d < bestD) { hit = b; bestD = d; }
+    }
+    if (!hit) { state.streak = 1; floatText(px, py, 'miss', COL.fg); return updateHud(); }
+    state.bugs.splice(state.bugs.indexOf(hit), 1);
+    if (hit.kind === 'fly') {
+      state.score += state.streak; floatText(hit.x, hit.y, '+' + state.streak, COL.glow);
+      state.streak = Math.min(state.streak + 1, 9); burst(hit.x, hit.y, COL.glow);
+    } else if (hit.kind === 'lantern') {
+      state.time += 5; floatText(hit.x, hit.y, '+5 s', COL.lantern); burst(hit.x, hit.y, COL.lantern, 20);
+    } else {
+      state.time = Math.max(0, state.time - 5); state.streak = 1;
+      floatText(hit.x, hit.y, '−5 s', COL.wasp); burst(hit.x, hit.y, COL.wasp, 20);
+    }
+    updateHud();
+  }
+
+  cv.addEventListener('pointerdown', e => tap(e.clientX, e.clientY));
+
+  function updateHud() {
+    ui.time.textContent = state.time.toFixed(1);
+    ui.clockBox.classList.toggle('low', state.time < 10);
+    ui.combo.textContent = '×' + state.streak;
+    ui.score.textContent = state.score;
+  }
+
+  function start() {
+    Object.assign(state, { running: true, time: 60, score: 0, streak: 1, bugs: [], sparks: [], spawn: 0 });
+    for (let i = 0; i < 5; i++) spawnBug();
+    ui.overlay.hidden = true; updateHud();
+  }
+
+  function end() {
+    state.running = false;
+    const isBest = state.score > best;
+    if (isBest) { best = state.score; try { localStorage.setItem('firefly-minute-best', best); } catch (e) {} }
+    ui.msg.textContent = isBest ? `New best. ${state.score} fireflies in the jar.` : `Time's up. ${state.score} fireflies in the jar.`;
+    ui.best.innerHTML = `Best jar: <b>${best}</b>`;
+    ui.start.textContent = 'Play again';
+    ui.overlay.hidden = false; ui.start.focus();
+  }
+  ui.start.addEventListener('click', start);
+
+  function step(dt) {
+    state.t += dt;
+    if (state.running) {
+      state.time -= dt;
+      if (state.time <= 0) { state.time = 0; updateHud(); end(); }
+      state.spawn -= dt;
+      const target = 6 + Math.floor((60 - state.time) / 8);
+      if (state.spawn <= 0 && state.bugs.length < target) { spawnBug(); state.spawn = 0.35; }
+      ui.time.textContent = state.time.toFixed(1);
+      ui.clockBox.classList.toggle('low', state.time < 10);
+    }
+    for (let i = state.bugs.length - 1; i >= 0; i--) {
+      const b = state.bugs[i];
+      b.age += dt;
+      const turn = (Math.random() - 0.5) * 4 * dt;
+      const a = Math.atan2(b.vy, b.vx) + turn;
+      b.vx = Math.cos(a) * b.speed; b.vy = Math.sin(a) * b.speed;
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.x < b.r || b.x > W - b.r) { b.vx *= -1; b.x = Math.max(b.r, Math.min(W - b.r, b.x)); }
+      if (b.y < 80 || b.y > H - 40) { b.vy *= -1; b.y = Math.max(80, Math.min(H - 40, b.y)); }
+      if (b.age > b.life) state.bugs.splice(i, 1);
+    }
+    for (let i = state.sparks.length - 1; i >= 0; i--) {
+      const s = state.sparks[i];
+      s.life -= dt; s.x += s.vx * dt; s.y += s.vy * dt;
+      if (!s.text) { s.vx *= 0.92; s.vy *= 0.92; }
+      if (s.life <= 0) state.sparks.splice(i, 1);
+    }
+  }
+
+  function draw() {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, COL.night); g.addColorStop(1, COL.night2);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2;
+    for (const blade of grass) {
+      const sway = reduced ? 0 : Math.sin(state.t * 1.3 + blade.x * 0.02) * 4;
+      ctx.beginPath(); ctx.moveTo(blade.x, H);
+      ctx.quadraticCurveTo(blade.x, H - blade.h / 2, blade.x + blade.lean + sway, H - blade.h);
+      ctx.stroke();
+    }
+
+    for (const b of state.bugs) {
+      const fadeIn = Math.min(1, b.age * 3), fadeOut = Math.min(1, (b.life - b.age) * 2);
+      const alpha = Math.max(0, Math.min(fadeIn, fadeOut));
+      if (b.kind === 'wasp') {
+        ctx.globalAlpha = alpha;
+        ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Math.atan2(b.vy, b.vx));
+        ctx.fillStyle = COL.wasp;
+        ctx.beginPath(); ctx.ellipse(0, 0, b.r, b.r * 0.6, 0, 0, 6.28); ctx.fill();
+        ctx.fillStyle = COL.night;
+        for (let s = -1; s <= 1; s++) ctx.fillRect(s * 5 - 1.5, -b.r * 0.6, 3, b.r * 1.2);
+        ctx.fillStyle = 'rgba(230,238,225,.45)';
+        const flap = Math.sin(state.t * 40) * 3;
+        ctx.beginPath(); ctx.ellipse(-2, -b.r * 0.7, 6, 3 + flap * 0.3, -0.4, 0, 6.28); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-2, b.r * 0.7, 6, 3 - flap * 0.3, 0.4, 0, 6.28); ctx.fill();
+        ctx.restore();
+      } else {
+        const color = b.kind === 'lantern' ? COL.lantern : COL.glow;
+        const pulse = 0.6 + 0.4 * Math.sin(state.t * (b.kind === 'lantern' ? 10 : 4) + b.phase);
+        ctx.globalAlpha = alpha * pulse;
+        const halo = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 3.2);
+        halo.addColorStop(0, color); halo.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 3.2, 0, 6.28); ctx.fill();
+        ctx.globalAlpha = alpha; ctx.fillStyle = COL.fg;
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.35, 0, 6.28); ctx.fill();
+      }
+    }
+
+    ctx.textAlign = 'center'; ctx.font = '500 16px "DM Mono", monospace';
+    for (const s of state.sparks) {
+      ctx.globalAlpha = Math.max(0, s.life / (s.text ? 0.9 : 0.6));
+      ctx.fillStyle = s.color;
+      if (s.text) ctx.fillText(s.text, s.x, s.y);
+      else { ctx.beginPath(); ctx.arc(s.x, s.y, 2, 0, 6.28); ctx.fill(); }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    step(dt); draw();
+    requestAnimationFrame(loop);
+  }
+
+  addEventListener('resize', resize);
+  resize();
+  for (let i = 0; i < 6; i++) spawnBug();
+  requestAnimationFrame(loop);
+})();
+</script>
