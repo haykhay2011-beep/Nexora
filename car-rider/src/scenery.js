@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { ROAD } from './config.js';
 import { PartBuilder, flatMaterial } from './models.js';
 import { RNG } from './rng.js';
+import { BIOMES } from './countries.js';
 
 function roundTree() {
   const b = new PartBuilder();
@@ -22,6 +23,54 @@ function pineTree() {
   b.cone(1.6, 2.4, 6, 0x2f7f4a, [0, 2.2, 0]);
   b.cone(1.2, 2.0, 6, 0x37905a, [0, 3.4, 0]);
   b.cone(0.8, 1.6, 6, 0x3fa064, [0, 4.5, 0]);
+  return b.build();
+}
+
+function palmTree() {
+  const b = new PartBuilder();
+  // curved trunk built from tilted segments
+  for (let i = 0; i < 5; i++) {
+    const t = i / 5;
+    b.cyl(0.2 - t * 0.06, 0.24 - t * 0.06, 1.0, 6, i % 2 ? 0x9a7248 : 0x8a6540, [t * 0.9, 0.5 + i * 0.95, 0], [0, 0, -0.18]);
+  }
+  const topX = 0.9, topY = 5.1;
+  for (let k = 0; k < 7; k++) {
+    const a = (k / 7) * Math.PI * 2;
+    b.box(2.6, 0.08, 0.5, k % 2 ? 0x3f9a3a : 0x4cae44, [topX + Math.cos(a) * 1.2, topY - 0.15, Math.sin(a) * 1.2], [0, -a, Math.sin(a) * 0.1 - 0.35]);
+  }
+  b.sphere(0.25, 0x6b4a2a, [topX, topY - 0.2, 0.1], [1, 1, 1]);
+  return b.build();
+}
+
+function cactusTree() {
+  const b = new PartBuilder();
+  b.cyl(0.32, 0.36, 3.2, 7, 0x4f9a52, [0, 1.6, 0]);
+  b.sphere(0.32, 0x4f9a52, [0, 3.2, 0], [1, 0.8, 1]);
+  b.cyl(0.2, 0.2, 1.0, 6, 0x4f9a52, [0.65, 1.7, 0], [0, 0, Math.PI / 2]);
+  b.cyl(0.2, 0.2, 1.1, 6, 0x4f9a52, [0.95, 2.25, 0]);
+  b.cyl(0.2, 0.2, 0.9, 6, 0x4f9a52, [-0.6, 1.3, 0], [0, 0, Math.PI / 2]);
+  b.cyl(0.2, 0.2, 0.9, 6, 0x4f9a52, [-0.85, 1.75, 0]);
+  return b.build();
+}
+
+function acaciaTree() {
+  const b = new PartBuilder();
+  b.cyl(0.14, 0.24, 3.0, 5, 0x6d4a2c, [0, 1.5, 0], [0, 0, 0.12]);
+  b.cyl(0.1, 0.14, 1.2, 5, 0x6d4a2c, [0.55, 3.0, 0], [0, 0, -0.7]);
+  b.sphere(1, 0x7f9a3a, [0.2, 3.5, 0], [2.6, 0.45, 2.3]);
+  b.sphere(1, 0x8aa844, [1.0, 3.3, 0.6], [1.6, 0.4, 1.4]);
+  return b.build();
+}
+
+function snowPine() {
+  const b = new PartBuilder();
+  b.cyl(0.15, 0.22, 1.4, 5, 0x6d4a2c, [0, 0.7, 0]);
+  b.cone(1.6, 2.4, 6, 0x2f6f4a, [0, 2.2, 0]);
+  b.cone(1.25, 0.9, 6, 0xf4f8fb, [0, 3.0, 0]);
+  b.cone(1.2, 2.0, 6, 0x37805a, [0, 3.4, 0]);
+  b.cone(0.95, 0.8, 6, 0xf4f8fb, [0, 4.05, 0]);
+  b.cone(0.8, 1.6, 6, 0x3f9064, [0, 4.5, 0]);
+  b.cone(0.6, 0.7, 6, 0xf4f8fb, [0, 5.0, 0]);
   return b.build();
 }
 
@@ -76,10 +125,14 @@ function barn() {
 }
 
 const TYPES = [
-  { name: 'round', geo: roundTree, per: 10 },
-  { name: 'pine', geo: pineTree, per: 10 },
-  { name: 'rock', geo: rock, per: 5 },
-  { name: 'bush', geo: bush, per: 8 },
+  { name: 'round', geo: roundTree, per: 12 },
+  { name: 'pine', geo: pineTree, per: 12 },
+  { name: 'palm', geo: palmTree, per: 12 },
+  { name: 'cactus', geo: cactusTree, per: 12 },
+  { name: 'acacia', geo: acaciaTree, per: 10 },
+  { name: 'snowpine', geo: snowPine, per: 12 },
+  { name: 'rock', geo: rock, per: 9 },
+  { name: 'bush', geo: bush, per: 12 },
   { name: 'fence', geo: fenceSection, per: 14 },
   { name: 'house', geo: house, per: 1 },
   { name: 'barn', geo: barn, per: 1 },
@@ -93,6 +146,7 @@ const _s = new THREE.Vector3();
 const _f = {};
 const _yAxis = new THREE.Vector3(0, 1, 0);
 const _c = new THREE.Color();
+const _mul = new THREE.Color();
 
 export class Scenery {
   constructor(scene, road) {
@@ -101,6 +155,7 @@ export class Scenery {
     this.slots = road.slots;
     this.rng = new RNG(1);
     this.seed = 1;
+    this.biome = BIOMES.T;
     this.meshes = {};
     for (const t of TYPES) {
       const mesh = new THREE.InstancedMesh(t.geo(), flatMaterial, t.per * this.slots);
@@ -118,6 +173,10 @@ export class Scenery {
 
   setSeed(seed) {
     this.seed = seed;
+  }
+
+  setBiome(key) {
+    this.biome = BIOMES[key] || BIOMES.T;
   }
 
   clear(slot) {
@@ -138,7 +197,7 @@ export class Scenery {
     return y - 0.12 + (ROAD.GROUND_Y - y - 0.28) * t;
   }
 
-  _place(type, slot, counter, s, d, scale, rotY, tint) {
+  _place(type, slot, counter, s, d, scale, rotY, tint, mul) {
     const entry = this.meshes[type];
     if (counter[type] >= entry.per) return false;
     const f = this.path.frame(s, _f);
@@ -152,7 +211,9 @@ export class Scenery {
     _m.compose(_p, _q, _s);
     const i = slot * entry.per + counter[type]++;
     entry.mesh.setMatrixAt(i, _m);
-    entry.mesh.setColorAt(i, _c.setScalar(tint));
+    _c.setScalar(tint);
+    if (mul !== undefined) _c.multiply(_mul.set(mul));
+    entry.mesh.setColorAt(i, _c);
     return true;
   }
 
@@ -166,25 +227,37 @@ export class Scenery {
     const counter = {};
     for (const t of TYPES) counter[t.name] = 0;
 
+    const bio = this.biome;
+    const mix = Object.entries(bio.trees);
+    const pickTree = () => {
+      let t = r.next();
+      for (const [name, w] of mix) {
+        if (t < w) return name;
+        t -= w;
+      }
+      return 'none';
+    };
     // trees in loose clumps on both sides
-    for (let i = 0; i < 20; i++) {
+    const attempts = Math.round(20 * bio.density);
+    for (let i = 0; i < attempts; i++) {
       const s = s0 + r.range(0, L);
       const side = r.sign();
       const d = side * (ROAD.VERGE + 3 + Math.pow(r.next(), 1.6) * 70);
       const f = this.path.frame(s, _f);
-      const type = r.chance(0.45) ? 'pine' : 'round';
+      const type = pickTree();
+      if (type === 'none') continue;
       const yaw = f.heading + r.range(0, 6.28);
-      this._place(type, slot, counter, s, d, r.range(0.8, 1.35), yaw, r.range(0.85, 1.12));
+      this._place(type, slot, counter, s, d, r.range(0.8, 1.35), yaw, r.range(0.85, 1.12), bio.leaf);
     }
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < Math.round(8 * bio.bush); i++) {
       const s = s0 + r.range(0, L);
       const d = r.sign() * (ROAD.VERGE + 1.5 + r.range(0, 30));
-      this._place('bush', slot, counter, s, d, r.range(0.7, 1.3), r.range(0, 6.28), r.range(0.85, 1.1));
+      this._place('bush', slot, counter, s, d, r.range(0.7, 1.3), r.range(0, 6.28), r.range(0.85, 1.1), bio.leaf);
     }
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < Math.round(4 * bio.rock); i++) {
       const s = s0 + r.range(0, L);
       const d = r.sign() * (ROAD.VERGE + 2 + r.range(0, 40));
-      this._place('rock', slot, counter, s, d, r.range(0.5, 1.6), r.range(0, 6.28), r.range(0.85, 1.1));
+      this._place('rock', slot, counter, s, d, r.range(0.5, 1.6), r.range(0, 6.28), r.range(0.85, 1.1), bio.rockTint);
     }
 
     // a fence run parallel to the road

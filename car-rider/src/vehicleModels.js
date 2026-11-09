@@ -2,7 +2,7 @@
 // Models face -Z, +Y is up, origin is on the ground at the vehicle's centre.
 import * as THREE from 'three';
 import { PartBuilder, wheelGeometry } from './models.js';
-import { nivaGeometry } from './armenianCars.js';
+import { marshrutkaGeometry, nivaGeometry, sedanGeometry } from './armenianCars.js';
 
 // body panels use this marker colour; it is swapped for the player's paint at runtime
 const PAINT = 0xff00ff;
@@ -135,47 +135,209 @@ function buildMonster() {
   };
 }
 
+
+function sedanSpec(opts, wheelX, wheelZ, r, exhaust, height) {
+  return {
+    body: sedanGeometry({ ...opts, color: PAINT, withWheels: false }),
+    wheels: [wheelSpec(wheelX, -wheelZ, r, 0.24, true), wheelSpec(-wheelX, -wheelZ, r, 0.24, true), wheelSpec(wheelX, wheelZ, r, 0.24), wheelSpec(-wheelX, wheelZ, r, 0.24)],
+    exhaust: [exhaust],
+    height,
+    length: opts.len,
+  };
+}
+
+function buildVaz() {
+  return sedanSpec({ len: 4.1 }, 0.82, 1.27, 0.33, [0.45, 0.3, 2.1], 1.45);
+}
+
+function buildVolga() {
+  return sedanSpec({ len: 4.6, w: 1.72, cabinLen: 2.3, cabinH: 0.52, topX: 0.9, topZ: 0.8, shift: 0.1 }, 0.87, 1.43, 0.34, [0.5, 0.3, 2.35], 1.5);
+}
+
+function buildMerc() {
+  return sedanSpec({ len: 4.4, w: 1.7, cabinLen: 2.2, cabinH: 0.5, topX: 0.92, topZ: 0.82, shift: 0.15, chrome: false }, 0.86, 1.36, 0.34, [0.5, 0.3, 2.25], 1.45);
+}
+
+function buildMarsh() {
+  return {
+    body: marshrutkaGeometry(PAINT, 0x2f6fb5, false),
+    wheels: [wheelSpec(0.98, -1.9, 0.4, 0.3, true), wheelSpec(-0.98, -1.9, 0.4, 0.3, true), wheelSpec(0.98, 1.5, 0.4, 0.3), wheelSpec(-0.98, 1.5, 0.4, 0.3)],
+    exhaust: [[0.7, 0.4, 2.8]],
+    height: 2.7,
+    length: 5.6,
+  };
+}
+
+function buildRally() {
+  const b = new PartBuilder();
+  const c = PAINT;
+  b.box(1.76, 0.5, 3.7, c, [0, 0.62, 0]);
+  b.taper(1.6, 0.52, 2.2, GLASS, [0, 1.1, 0.45], [0, 0, 0], 0.84, 0.7);
+  b.box(1.2, 0.06, 1.4, c, [0, 1.36, 0.5]);
+  b.box(0.55, 0.03, 1.5, 0x23242a, [0, 0.89, -1.0]); // hood stripe
+  b.box(0.3, 0.1, 0.6, 0x23242a, [0, 0.95, -0.9]); // hood scoop
+  b.box(1.8, 0.07, 0.55, 0x23242a, [0, 1.38, 1.85]); // wing
+  b.box(0.08, 0.34, 0.1, 0x23242a, [0.7, 1.2, 1.85]);
+  b.box(0.08, 0.34, 0.1, 0x23242a, [-0.7, 1.2, 1.85]);
+  b.box(1.8, 0.18, 0.12, 0x23242a, [0, 0.4, -1.88]);
+  for (const sx of [-1, 1]) {
+    b.box(0.3, 0.14, 0.06, 0xfff3b0, [sx * 0.55, 0.72, -1.86]);
+    b.box(0.2, 0.12, 0.06, 0xffd23f, [sx * 0.76, 0.5, -1.88]);
+    b.box(0.3, 0.12, 0.06, 0xff3030, [sx * 0.6, 0.78, 1.86]);
+  }
+  return {
+    body: b.build(),
+    wheels: [wheelSpec(0.88, -1.15, 0.36, 0.28, true), wheelSpec(-0.88, -1.15, 0.36, 0.28, true), wheelSpec(0.88, 1.15, 0.36, 0.28), wheelSpec(-0.88, 1.15, 0.36, 0.28)],
+    exhaust: [[0.5, 0.32, 1.9]],
+    height: 1.45,
+    length: 3.8,
+  };
+}
+
+function buildMuscle() {
+  const b = new PartBuilder();
+  const c = PAINT;
+  b.box(1.9, 0.5, 4.7, c, [0, 0.66, 0]);
+  b.taper(1.7, 0.42, 1.7, GLASS, [0, 1.12, 0.7], [0, 0, 0], 0.82, 0.68);
+  b.box(1.1, 0.06, 1.1, c, [0, 1.34, 0.7]);
+  b.box(0.5, 0.14, 1.2, 0x23242a, [0, 0.95, -1.25]); // hood scoop
+  b.box(0.3, 0.03, 4.5, 0xf1f1ec, [0.35, 0.92, 0]); // racing stripes
+  b.box(0.3, 0.03, 4.5, 0xf1f1ec, [-0.35, 0.92, 0]);
+  b.box(1.95, 0.16, 0.12, 0xc9ced6, [0, 0.46, -2.34]);
+  b.box(1.95, 0.16, 0.12, 0xc9ced6, [0, 0.46, 2.34]);
+  b.box(1.0, 0.18, 0.05, 0x23242a, [0, 0.74, -2.36]);
+  for (const sx of [-1, 1]) {
+    b.cyl(0.14, 0.14, 0.08, 10, 0xfff3b0, [sx * 0.62, 0.78, -2.36], [Math.PI / 2, 0, 0]);
+    b.box(0.5, 0.16, 0.05, 0xff3030, [sx * 0.56, 0.78, 2.36]);
+  }
+  return {
+    body: b.build(),
+    wheels: [wheelSpec(0.96, -1.5, 0.38, 0.3, true), wheelSpec(-0.96, -1.5, 0.38, 0.3, true), wheelSpec(0.98, 1.5, 0.42, 0.38), wheelSpec(-0.98, 1.5, 0.42, 0.38)],
+    exhaust: [[0.55, 0.3, 2.4], [-0.55, 0.3, 2.4]],
+    height: 1.4,
+    length: 4.8,
+  };
+}
+
+function buildSuper() {
+  const b = new PartBuilder();
+  const c = PAINT;
+  b.box(1.95, 0.3, 4.3, c, [0, 0.46, 0]);
+  b.taper(1.9, 0.28, 1.7, c, [0, 0.74, -1.25], [0, 0, 0], 0.7, 0.4);
+  b.taper(1.5, 0.4, 1.7, GLASS, [0, 0.84, 0.25], [0, 0, 0], 0.7, 0.55);
+  b.box(0.4, 0.04, 1.2, 0x23242a, [0, 1.05, 0.4]);
+  b.box(0.5, 0.2, 1.0, 0x23242a, [0.95, 0.55, 0.5]); // side intakes
+  b.box(0.5, 0.2, 1.0, 0x23242a, [-0.95, 0.55, 0.5]);
+  b.box(2.0, 0.08, 0.55, 0x23242a, [0, 1.0, 1.95]); // wing
+  b.box(0.1, 0.4, 0.12, 0x23242a, [0.65, 0.78, 1.95]);
+  b.box(0.1, 0.4, 0.12, 0x23242a, [-0.65, 0.78, 1.95]);
+  b.box(1.9, 0.12, 0.3, 0x23242a, [0, 0.3, -2.2]);
+  b.box(1.6, 0.12, 0.3, 0x23242a, [0, 0.3, 2.2]);
+  for (const sx of [-1, 1]) {
+    b.box(0.5, 0.06, 0.06, 0xdff6ff, [sx * 0.62, 0.66, -2.16]);
+    b.box(0.7, 0.07, 0.06, 0xff3030, [sx * 0.5, 0.58, 2.16]);
+  }
+  return {
+    body: b.build(),
+    wheels: [wheelSpec(0.98, -1.35, 0.35, 0.3, true), wheelSpec(-0.98, -1.35, 0.35, 0.3, true), wheelSpec(1.0, 1.35, 0.37, 0.36), wheelSpec(-1.0, 1.35, 0.37, 0.36)],
+    exhaust: [[0.4, 0.4, 2.2], [-0.4, 0.4, 2.2]],
+    height: 1.15,
+    length: 4.4,
+  };
+}
+
 // speedMul: top speed multiplier        yawMax: max steering angle (rad)
 // steerResp: how quickly it reaches it   drift: sensitivity to being flung wide by bends
 // oil: how badly oil upsets it           hw/hl: collision half extents (m)
 // spin: air spin rate (rad/s)            hop/ramp: jump multipliers
-export const VEHICLES = [
+const VEHICLE_LIST = [
   {
-    id: 'compact', paint: '#f1f1ec', name: 'Lada Niva', unlock: 0, build: buildCompact,
+    id: 'compact', paint: '#f1f1ec', name: 'Lada Niva', price: 0, build: buildCompact,
     blurb: 'The legendary 4x4. Balanced and friendly.',
     speedMul: 1, accel: 11, yawMax: 0.42, steerResp: 9, drift: 1, oil: 1, hw: 0.9, hl: 1.85,
     spin: 7.5, hop: 1, ramp: 1, lean: 1, sturdy: false, crusher: false,
     ratings: { speed: 3, handling: 3, tough: 3, air: 3 },
   },
   {
-    id: 'pickup', paint: '#3b82d6', name: 'Pickup Truck', unlock: 800, build: buildPickup,
+    id: 'pickup', paint: '#3b82d6', name: 'Pickup Truck', price: 600, build: buildPickup,
     blurb: 'Slower but sturdy. Shrugs off potholes.',
     speedMul: 0.9, accel: 9, yawMax: 0.38, steerResp: 7, drift: 0.85, oil: 0.9, hw: 1.0, hl: 2.2,
     spin: 6.6, hop: 0.9, ramp: 0.95, lean: 0.7, sturdy: true, crusher: false,
     ratings: { speed: 2, handling: 2, tough: 5, air: 2 },
   },
   {
-    id: 'sports', paint: '#ffc21a', name: 'Sports Car', unlock: 2500, build: buildSports,
+    id: 'sports', paint: '#ffc21a', name: 'Sports Car', price: 2500, build: buildSports,
     blurb: 'Blisteringly fast with razor steering. Twitchy!',
     speedMul: 1.14, accel: 15, yawMax: 0.52, steerResp: 15, drift: 1.55, oil: 1.7, hw: 0.9, hl: 2.0,
     spin: 8.2, hop: 0.95, ramp: 1, lean: 1.3, sturdy: false, crusher: false,
     ratings: { speed: 5, handling: 4, tough: 2, air: 3 },
   },
   {
-    id: 'moto', paint: '#e8501a', name: 'Motorcycle', unlock: 5000, build: buildMoto,
+    id: 'moto', paint: '#e8501a', name: 'Motorcycle', price: 1800, build: buildMoto,
     blurb: 'Super nimble, tiny hitbox, spins like a top.',
     speedMul: 1.04, accel: 14, yawMax: 0.5, steerResp: 12, drift: 1.1, oil: 1.3, hw: 0.4, hl: 1.1,
     spin: 11.5, hop: 1.05, ramp: 1, lean: -2.6, sturdy: false, crusher: false,
     ratings: { speed: 4, handling: 5, tough: 1, air: 5 },
   },
   {
-    id: 'monster', paint: '#3ec26b', name: 'Monster Truck', unlock: 9000, build: buildMonster,
+    id: 'monster', paint: '#3ec26b', name: 'Monster Truck', price: 5000, build: buildMonster,
     blurb: 'Crushes cones and barrels. Huge air, wide turns.',
     speedMul: 0.95, accel: 9, yawMax: 0.32, steerResp: 5, drift: 0.8, oil: 0.8, hw: 1.3, hl: 2.2,
     spin: 5.6, hop: 1.25, ramp: 1.35, lean: 0.5, sturdy: true, crusher: true,
     ratings: { speed: 3, handling: 1, tough: 4, air: 5 },
   },
+  {
+    id: 'vaz', paint: '#7d2630', name: 'Lada 2107', price: 400, build: buildVaz,
+    blurb: 'The classic Zhiguli. Boxy, honest, a bit slow.',
+    speedMul: 0.96, accel: 10, yawMax: 0.4, steerResp: 8, drift: 1.05, oil: 1.1, hw: 0.85, hl: 2.0,
+    spin: 7, hop: 0.95, ramp: 0.95, lean: 1.1, sturdy: false, crusher: false,
+    ratings: { speed: 2, handling: 3, tough: 3, air: 3 },
+  },
+  {
+    id: 'volga', paint: '#1b1b1f', name: 'Volga GAZ-24', price: 900, build: buildVolga,
+    blurb: 'Big, heavy and steady. Shrugs off potholes.',
+    speedMul: 1.0, accel: 9, yawMax: 0.38, steerResp: 7, drift: 0.9, oil: 0.9, hw: 0.92, hl: 2.2,
+    spin: 6, hop: 0.9, ramp: 0.95, lean: 0.8, sturdy: true, crusher: false,
+    ratings: { speed: 3, handling: 2, tough: 4, air: 2 },
+  },
+  {
+    id: 'marsh', paint: '#f1f1ec', name: 'Marshrutka', price: 1200, build: buildMarsh,
+    blurb: 'The Gazelle minibus. Slow, huge, nearly unbreakable.',
+    speedMul: 0.88, accel: 8, yawMax: 0.34, steerResp: 6, drift: 0.8, oil: 0.85, hw: 1.05, hl: 2.7,
+    spin: 4.5, hop: 0.75, ramp: 0.85, lean: 0.5, sturdy: true, crusher: false,
+    ratings: { speed: 2, handling: 1, tough: 5, air: 1 },
+  },
+  {
+    id: 'merc', paint: '#b7bcc2', name: 'Mercedes W124', price: 1500, build: buildMerc,
+    blurb: 'Built like a vault and quick on the motorway.',
+    speedMul: 1.08, accel: 12, yawMax: 0.44, steerResp: 10, drift: 0.85, oil: 0.9, hw: 0.9, hl: 2.15,
+    spin: 7, hop: 1, ramp: 1, lean: 1, sturdy: false, crusher: false,
+    ratings: { speed: 4, handling: 3, tough: 4, air: 3 },
+  },
+  {
+    id: 'rally', paint: '#3b82d6', name: 'Rally Hatch', price: 3600, build: buildRally,
+    blurb: 'Gravel-bred grip. Hardly notices oil.',
+    speedMul: 1.1, accel: 14, yawMax: 0.5, steerResp: 13, drift: 0.75, oil: 0.6, hw: 0.86, hl: 1.85,
+    spin: 8.5, hop: 1.05, ramp: 1.1, lean: 1.2, sturdy: false, crusher: false,
+    ratings: { speed: 4, handling: 5, tough: 2, air: 4 },
+  },
+  {
+    id: 'muscle', paint: '#e5483c', name: 'Muscle Car', price: 4200, build: buildMuscle,
+    blurb: 'All engine. Great on the straights, a handful in bends.',
+    speedMul: 1.15, accel: 15, yawMax: 0.4, steerResp: 8, drift: 1.3, oil: 1.5, hw: 0.95, hl: 2.3,
+    spin: 6.5, hop: 0.9, ramp: 1, lean: 1.3, sturdy: false, crusher: false,
+    ratings: { speed: 5, handling: 2, tough: 3, air: 3 },
+  },
+  {
+    id: 'super', paint: '#ffc21a', name: 'Supercar', price: 9000, build: buildSuper,
+    blurb: 'Ridiculous pace and reflexes. Keep it pointed straight.',
+    speedMul: 1.25, accel: 18, yawMax: 0.55, steerResp: 16, drift: 1.6, oil: 1.9, hw: 0.95, hl: 2.15,
+    spin: 8.5, hop: 0.9, ramp: 1, lean: 1.4, sturdy: false, crusher: false,
+    ratings: { speed: 5, handling: 5, tough: 1, air: 3 },
+  },
 ];
+
+export const VEHICLES = [...VEHICLE_LIST].sort((a, b) => a.price - b.price);
 
 export function getVehicle(id) {
   return VEHICLES.find((v) => v.id === id) || VEHICLES[0];

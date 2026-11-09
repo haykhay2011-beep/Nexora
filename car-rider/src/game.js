@@ -15,10 +15,15 @@ import { persist, save } from './storage.js';
 import { UI } from './ui.js';
 import { Vehicle } from './vehicle.js';
 import { VEHICLES, getVehicle } from './vehicleModels.js';
+import { UPGRADES, levelsOf, upgradeCost } from './upgrades.js';
+import { getCountry } from './countries.js';
 
 const START_S = 26; // the road begins a little behind the start line so the camera has room
 const CRASH_TIME = 2.0;
-const POWER_MAX = { nitro: 6, shield: POWER.SHIELD, magnet: POWER.MAGNET, grip: POWER.GRIP };
+const POWER_MAX = { nitro: 9, shield: POWER.SHIELD, magnet: POWER.MAGNET, grip: POWER.GRIP };
+
+// each coin picked up is worth this many coins in the wallet
+const COIN_VALUE = 5;
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -101,17 +106,25 @@ export class Game {
       },
       brake: (on) => this.input.setBrakeTouch(on),
       selectVehicle: (id, locked) => this.selectVehicle(id, locked),
+      openCountries: () => this.openCountries(),
+      closeCountries: () => this.closeCountries(),
+      pickCountry: (code) => this.pickCountry(code),
+      buyVehicle: (id) => this.buyVehicle(id),
+      buyUpgrade: (id) => this.buyUpgrade(id),
       click: () => this.sound.click(),
     });
     this.ui.setMuteIcon(this.sound.muted);
     this.ui.setUnits(save.units);
     this.syncSettings();
     this.ui.setBest(save.best);
+    this.ui.setWallet(save.coins);
+    this.ui.setDestination(save.country);
+    this.applyCountry(save.country);
     if (this.mobile) this.ui.setTouchMode(true);
 
     this.vehicle.hooks.emit = (name, data) => this.onVehicleEvent(name, data);
     this.vehicle.hooks.beforeCrash = (reason) => this.absorbCrash(reason);
-    this.vehicle.setDef(getVehicle(save.selected), this.paintFor(save.selected));
+    this.applyVehicle(save.selected);
 
     this.state = 'menu';
     this.time = 0;
@@ -153,7 +166,7 @@ export class Game {
     return {
       score: 0, dist: 0, t: 0, mult: 1, multT: 0, coins: 0, tricks: 0,
       power: { nitro: 0, shield: 0, magnet: 0, grip: 0 },
-      closeCalls: 0, closeChain: 0,
+      closeCalls: 0, closeChain: 0, lives: 0,
       crashTimer: 0, startS: START_S,
     };
   }
@@ -210,7 +223,8 @@ export class Game {
     this.seedUsed = Number.isFinite(fixed);
     this.resetWorld(seed);
     this.run = this.newRun();
-    this.vehicle.speed = PHYS.START_SPEED * 0.8 * this.vehicle.def.speedMul * this.speedMul();
+    this.vehicle.speed = PHYS.START_SPEED * 0.8 * this.vehicle.stats.speedMul * this.speedMul();
+    this.run.lives = this.vehicle.stats.lives;
     this.obstacles.trafficScale = Math.min(1, this.speedMul());
     this.obstacles.trafficDensity = this.trafficSetting();
     this.obstacles.noStatic = !!save.noHesi;
@@ -251,6 +265,7 @@ export class Game {
     if (this.state === 'playing') this.pause();
     else if (this.state === 'paused') this.resume();
     else if (this.state === 'garage') this.closeGarage();
+    else if (this.state === 'countries') this.closeCountries();
   }
 
   onMenuKey(k) {
@@ -272,6 +287,7 @@ export class Game {
     }
     this.state = 'garage';
     this.ui.show('garage');
+    this.ui.setGarageTab('cars');
     this.ui.renderGarage(save, VEHICLES.findIndex((v) => v.id === save.selected));
     this.ui.setPaintValue(this.paintFor(save.selected));
     this.vehicle.speed = 0;
@@ -296,16 +312,59 @@ export class Game {
     this.selectVehicle(v.id, false);
   }
 
+  refreshGarage() {
+    this.ui.renderGarage(save, VEHICLES.findIndex((v) => v.id === save.selected));
+    this.ui.setPaintValue(this.paintFor(save.selected));
+  }
+
+  buyVehicle(id) {
+    const def = getVehicle(id);
+    if (save.unlocked.includes(id)) return;
+    if (save.coins < def.price) {
+      this.sound.pothole();
+      this.ui.garageMsg(`Not enough coins: ${def.name} costs ${def.price.toLocaleString('en-US')}`);
+      return;
+    }
+    save.coins -= def.price;
+    save.unlocked.push(id);
+    save.selected = id;
+    persist();
+    this.applyVehicle(id);
+    this.refreshGarage();
+    this.sound.unlockFanfare();
+    this.ui.garageMsg(`Bought the ${def.name}!`);
+  }
+
+  buyUpgrade(upId) {
+    const up = UPGRADES.find((u) => u.id === upId);
+    const id = save.selected;
+    const lv = levelsOf(save, id);
+    const cost = upgradeCost(up, lv[upId]);
+    if (lv[upId] >= up.max) return;
+    if (save.coins < cost) {
+      this.sound.pothole();
+      this.ui.garageMsg(`Need ${cost.toLocaleString('en-US')} coins for ${up.name}`);
+      return;
+    }
+    save.coins -= cost;
+    save.upgrades[id] = { ...lv, [upId]: lv[upId] + 1 };
+    persist();
+    this.applyVehicle(id);
+    this.refreshGarage();
+    this.sound.powerup();
+    this.ui.garageMsg(`${up.name} upgraded to level ${lv[upId] + 1}`);
+  }
+
   selectVehicle(id, locked) {
     if (locked) {
       this.sound.pothole();
+      this.ui.garageMsg(`${getVehicle(id).name}: buy it with the button on its card`);
       return;
     }
     save.selected = id;
     persist();
-    this.vehicle.setDef(getVehicle(id), this.paintFor(id));
-    this.ui.renderGarage(save, VEHICLES.findIndex((v) => v.id === id));
-    this.ui.setPaintValue(this.paintFor(id));
+    this.applyVehicle(id);
+    this.refreshGarage();
     this.sound.powerup();
   }
 
@@ -328,6 +387,7 @@ export class Game {
         break;
       case 'menu':
       case 'garage':
+      case 'countries':
       case 'over':
         this.updateAttract(dt);
         break;
@@ -368,6 +428,42 @@ export class Game {
     this.ui.setNoHesi(!!save.noHesi);
   }
 
+  applyCountry(code) {
+    const c = getCountry(code);
+    this.env.setCountry(c.code);
+    this.scenery.setBiome(c.biome);
+  }
+
+  openCountries() {
+    this.sound.unlock();
+    this.state = 'countries';
+    this.ui.show('countries');
+    this.ui.renderCountries(save.countryBest);
+    setTimeout(() => {
+      const sel = document.querySelector('.country.sel');
+      if (sel) sel.scrollIntoView({ block: 'center' });
+    }, 30);
+  }
+
+  closeCountries() {
+    this.state = 'menu';
+    this.ui.show('start');
+  }
+
+  pickCountry(code) {
+    this.sound.powerup();
+    save.country = code;
+    persist();
+    this.ui.setDestination(code);
+    this.applyCountry(code);
+    this.loadAttract();
+    this.ui.show('start');
+  }
+
+  applyVehicle(id) {
+    this.vehicle.setDef(getVehicle(id), this.paintFor(id), levelsOf(save, id));
+  }
+
   paintFor(id) {
     const c = save.colors[id];
     return typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c) ? c : getVehicle(id).paint;
@@ -392,7 +488,7 @@ export class Game {
     const v = this.vehicle;
     const k = this.path.curvature(v.s);
     const speed = this.state === 'garage' ? 0 : 15;
-    const want = -v.d * 0.9 + k * v.speed * v.speed * PHYS.DRIFT * v.def.drift;
+    const want = -v.d * 0.9 + k * v.speed * v.speed * PHYS.DRIFT * v.stats.drift;
     const sinYaw = clamp(want / Math.max(v.speed, 4), -0.4, 0.4);
     const steer = clamp(Math.asin(sinYaw) / v.def.yawMax, -1, 1);
     v.step(dt, steer, false, { targetSpeed: speed, nitro: 0, groundAt: () => 0 });
@@ -432,7 +528,7 @@ export class Game {
 
     // world generation & upkeep
     this.road.update(v.s);
-    this.obstacles.generate(v.s, run.t, this.targetSpeed(run.t) * v.def.speedMul);
+    this.obstacles.generate(v.s, run.t, this.targetSpeed(run.t) * v.stats.speedMul);
     this.obstacles.update(dt, v.s);
 
     if (v.alive) {
@@ -489,6 +585,8 @@ export class Game {
       multFrac: clamp(run.multT / SCORE.MULT_TIME, 0, 1),
       powers: run.power,
       maxPowers: POWER_MAX,
+      coins: run.coins * COIN_VALUE,
+      lives: run.lives,
     };
   }
 
@@ -549,6 +647,13 @@ export class Game {
         v.speed *= 0.9;
         continue;
       }
+      if (run.lives > 0) {
+        this.spendLife();
+        this.obstacles.smash(o, v.speed);
+        v.invuln = 1.6;
+        v.speed *= 0.8;
+        continue;
+      }
       v.crash('obstacle');
     }
   }
@@ -582,6 +687,16 @@ export class Game {
     if (run.multT <= 0) run.closeChain = 0;
   }
 
+  spendLife() {
+    const run = this.run;
+    run.lives--;
+    this.sound.shieldBreak();
+    this.shake = Math.max(this.shake, 0.7);
+    this.ui.toast(run.lives > 0 ? `Extra life used! ${run.lives} left` : 'Last extra life used!', '#ff7a90');
+    const p = this.vehicle.obj.root.position;
+    this.fx.burst(p.x, p.y + 1, p.z, 0xff5a7a, 18, 7, 0.3);
+  }
+
   breakShield() {
     const v = this.vehicle;
     this.run.power.shield = 0;
@@ -597,6 +712,10 @@ export class Game {
     if (this.state !== 'playing') return false;
     if (this.run.power.shield > 0) {
       this.breakShield();
+      return true;
+    }
+    if (this.run.lives > 0) {
+      this.spendLife();
       return true;
     }
     return false;
@@ -662,7 +781,7 @@ export class Game {
         this.fx.burst(g.x, g.y, g.z, 0xffd23f, 4, 3, 0.2);
         break;
       case 'nitro':
-        run.power.nitro = Math.min(POWER_MAX.nitro, run.power.nitro + POWER.NITRO);
+        run.power.nitro = Math.min(POWER_MAX.nitro, run.power.nitro + POWER.NITRO + this.vehicle.stats.nitroTime);
         this.sound.nitro();
         this.ui.toast('NITRO!', '#ff8a1f');
         this.shake = Math.max(this.shake, 0.2);
@@ -704,19 +823,17 @@ export class Game {
     const newBest = score > prevBest;
     if (newBest) save.best = score;
     const unlocked = [];
-    for (const v of VEHICLES) {
-      if (score >= v.unlock && !save.unlocked.includes(v.id)) {
-        save.unlocked.push(v.id);
-        unlocked.push(v.name);
-      }
-    }
+    const bank = run.coins * COIN_VALUE + Math.floor(score / 100);
+    save.coins += bank;
+    save.countryBest[save.country] = Math.max(save.countryBest[save.country] || 0, score);
     persist();
     this.state = 'over';
     this.ui.setHudVisible(false);
     this.ui.setBest(save.best);
     this.ui.showGameOver({
-      score, best: save.best, newBest, unlocked, dist: run.dist, tricks: run.tricks, coins: run.coins, seed: this.seed,
+      score, best: save.best, newBest, unlocked, dist: run.dist, tricks: run.tricks, coins: run.coins, seed: this.seed, bank, wallet: save.coins,
     });
+    this.ui.setWallet(save.coins);
     if (newBest || unlocked.length) this.sound.unlockFanfare();
   }
 

@@ -54,7 +54,7 @@ The speed readout (bottom left) switches between km/h and mph when clicked. The 
 - The car drives itself; you steer. The road bends constantly and the bends push you towards the outside, so keep
   correcting. Curves get tighter and more frequent the longer you survive, and speed slowly climbs.
 - **Shoulder** (the tan strip): slows you down. **Guardrail**: scraping it is fine, hitting it head-on is a crash.
-- **Traffic**: Armenian road regulars (Lada Niva, boxy Lada sedans, Volga, old Mercedes, and white Gazelle marshrutka minibuses) cruise the lanes at their own speeds, so you weave through them. Hitting one ends the run, and traffic never lines up three abreast.
+- **Traffic**: cars change lanes on their own, signalling across smoothly when there is room. Armenian road regulars (Lada Niva, boxy Lada sedans, Volga, old Mercedes, and white Gazelle marshrutka minibuses) cruise the lanes at their own speeds, so you weave through them. Hitting one ends the run, and traffic never lines up three abreast.
 - **Obstacles**: cones, barrels and roadblocks end the run, and so does hitting a car. Potholes slow you and bounce the car. Oil slicks make
   steering slippery for a moment. Hopping clears cones and barrels. There is always a passable path.
 - **Ramps** appear on straighter stretches. In the air, steer to spin. Every full rotation is a trick; landing roughly
@@ -65,22 +65,35 @@ The speed readout (bottom left) switches between km/h and mph when clicked. The 
   and their timers are shown in the HUD.
 - Score = distance + coins + tricks, all multiplied by the current multiplier. Your best score is saved.
 
-## Vehicles
+## Vehicles, coins and upgrades
 
-Unlock vehicles by reaching a score in a single run, then pick one in the Garage.
+Collect coins while you drive; each coin is worth 5 in your wallet, and every run also pays a score bonus. Spend them in the Garage:
 
-| Vehicle | Unlock | Character |
+- **Cars**: buy any of 12 vehicles, from the Lada Niva you start with to the Supercar.
+
+| Vehicle | Price | Character |
 | --- | --- | --- |
 | Lada Niva | start | Balanced all-rounder |
-| Pickup Truck | 800 | Slower, sturdy, ignores potholes |
-| Sports Car | 2,500 | Fastest and sharpest steering, but twitchy and easily upset by oil |
-| Motorcycle | 5,000 | Very nimble, tiny hitbox, spins fastest in the air |
-| Monster Truck | 9,000 | Crushes cones and barrels, huge jumps, slow turning |
+| Lada 2107 | 400 | Classic Zhiguli, a bit slow |
+| Pickup Truck | 600 | Slower, sturdy, ignores potholes |
+| Volga GAZ-24 | 900 | Big, heavy, steady |
+| Marshrutka | 1,200 | Huge Gazelle minibus, nearly unbreakable |
+| Mercedes W124 | 1,500 | Stable and quick |
+| Motorcycle | 1,800 | Very nimble, tiny hitbox, spins fastest in the air |
+| Sports Car | 2,500 | Fast with razor steering, twitchy |
+| Rally Hatch | 3,600 | Grippy, hardly notices oil |
+| Muscle Car | 4,200 | All engine, a handful in bends |
+| Monster Truck | 5,000 | Crushes cones and barrels, huge jumps |
+| Supercar | 9,000 | Ridiculous pace and reflexes |
 
-**Paint:** in the Garage, pick any of the preset swatches or any colour you like for the selected vehicle; each vehicle remembers its own paint.
+- **Upgrades** (per vehicle): Engine (top speed, acceleration), Exhaust (longer, stronger nitro and hotter flames), Tires (steering, grip, oil), Brakes (stopping power) and Extra life (each level lets you survive one more crash per run, up to 3).
+- **Paint**: any colour for each vehicle.
 
-Unlocks, the selected vehicle, paint, best score, units and mute are stored in `localStorage` (all access is wrapped in
-`try/catch`, so the game still works when storage is blocked).
+Wallet, owned cars, upgrades, paint and settings are stored in `localStorage` (all access is wrapped in `try/catch`, so the game still works when storage is blocked).
+
+## Destinations
+
+Pick any of **195 countries** (193 UN members plus the Holy See and Palestine) from the Destination button. Each one has its own biome (temperate, Mediterranean, desert, savanna, tropical, alpine, boreal, arctic, steppe or island: sky, haze, ground and vegetation) and many have a landmark on the horizon: Mount Ararat for Armenia, a snow-capped volcano for Japan, pyramids for Egypt, alps for Switzerland, a skyline for the UAE, Uluru for Australia and so on. Your best score is tracked per destination.
 
 ## Project layout
 
@@ -95,7 +108,10 @@ car-rider/
     scenery.js          instanced trees, rocks, bushes, fences, houses
     environment.js      sky, fog, lights, ground, mountains, clouds
     vehicle.js          road-relative vehicle physics, crash/tumble, effects
-    vehicleModels.js    the five vehicles: stats + low-poly models
+    vehicleModels.js    the twelve vehicles: stats + low-poly models
+    armenianCars.js     Niva, Lada, Volga, Mercedes and marshrutka models used by traffic
+    upgrades.js         garage upgrades and how they change handling
+    countries.js        195 destinations, biomes and landmarks
     obstacles.js        obstacles, hazards, ramps + the layout director
     collectibles.js     coins, nitro, mystery boxes
     particles.js        pooled particles and skid marks

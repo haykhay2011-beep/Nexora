@@ -7,12 +7,12 @@ export const ROAD = {
   CHUNK_LEN: 50,         // length of one road chunk mesh
   CHUNKS_AHEAD: 11,      // how many chunks are kept ahead of the player
   CHUNKS_BEHIND: 2,
-  HALF_WIDTH: 5,         // asphalt half width
-  SHOULDER: 7.4,         // outer edge of the shoulder
-  RAIL: 7.7,             // guardrail offset
-  VERGE: 8.8,            // flat grass strip outside the rail
+  HALF_WIDTH: 6,         // asphalt half width (three 4 m lanes)
+  SHOULDER: 8.4,         // outer edge of the shoulder
+  RAIL: 8.7,             // guardrail offset
+  VERGE: 9.8,            // flat grass strip outside the rail
   LANES: 3,
-  LANE_W: 10 / 3,
+  LANE_W: 4,
   GROUND_Y: -0.8,        // height of the flat countryside plane
 };
 

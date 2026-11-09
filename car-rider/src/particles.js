@@ -77,10 +77,11 @@ export class Particles {
     this.spawn(x, y, z, dir.x * 4 + (r() - 0.5) * 5, 1 + r() * 3, dir.z * 4 + (r() - 0.5) * 5, 0.3 + r() * 0.3, 0.14, 0.04, r() < 0.5 ? 0xffd34a : 0xff8a2a, 14, 0.97);
   }
 
-  flame(x, y, z, vx, vy, vz) {
+  flame(x, y, z, vx, vy, vz, tier = 0) {
     const r = Math.random;
     const hot = r() < 0.45;
-    this.spawn(x + (r() - 0.5) * 0.12, y + (r() - 0.5) * 0.12, z + (r() - 0.5) * 0.12, vx + (r() - 0.5) * 1.5, vy + (r() - 0.5) * 1.2, vz + (r() - 0.5) * 1.5, 0.22 + r() * 0.16, hot ? 0.34 : 0.5, 0.05, hot ? 0xfff3a0 : r() < 0.5 ? 0xff8a1f : 0xff4a1a, 0, 0.9);
+    const cols = tier === 2 ? [0xffffff, 0x9ad8ff, 0x3a7bff] : tier === 1 ? [0xfff3a0, 0x7fe3ff, 0x2fb5ff] : [0xfff3a0, 0xff8a1f, 0xff4a1a];
+    this.spawn(x + (r() - 0.5) * 0.12, y + (r() - 0.5) * 0.12, z + (r() - 0.5) * 0.12, vx + (r() - 0.5) * 1.5, vy + (r() - 0.5) * 1.2, vz + (r() - 0.5) * 1.5, 0.22 + r() * 0.16, hot ? 0.34 : 0.5, 0.05, hot ? cols[0] : r() < 0.5 ? cols[1] : cols[2], 0, 0.9);
   }
 
   burst(x, y, z, color, count = 10, speed = 5, size = 0.28) {

@@ -33,15 +33,15 @@ function barrelGeo() {
 
 function roadblockGeo() {
   const b = new PartBuilder();
-  b.box(0.14, 1.2, 0.6, 0x4b4e57, [1.35, 0.6, 0]);
-  b.box(0.14, 1.2, 0.6, 0x4b4e57, [-1.35, 0.6, 0]);
-  for (let i = 0; i < 8; i++) {
+  b.box(0.14, 1.2, 0.6, 0x4b4e57, [1.65, 0.6, 0]);
+  b.box(0.14, 1.2, 0.6, 0x4b4e57, [-1.65, 0.6, 0]);
+  for (let i = 0; i < 9; i++) {
     const col = i % 2 ? 0xe03a2f : 0xffffff;
-    b.box(0.4, 0.34, 0.14, col, [-1.4 + i * 0.4 + 0.2, 1.3, 0]);
-    b.box(0.4, 0.34, 0.14, i % 2 ? 0xffffff : 0xe03a2f, [-1.4 + i * 0.4 + 0.2, 0.85, 0]);
+    b.box(0.4, 0.34, 0.14, col, [-1.8 + i * 0.4 + 0.2, 1.3, 0]);
+    b.box(0.4, 0.34, 0.14, i % 2 ? 0xffffff : 0xe03a2f, [-1.8 + i * 0.4 + 0.2, 0.85, 0]);
   }
-  b.box(0.3, 0.14, 0.2, 0xffc21a, [1.35, 1.27, 0]);
-  b.box(0.3, 0.14, 0.2, 0xffc21a, [-1.35, 1.27, 0]);
+  b.box(0.3, 0.14, 0.2, 0xffc21a, [1.65, 1.27, 0]);
+  b.box(0.3, 0.14, 0.2, 0xffc21a, [-1.65, 1.27, 0]);
   return b.build();
 }
 
@@ -70,7 +70,7 @@ function oilGeo() {
 const TRAFFIC_DENSITY = 12;
 
 const RAMP_L = 11;
-const RAMP_W = 3.6;
+const RAMP_W = 4.2;
 const RAMP_H = 2.5;
 
 function rampGeo() {
@@ -99,7 +99,7 @@ function rampGeo() {
 const TYPES = {
   cone: { geo: coneGeo, count: 40, hl: 0.4, hw: 0.4, h: 0.75, solid: true, crush: true },
   barrel: { geo: barrelGeo, count: 28, hl: 0.5, hw: 0.5, h: 1.05, solid: true, crush: true },
-  roadblock: { geo: roadblockGeo, count: 14, hl: 0.4, hw: 1.5, h: 1.5, solid: true },
+  roadblock: { geo: roadblockGeo, count: 14, hl: 0.4, hw: 1.8, h: 1.5, solid: true },
   pothole: { geo: potholeGeo, count: 20, hl: 1.0, hw: 0.95, h: 0, hazard: true },
   oil: { geo: oilGeo, count: 14, hl: 1.5, hw: 1.4, h: 0, hazard: true },
   ramp: { geo: rampGeo, count: 5, hl: RAMP_L / 2, hw: RAMP_W / 2, h: 0, ramp: true },
@@ -260,7 +260,7 @@ export class Obstacles {
       const lane = lanes.splice(r.int(0, lanes.length - 1), 1)[0];
       // keep clear of other vehicles already in that lane
       let clear = true;
-      for (const o of this.items) if (o.car && !o.dead && o.lane === lane && Math.abs(o.s - s) < 11 + o.hl) clear = false;
+      for (const o of this.items) if (o.car && !o.dead && this._occupies(o, lane) && Math.abs(o.s - s) < 11 + o.hl) clear = false;
       // do not spawn into a spot where the other two lanes are already occupied
       const occ = new Set();
       for (const o of this.items) if (o.solid && !o.dead && Math.abs(o.s - s) < 38) occ.add(o.lane !== undefined ? o.lane : this._laneOf(o.d));
@@ -278,39 +278,106 @@ export class Obstacles {
       const fam = TRAFFIC[family];
       const type = family + r.int(0, fam.variants.length - 1);
       const cruise = r.range(fam.speed[0], fam.speed[1]) * this.trafficScale;
-      this._spawn(type, s + (k ? r.range(-12, 12) : 0), this._laneD(lane), { vs: cruise, cruise, lane });
+      this._spawn(type, s + (k ? r.range(-12, 12) : 0), this._laneD(lane), { vs: cruise, cruise, lane, lane2: undefined, lc: null, lcT: r.range(2, 9) });
     }
   }
 
-  _trafficUpdate(dt) {
+  _occupies(o, l) {
+    if (o.lane !== undefined) return o.lane === l || o.lane2 === l;
+    return this._laneOf(o.d) === l;
+  }
+
+  _shares(a, b) {
+    for (let l = 0; l < 3; l++) if (this._occupies(a, l) && this._occupies(b, l)) return true;
+    return false;
+  }
+
+  // Is it safe for car c to move into lane `tl` right now?
+  _laneChangeOk(c, tl) {
+    const items = this.items;
+    const occ = [false, false, false];
+    for (const o of items) {
+      if (o === c || o.dead || !o.solid) continue;
+      if (this._occupies(o, tl)) {
+        const gap = Math.abs(o.s - c.s) - o.hl - c.hl;
+        const behindFast = o.car && o.s < c.s && o.vs > c.vs;
+        if (gap < (behindFast ? 20 : 11)) return false;
+      }
+      const win = o.car ? 26 : 18;
+      if (Math.abs(o.s - c.s) < win) for (let l = 0; l < 3; l++) if (l !== tl && this._occupies(o, l)) occ[l] = true;
+    }
+    // never leave the other two lanes both occupied right beside the new position
+    if (occ.filter(Boolean).length >= 2) return false;
+    // keep clear of ramps
+    for (const o of items) if (o.ramp && c.s > o.s - 170 && c.s < o.s + 30) return false;
+    return true;
+  }
+
+  _tryLaneChange(c, playerS, urgent) {
+    const r = this.rng;
+    c.lcT = r.range(urgent ? 1.5 : 4, urgent ? 3 : 11);
+    // hold lanes right next to the player so nobody is cut off unfairly
+    if (c.s > playerS - 12 && c.s < playerS + 24) return;
+    const dirs = r.chance(0.5) ? [-1, 1] : [1, -1];
+    for (const dir of dirs) {
+      const tl = c.lane + dir;
+      if (tl < 0 || tl > 2) continue;
+      if (!this._laneChangeOk(c, tl)) continue;
+      c.lane2 = c.lane;
+      c.lane = tl;
+      c.lc = { t: 0, dur: r.range(1.7, 2.4), d0: c.d, d1: this._laneD(tl) };
+      return;
+    }
+  }
+
+  _trafficUpdate(dt, playerS) {
     const items = this.items;
     for (const c of items) {
       if (!c.car || c.dead) continue;
       let target = c.cruise;
+      let blocked = false;
       // follow the vehicle ahead in the same lane
       for (const o of items) {
-        if (o === c || !o.car || o.dead || o.lane !== c.lane || o.s <= c.s) continue;
+        if (o === c || !o.car || o.dead || o.s <= c.s || !this._shares(o, c)) continue;
         const gap = o.s - c.s - o.hl - c.hl;
-        if (gap < 24) target = Math.min(target, Math.max(0, o.vs + (gap - 8) * 0.5));
+        if (gap < 24) {
+          target = Math.min(target, Math.max(0, o.vs + (gap - 8) * 0.5));
+          if (o.vs < c.cruise - 1.5) blocked = true;
+        }
       }
       // never help seal all three lanes: the rearmost car of a cluster drops back
-      let others = 0;
       let rearmost = true;
       const occ = [false, false, false];
       for (const o of items) {
         if (o === c || o.dead || !o.solid) continue;
         const win = o.car ? 32 : 22;
         if (Math.abs(o.s - c.s) > win) continue;
-        const l = o.lane !== undefined ? o.lane : this._laneOf(o.d);
-        if (l === c.lane) continue;
-        occ[l] = true;
+        for (let l = 0; l < 3; l++) if (l !== c.lane && l !== c.lane2 && this._occupies(o, l)) occ[l] = true;
         if (o.car && o.s < c.s) rearmost = false;
       }
-      others = occ.filter(Boolean).length;
-      if (others >= 2 && rearmost) target = Math.min(target, c.vs - 8);
+      if (occ.filter(Boolean).length >= 2 && rearmost) target = Math.min(target, c.vs - 8);
       const dv = target - c.vs;
       c.vs += Math.max(-12 * dt, Math.min(2.5 * dt, dv));
       if (c.vs < 2.5) c.vs = 2.5;
+
+      // lane changes: drift across smoothly, or decide to start one
+      if (c.lc) {
+        const lc = c.lc;
+        lc.t += dt;
+        const u = Math.min(1, lc.t / lc.dur);
+        c.d = lc.d0 + (lc.d1 - lc.d0) * (u * u * (3 - 2 * u));
+        const vd = ((lc.d1 - lc.d0) * 6 * u * (1 - u)) / lc.dur;
+        c.yawJitter = -Math.atan2(vd, Math.max(c.vs, 1));
+        if (u >= 1) {
+          c.lc = null;
+          c.lane2 = undefined;
+          c.yawJitter = 0;
+          c.d = lc.d1;
+        }
+      } else {
+        c.lcT -= dt;
+        if (c.lcT <= 0 || (blocked && c.lcT < 5)) this._tryLaneChange(c, playerS, blocked);
+      }
     }
   }
 
@@ -325,7 +392,7 @@ export class Obstacles {
     // --- ramp
     if (!reserved && !this.noStatic && s > this.nextRampS) {
       // a lane is usable if no traffic could drive into the ramp from behind
-      const free = [0, 1, 2].filter((l) => !this.items.some((o) => o.car && !o.dead && o.lane === l && o.s > s - 200 && o.s < s + 110));
+      const free = [0, 1, 2].filter((l) => !this.items.some((o) => o.car && !o.dead && this._occupies(o, l) && o.s > s - 200 && o.s < s + 110));
       if (free.length && this._straight(s + 8, s + 88)) {
         const lane = free[r.int(0, free.length - 1)];
         this._spawn('ramp', s + 20, this._laneD(lane));
@@ -412,7 +479,7 @@ export class Obstacles {
 
   // ------------------------------------------------------------- per frame
   update(dt, playerS) {
-    this._trafficUpdate(dt);
+    this._trafficUpdate(dt, playerS);
     for (let i = this.items.length - 1; i >= 0; i--) {
       const o = this.items[i];
       if (o.vs && !o.dead) {

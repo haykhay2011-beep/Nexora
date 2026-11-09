@@ -57,7 +57,7 @@ export function sedanGeometry({ color, len = 4.1, w = 1.62, cabinLen = 2.0, cabi
 }
 
 // GAZelle marshrutka minibus.
-export function marshrutkaGeometry(color, stripe) {
+export function marshrutkaGeometry(color, stripe, withWheels = true) {
   const b = new PartBuilder();
   b.box(2.0, 1.45, 4.6, color, [0, 1.35, 0.4]);
   b.box(1.95, 0.9, 1.0, color, [0, 1.05, -2.3]);
@@ -71,7 +71,7 @@ export function marshrutkaGeometry(color, stripe) {
     b.box(0.3, 0.16, 0.06, HEAD, [sx * 0.7, 0.98, -2.82]);
     b.box(0.14, 0.4, 0.06, TAIL, [sx * 0.9, 1.2, 2.71]);
   }
-  addWheels(b, [[0.98, -1.9, 0.4, 0.3], [-0.98, -1.9, 0.4, 0.3], [0.98, 1.5, 0.4, 0.3], [-0.98, 1.5, 0.4, 0.3]]);
+  if (withWheels) addWheels(b, [[0.98, -1.9, 0.4, 0.3], [-0.98, -1.9, 0.4, 0.3], [0.98, 1.5, 0.4, 0.3], [-0.98, 1.5, 0.4, 0.3]]);
   return b.build();
 }
 

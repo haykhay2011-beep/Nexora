@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { PHYS, POWER, ROAD } from './config.js';
 import { flatMaterial, makeBlobShadow } from './models.js';
 import { createVehicleObject, getVehicle } from './vehicleModels.js';
+import { vehicleStats } from './upgrades.js';
 
 const TAU = Math.PI * 2;
 const wrapPi = (a) => a - TAU * Math.floor((a + Math.PI) / TAU);
@@ -47,8 +48,9 @@ export class Vehicle {
     this.reset();
   }
 
-  setDef(def, paint) {
+  setDef(def, paint, levels) {
     this.def = def;
+    this.stats = vehicleStats(def, levels || { engine: 0, exhaust: 0, tires: 0, brakes: 0, life: 0 });
     if (this.obj) {
       this.holder.remove(this.obj.root);
       this.obj.dispose();
@@ -122,31 +124,33 @@ export class Vehicle {
     if (this.invuln > 0) this.invuln -= dt;
 
     // speed
-    let target = env.targetSpeed * D.speedMul;
+    const S = this.stats;
+    let target = env.targetSpeed * S.speedMul;
     this.onShoulder = this.grounded && Math.abs(this.d) + D.hw * 0.4 > ROAD.HALF_WIDTH;
     if (this.onShoulder) target *= PHYS.SHOULDER_SPEED;
     const nitro = env.nitro > 0;
-    if (nitro) target *= 1 + POWER.NITRO_BOOST;
+    if (nitro) target *= 1 + S.nitroBoost;
     // brakes: the harder you hold, the lower the target and the stronger the retardation
     const brake = env.brake || 0;
     this.brake = brake;
-    if (brake > 0) target *= 1 - 0.8 * brake;
-    const acc = D.accel * (nitro ? 2.8 : 1);
+    const brakeEff = Math.min(1, brake * S.brakePower);
+    if (brake > 0) target *= 1 - 0.8 * brakeEff;
+    const acc = S.accel * (nitro ? 2.8 : 1);
     if (this.speed < target) this.speed = Math.min(target, this.speed + acc * dt);
-    else this.speed = Math.max(target, this.speed - (14 + 30 * brake) * dt);
+    else this.speed = Math.max(target, this.speed - (14 + 30 * brakeEff) * dt);
 
     this.steerV += (steer - this.steerV) * (1 - Math.exp(-16 * dt));
 
     // steering (ground) or spinning (air)
     if (this.grounded) {
-      let resp = D.steerResp;
+      let resp = S.steerResp;
       if (this.slip > 0) {
         this.slip -= dt;
         resp *= 0.22;
       }
       const targetYaw = this.steerV * D.yawMax;
       this.yaw += (targetYaw - this.yaw) * (1 - Math.exp(-resp * dt));
-      if (this.slip > 0) this.yaw += Math.sin(this.time * 12) * 0.55 * D.oil * dt;
+      if (this.slip > 0) this.yaw += Math.sin(this.time * 12) * 0.55 * S.oil * dt;
       this.yaw = clamp(this.yaw, -PHYS.MAX_YAW, PHYS.MAX_YAW);
       const want = clamp(Math.abs(this.yaw) / Math.max(0.2, D.yawMax) - 0.55, 0, 1) * 2.2;
       const brakeSkid = brake > 0.55 && this.speed > 9 ? (brake - 0.4) * 1.2 : 0;
@@ -160,8 +164,8 @@ export class Vehicle {
 
     // motion along / across the road
     const k = this.path.curvature(this.s);
-    let lat = this.speed * Math.sin(this.yaw) - k * this.speed * this.speed * PHYS.DRIFT * D.drift * (this.grounded ? 1 : 0.55);
-    if (this.slip > 0) lat += Math.sin(this.time * 7.3) * 2.4 * D.oil;
+    let lat = this.speed * Math.sin(this.yaw) - k * this.speed * this.speed * PHYS.DRIFT * S.drift * (this.grounded ? 1 : 0.55);
+    if (this.slip > 0) lat += Math.sin(this.time * 7.3) * 2.4 * S.oil;
     this.s += this.speed * Math.cos(this.yaw) * dt;
     this.d += lat * dt;
 
@@ -368,7 +372,7 @@ export class Vehicle {
         _v.copy(e);
         root.localToWorld(_v);
         for (let i = 0; i < 2; i++) {
-          fx.flame(_v.x, _v.y, _v.z, -_fwd.x * (6 + this.speed * 0.2), 0.3, -_fwd.z * (6 + this.speed * 0.2));
+          fx.flame(_v.x, _v.y, _v.z, -_fwd.x * (6 + this.speed * 0.2), 0.3, -_fwd.z * (6 + this.speed * 0.2), this.stats.flameTier);
         }
       }
     }

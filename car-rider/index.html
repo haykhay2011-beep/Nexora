@@ -22,6 +22,7 @@
         <div class="hud-left">
           <div class="hud-score"><span class="lbl">SCORE</span><span id="hud-score">0</span></div>
           <div class="hud-dist"><span class="lbl">DISTANCE</span> <span id="hud-dist">0 m</span></div>
+          <div class="hud-coins">🪙 <span id="hud-coins">0</span><span id="hud-lives"></span></div>
           <div id="hud-powers"></div>
         </div>
         <div class="hud-mult" id="hud-mult-wrap">
@@ -41,8 +42,9 @@
         <div class="panel start-panel">
           <h1 class="title"><span>CAR</span> <span class="t2">RIDER</span></h1>
           <p class="tagline">Endless road trip under Mount Ararat (Masis)</p>
+          <p class="dest" id="start-dest"></p>
           <p class="cta">Press Space / Tap to start</p>
-          <p class="best">Best score <b id="start-best">0</b></p>
+          <p class="best">Best score <b id="start-best">0</b> &nbsp;·&nbsp; 🪙 <b id="start-coins">0</b></p>
           <div class="controls">
             <div><kbd>←</kbd><kbd>→</kbd> / <kbd>A</kbd><kbd>D</kbd><span>Steer</span></div>
             <div><kbd>Space</kbd><span>Hop (on the ground)</span></div>
@@ -57,20 +59,44 @@
           <div class="row">
             <button id="btn-start" class="btn primary">Drive</button>
             <button id="btn-garage" class="btn">Garage</button>
+            <button id="btn-dest" class="btn">Destination</button>
           </div>
         </div>
+      </section>
+
+      <!-- destinations -->
+      <section id="screen-countries" class="screen countries">
+        <div class="countries-top">
+          <h2>Destinations</h2>
+          <button id="btn-countries-back" class="btn">Back</button>
+        </div>
+        <div class="countries-tools">
+          <input id="country-search" type="search" placeholder="Search 195 countries" autocomplete="off" aria-label="Search countries" />
+          <div id="country-chips" class="chips"></div>
+        </div>
+        <div id="country-grid" class="country-grid"></div>
       </section>
 
       <!-- garage -->
       <section id="screen-garage" class="screen garage">
         <div class="garage-top">
           <h2>Garage</h2>
+          <div class="wallet" title="Coins">🪙 <b id="wallet">0</b></div>
           <button id="btn-garage-back" class="btn">Back</button>
         </div>
         <div class="garage-bottom">
-        <div class="paint"><span>Paint</span><div id="swatches"></div><label class="custom" title="Pick any colour"><input type="color" id="paint-custom" value="#f1f1ec" aria-label="Custom colour" /><i>Any colour</i></label><button id="paint-reset" class="btn small">Reset</button></div>
-        <div class="garage-cards" id="garage-cards"></div>
-        <p class="garage-hint">← → to browse · Enter / click to select · Unlock vehicles by reaching score goals in a single run</p>
+          <div class="tabs" role="tablist">
+            <button class="tab sel" data-tab="cars" role="tab">Cars</button>
+            <button class="tab" data-tab="upgrades" role="tab">Upgrades</button>
+            <button class="tab" data-tab="paint" role="tab">Paint</button>
+          </div>
+          <div id="garage-msg" class="garage-msg" aria-live="polite"></div>
+          <div id="tab-cars"><div class="garage-cards" id="garage-cards"></div></div>
+          <div id="tab-upgrades" class="hidden"><div class="upgrade-list" id="upgrade-list"></div></div>
+          <div id="tab-paint" class="hidden">
+            <div class="paint"><span>Paint</span><div id="swatches"></div><label class="custom" title="Pick any colour"><input type="color" id="paint-custom" value="#f1f1ec" aria-label="Custom colour" /><i>Any colour</i></label><button id="paint-reset" class="btn small">Reset</button></div>
+          </div>
+          <p class="garage-hint">Earn coins by collecting them while you drive · buy cars, then upgrade engine, exhaust, tires, brakes and lives</p>
         </div>
       </section>
 
@@ -101,6 +127,7 @@
             <div><span class="lbl">TRICKS</span><b id="over-tricks">0</b></div>
             <div><span class="lbl">COINS</span><b id="over-coins">0</b></div>
           </div>
+          <div class="bank" id="over-bank"></div>
           <div id="over-unlocks"></div>
           <div class="row">
             <button id="btn-restart" class="btn primary">Drive again</button>

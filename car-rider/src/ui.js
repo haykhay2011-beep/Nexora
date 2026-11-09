@@ -1,5 +1,7 @@
 // DOM-based UI: HUD, start / garage / pause / game-over screens, toasts.
 import { VEHICLES } from './vehicleModels.js';
+import { UPGRADES, levelsOf, upgradeCost } from './upgrades.js';
+import { BIOMES, CONTINENTS, COUNTRIES, flagOf, getCountry } from './countries.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -19,12 +21,14 @@ export class UI {
       start: $('screen-start'),
       garage: $('screen-garage'),
       pause: $('screen-pause'),
+      countries: $('screen-countries'),
       over: $('screen-over'),
     };
     this.current = null;
     this.hud = $('hud');
     this.el = {
       score: $('hud-score'), dist: $('hud-dist'), speed: $('hud-speed'), unit: $('hud-unit'),
+      coins: $('hud-coins'), lives: $('hud-lives'),
       mult: $('hud-mult'), multWrap: $('hud-mult-wrap'), multRing: $('hud-mult-ring'),
       powers: $('hud-powers'), toasts: $('toasts'), pause: $('btn-pause'), mute: $('btn-mute'),
     };
@@ -34,6 +38,26 @@ export class UI {
 
     $('btn-start').onclick = () => h.start();
     $('btn-garage').onclick = () => h.openGarage();
+    $('btn-dest').onclick = () => h.openCountries();
+    $('btn-countries-back').onclick = () => h.closeCountries();
+    this.cFilter = '';
+    this.cCont = 'All';
+    $('country-search').addEventListener('input', (e) => {
+      this.cFilter = e.target.value.trim().toLowerCase();
+      this.renderCountries();
+    });
+    const chips = $('country-chips');
+    for (const name of ['All', ...CONTINENTS]) {
+      const c = document.createElement('button');
+      c.className = 'chip' + (name === 'All' ? ' sel' : '');
+      c.textContent = name;
+      c.onclick = () => {
+        this.cCont = name;
+        for (const x of chips.children) x.classList.toggle('sel', x === c);
+        this.renderCountries();
+      };
+      chips.appendChild(c);
+    }
     $('btn-garage-back').onclick = () => h.closeGarage();
     $('btn-resume').onclick = () => h.resume();
     $('btn-pause-restart').onclick = () => h.restart();
@@ -42,6 +66,9 @@ export class UI {
     $('btn-over-garage').onclick = () => h.openGarage();
     $('btn-over-menu').onclick = () => h.menu();
     this.el.pause.onclick = () => h.pause();
+    // garage tabs
+    this.garageTab = 'cars';
+    for (const t of document.querySelectorAll('.tab')) t.onclick = () => this.setGarageTab(t.dataset.tab);
     // paint panel
     const swatches = $('swatches');
     for (const hex of ['#f1f1ec', '#1b1b1f', '#b7bcc2', '#e5483c', '#e8691f', '#ffc21a', '#8fd13f', '#3ec26b', '#2fb5a8', '#3ac7f0', '#3b82d6', '#24408e', '#7a4fd1', '#ff6fb5']) {
@@ -160,6 +187,16 @@ export class UI {
       this.el.score.textContent = fmt(score);
       L.score = score;
     }
+    const coins = String(d.coins);
+    if (L.coins !== coins) {
+      this.el.coins.textContent = coins;
+      L.coins = coins;
+    }
+    const hearts = '❤️'.repeat(d.lives || 0);
+    if (L.lives !== hearts) {
+      this.el.lives.textContent = hearts;
+      L.lives = hearts;
+    }
     const dist = d.dist >= 1000 ? (d.dist / 1000).toFixed(2) + ' km' : Math.floor(d.dist) + ' m';
     if (L.dist !== dist) {
       this.el.dist.textContent = dist;
@@ -230,14 +267,64 @@ export class UI {
     setTimeout(() => el.remove(), 1500);
   }
 
+  // ------------------------------------------------------------ destinations
+  setDestination(code) {
+    const c = getCountry(code);
+    this.countryCode = code;
+    $('start-dest').textContent = `📍 ${flagOf(c.code)} ${c.name}`;
+  }
+
+  renderCountries(best) {
+    if (best) this.countryBest = best;
+    const grid = $('country-grid');
+    const q = this.cFilter;
+    const list = COUNTRIES.filter((c) => (this.cCont === 'All' || c.continent === this.cCont) && (!q || c.name.toLowerCase().includes(q) || c.code.toLowerCase() === q));
+    grid.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'count-line';
+    head.textContent = `${list.length} destination${list.length === 1 ? '' : 's'}`;
+    grid.appendChild(head);
+    for (const c of list) {
+      const b = document.createElement('button');
+      b.className = 'country' + (c.code === this.countryCode ? ' sel' : '');
+      const bs = (this.countryBest || {})[c.code];
+      b.innerHTML = `<span class="flag">${flagOf(c.code)}</span><b></b><small><span class="code">${c.code}</span> · ${BIOMES[c.biome].name}${bs ? ' · best ' + fmt(bs) : ''}</small>`;
+      b.querySelector('b').textContent = c.name;
+      b.onclick = () => this.h.pickCountry(c.code);
+      grid.appendChild(b);
+    }
+  }
+
   // ------------------------------------------------------------ garage
+  setGarageTab(tab) {
+    this.garageTab = tab;
+    for (const t of document.querySelectorAll('.tab')) t.classList.toggle('sel', t.dataset.tab === tab);
+    for (const name of ['cars', 'upgrades', 'paint']) $('tab-' + name).classList.toggle('hidden', name !== tab);
+  }
+
+  setWallet(n) {
+    const txt = Math.floor(n).toLocaleString('en-US');
+    $('wallet').textContent = txt;
+    $('start-coins').textContent = txt;
+  }
+
+  garageMsg(text) {
+    const el = $('garage-msg');
+    el.textContent = text;
+    clearTimeout(this._msgT);
+    this._msgT = setTimeout(() => (el.textContent = ''), 2600);
+  }
+
   renderGarage(save, selectedIndexFocus) {
+    this.setWallet(save.coins);
     const wrap = $('garage-cards');
     wrap.innerHTML = '';
     VEHICLES.forEach((v, i) => {
-      const locked = !save.unlocked.includes(v.id);
-      const card = document.createElement('button');
-      card.className = 'card' + (locked ? ' locked' : '') + (save.selected === v.id ? ' sel' : '');
+      const owned = save.unlocked.includes(v.id);
+      const card = document.createElement('div');
+      card.className = 'card' + (owned ? '' : ' locked') + (save.selected === v.id ? ' sel' : '');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
       card.dataset.index = i;
       const bars = Object.entries({ Speed: v.ratings.speed, Handling: v.ratings.handling, Tough: v.ratings.tough, Air: v.ratings.air })
         .map(([k, n]) => `<div class="stat"><label>${k}</label><i><b style="width:${n * 20}%"></b></i></div>`)
@@ -245,11 +332,54 @@ export class UI {
       card.innerHTML = `
         <div class="inner"><h3>${v.name}</h3><p>${v.blurb}</p>${bars}</div>
         ${save.selected === v.id ? '<span class="tag">SELECTED</span>' : ''}
-        ${locked ? `<div class="lockbadge"><span><div>🔒</div>Unlock at<br>${fmt(v.unlock)} pts</span></div>` : ''}`;
-      card.onclick = () => this.h.selectVehicle(v.id, locked);
+        ${owned ? '' : `<span class="price">🪙 ${fmt(v.price)}</span>`}`;
+      if (!owned) {
+        const buy = document.createElement('button');
+        buy.className = 'btn buy' + (save.coins >= v.price ? ' primary' : '');
+        buy.textContent = save.coins >= v.price ? `Buy · ${fmt(v.price)}` : `Need ${fmt(v.price - save.coins)} more`;
+        buy.onclick = (e) => {
+          e.stopPropagation();
+          this.h.buyVehicle(v.id);
+        };
+        card.appendChild(buy);
+      }
+      const choose = () => this.h.selectVehicle(v.id, !owned);
+      card.onclick = choose;
+      card.onkeydown = (e) => {
+        if (e.key === 'Enter') choose();
+      };
       wrap.appendChild(card);
       if (selectedIndexFocus === i) setTimeout(() => card.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }), 30);
     });
+    this.renderUpgrades(save);
+  }
+
+  renderUpgrades(save) {
+    const list = $('upgrade-list');
+    list.innerHTML = '';
+    const veh = VEHICLES.find((v) => v.id === save.selected) || VEHICLES[0];
+    const lv = levelsOf(save, veh.id);
+    const head = document.createElement('div');
+    head.className = 'garage-msg';
+    head.style.gridColumn = '1 / -1';
+    head.textContent = `Tuning: ${veh.name}`;
+    list.appendChild(head);
+    for (const up of UPGRADES) {
+      const level = lv[up.id];
+      const maxed = level >= up.max;
+      const cost = upgradeCost(up, level);
+      const row = document.createElement('div');
+      row.className = 'upg';
+      const pips = Array.from({ length: up.max }, (_, i) => `<i class="${i < level ? 'on' : ''}"></i>`).join('');
+      row.innerHTML = `<div class="ico">${up.icon}</div><div class="txt"><b>${up.name} · Lv ${level}/${up.max}</b><small>${up.desc}</small><div class="pips">${pips}</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn' + (!maxed && save.coins >= cost ? ' primary' : '');
+      btn.textContent = maxed ? 'MAX' : `🪙 ${fmt(cost)}`;
+      btn.disabled = maxed || save.coins < cost;
+      btn.onclick = () => this.h.buyUpgrade(up.id);
+      row.appendChild(btn);
+      list.appendChild(row);
+    }
   }
 
   // ------------------------------------------------------------ game over
@@ -261,6 +391,7 @@ export class UI {
     $('over-coins').textContent = info.coins;
     $('over-new').classList.toggle('hidden', !info.newBest);
     $('over-seed').textContent = 'Seed ' + info.seed;
+    $('over-bank').textContent = `+${fmt(info.bank)} coins banked · wallet ${fmt(info.wallet)}`;
     const u = $('over-unlocks');
     u.innerHTML = '';
     for (const name of info.unlocked) {
