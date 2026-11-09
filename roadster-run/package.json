@@ -1,0 +1,20 @@
+{
+  "name": "roadster-run",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Roadster Run - an endless low-poly electric sports car driving game for the browser (Three.js + Vite).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --mode singlefile",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^7.3.7",
+    "vite-plugin-singlefile": "^2.3.4"
+  }
+}
