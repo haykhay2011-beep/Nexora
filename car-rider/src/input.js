@@ -47,7 +47,7 @@ export class Input {
       if (e.repeat) return;
       this.keys.add(k);
       if (k === 'Space' || k === 'ArrowUp' || k === 'KeyW') this.hopBuffer = 0.14;
-      if (k === 'KeyB') this.brakeLevel = Math.min(1, this.brakeLevel + 0.22); // every press adds braking
+      if (k === 'KeyB' || k === 'ArrowDown') this.brakeLevel = Math.min(1, this.brakeLevel + 0.22); // every press adds braking
       if (k === 'KeyP' || k === 'Escape') this.onPause && this.onPause();
       this.onMenuKey && this.onMenuKey(k);
     } else {
@@ -121,7 +121,7 @@ export class Input {
       this.hopBuffer -= dt;
     }
     // holding builds braking up, letting go eases it off; extra taps stack on top
-    const held = k.has('KeyB') || this.brakeTouch;
+    const held = k.has('KeyB') || k.has('ArrowDown') || this.brakeTouch;
     if (held) this.brakeLevel = Math.min(1, this.brakeLevel + 1.7 * dt);
     else this.brakeLevel = Math.max(0, this.brakeLevel - 2.4 * dt);
     return { steer: (r ? 1 : 0) - (l ? 1 : 0), hop, brake: this.brakeLevel };

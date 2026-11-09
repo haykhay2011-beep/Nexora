@@ -37,7 +37,7 @@ Regenerate it with `npm run build:single`.
 | --- | --- | --- |
 | Steer | `←` / `→` or `A` / `D` | Hold (or tap) the left / right half of the screen |
 | Hop (ground only) | `Space` | Swipe up |
-| Brake | Hold `B` (each extra tap brakes harder) | Hold the BRAKE button (bottom right) |
+| Brake | Hold `↓` or `B` (each extra tap brakes harder) | Hold the BRAKE button (bottom right) |
 | Spin in the air | `←` / `→` or `A` / `D` while airborne | Hold left / right half while airborne |
 | Pause / resume | `Esc` or `P` | Pause button (top right) |
 | Start / restart | `Space` or `Enter` | Tap |
