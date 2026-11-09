@@ -269,7 +269,8 @@ export class Obstacles {
     const r = this.rng;
     const diff = this.diff;
     // eases from 1.5x to the full density over the first ~40 s of a run
-    const density = Math.min(this.trafficDensity, 1.5 + this.t / 12);
+    const d = this.trafficDensity;
+    const density = d <= 1.5 ? d : Math.min(d, 1.5 + ((d - 1.5) * this.t) / 40);
     if (this.trafficDensity <= 0) {
       this.trafficNextS = s + 100;
       return;
@@ -286,7 +287,7 @@ export class Obstacles {
       for (const o of this.items) if (o.car && !o.dead && o.lane === lane && Math.abs(o.s - s) < 16 + o.hl) clear = false;
       // do not spawn into a spot where the other two lanes are already occupied
       const occ = new Set();
-      for (const o of this.items) if (o.solid && !o.dead && Math.abs(o.s - s) < 26) occ.add(o.lane !== undefined ? o.lane : this._laneOf(o.d));
+      for (const o of this.items) if (o.solid && !o.dead && Math.abs(o.s - s) < 38) occ.add(o.lane !== undefined ? o.lane : this._laneOf(o.d));
       occ.delete(lane);
       if (!clear || occ.size >= 2) continue;
       const truck = r.chance(0.18);
@@ -313,7 +314,7 @@ export class Obstacles {
       const occ = [false, false, false];
       for (const o of items) {
         if (o === c || o.dead || !o.solid) continue;
-        const win = o.car ? 22 : 18;
+        const win = o.car ? 32 : 22;
         if (Math.abs(o.s - c.s) > win) continue;
         const l = o.lane !== undefined ? o.lane : this._laneOf(o.d);
         if (l === c.lane) continue;

@@ -42,7 +42,7 @@ Regenerate it with `npm run build:single`.
 | Start / restart | `Space` or `Enter` | Tap |
 | Garage | Garage button, then `←` / `→` to browse | Tap a card |
 
-**Car speed** (60%–150%) is a slider on the start and pause screens; it scales your speed and the traffic's, and is saved. The **Traffic** slider (Off to 5x, default 5x) sets how busy the road is; traffic eases in over the first ~40 seconds of a run.
+**Car speed** (60%–150%) is a slider on the start and pause screens; it scales your speed and the traffic's, and is saved. The **Traffic** slider (Off to 25x, default 5x) sets how busy the road is; traffic eases in over the first ~40 seconds of a run.
 
 The speed readout (bottom left) switches between km/h and mph when clicked. The speaker button mutes all sound.
 

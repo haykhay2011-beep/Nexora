@@ -337,7 +337,7 @@ export class Game {
 
   trafficSetting() {
     const t = Number(save.traffic);
-    return t >= 0 && t <= 5 ? t : 5;
+    return t >= 0 && t <= 25 ? t : 5;
   }
 
   speedMul() {
