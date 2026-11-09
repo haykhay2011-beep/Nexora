@@ -70,12 +70,19 @@ export class Game {
         persist();
         this.ui.setSpeedSetting(pct);
       },
+      setTraffic: (v) => {
+        save.traffic = v;
+        persist();
+        this.ui.setTrafficSetting(v);
+        this.obstacles.trafficDensity = v;
+      },
       selectVehicle: (id, locked) => this.selectVehicle(id, locked),
       click: () => this.sound.click(),
     });
     this.ui.setMuteIcon(this.sound.muted);
     this.ui.setUnits(save.units);
     this.ui.setSpeedSetting(Math.round(this.speedMul() * 100));
+    this.ui.setTrafficSetting(this.trafficSetting());
     this.ui.setBest(save.best);
     if (this.mobile) this.ui.setTouchMode(true);
 
@@ -181,6 +188,7 @@ export class Game {
     this.run = this.newRun();
     this.vehicle.speed = PHYS.START_SPEED * 0.8 * this.vehicle.def.speedMul * this.speedMul();
     this.obstacles.trafficScale = Math.min(1, this.speedMul());
+    this.obstacles.trafficDensity = this.trafficSetting();
     this.shake = 0;
     this.state = 'playing';
     this.input.setEnabled(true);
@@ -326,6 +334,11 @@ export class Game {
   }
 
   groundAt = (s, d) => this.obstacles.groundAt(s, d);
+
+  trafficSetting() {
+    const t = Number(save.traffic);
+    return t >= 0 && t <= 5 ? t : 5;
+  }
 
   speedMul() {
     const m = Number(save.speedMul);

@@ -181,6 +181,7 @@ export class Obstacles {
     this.nextNitroS = startS + 520;
     this.nextBoxS = startS + 300;
     this.trafficNextS = startS + 120;
+    this.trafficDensity = TRAFFIC_DENSITY;
     this.trafficScale = 1; // set by the game from the car-speed setting
     this.reserveEnd = -1;
   }
@@ -268,7 +269,11 @@ export class Obstacles {
     const r = this.rng;
     const diff = this.diff;
     // eases from 1.5x to the full density over the first ~40 s of a run
-    const density = Math.min(TRAFFIC_DENSITY, 1.5 + this.t / 12);
+    const density = Math.min(this.trafficDensity, 1.5 + this.t / 12);
+    if (this.trafficDensity <= 0) {
+      this.trafficNextS = s + 100;
+      return;
+    }
     const gap = ((95 - 50 * diff) / density) * r.range(0.75, 1.35);
     this.trafficNextS = s + gap;
     if (s < this.reserveEnd + 5) return;

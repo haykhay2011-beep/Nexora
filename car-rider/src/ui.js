@@ -42,6 +42,11 @@ export class UI {
     $('btn-over-garage').onclick = () => h.openGarage();
     $('btn-over-menu').onclick = () => h.menu();
     this.el.pause.onclick = () => h.pause();
+    for (const id of ['traffic-start', 'traffic-pause']) {
+      const el = $(id);
+      el.addEventListener('input', () => h.setTraffic(Number(el.value)));
+      el.addEventListener('change', () => el.blur());
+    }
     for (const id of ['speed-start', 'speed-pause']) {
       const el = $(id);
       el.addEventListener('input', () => h.setSpeed(Number(el.value)));
@@ -80,6 +85,12 @@ export class UI {
   setUnits(u) {
     this.units = u;
     this.el.unit.textContent = u === 'mph' ? 'mph' : 'km/h';
+  }
+
+  setTrafficSetting(v) {
+    const label = v === 0 ? 'Off' : v + 'x';
+    for (const id of ['traffic-start', 'traffic-pause']) $(id).value = v;
+    for (const id of ['traffic-start-val', 'traffic-pause-val']) $(id).textContent = label;
   }
 
   setSpeedSetting(pct) {
