@@ -12,6 +12,8 @@ export class Input {
     this.pulseR = 0;
     this.hopQueued = false;
     this.hopBuffer = 0;
+    this.brakeLevel = 0;
+    this.brakeTouch = false;
     this.pointers = new Map();
     this.onPause = null;
     this.onAnyKey = null;
@@ -23,6 +25,7 @@ export class Input {
     window.addEventListener('keyup', (e) => this._key(e, false));
     window.addEventListener('blur', () => {
       this.keys.clear();
+      this.brakeTouch = false;
       this._releaseAll();
     });
 
@@ -37,13 +40,14 @@ export class Input {
   _key(e, down) {
     const k = e.code;
     if (e.target && e.target.tagName === 'INPUT') return;
-    const handled = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyA', 'KeyD', 'KeyP', 'Escape', 'Enter'].includes(k);
+    const handled = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyA', 'KeyD', 'KeyP', 'KeyB', 'Escape', 'Enter'].includes(k);
     if (handled && e.target && e.target.tagName === 'BUTTON' && (k === 'Space' || k === 'Enter')) return;
     if (handled) e.preventDefault();
     if (down) {
       if (e.repeat) return;
       this.keys.add(k);
       if (k === 'Space' || k === 'ArrowUp' || k === 'KeyW') this.hopBuffer = 0.14;
+      if (k === 'KeyB') this.brakeLevel = Math.min(1, this.brakeLevel + 0.22); // every press adds braking
       if (k === 'KeyP' || k === 'Escape') this.onPause && this.onPause();
       this.onMenuKey && this.onMenuKey(k);
     } else {
@@ -97,7 +101,11 @@ export class Input {
 
   setEnabled(v) {
     this.enabled = v;
-    if (!v) this._releaseAll();
+    if (!v) {
+      this._releaseAll();
+      this.brakeLevel = 0;
+      this.brakeTouch = false;
+    }
   }
 
   // returns { steer, hop }
@@ -112,7 +120,15 @@ export class Input {
       hop = true;
       this.hopBuffer -= dt;
     }
-    return { steer: (r ? 1 : 0) - (l ? 1 : 0), hop };
+    // holding builds braking up, letting go eases it off; extra taps stack on top
+    const held = k.has('KeyB') || this.brakeTouch;
+    if (held) this.brakeLevel = Math.min(1, this.brakeLevel + 1.7 * dt);
+    else this.brakeLevel = Math.max(0, this.brakeLevel - 2.4 * dt);
+    return { steer: (r ? 1 : 0) - (l ? 1 : 0), hop, brake: this.brakeLevel };
+  }
+
+  setBrakeTouch(on) {
+    this.brakeTouch = on;
   }
 
   consumeHop() {

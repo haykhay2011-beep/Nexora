@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { PartBuilder, wheelGeometry } from './models.js';
 import { nivaGeometry } from './armenianCars.js';
 
+// body panels use this marker colour; it is swapped for the player's paint at runtime
+const PAINT = 0xff00ff;
 const GLASS = 0x34465a;
 const DARK = 0x2a2c33;
 
@@ -15,7 +17,7 @@ function buildCompact() {
   // Lada Niva: the legendary Soviet 4x4
   const R = 0.37;
   return {
-    body: nivaGeometry(0xe8691f, false),
+    body: nivaGeometry(PAINT, false),
     wheels: [wheelSpec(0.86, -1.15, R, 0.28, true), wheelSpec(-0.86, -1.15, R, 0.28, true), wheelSpec(0.86, 1.15, R, 0.28), wheelSpec(-0.86, 1.15, R, 0.28)],
     exhaust: [[0.5, 0.34, 1.92]],
     height: 1.85,
@@ -25,7 +27,7 @@ function buildCompact() {
 
 function buildPickup() {
   const b = new PartBuilder();
-  const c = 0x3b82d6;
+  const c = PAINT;
   b.box(1.95, 0.5, 4.4, c, [0, 0.78, 0]);
   b.taper(1.85, 0.75, 1.75, c, [0, 1.4, -0.55], [0, 0, 0], 0.82, 0.78);
   b.taper(1.88, 0.5, 1.8, GLASS, [0, 1.45, -0.55], [0, 0, 0], 0.82, 0.76);
@@ -52,7 +54,7 @@ function buildPickup() {
 
 function buildSports() {
   const b = new PartBuilder();
-  const c = 0xffc21a;
+  const c = PAINT;
   b.box(1.85, 0.38, 4.1, c, [0, 0.5, 0]);
   b.taper(1.85, 0.3, 1.5, c, [0, 0.79, -1.2], [0, 0, 0], 0.8, 0.5);
   b.taper(1.5, 0.42, 1.6, GLASS, [0, 0.93, 0.4], [0, 0, 0], 0.72, 0.62);
@@ -76,7 +78,7 @@ function buildSports() {
 
 function buildMoto() {
   const b = new PartBuilder();
-  const c = 0xe8501a;
+  const c = PAINT;
   b.box(0.26, 0.3, 1.5, 0x2a2c33, [0, 0.78, 0.1]);
   b.box(0.38, 0.3, 0.7, c, [0, 1.08, -0.25]);
   b.box(0.32, 0.1, 0.7, DARK, [0, 1.0, 0.5]);
@@ -105,7 +107,7 @@ function buildMoto() {
 
 function buildMonster() {
   const b = new PartBuilder();
-  const c = 0x3ec26b;
+  const c = PAINT;
   b.box(1.9, 0.7, 3.6, c, [0, 1.85, 0]);
   b.taper(1.8, 0.8, 1.8, c, [0, 2.6, 0.2], [0, 0, 0], 0.82, 0.76);
   b.taper(1.84, 0.5, 1.84, GLASS, [0, 2.65, 0.2], [0, 0, 0], 0.82, 0.76);
@@ -139,35 +141,35 @@ function buildMonster() {
 // spin: air spin rate (rad/s)            hop/ramp: jump multipliers
 export const VEHICLES = [
   {
-    id: 'compact', name: 'Lada Niva', unlock: 0, build: buildCompact,
+    id: 'compact', paint: '#f1f1ec', name: 'Lada Niva', unlock: 0, build: buildCompact,
     blurb: 'The legendary 4x4. Balanced and friendly.',
     speedMul: 1, accel: 11, yawMax: 0.42, steerResp: 9, drift: 1, oil: 1, hw: 0.9, hl: 1.85,
     spin: 7.5, hop: 1, ramp: 1, lean: 1, sturdy: false, crusher: false,
     ratings: { speed: 3, handling: 3, tough: 3, air: 3 },
   },
   {
-    id: 'pickup', name: 'Pickup Truck', unlock: 800, build: buildPickup,
+    id: 'pickup', paint: '#3b82d6', name: 'Pickup Truck', unlock: 800, build: buildPickup,
     blurb: 'Slower but sturdy. Shrugs off potholes.',
     speedMul: 0.9, accel: 9, yawMax: 0.38, steerResp: 7, drift: 0.85, oil: 0.9, hw: 1.0, hl: 2.2,
     spin: 6.6, hop: 0.9, ramp: 0.95, lean: 0.7, sturdy: true, crusher: false,
     ratings: { speed: 2, handling: 2, tough: 5, air: 2 },
   },
   {
-    id: 'sports', name: 'Sports Car', unlock: 2500, build: buildSports,
+    id: 'sports', paint: '#ffc21a', name: 'Sports Car', unlock: 2500, build: buildSports,
     blurb: 'Blisteringly fast with razor steering. Twitchy!',
     speedMul: 1.14, accel: 15, yawMax: 0.52, steerResp: 15, drift: 1.55, oil: 1.7, hw: 0.9, hl: 2.0,
     spin: 8.2, hop: 0.95, ramp: 1, lean: 1.3, sturdy: false, crusher: false,
     ratings: { speed: 5, handling: 4, tough: 2, air: 3 },
   },
   {
-    id: 'moto', name: 'Motorcycle', unlock: 5000, build: buildMoto,
+    id: 'moto', paint: '#e8501a', name: 'Motorcycle', unlock: 5000, build: buildMoto,
     blurb: 'Super nimble, tiny hitbox, spins like a top.',
     speedMul: 1.04, accel: 14, yawMax: 0.5, steerResp: 12, drift: 1.1, oil: 1.3, hw: 0.4, hl: 1.1,
     spin: 11.5, hop: 1.05, ramp: 1, lean: -2.6, sturdy: false, crusher: false,
     ratings: { speed: 4, handling: 5, tough: 1, air: 5 },
   },
   {
-    id: 'monster', name: 'Monster Truck', unlock: 9000, build: buildMonster,
+    id: 'monster', paint: '#3ec26b', name: 'Monster Truck', unlock: 9000, build: buildMonster,
     blurb: 'Crushes cones and barrels. Huge air, wide turns.',
     speedMul: 0.95, accel: 9, yawMax: 0.32, steerResp: 5, drift: 0.8, oil: 0.8, hw: 1.3, hl: 2.2,
     spin: 5.6, hop: 1.25, ramp: 1.35, lean: 0.5, sturdy: true, crusher: true,
@@ -206,15 +208,45 @@ export function createVehicleObject(def, material) {
     pivot.add(holder);
     wheels.push({ holder, mesh, front: w.front, r: w.r });
   }
+  // paint: recolour every vertex that carries the marker colour
+  const colorAttr = spec.body.attributes.color;
+  const paintIdx = [];
+  for (let i = 0; i < colorAttr.count; i++) {
+    if (colorAttr.getX(i) > 0.98 && colorAttr.getY(i) < 0.02 && colorAttr.getZ(i) > 0.98) paintIdx.push(i);
+  }
+  const setPaint = (hex) => {
+    const c = new THREE.Color(hex);
+    for (const i of paintIdx) colorAttr.setXYZ(i, c.r, c.g, c.b);
+    colorAttr.needsUpdate = true;
+  };
+
+  // brake lights: glowing red bars at the rear, lit while braking
+  const brakeMat = new THREE.MeshBasicMaterial({ color: 0xff2a1a });
+  const brakeLights = new THREE.Group();
+  const moto = def.id === 'moto';
+  for (const sx of moto ? [0] : [-1, 1]) {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(moto ? 0.2 : 0.42, 0.16, 0.06), brakeMat);
+    bar.position.set(sx * def.hw * 0.62, spec.height * (moto ? 0.5 : 0.42), spec.length / 2 + 0.05);
+    brakeLights.add(bar);
+  }
+  brakeLights.visible = false;
+  pivot.add(brakeLights);
+
   return {
     root,
     pivot,
+    setPaint,
+    setBrake(level) {
+      brakeLights.visible = level > 0.08;
+      brakeLights.scale.setScalar(0.85 + level * 0.45);
+    },
     wheels,
     exhaust: spec.exhaust.map((e) => new THREE.Vector3(e[0], e[1], e[2])),
     height: spec.height,
     length: spec.length,
     dispose() {
       spec.body.dispose();
+      brakeMat.dispose();
       for (const g of geoCache.values()) g.dispose();
     },
   };

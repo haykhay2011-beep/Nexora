@@ -134,3 +134,19 @@ body.touch .touch-only { display: flex !important; }
 .speedctl.hesi { justify-content: flex-start; cursor: pointer; }
 .speedctl.hesi input { flex: none; width: 24px; height: 24px; }
 .speedctl.hesi em { font-style: normal; font-weight: 600; font-size: 12px; opacity: 0.85; margin-left: auto; text-align: right; }
+
+/* paint panel */
+.garage-bottom { display: flex; flex-direction: column; gap: 10px; min-width: 0; max-width: 100%; }
+.paint { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; background: var(--panel); border: 2px solid rgba(255,255,255,0.5); border-radius: 16px; padding: 8px 12px; align-self: center; font-weight: 800; }
+#swatches { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.swatch { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; cursor: pointer; padding: 0; box-shadow: 0 2px 0 rgba(0,0,0,0.35); }
+.swatch:active { transform: scale(0.9); }
+.paint .custom { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.paint .custom i { font-style: normal; font-size: 12px; opacity: 0.9; }
+.paint input[type=color] { width: 38px; height: 30px; border: 3px solid #fff; border-radius: 10px; padding: 0; background: none; cursor: pointer; }
+.btn.small { font-size: 13px; padding: 6px 12px; min-height: 0; border-width: 2px; }
+
+/* brake button (touch devices) */
+.brake-btn { display: none; position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); width: 86px; height: 86px; border-radius: 50%; border: 4px solid #fff; background: rgba(229,72,60,0.88); color: #fff; font: 900 15px var(--font); letter-spacing: 0.04em; pointer-events: auto; touch-action: none; box-shadow: 0 5px 0 rgba(0,0,0,0.3); }
+.brake-btn.down { transform: scale(0.94); background: #ff2a1a; }
+body.touch .brake-btn { display: grid; place-items: center; }

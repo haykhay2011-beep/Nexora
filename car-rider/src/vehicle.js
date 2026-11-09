@@ -47,13 +47,14 @@ export class Vehicle {
     this.reset();
   }
 
-  setDef(def) {
+  setDef(def, paint) {
     this.def = def;
     if (this.obj) {
       this.holder.remove(this.obj.root);
       this.obj.dispose();
     }
     this.obj = createVehicleObject(def, flatMaterial);
+    this.obj.setPaint(paint || def.paint);
     this.holder.add(this.obj.root);
     this.obj.root.add(this.bubble);
     const r = Math.max(def.hl * 0.95, this.obj.height * 0.7);
@@ -62,6 +63,10 @@ export class Vehicle {
     this.shadow.scale.set(Math.max(def.hw * 1.2, 0.9), 1, def.hl / 1.9);
     this.hw = def.hw * 0.9;
     this.hl = def.hl * 0.9;
+  }
+
+  setPaint(hex) {
+    this.obj.setPaint(hex);
   }
 
   reset(s = 0, d = 0) {
@@ -88,6 +93,7 @@ export class Vehicle {
     this.slip = 0;
     this.skid = 0;
     this.steerV = 0;
+    this.brake = 0;
     this.onShoulder = false;
     this.scraping = false;
     this.invuln = 0;
@@ -121,9 +127,13 @@ export class Vehicle {
     if (this.onShoulder) target *= PHYS.SHOULDER_SPEED;
     const nitro = env.nitro > 0;
     if (nitro) target *= 1 + POWER.NITRO_BOOST;
+    // brakes: the harder you hold, the lower the target and the stronger the retardation
+    const brake = env.brake || 0;
+    this.brake = brake;
+    if (brake > 0) target *= 1 - 0.8 * brake;
     const acc = D.accel * (nitro ? 2.8 : 1);
     if (this.speed < target) this.speed = Math.min(target, this.speed + acc * dt);
-    else this.speed = Math.max(target, this.speed - 14 * dt);
+    else this.speed = Math.max(target, this.speed - (14 + 30 * brake) * dt);
 
     this.steerV += (steer - this.steerV) * (1 - Math.exp(-16 * dt));
 
@@ -139,7 +149,8 @@ export class Vehicle {
       if (this.slip > 0) this.yaw += Math.sin(this.time * 12) * 0.55 * D.oil * dt;
       this.yaw = clamp(this.yaw, -PHYS.MAX_YAW, PHYS.MAX_YAW);
       const want = clamp(Math.abs(this.yaw) / Math.max(0.2, D.yawMax) - 0.55, 0, 1) * 2.2;
-      this.skid += ((this.slip > 0 ? 1 : Math.min(1, want)) - this.skid) * (1 - Math.exp(-14 * dt));
+      const brakeSkid = brake > 0.55 && this.speed > 9 ? (brake - 0.4) * 1.2 : 0;
+      this.skid += ((this.slip > 0 ? 1 : Math.min(1, Math.max(want, brakeSkid))) - this.skid) * (1 - Math.exp(-14 * dt));
     } else {
       this.spinVel += (steer * D.spin - this.spinVel) * (1 - Math.exp((steer !== 0 ? -9 : -12) * dt));
       this.spin += this.spinVel * dt;
@@ -312,6 +323,7 @@ export class Vehicle {
       this.lean + (crashed ? this.tumble : 0)
     );
     const steerAng = -this.steerV * 0.45;
+    this.obj.setBrake(this.alive ? this.brake : 0);
     for (const w of this.obj.wheels) {
       w.mesh.rotation.x = -this.wheelRot / w.r;
       if (w.front) w.holder.rotation.y = steerAng;

@@ -37,6 +37,7 @@ Regenerate it with `npm run build:single`.
 | --- | --- | --- |
 | Steer | `←` / `→` or `A` / `D` | Hold (or tap) the left / right half of the screen |
 | Hop (ground only) | `Space` | Swipe up |
+| Brake | Hold `B` (each extra tap brakes harder) | Hold the BRAKE button (bottom right) |
 | Spin in the air | `←` / `→` or `A` / `D` while airborne | Hold left / right half while airborne |
 | Pause / resume | `Esc` or `P` | Pause button (top right) |
 | Start / restart | `Space` or `Enter` | Tap |
@@ -76,7 +77,9 @@ Unlock vehicles by reaching a score in a single run, then pick one in the Garage
 | Motorcycle | 5,000 | Very nimble, tiny hitbox, spins fastest in the air |
 | Monster Truck | 9,000 | Crushes cones and barrels, huge jumps, slow turning |
 
-Unlocks, the selected vehicle, best score, units and mute are stored in `localStorage` (all access is wrapped in
+**Paint:** in the Garage, pick any of the preset swatches or any colour you like for the selected vehicle; each vehicle remembers its own paint.
+
+Unlocks, the selected vehicle, paint, best score, units and mute are stored in `localStorage` (all access is wrapped in
 `try/catch`, so the game still works when storage is blocked).
 
 ## Project layout

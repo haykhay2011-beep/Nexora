@@ -42,6 +42,28 @@ export class UI {
     $('btn-over-garage').onclick = () => h.openGarage();
     $('btn-over-menu').onclick = () => h.menu();
     this.el.pause.onclick = () => h.pause();
+    // paint panel
+    const swatches = $('swatches');
+    for (const hex of ['#f1f1ec', '#1b1b1f', '#b7bcc2', '#e5483c', '#e8691f', '#ffc21a', '#8fd13f', '#3ec26b', '#2fb5a8', '#3ac7f0', '#3b82d6', '#24408e', '#7a4fd1', '#ff6fb5']) {
+      const b = document.createElement('button');
+      b.className = 'swatch';
+      b.style.background = hex;
+      b.title = hex;
+      b.setAttribute('aria-label', 'Paint ' + hex);
+      b.onclick = () => h.setPaint(hex);
+      swatches.appendChild(b);
+    }
+    $('paint-custom').addEventListener('input', (e) => h.setPaint(e.target.value));
+    $('paint-reset').onclick = () => h.resetPaint();
+    // touch brake button
+    const brake = $('btn-brake');
+    const press = (on) => (e) => {
+      e.preventDefault();
+      brake.classList.toggle('down', on);
+      h.brake(on);
+    };
+    brake.addEventListener('pointerdown', press(true));
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) brake.addEventListener(ev, press(false));
     for (const id of ['hesi-start', 'hesi-pause']) {
       const el = $(id);
       el.addEventListener('change', () => {
@@ -107,6 +129,10 @@ export class UI {
   setSpeedSetting(pct) {
     for (const id of ['speed-start', 'speed-pause']) $(id).value = pct;
     for (const id of ['speed-start-val', 'speed-pause-val']) $(id).textContent = pct + '%';
+  }
+
+  setPaintValue(hex) {
+    $('paint-custom').value = hex;
   }
 
   setBest(best) {

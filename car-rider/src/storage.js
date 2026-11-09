@@ -11,6 +11,7 @@ const DEFAULTS = {
   speedMul: 1,
   traffic: 12,
   noHesi: false,
+  colors: {},
 };
 
 function read() {
@@ -22,6 +23,7 @@ function read() {
       ...DEFAULTS,
       ...data,
       unlocked: Array.isArray(data.unlocked) ? data.unlocked : [...DEFAULTS.unlocked],
+      colors: data.colors && typeof data.colors === 'object' ? data.colors : {},
     };
   } catch {
     return { ...DEFAULTS };

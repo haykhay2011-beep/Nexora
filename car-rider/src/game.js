@@ -86,6 +86,20 @@ export class Game {
         this.syncSettings();
         this.obstacles.noStatic = on;
       },
+      setPaint: (hex) => {
+        save.colors[save.selected] = hex;
+        persist();
+        this.vehicle.setPaint(hex);
+        this.ui.setPaintValue(hex);
+      },
+      resetPaint: () => {
+        delete save.colors[save.selected];
+        persist();
+        const hex = this.paintFor(save.selected);
+        this.vehicle.setPaint(hex);
+        this.ui.setPaintValue(hex);
+      },
+      brake: (on) => this.input.setBrakeTouch(on),
       selectVehicle: (id, locked) => this.selectVehicle(id, locked),
       click: () => this.sound.click(),
     });
@@ -97,7 +111,7 @@ export class Game {
 
     this.vehicle.hooks.emit = (name, data) => this.onVehicleEvent(name, data);
     this.vehicle.hooks.beforeCrash = (reason) => this.absorbCrash(reason);
-    this.vehicle.setDef(getVehicle(save.selected));
+    this.vehicle.setDef(getVehicle(save.selected), this.paintFor(save.selected));
 
     this.state = 'menu';
     this.time = 0;
@@ -259,6 +273,7 @@ export class Game {
     this.state = 'garage';
     this.ui.show('garage');
     this.ui.renderGarage(save, VEHICLES.findIndex((v) => v.id === save.selected));
+    this.ui.setPaintValue(this.paintFor(save.selected));
     this.vehicle.speed = 0;
   }
 
@@ -288,8 +303,9 @@ export class Game {
     }
     save.selected = id;
     persist();
-    this.vehicle.setDef(getVehicle(id));
+    this.vehicle.setDef(getVehicle(id), this.paintFor(id));
     this.ui.renderGarage(save, VEHICLES.findIndex((v) => v.id === id));
+    this.ui.setPaintValue(this.paintFor(id));
     this.sound.powerup();
   }
 
@@ -352,6 +368,11 @@ export class Game {
     this.ui.setNoHesi(!!save.noHesi);
   }
 
+  paintFor(id) {
+    const c = save.colors[id];
+    return typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c) ? c : getVehicle(id).paint;
+  }
+
   trafficSetting() {
     const t = Number(save.traffic);
     return t >= 0 && t <= 40 ? t : 12;
@@ -403,6 +424,7 @@ export class Game {
 
     const prevS = v.s;
     v.step(dt, inp.steer, inp.hop, {
+      brake: inp.brake,
       targetSpeed: this.targetSpeed(run.t),
       nitro: run.power.nitro,
       groundAt: this.groundAt,

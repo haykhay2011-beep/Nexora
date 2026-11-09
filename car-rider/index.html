@@ -31,6 +31,7 @@
         <div class="hud-speed" id="hud-speed-wrap" title="Click to switch km/h / mph">
           <span id="hud-speed">0</span><span id="hud-unit">km/h</span>
         </div>
+        <button id="btn-brake" class="brake-btn" aria-label="Brake">BRAKE</button>
         <div id="toasts"></div>
         <div id="touch-hint" class="hidden">Hold left / right to steer &nbsp;·&nbsp; swipe up to hop</div>
       </div>
@@ -46,6 +47,7 @@
             <div><kbd>←</kbd><kbd>→</kbd> / <kbd>A</kbd><kbd>D</kbd><span>Steer</span></div>
             <div><kbd>Space</kbd><span>Hop (on the ground)</span></div>
             <div><kbd>←</kbd><kbd>→</kbd><span>Spin in the air (ramps!)</span></div>
+            <div><kbd>B</kbd><span>Brake (hold, or tap more to brake harder)</span></div>
             <div><kbd>P</kbd> / <kbd>Esc</kbd><span>Pause</span></div>
             <div class="touch-only"><em>Touch</em><span>Hold left / right half · swipe up to hop</span></div>
           </div>
@@ -65,8 +67,11 @@
           <h2>Garage</h2>
           <button id="btn-garage-back" class="btn">Back</button>
         </div>
+        <div class="garage-bottom">
+        <div class="paint"><span>Paint</span><div id="swatches"></div><label class="custom" title="Pick any colour"><input type="color" id="paint-custom" value="#f1f1ec" aria-label="Custom colour" /><i>Any colour</i></label><button id="paint-reset" class="btn small">Reset</button></div>
         <div class="garage-cards" id="garage-cards"></div>
         <p class="garage-hint">← → to browse · Enter / click to select · Unlock vehicles by reaching score goals in a single run</p>
+        </div>
       </section>
 
       <!-- pause -->
