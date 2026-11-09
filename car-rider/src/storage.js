@@ -10,6 +10,7 @@ const DEFAULTS = {
   units: 'kmh',
   speedMul: 1,
   traffic: 5,
+  noHesi: false,
 };
 
 function read() {

@@ -181,6 +181,7 @@ export class Obstacles {
     this.nextNitroS = startS + 520;
     this.nextBoxS = startS + 300;
     this.trafficNextS = startS + 120;
+    this.noStatic = false; // No Hesi mode: traffic only
     this.trafficDensity = TRAFFIC_DENSITY;
     this.trafficScale = 1; // set by the game from the car-speed setting
     this.reserveEnd = -1;
@@ -338,7 +339,7 @@ export class Obstacles {
     gap = Math.max(gap, 24);
 
     // --- ramp
-    if (!reserved && s > this.nextRampS) {
+    if (!reserved && !this.noStatic && s > this.nextRampS) {
       // a lane is usable if no traffic could drive into the ramp from behind
       const free = [0, 1, 2].filter((l) => !this.items.some((o) => o.car && !o.dead && o.lane === l && o.s > s - 200 && o.s < s + 110));
       if (free.length && this._straight(s + 8, s + 88)) {
@@ -362,7 +363,7 @@ export class Obstacles {
     const next = this._walk(safe, null);
     this.safe = next;
 
-    if (!reserved) {
+    if (!reserved && !this.noStatic) {
       // solid obstacles
       // traffic shares the road, so static rows only ever block a single lane
       const nBlock = 1;

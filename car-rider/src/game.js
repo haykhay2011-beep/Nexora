@@ -76,13 +76,22 @@ export class Game {
         this.ui.setTrafficSetting(v);
         this.obstacles.trafficDensity = v;
       },
+      setNoHesi: (on) => {
+        save.noHesi = on;
+        if (on) {
+          save.traffic = 15;
+          save.speedMul = 1.3;
+        }
+        persist();
+        this.syncSettings();
+        this.obstacles.noStatic = on;
+      },
       selectVehicle: (id, locked) => this.selectVehicle(id, locked),
       click: () => this.sound.click(),
     });
     this.ui.setMuteIcon(this.sound.muted);
     this.ui.setUnits(save.units);
-    this.ui.setSpeedSetting(Math.round(this.speedMul() * 100));
-    this.ui.setTrafficSetting(this.trafficSetting());
+    this.syncSettings();
     this.ui.setBest(save.best);
     if (this.mobile) this.ui.setTouchMode(true);
 
@@ -130,6 +139,7 @@ export class Game {
     return {
       score: 0, dist: 0, t: 0, mult: 1, multT: 0, coins: 0, tricks: 0,
       power: { nitro: 0, shield: 0, magnet: 0, grip: 0 },
+      closeCalls: 0, closeChain: 0,
       crashTimer: 0, startS: START_S,
     };
   }
@@ -189,6 +199,7 @@ export class Game {
     this.vehicle.speed = PHYS.START_SPEED * 0.8 * this.vehicle.def.speedMul * this.speedMul();
     this.obstacles.trafficScale = Math.min(1, this.speedMul());
     this.obstacles.trafficDensity = this.trafficSetting();
+    this.obstacles.noStatic = !!save.noHesi;
     this.shake = 0;
     this.state = 'playing';
     this.input.setEnabled(true);
@@ -335,6 +346,12 @@ export class Game {
 
   groundAt = (s, d) => this.obstacles.groundAt(s, d);
 
+  syncSettings() {
+    this.ui.setSpeedSetting(Math.round(this.speedMul() * 100));
+    this.ui.setTrafficSetting(this.trafficSetting());
+    this.ui.setNoHesi(!!save.noHesi);
+  }
+
   trafficSetting() {
     const t = Number(save.traffic);
     return t >= 0 && t <= 25 ? t : 5;
@@ -398,6 +415,7 @@ export class Game {
 
     if (v.alive) {
       this.handleContacts();
+      if (v.alive) this.checkCloseCalls();
       const got = this.collectibles.update(dt, v, run.power.magnet > 0, v.s);
       for (const g of got) this.collect(g);
       // distance score
@@ -511,6 +529,35 @@ export class Game {
       }
       v.crash('obstacle');
     }
+  }
+
+  // Squeezing past traffic without braking pays out: "no hesi".
+  checkCloseCalls() {
+    const v = this.vehicle;
+    const run = this.run;
+    for (const o of this.obstacles.items) {
+      if (!o.car || o.dead || o.passed) continue;
+      if (o.s + o.hl < v.s - v.hl) {
+        o.passed = true;
+        continue;
+      }
+      if (v.h > 0.6 || Math.abs(o.s - v.s) > o.hl + v.hl) continue;
+      const gap = Math.abs(o.d - v.d) - (o.hw + v.hw);
+      if (gap > 0 && gap < 0.95) {
+        o.passed = true;
+        run.closeCalls++;
+        run.closeChain++;
+        const pts = 40 * run.mult + run.closeChain * 10;
+        run.score += pts;
+        run.multT = SCORE.MULT_TIME;
+        if (run.closeChain % 3 === 0) run.mult = Math.min(SCORE.MULT_MAX, run.mult + 1);
+        else if (run.mult === 1) run.mult = 2;
+        this.sound.coin(Math.min(11, run.closeChain));
+        this.ui.toast(`CLOSE CALL x${run.closeChain}  +${pts}`, '#7df9ff');
+      }
+    }
+    // the chain breaks when the multiplier lapses
+    if (run.multT <= 0) run.closeChain = 0;
   }
 
   breakShield() {

@@ -131,3 +131,6 @@ body.touch .touch-only { display: flex !important; }
 .speedctl span { flex: none; }
 .speedctl b { flex: none; width: 52px; text-align: right; color: var(--yellow); font-variant-numeric: tabular-nums; }
 .speedctl input { flex: 1; min-width: 0; height: 32px; accent-color: var(--yellow); cursor: pointer; touch-action: pan-x; }
+.speedctl.hesi { justify-content: flex-start; cursor: pointer; }
+.speedctl.hesi input { flex: none; width: 24px; height: 24px; }
+.speedctl.hesi em { font-style: normal; font-weight: 600; font-size: 12px; opacity: 0.85; margin-left: auto; text-align: right; }
