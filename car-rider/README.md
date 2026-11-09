@@ -42,7 +42,7 @@ Regenerate it with `npm run build:single`.
 | Start / restart | `Space` or `Enter` | Tap |
 | Garage | Garage button, then `←` / `→` to browse | Tap a card |
 
-**Car speed** (60%–150%) is a slider on the start and pause screens; it scales your speed and the traffic's, and is saved. The **Traffic** slider (Off to 25x, default 5x) sets how busy the road is; traffic eases in over the first ~40 seconds of a run.
+**Car speed** (60%–150%) is a slider on the start and pause screens; it scales your speed and the traffic's, and is saved. The **Traffic** slider (Off to 40x, default 12x; 20x and up is rush hour) sets how busy the road is; traffic eases in over the first ~40 seconds of a run.
 
 **No Hesi mode** (checkbox on the start and pause screens) strips the road down to traffic only, sets traffic to 15x and speed to 130%, and pays out **close calls**: squeeze past a car within about a metre without braking for bonus points and multiplier.
 
@@ -53,7 +53,7 @@ The speed readout (bottom left) switches between km/h and mph when clicked. The 
 - The car drives itself; you steer. The road bends constantly and the bends push you towards the outside, so keep
   correcting. Curves get tighter and more frequent the longer you survive, and speed slowly climbs.
 - **Shoulder** (the tan strip): slows you down. **Guardrail**: scraping it is fine, hitting it head-on is a crash.
-- **Traffic**: cars and trucks cruise the lanes at their own speeds, so you weave through them. Hitting one ends the run, and traffic never lines up three abreast.
+- **Traffic**: Armenian road regulars (Lada Niva, boxy Lada sedans, Volga, old Mercedes, and white Gazelle marshrutka minibuses) cruise the lanes at their own speeds, so you weave through them. Hitting one ends the run, and traffic never lines up three abreast.
 - **Obstacles**: cones, barrels and roadblocks end the run, and so does hitting a car. Potholes slow you and bounce the car. Oil slicks make
   steering slippery for a moment. Hopping clears cones and barrels. There is always a passable path.
 - **Ramps** appear on straighter stretches. In the air, steer to spin. Every full rotation is a trick; landing roughly
@@ -70,7 +70,7 @@ Unlock vehicles by reaching a score in a single run, then pick one in the Garage
 
 | Vehicle | Unlock | Character |
 | --- | --- | --- |
-| Compact | start | Balanced all-rounder |
+| Lada Niva | start | Balanced all-rounder |
 | Pickup Truck | 800 | Slower, sturdy, ignores potholes |
 | Sports Car | 2,500 | Fastest and sharpest steering, but twitchy and easily upset by oil |
 | Motorcycle | 5,000 | Very nimble, tiny hitbox, spins fastest in the air |

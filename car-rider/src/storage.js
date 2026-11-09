@@ -9,7 +9,7 @@ const DEFAULTS = {
   muted: false,
   units: 'kmh',
   speedMul: 1,
-  traffic: 5,
+  traffic: 12,
   noHesi: false,
 };
 

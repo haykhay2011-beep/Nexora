@@ -2,6 +2,7 @@
 // Models face -Z, +Y is up, origin is on the ground at the vehicle's centre.
 import * as THREE from 'three';
 import { PartBuilder, wheelGeometry } from './models.js';
+import { nivaGeometry } from './armenianCars.js';
 
 const GLASS = 0x34465a;
 const DARK = 0x2a2c33;
@@ -11,24 +12,14 @@ function wheelSpec(x, z, r, w, front = false) {
 }
 
 function buildCompact() {
-  const b = new PartBuilder();
-  const c = 0xe5483c;
-  b.box(1.7, 0.45, 3.6, c, [0, 0.6, 0]);
-  b.taper(1.56, 0.4, 1.96, GLASS, [0, 1.06, 0.3], [0, 0, 0], 0.8, 0.74);
-  b.box(1.1, 0.07, 1.3, c, [0, 1.3, 0.32]);
-  b.box(1.74, 0.2, 0.14, DARK, [0, 0.42, -1.8]);
-  b.box(1.74, 0.2, 0.14, DARK, [0, 0.42, 1.8]);
-  b.box(0.32, 0.14, 0.06, 0xfff3b0, [0.55, 0.66, -1.81]);
-  b.box(0.32, 0.14, 0.06, 0xfff3b0, [-0.55, 0.66, -1.81]);
-  b.box(0.32, 0.14, 0.06, 0xff3030, [0.55, 0.66, 1.81]);
-  b.box(0.32, 0.14, 0.06, 0xff3030, [-0.55, 0.66, 1.81]);
-  b.box(1.72, 0.05, 3.62, 0xffffff, [0, 0.44, 0]);
+  // Lada Niva: the legendary Soviet 4x4
+  const R = 0.37;
   return {
-    body: b.build(),
-    wheels: [wheelSpec(0.86, -1.15, 0.34, 0.26, true), wheelSpec(-0.86, -1.15, 0.34, 0.26, true), wheelSpec(0.86, 1.15, 0.34, 0.26), wheelSpec(-0.86, 1.15, 0.34, 0.26)],
-    exhaust: [[0.45, 0.3, 1.85]],
-    height: 1.4,
-    length: 3.8,
+    body: nivaGeometry(0xe8691f, false),
+    wheels: [wheelSpec(0.86, -1.15, R, 0.28, true), wheelSpec(-0.86, -1.15, R, 0.28, true), wheelSpec(0.86, 1.15, R, 0.28), wheelSpec(-0.86, 1.15, R, 0.28)],
+    exhaust: [[0.5, 0.34, 1.92]],
+    height: 1.85,
+    length: 3.9,
   };
 }
 
@@ -148,9 +139,9 @@ function buildMonster() {
 // spin: air spin rate (rad/s)            hop/ramp: jump multipliers
 export const VEHICLES = [
   {
-    id: 'compact', name: 'Compact', unlock: 0, build: buildCompact,
-    blurb: 'Balanced and friendly. A great all-rounder.',
-    speedMul: 1, accel: 11, yawMax: 0.42, steerResp: 9, drift: 1, oil: 1, hw: 0.85, hl: 1.7,
+    id: 'compact', name: 'Lada Niva', unlock: 0, build: buildCompact,
+    blurb: 'The legendary 4x4. Balanced and friendly.',
+    speedMul: 1, accel: 11, yawMax: 0.42, steerResp: 9, drift: 1, oil: 1, hw: 0.9, hl: 1.85,
     spin: 7.5, hop: 1, ramp: 1, lean: 1, sturdy: false, crusher: false,
     ratings: { speed: 3, handling: 3, tough: 3, air: 3 },
   },

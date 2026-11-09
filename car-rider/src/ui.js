@@ -99,7 +99,7 @@ export class UI {
   }
 
   setTrafficSetting(v) {
-    const label = v === 0 ? 'Off' : v + 'x';
+    const label = v === 0 ? 'Off' : v >= 20 ? 'Rush ' + v + 'x' : v + 'x';
     for (const id of ['traffic-start', 'traffic-pause']) $(id).value = v;
     for (const id of ['traffic-start-val', 'traffic-pause-val']) $(id).textContent = label;
   }
