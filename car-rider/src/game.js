@@ -33,7 +33,7 @@ export class Game {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(62, 1, 0.3, 1200);
+    this.camera = new THREE.PerspectiveCamera(62, 1, 0.3, 1600);
     this.env = new Environment(this.scene);
     this.road = new Road(this.scene);
     this.path = this.road.path;
